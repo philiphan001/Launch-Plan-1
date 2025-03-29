@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { activeStorage } from "./index";
 import { validateRequest } from "../shared/middleware";
 import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema } from "../shared/schema";
 import { spawn } from "child_process";
@@ -14,7 +14,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.post("/api/users/register", validateRequest({ body: insertUserSchema }), async (req: Request, res: Response) => {
     try {
-      const user = await storage.createUser(req.body);
+      const user = await activeStorage.createUser(req.body);
       res.status(201).json({ id: user.id, username: user.username });
     } catch (error) {
       res.status(500).json({ message: "Failed to create user" });
@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/users/:id", async (req: Request, res: Response) => {
     try {
-      const user = await storage.getUser(parseInt(req.params.id));
+      const user = await activeStorage.getUser(parseInt(req.params.id));
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -38,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Financial profile routes
   app.post("/api/financial-profiles", validateRequest({ body: insertFinancialProfileSchema }), async (req: Request, res: Response) => {
     try {
-      const profile = await storage.createFinancialProfile(req.body);
+      const profile = await activeStorage.createFinancialProfile(req.body);
       res.status(201).json(profile);
     } catch (error) {
       res.status(500).json({ message: "Failed to create financial profile" });
@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/financial-profiles/:userId", async (req: Request, res: Response) => {
     try {
-      const profile = await storage.getFinancialProfileByUserId(parseInt(req.params.userId));
+      const profile = await activeStorage.getFinancialProfileByUserId(parseInt(req.params.userId));
       if (!profile) {
         return res.status(404).json({ message: "Financial profile not found" });
       }
@@ -60,16 +60,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // College routes
   app.get("/api/colleges", async (req: Request, res: Response) => {
     try {
-      const colleges = await storage.getColleges();
+      console.log("Attempting to fetch colleges from database");
+      const colleges = await activeStorage.getColleges();
+      console.log("Colleges fetched successfully:", colleges.length);
       res.json(colleges);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get colleges" });
+      console.error("Error fetching colleges:", error);
+      res.status(500).json({ message: "Failed to get colleges", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
   app.get("/api/colleges/:id", async (req: Request, res: Response) => {
     try {
-      const college = await storage.getCollege(parseInt(req.params.id));
+      const college = await activeStorage.getCollege(parseInt(req.params.id));
       if (!college) {
         return res.status(404).json({ message: "College not found" });
       }
@@ -82,16 +85,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Career routes
   app.get("/api/careers", async (req: Request, res: Response) => {
     try {
-      const careers = await storage.getCareers();
+      console.log("Attempting to fetch careers from database");
+      const careers = await activeStorage.getCareers();
+      console.log("Careers fetched successfully:", careers.length);
       res.json(careers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get careers" });
+      console.error("Error fetching careers:", error);
+      res.status(500).json({ message: "Failed to get careers", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
   app.get("/api/careers/:id", async (req: Request, res: Response) => {
     try {
-      const career = await storage.getCareer(parseInt(req.params.id));
+      const career = await activeStorage.getCareer(parseInt(req.params.id));
       if (!career) {
         return res.status(404).json({ message: "Career not found" });
       }
@@ -104,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Favorites routes
   app.post("/api/favorites/colleges", async (req: Request, res: Response) => {
     try {
-      const favorite = await storage.addFavoriteCollege(req.body.userId, req.body.collegeId);
+      const favorite = await activeStorage.addFavoriteCollege(req.body.userId, req.body.collegeId);
       res.status(201).json(favorite);
     } catch (error) {
       res.status(500).json({ message: "Failed to add favorite college" });
@@ -113,7 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/favorites/colleges/:id", async (req: Request, res: Response) => {
     try {
-      await storage.removeFavoriteCollege(parseInt(req.params.id));
+      await activeStorage.removeFavoriteCollege(parseInt(req.params.id));
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to remove favorite college" });
@@ -122,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/favorites/colleges/:userId", async (req: Request, res: Response) => {
     try {
-      const favorites = await storage.getFavoriteCollegesByUserId(parseInt(req.params.userId));
+      const favorites = await activeStorage.getFavoriteCollegesByUserId(parseInt(req.params.userId));
       res.json(favorites);
     } catch (error) {
       res.status(500).json({ message: "Failed to get favorite colleges" });
@@ -131,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/favorites/careers", async (req: Request, res: Response) => {
     try {
-      const favorite = await storage.addFavoriteCareer(req.body.userId, req.body.careerId);
+      const favorite = await activeStorage.addFavoriteCareer(req.body.userId, req.body.careerId);
       res.status(201).json(favorite);
     } catch (error) {
       res.status(500).json({ message: "Failed to add favorite career" });
@@ -140,7 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/favorites/careers/:id", async (req: Request, res: Response) => {
     try {
-      await storage.removeFavoriteCareer(parseInt(req.params.id));
+      await activeStorage.removeFavoriteCareer(parseInt(req.params.id));
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to remove favorite career" });
@@ -149,7 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/favorites/careers/:userId", async (req: Request, res: Response) => {
     try {
-      const favorites = await storage.getFavoriteCareersByUserId(parseInt(req.params.userId));
+      const favorites = await activeStorage.getFavoriteCareersByUserId(parseInt(req.params.userId));
       res.json(favorites);
     } catch (error) {
       res.status(500).json({ message: "Failed to get favorite careers" });
@@ -159,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Financial projections routes
   app.post("/api/financial-projections", validateRequest({ body: insertFinancialProjectionSchema }), async (req: Request, res: Response) => {
     try {
-      const projection = await storage.createFinancialProjection(req.body);
+      const projection = await activeStorage.createFinancialProjection(req.body);
       res.status(201).json(projection);
     } catch (error) {
       res.status(500).json({ message: "Failed to create financial projection" });
@@ -168,7 +174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/financial-projections/:userId", async (req: Request, res: Response) => {
     try {
-      const projections = await storage.getFinancialProjectionsByUserId(parseInt(req.params.userId));
+      const projections = await activeStorage.getFinancialProjectionsByUserId(parseInt(req.params.userId));
       res.json(projections);
     } catch (error) {
       res.status(500).json({ message: "Failed to get financial projections" });

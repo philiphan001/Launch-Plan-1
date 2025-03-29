@@ -1,6 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { pgStorage } from "./pg-storage";
+import { storage } from "./storage";
+
+// Use PostgreSQL storage if available
+export const activeStorage = process.env.DATABASE_URL ? pgStorage : storage;
 
 const app = express();
 app.use(express.json());
