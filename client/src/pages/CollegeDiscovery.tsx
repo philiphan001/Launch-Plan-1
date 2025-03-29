@@ -87,25 +87,7 @@ const CollegeDiscovery = () => {
   const { data: colleges = [], isLoading, isError } = useQuery<College[]>({
     queryKey: ['/api/colleges'],
     retry: 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    onSuccess: (data) => {
-      // Log first few colleges with either flag set to check property names
-      console.log("College data sample:", data[0]);
-      
-      // Check for colleges with US News Top 150 rank
-      const usNewsTop150Colleges = data.filter(c => c.usNewsTop150 !== null && c.usNewsTop150 !== undefined && c.usNewsTop150 <= 150);
-      console.log("US News Top 150 colleges count:", usNewsTop150Colleges.length);
-      if (usNewsTop150Colleges.length > 0) {
-        console.log("US News Top 150 sample:", usNewsTop150Colleges[0]);
-      }
-      
-      // Check for colleges with Best Liberal Arts rank
-      const bestLiberalArtsColleges = data.filter(c => c.bestLiberalArtsColleges !== null && c.bestLiberalArtsColleges !== undefined && c.bestLiberalArtsColleges <= 300);
-      console.log("Best Liberal Arts colleges count:", bestLiberalArtsColleges.length);
-      if (bestLiberalArtsColleges.length > 0) {
-        console.log("Best Liberal Arts sample:", bestLiberalArtsColleges[0]);
-      }
-    }
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
   
   // Fetch user's favorite colleges
@@ -559,6 +541,78 @@ const CollegeDiscovery = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Debug info to help diagnose filtering issues */}
+              <div className="bg-gray-100 p-4 mb-4 rounded-md">
+                <h3 className="text-sm font-medium mb-2">Debug Information:</h3>
+                <div className="text-xs space-y-1">
+                  <p>Total colleges: {colleges.length}</p>
+                  <p>Filtered colleges: {filteredColleges.length}</p>
+                  <p>US News filter active: {usNewsTop150Filter ? 'Yes' : 'No'}</p>
+                  <p>Liberal Arts filter active: {bestLiberalArtsFilter ? 'Yes' : 'No'}</p>
+                  <p>Max tuition: ${maxTuition}</p>
+                  <p>Acceptance range: {acceptanceRange[0]}% - {acceptanceRange[1]}%</p>
+                  <p>Selected types: {selectedTypes.length ? selectedTypes.join(', ') : 'None'}</p>
+                  <p>Selected states: {selectedStates.length ? selectedStates.join(', ') : 'None'}</p>
+                  <p>Selected sizes: {selectedSizes.length ? selectedSizes.join(', ') : 'None'}</p>
+                </div>
+                <div className="mt-2 space-x-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      // Show only US News Top 150
+                      setMaxTuition(80000);
+                      setAcceptanceRange([0, 100]);
+                      setSelectedTypes([]);
+                      setSelectedStates([]);
+                      setSelectedSizes([]);
+                      setBestLiberalArtsFilter(false);
+                      setUsNewsTop150Filter(true);
+                      setCurrentPage(1);
+                      
+                      // Log for debugging
+                      console.log("Showing only US News Top 150 colleges");
+                      const matchingColleges = colleges.filter(c => 
+                        c.usNewsTop150 !== null && 
+                        c.usNewsTop150 !== undefined && 
+                        c.usNewsTop150 <= 150
+                      );
+                      console.log(`Found ${matchingColleges.length} matching colleges`);
+                      console.log("Sample colleges:", matchingColleges.slice(0, 5).map(c => c.name));
+                    }}
+                  >
+                    Show US News Top 150 Only
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      // Show only Liberal Arts
+                      setMaxTuition(80000);
+                      setAcceptanceRange([0, 100]);
+                      setSelectedTypes([]);
+                      setSelectedStates([]);
+                      setSelectedSizes([]);
+                      setUsNewsTop150Filter(false);
+                      setBestLiberalArtsFilter(true);
+                      setCurrentPage(1);
+                      
+                      // Log for debugging
+                      console.log("Showing only Best Liberal Arts colleges");
+                      const matchingColleges = colleges.filter(c => 
+                        c.bestLiberalArtsColleges !== null && 
+                        c.bestLiberalArtsColleges !== undefined && 
+                        c.bestLiberalArtsColleges <= 300
+                      );
+                      console.log(`Found ${matchingColleges.length} matching colleges`);
+                      console.log("Sample colleges:", matchingColleges.slice(0, 5).map(c => c.name));
+                    }}
+                  >
+                    Show Liberal Arts Only
+                  </Button>
+                </div>
+              </div>
+            
               {currentColleges.length > 0 ? (
                 <>
                   {currentColleges.map((college) => (
