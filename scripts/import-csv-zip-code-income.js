@@ -14,9 +14,9 @@ const sql = postgres(process.env.DATABASE_URL);
 async function importZipCodeIncome() {
   console.log('Starting zip code income import...');
   
-  // Clear existing zip_code_income table
-  await sql`DELETE FROM zip_code_income`;
-  console.log('Cleared existing zip code income data');
+  // Check existing records to determine where to start
+  const existingCount = await sql`SELECT COUNT(*) AS count FROM zip_code_income`.then(res => parseInt(res[0].count));
+  console.log(`Found ${existingCount} existing zip code income records`);
 
   // Read and parse the CSV file
   const csvFilePath = path.join(__dirname, '../attached_assets/Zip_Code_Income.csv');
@@ -34,9 +34,22 @@ async function importZipCodeIncome() {
     let insertCount = 0;
     
     // Process records in batches to avoid memory issues
-    const batchSize = 100;
-    for (let i = 0; i < records.length; i += batchSize) {
-      const batch = records.slice(i, i + batchSize);
+    const batchSize = 50; // Reduced batch size for better performance
+    
+    // Calculate starting index based on existing records
+    const startIndex = existingCount;
+    console.log(`Starting import from record ${startIndex}`);
+    
+    // Skip records that have already been imported
+    if (startIndex >= records.length) {
+      console.log('All records already imported. Nothing to do.');
+      await sql.end();
+      return;
+    }
+    
+    // Process only records that haven't been imported yet
+    for (let i = startIndex; i < records.length; i += batchSize) {
+      const batch = records.slice(i, Math.min(i + batchSize, records.length));
       
       // Process and transform each record in the batch
       const incomeData = batch.map(record => {
