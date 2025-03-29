@@ -133,8 +133,16 @@ const CollegeDiscovery = () => {
     // Basic data check - skip colleges with missing core data
     if (!college.name) return false;
     
-    const matchesSearch = college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (college.location && college.location.toLowerCase().includes(searchQuery.toLowerCase()));
+    // Improved search with trimming and better fuzzy match
+    const cleanSearchQuery = searchQuery.toLowerCase().trim();
+    const cleanCollegeName = college.name.toLowerCase().trim();
+    const cleanLocation = college.location ? college.location.toLowerCase().trim() : '';
+    
+    // If the search query is empty, consider it a match
+    const matchesSearch = cleanSearchQuery === '' || 
+                         cleanCollegeName.includes(cleanSearchQuery) ||
+                         cleanLocation.includes(cleanSearchQuery);
+                         
     const matchesTuition = college.tuition ? college.tuition <= maxTuition : true;
     const matchesAcceptance = college.acceptanceRate ? 
                             college.acceptanceRate >= acceptanceRange[0] && 
@@ -145,6 +153,17 @@ const CollegeDiscovery = () => {
                         (college.state && selectedStates.includes(college.state));
     const matchesSize = selectedSizes.length === 0 || 
                        (college.size && selectedSizes.includes(college.size));
+    
+    // If we're searching for Skidmore specifically and this is Skidmore, log details
+    if (cleanSearchQuery.includes('skidmore') && college.id === 2189) {
+      console.log('Found Skidmore:', college);
+      console.log('Search matches:', matchesSearch);
+      console.log('Tuition matches:', matchesTuition);
+      console.log('Acceptance matches:', matchesAcceptance);
+      console.log('Type matches:', matchesType);
+      console.log('State matches:', matchesState);
+      console.log('Size matches:', matchesSize);
+    }
     
     return matchesSearch && matchesTuition && matchesAcceptance && matchesType && matchesState && matchesSize;
   });
