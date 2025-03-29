@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { College } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,7 +40,9 @@ const CollegeDiscovery = () => {
       sizes: params.get('sizes')?.split(',').filter(Boolean) || [],
       usNewsTop150: params.get('usNewsTop150') === 'true',
       bestLiberalArts: params.get('bestLiberalArts') === 'true',
-      page: parseInt(params.get('page') || "1")
+      page: parseInt(params.get('page') || "1"),
+      sortBy: params.get('sortBy') || "name", // Default sort by name
+      sortOrder: params.get('sortOrder') || "asc" // Default sort ascending
     };
   };
   
@@ -54,6 +57,8 @@ const CollegeDiscovery = () => {
   const [usNewsTop150Filter, setUsNewsTop150Filter] = useState<boolean>(initialParams.usNewsTop150);
   const [bestLiberalArtsFilter, setBestLiberalArtsFilter] = useState<boolean>(initialParams.bestLiberalArts);
   const [currentPage, setCurrentPage] = useState(initialParams.page);
+  const [sortBy, setSortBy] = useState<string>(initialParams.sortBy);
+  const [sortOrder, setSortOrder] = useState<string>(initialParams.sortOrder);
   const itemsPerPage = 10;
   
   // Update URL when filters change
@@ -71,6 +76,8 @@ const CollegeDiscovery = () => {
     if (usNewsTop150Filter) params.set('usNewsTop150', 'true');
     if (bestLiberalArtsFilter) params.set('bestLiberalArts', 'true');
     if (currentPage !== 1) params.set('page', currentPage.toString());
+    if (sortBy !== 'name') params.set('sortBy', sortBy);
+    if (sortOrder !== 'asc') params.set('sortOrder', sortOrder);
     
     // Construct new URL with search params
     const newUrl = `/colleges${params.toString() ? `?${params.toString()}` : ''}`;
@@ -193,7 +200,9 @@ const CollegeDiscovery = () => {
     selectedSizes, 
     usNewsTop150Filter,
     bestLiberalArtsFilter,
-    currentPage
+    currentPage,
+    sortBy,
+    sortOrder
   ]);
   
   // Extract unique types, states and sizes from the fetched colleges
@@ -278,11 +287,55 @@ const CollegeDiscovery = () => {
            matchesUsNewsTop150 && matchesBestLiberalArts;
   });
   
+  // Sort the filtered colleges based on sort parameters
+  const sortedColleges = [...filteredColleges].sort((a, b) => {
+    let valueA, valueB;
+
+    // Extract the values to compare based on sortBy
+    switch (sortBy) {
+      case 'name':
+        valueA = a.name || '';
+        valueB = b.name || '';
+        break;
+      case 'tuition':
+        valueA = a.tuition || Number.MAX_SAFE_INTEGER;  // Handle nulls by placing at the end
+        valueB = b.tuition || Number.MAX_SAFE_INTEGER;
+        break;
+      case 'acceptanceRate':
+        valueA = a.acceptanceRate || Number.MAX_SAFE_INTEGER;
+        valueB = b.acceptanceRate || Number.MAX_SAFE_INTEGER;
+        break;
+      case 'usNewsTop150':
+        // For ranking, we want lower numbers at the top, and null/0 values at the end
+        valueA = a.usNewsTop150 && a.usNewsTop150 > 0 ? a.usNewsTop150 : Number.MAX_SAFE_INTEGER;
+        valueB = b.usNewsTop150 && b.usNewsTop150 > 0 ? b.usNewsTop150 : Number.MAX_SAFE_INTEGER;
+        break;
+      case 'bestLiberalArtsColleges':
+        valueA = a.bestLiberalArtsColleges && a.bestLiberalArtsColleges > 0 ? a.bestLiberalArtsColleges : Number.MAX_SAFE_INTEGER;
+        valueB = b.bestLiberalArtsColleges && b.bestLiberalArtsColleges > 0 ? b.bestLiberalArtsColleges : Number.MAX_SAFE_INTEGER;
+        break;
+      default:
+        valueA = a.name || '';
+        valueB = b.name || '';
+    }
+
+    // Compare based on sortOrder
+    if (typeof valueA === 'string' && typeof valueB === 'string') {
+      return sortOrder === 'asc' 
+        ? valueA.localeCompare(valueB) 
+        : valueB.localeCompare(valueA);
+    } else {
+      return sortOrder === 'asc' 
+        ? (valueA as number) - (valueB as number) 
+        : (valueB as number) - (valueA as number);
+    }
+  });
+  
   // Calculate pagination
-  const totalPages = Math.ceil(filteredColleges.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedColleges.length / itemsPerPage);
   const pageStart = (currentPage - 1) * itemsPerPage;
   const pageEnd = pageStart + itemsPerPage;
-  const currentColleges = filteredColleges.slice(pageStart, pageEnd);
+  const currentColleges = sortedColleges.slice(pageStart, pageEnd);
   
   // Debug logging - must be placed after filteredColleges and currentColleges are defined
   useEffect(() => {
@@ -468,6 +521,8 @@ const CollegeDiscovery = () => {
                     setSelectedSizes([]);
                     setUsNewsTop150Filter(false);
                     setBestLiberalArtsFilter(false);
+                    setSortBy('name');  // Reset sort to default
+                    setSortOrder('asc'); // Reset sort order to default
                     setCurrentPage(1);
                   }}
                 >
@@ -517,8 +572,8 @@ const CollegeDiscovery = () => {
         </div>
         
         <div className="md:col-span-3">
-          <div className="mb-4">
-            <div className="relative">
+          <div className="mb-4 flex gap-4 flex-col md:flex-row">
+            <div className="relative flex-1">
               <Input 
                 placeholder="Search colleges by name or location..." 
                 value={searchQuery}
@@ -542,6 +597,49 @@ const CollegeDiscovery = () => {
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
                 />
               </svg>
+            </div>
+            
+            <div className="flex gap-2">
+              <div className="w-48">
+                <Label htmlFor="sort-by" className="sr-only">Sort by</Label>
+                <Select
+                  value={sortBy}
+                  onValueChange={(value) => {
+                    setSortBy(value);
+                    setCurrentPage(1); // Reset to first page when sort changes
+                  }}
+                >
+                  <SelectTrigger id="sort-by">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="tuition">Tuition</SelectItem>
+                    <SelectItem value="acceptanceRate">Acceptance Rate</SelectItem>
+                    <SelectItem value="usNewsTop150">US News Rank</SelectItem>
+                    <SelectItem value="bestLiberalArtsColleges">Liberal Arts Rank</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-32">
+                <Label htmlFor="sort-order" className="sr-only">Sort order</Label>
+                <Select
+                  value={sortOrder}
+                  onValueChange={(value) => {
+                    setSortOrder(value);
+                    setCurrentPage(1); // Reset to first page when sort order changes
+                  }}
+                >
+                  <SelectTrigger id="sort-order">
+                    <SelectValue placeholder="Order" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="asc">Ascending</SelectItem>
+                    <SelectItem value="desc">Descending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           
@@ -577,6 +675,7 @@ const CollegeDiscovery = () => {
                 <div className="text-xs space-y-1">
                   <p>Total colleges: {colleges.length}</p>
                   <p>Filtered colleges: {filteredColleges.length}</p>
+                  <p>Sort by: {sortBy}, Order: {sortOrder}</p>
                   <p>US News filter active: {usNewsTop150Filter ? 'Yes' : 'No'}</p>
                   <p>Liberal Arts filter active: {bestLiberalArtsFilter ? 'Yes' : 'No'}</p>
                   <p>Max tuition: ${maxTuition}</p>
@@ -598,6 +697,8 @@ const CollegeDiscovery = () => {
                       setSelectedSizes([]);
                       setBestLiberalArtsFilter(false);
                       setUsNewsTop150Filter(true);
+                      setSortBy('usNewsTop150');  // Sort by US News Rank
+                      setSortOrder('asc');  // Show lowest (best) ranks first
                       setCurrentPage(1);
                       
                       // Log for debugging
@@ -626,6 +727,8 @@ const CollegeDiscovery = () => {
                       setSelectedSizes([]);
                       setUsNewsTop150Filter(false);
                       setBestLiberalArtsFilter(true);
+                      setSortBy('bestLiberalArtsColleges');  // Sort by Liberal Arts Rank
+                      setSortOrder('asc');  // Show lowest (best) ranks first
                       setCurrentPage(1);
                       
                       // Log for debugging
