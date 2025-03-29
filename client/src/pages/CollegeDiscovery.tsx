@@ -88,6 +88,12 @@ const CollegeDiscovery = () => {
     queryKey: ['/api/colleges'],
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    onSuccess: (data) => {
+      // Log first college with either flag set to check property names
+      console.log("College data sample:", 
+        data.find(c => c.us_news_top_150 === 1 || c.best_liberal_arts_colleges === 1) || data[0]
+      );
+    }
   });
   
   // Fetch user's favorite colleges
