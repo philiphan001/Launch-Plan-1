@@ -1,7 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const { parse } = require('csv-parse');
-const postgres = require('postgres');
+import fs from 'fs';
+import path from 'path';
+import { parse } from 'csv-parse/sync';
+import postgres from 'postgres';
+import { fileURLToPath } from 'url';
+
+// Get the current file path for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create a Postgres client with the database connection string
 const sql = postgres(process.env.DATABASE_URL);
@@ -17,15 +22,12 @@ async function importZipCodeIncome() {
   const csvFilePath = path.join(__dirname, '../attached_assets/Zip_Code_Income.csv');
   const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
   
-  // Parse CSV data
-  parse(fileContent, {
-    columns: true,
-    skip_empty_lines: true
-  }, async (err, records) => {
-    if (err) {
-      console.error('Error parsing CSV:', err);
-      process.exit(1);
-    }
+  // Parse CSV data using synchronous parse for ES modules
+  try {
+    const records = parse(fileContent, {
+      columns: true,
+      skip_empty_lines: true
+    });
     
     console.log(`Parsed ${records.length} zip code income records from CSV`);
     
@@ -38,29 +40,41 @@ async function importZipCodeIncome() {
       
       // Process and transform each record in the batch
       const incomeData = batch.map(record => {
+        // Make sure zipCode is never undefined or empty
+        const zipCode = record['zipcode'] || record['Zipcode'] || '';
+        
         // Process mean income: remove commas and convert to number
         let meanIncome = null;
         if (record['Mean Income']) {
-          meanIncome = parseInt(record['Mean Income'].replace(/[^0-9.-]+/g, '')) || null;
+          const cleanedValue = record['Mean Income'].replace(/[^0-9.-]+/g, '');
+          if (cleanedValue && !isNaN(parseInt(cleanedValue))) {
+            meanIncome = parseInt(cleanedValue);
+          }
         }
         
         // Process estimated investments and home value
         let estimatedInvestments = null;
         if (record['Estimated Investments']) {
-          estimatedInvestments = parseInt(record['Estimated Investments'].replace(/[^0-9.-]+/g, '')) || null;
+          const cleanedValue = record['Estimated Investments'].replace(/[^0-9.-]+/g, '');
+          if (cleanedValue && !isNaN(parseInt(cleanedValue))) {
+            estimatedInvestments = parseInt(cleanedValue);
+          }
         }
         
         let homeValue = null;
         if (record['Home_Value']) {
-          homeValue = parseInt(record['Home_Value'].replace(/[^0-9.-]+/g, '')) || null;
+          const cleanedValue = record['Home_Value'].replace(/[^0-9.-]+/g, '');
+          if (cleanedValue && !isNaN(parseInt(cleanedValue))) {
+            homeValue = parseInt(cleanedValue);
+          }
         }
         
         return {
-          state: record['State'],
-          zipCode: record['zipcode'] || record['Zipcode'] || '', // Handle different header names
-          meanIncome: meanIncome,
-          estimatedInvestments: estimatedInvestments,
-          homeValue: homeValue
+          state: record['State'] || null,
+          zip_code: zipCode,
+          mean_income: meanIncome,
+          estimated_investments: estimatedInvestments,
+          home_value: homeValue
         };
       });
       
@@ -77,7 +91,10 @@ async function importZipCodeIncome() {
     console.log(`Zip code income import completed successfully. Total records: ${insertCount}`);
     // Close the database connection
     await sql.end();
-  });
+  } catch (err) {
+    console.error('Error parsing CSV:', err);
+    process.exit(1);
+  }
 }
 
 // Execute the import function

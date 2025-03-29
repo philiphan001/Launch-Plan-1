@@ -209,67 +209,67 @@ export class MemStorage implements IStorage {
     
     // Add sample career paths
     this.createCareerPath({
-      fieldOfStudy: "Computer Science",
-      careerTitle: "Software Engineer",
-      optionRank: 1
+      field_of_study: "Computer Science",
+      career_title: "Software Engineer",
+      option_rank: 1
     });
     
     this.createCareerPath({
-      fieldOfStudy: "Computer Science",
-      careerTitle: "Data Scientist",
-      optionRank: 2
+      field_of_study: "Computer Science",
+      career_title: "Data Scientist",
+      option_rank: 2
     });
     
     // Add sample location cost of living
     this.createLocationCostOfLiving({
-      zipCode: "98101",
+      zip_code: "98101",
       city: "Seattle",
       state: "WA",
       housing: 1850,
       transportation: 450,
       food: 550,
       healthcare: 350,
-      personalInsurance: 120,
+      personal_insurance: 120,
       apparel: 100,
       services: 200,
       entertainment: 300,
       other: 250,
-      monthlyExpense: 4170,
-      incomeAdjustmentFactor: 1.3
+      monthly_expense: 4170,
+      income_adjustment_factor: 1.3
     });
     
     this.createLocationCostOfLiving({
-      zipCode: "94305",
+      zip_code: "94305",
       city: "Stanford",
       state: "CA",
       housing: 2600,
       transportation: 500,
       food: 650,
       healthcare: 400,
-      personalInsurance: 150,
+      personal_insurance: 150,
       apparel: 120,
       services: 250,
       entertainment: 350,
       other: 300,
-      monthlyExpense: 5320,
-      incomeAdjustmentFactor: 1.6
+      monthly_expense: 5320,
+      income_adjustment_factor: 1.6
     });
     
     // Add sample zip code income data
     this.createZipCodeIncome({
-      zipCode: "98101",
+      zip_code: "98101",
       state: "WA",
-      meanIncome: 98500,
-      estimatedInvestments: 350000,
-      homeValue: 750000
+      mean_income: 98500,
+      estimated_investments: 350000,
+      home_value: 750000
     });
     
     this.createZipCodeIncome({
-      zipCode: "94305",
+      zip_code: "94305",
       state: "CA",
-      meanIncome: 128000,
-      estimatedInvestments: 520000,
-      homeValue: 1800000
+      mean_income: 128000,
+      estimated_investments: 520000,
+      home_value: 1800000
     });
   }
   
@@ -507,7 +507,7 @@ export class MemStorage implements IStorage {
   
   async getCareerPathsByField(fieldOfStudy: string): Promise<CareerPath[]> {
     return Array.from(this.careerPaths.values()).filter(
-      (careerPath) => careerPath.fieldOfStudy === fieldOfStudy,
+      (careerPath) => careerPath.field_of_study === fieldOfStudy,
     );
   }
   
@@ -529,7 +529,7 @@ export class MemStorage implements IStorage {
   
   async getLocationCostOfLivingByZipCode(zipCode: string): Promise<LocationCostOfLiving | undefined> {
     return Array.from(this.locationCostOfLivings.values()).find(
-      (location) => location.zipCode === zipCode,
+      (location) => location.zip_code === zipCode,
     );
   }
   
@@ -551,7 +551,7 @@ export class MemStorage implements IStorage {
   
   async getZipCodeIncomeByZipCode(zipCode: string): Promise<ZipCodeIncome | undefined> {
     return Array.from(this.zipCodeIncomes.values()).find(
-      (income) => income.zipCode === zipCode,
+      (income) => income.zip_code === zipCode,
     );
   }
   

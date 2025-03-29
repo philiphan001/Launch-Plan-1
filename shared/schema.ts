@@ -209,15 +209,15 @@ export type InsertMilestone = z.infer<typeof insertMilestoneSchema>;
 // Career paths table
 export const careerPaths = pgTable("career_paths", {
   id: serial("id").primaryKey(),
-  fieldOfStudy: text("field_of_study").notNull(),
-  careerTitle: text("career_title").notNull(),
-  optionRank: integer("option_rank"), // The position/rank of the career option for the field
+  field_of_study: text("field_of_study").notNull(),
+  career_title: text("career_title").notNull(),
+  option_rank: integer("option_rank"), // The position/rank of the career option for the field
 });
 
 export const insertCareerPathSchema = createInsertSchema(careerPaths).pick({
-  fieldOfStudy: true,
-  careerTitle: true,
-  optionRank: true,
+  field_of_study: true,
+  career_title: true,
+  option_rank: true,
 });
 
 export type CareerPath = typeof careerPaths.$inferSelect;
@@ -226,37 +226,37 @@ export type InsertCareerPath = z.infer<typeof insertCareerPathSchema>;
 // Location Cost of Living table
 export const locationCostOfLiving = pgTable("location_cost_of_living", {
   id: serial("id").primaryKey(),
-  zipCode: text("zip_code").notNull(),
+  zip_code: text("zip_code").notNull(),
   city: text("city"),
   state: text("state"),
   housing: integer("housing"), // Monthly housing cost
   transportation: integer("transportation"), // Monthly transportation cost
   food: integer("food"), // Monthly food cost
   healthcare: integer("healthcare"), // Monthly healthcare cost
-  personalInsurance: integer("personal_insurance"), // Monthly personal insurance cost
+  personal_insurance: integer("personal_insurance"), // Monthly personal insurance cost
   apparel: integer("apparel"), // Monthly apparel cost
   services: integer("services"), // Monthly services cost
   entertainment: integer("entertainment"), // Monthly entertainment cost
   other: integer("other"), // Monthly other expenses
-  monthlyExpense: integer("monthly_expense"), // Total monthly expense
-  incomeAdjustmentFactor: real("income_adjustment_factor"), // Income adjustment factor based on cost of living
+  monthly_expense: integer("monthly_expense"), // Total monthly expense
+  income_adjustment_factor: real("income_adjustment_factor"), // Income adjustment factor based on cost of living
 });
 
 export const insertLocationCostOfLivingSchema = createInsertSchema(locationCostOfLiving).pick({
-  zipCode: true,
+  zip_code: true,
   city: true,
   state: true,
   housing: true,
   transportation: true,
   food: true,
   healthcare: true,
-  personalInsurance: true,
+  personal_insurance: true,
   apparel: true,
   services: true,
   entertainment: true,
   other: true,
-  monthlyExpense: true,
-  incomeAdjustmentFactor: true,
+  monthly_expense: true,
+  income_adjustment_factor: true,
 });
 
 export type LocationCostOfLiving = typeof locationCostOfLiving.$inferSelect;
@@ -266,18 +266,18 @@ export type InsertLocationCostOfLiving = z.infer<typeof insertLocationCostOfLivi
 export const zipCodeIncome = pgTable("zip_code_income", {
   id: serial("id").primaryKey(),
   state: text("state"),
-  zipCode: text("zip_code").notNull(),
-  meanIncome: integer("mean_income"), // Mean income for the zip code
-  estimatedInvestments: integer("estimated_investments"), // Estimated investments
-  homeValue: integer("home_value"), // Average home value in the zip code
+  zip_code: text("zip_code").notNull(),
+  mean_income: integer("mean_income"), // Mean income for the zip code
+  estimated_investments: integer("estimated_investments"), // Estimated investments
+  home_value: integer("home_value"), // Average home value in the zip code
 });
 
 export const insertZipCodeIncomeSchema = createInsertSchema(zipCodeIncome).pick({
   state: true,
-  zipCode: true,
-  meanIncome: true,
-  estimatedInvestments: true,
-  homeValue: true,
+  zip_code: true,
+  mean_income: true,
+  estimated_investments: true,
+  home_value: true,
 });
 
 export type ZipCodeIncome = typeof zipCodeIncome.$inferSelect;

@@ -216,7 +216,7 @@ export class PgStorage implements IStorage {
   }
   
   async getCareerPathsByField(fieldOfStudy: string): Promise<CareerPath[]> {
-    return await db.select().from(careerPaths).where(eq(careerPaths.fieldOfStudy, fieldOfStudy));
+    return await db.select().from(careerPaths).where(eq(careerPaths.field_of_study, fieldOfStudy));
   }
   
   async getAllCareerPaths(): Promise<CareerPath[]> {
@@ -235,7 +235,7 @@ export class PgStorage implements IStorage {
   }
   
   async getLocationCostOfLivingByZipCode(zipCode: string): Promise<LocationCostOfLiving | undefined> {
-    const result = await db.select().from(locationCostOfLiving).where(eq(locationCostOfLiving.zipCode, zipCode));
+    const result = await db.select().from(locationCostOfLiving).where(eq(locationCostOfLiving.zip_code, zipCode));
     return result[0];
   }
   
@@ -255,7 +255,7 @@ export class PgStorage implements IStorage {
   }
   
   async getZipCodeIncomeByZipCode(zipCode: string): Promise<ZipCodeIncome | undefined> {
-    const result = await db.select().from(zipCodeIncome).where(eq(zipCodeIncome.zipCode, zipCode));
+    const result = await db.select().from(zipCodeIncome).where(eq(zipCodeIncome.zip_code, zipCode));
     return result[0];
   }
   

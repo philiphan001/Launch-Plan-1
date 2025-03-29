@@ -1,7 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const { parse } = require('csv-parse');
-const postgres = require('postgres');
+import fs from 'fs';
+import path from 'path';
+import { parse } from 'csv-parse/sync';
+import postgres from 'postgres';
+import { fileURLToPath } from 'url';
+
+// Get the current file path for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create a Postgres client with the database connection string
 const sql = postgres(process.env.DATABASE_URL);
@@ -17,15 +22,12 @@ async function importLocationCostOfLiving() {
   const csvFilePath = path.join(__dirname, '../attached_assets/COLI by Location.csv');
   const fileContent = fs.readFileSync(csvFilePath, { encoding: 'utf-8' });
   
-  // Parse CSV data
-  parse(fileContent, {
-    columns: true,
-    skip_empty_lines: true
-  }, async (err, records) => {
-    if (err) {
-      console.error('Error parsing CSV:', err);
-      process.exit(1);
-    }
+  // Parse CSV data using synchronous parse for ES modules
+  try {
+    const records = parse(fileContent, {
+      columns: true,
+      skip_empty_lines: true
+    });
     
     console.log(`Parsed ${records.length} location cost of living records from CSV`);
     
@@ -38,21 +40,39 @@ async function importLocationCostOfLiving() {
       
       // Process and transform each record in the batch
       const locationData = batch.map(record => {
+        // Make sure zipCode is never undefined or empty
+        const zipCode = record['Zipcode'] || '';
+        
+        // Safely parse numerical values
+        const parseIntSafe = (value) => {
+          if (value && !isNaN(parseInt(value))) {
+            return parseInt(value);
+          }
+          return null;
+        };
+        
+        const parseFloatSafe = (value) => {
+          if (value && !isNaN(parseFloat(value))) {
+            return parseFloat(value);
+          }
+          return null;
+        };
+        
         return {
-          zipCode: record['Zipcode'],
-          city: record['City'],
-          state: record['State'],
-          housing: parseInt(record['Housing']) || null,
-          transportation: parseInt(record['Transportation']) || null,
-          food: parseInt(record['Food']) || null,
-          healthcare: parseInt(record['Healthcare']) || null,
-          personalInsurance: parseInt(record['Personal Insurance']) || null,
-          apparel: parseInt(record['Apparel']) || null,
-          services: parseInt(record['Services']) || null,
-          entertainment: parseInt(record['Entertainment']) || null,
-          other: parseInt(record['Other']) || null,
-          monthlyExpense: parseInt(record['Monthly Expense']) || null,
-          incomeAdjustmentFactor: parseFloat(record['Income Adjustment Factor']) || null
+          zip_code: zipCode,
+          city: record['City'] || null,
+          state: record['State'] || null,
+          housing: parseIntSafe(record['Housing']),
+          transportation: parseIntSafe(record['Transportation']),
+          food: parseIntSafe(record['Food']),
+          healthcare: parseIntSafe(record['Healthcare']),
+          personal_insurance: parseIntSafe(record['Personal Insurance']),
+          apparel: parseIntSafe(record['Apparel']),
+          services: parseIntSafe(record['Services']),
+          entertainment: parseIntSafe(record['Entertainment']),
+          other: parseIntSafe(record['Other']),
+          monthly_expense: parseIntSafe(record['Monthly Expense']),
+          income_adjustment_factor: parseFloatSafe(record['Income Adjustment Factor'])
         };
       });
       
@@ -69,7 +89,10 @@ async function importLocationCostOfLiving() {
     console.log(`Location cost of living import completed successfully. Total records: ${insertCount}`);
     // Close the database connection
     await sql.end();
-  });
+  } catch (err) {
+    console.error('Error parsing CSV:', err);
+    process.exit(1);
+  }
 }
 
 // Execute the import function
