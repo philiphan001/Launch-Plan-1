@@ -110,55 +110,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Favorites routes
   app.post("/api/favorites/colleges", async (req: Request, res: Response) => {
     try {
-      const favorite = await activeStorage.addFavoriteCollege(req.body.userId, req.body.collegeId);
+      const { userId, collegeId } = req.body;
+      
+      // Validate required fields
+      if (userId === undefined || collegeId === undefined) {
+        return res.status(400).json({ message: "Missing required fields: userId and collegeId are required" });
+      }
+      
+      // Verify user exists
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        // Create a demo user if not found (for development purposes)
+        console.log(`User with ID ${userId} not found, creating demo user...`);
+        await activeStorage.createUser({
+          username: "demouser",
+          password: "password123", // This is a demo app, in production you'd use proper auth
+          firstName: "Demo",
+          lastName: "User",
+          email: "demo@example.com"
+        });
+      }
+      
+      // Check if college exists
+      const college = await activeStorage.getCollege(collegeId);
+      if (!college) {
+        return res.status(404).json({ message: `College with ID ${collegeId} not found` });
+      }
+      
+      // Add to favorites
+      const favorite = await activeStorage.addFavoriteCollege(userId, collegeId);
       res.status(201).json(favorite);
     } catch (error) {
-      res.status(500).json({ message: "Failed to add favorite college" });
+      console.error("Error adding favorite college:", error);
+      res.status(500).json({ message: "Failed to add favorite college", error: String(error) });
     }
   });
 
   app.delete("/api/favorites/colleges/:id", async (req: Request, res: Response) => {
     try {
-      await activeStorage.removeFavoriteCollege(parseInt(req.params.id));
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid favorite ID format" });
+      }
+      
+      // Check if favorite exists
+      const favorite = await activeStorage.getFavoriteCollege(id);
+      if (!favorite) {
+        return res.status(404).json({ message: `Favorite with ID ${id} not found` });
+      }
+      
+      await activeStorage.removeFavoriteCollege(id);
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ message: "Failed to remove favorite college" });
+      console.error("Error removing favorite college:", error);
+      res.status(500).json({ message: "Failed to remove favorite college", error: String(error) });
     }
   });
 
   app.get("/api/favorites/colleges/:userId", async (req: Request, res: Response) => {
     try {
-      const favorites = await activeStorage.getFavoriteCollegesByUserId(parseInt(req.params.userId));
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // For development purposes, check if user exists and create a demo user if needed
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
+        await activeStorage.createUser({
+          username: "demouser",
+          password: "password123",
+          firstName: "Demo",
+          lastName: "User",
+          email: "demo@example.com"
+        });
+      }
+      
+      const favorites = await activeStorage.getFavoriteCollegesByUserId(userId);
       res.json(favorites);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get favorite colleges" });
+      console.error("Error getting favorite colleges:", error);
+      res.status(500).json({ message: "Failed to get favorite colleges", error: String(error) });
     }
   });
 
   app.post("/api/favorites/careers", async (req: Request, res: Response) => {
     try {
-      const favorite = await activeStorage.addFavoriteCareer(req.body.userId, req.body.careerId);
+      const { userId, careerId } = req.body;
+      
+      // Validate required fields
+      if (userId === undefined || careerId === undefined) {
+        return res.status(400).json({ message: "Missing required fields: userId and careerId are required" });
+      }
+      
+      // Verify user exists
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        // Create a demo user if not found (for development purposes)
+        console.log(`User with ID ${userId} not found, creating demo user...`);
+        await activeStorage.createUser({
+          username: "demouser",
+          password: "password123", // This is a demo app, in production you'd use proper auth
+          firstName: "Demo",
+          lastName: "User",
+          email: "demo@example.com"
+        });
+      }
+      
+      // Check if career exists
+      const career = await activeStorage.getCareer(careerId);
+      if (!career) {
+        return res.status(404).json({ message: `Career with ID ${careerId} not found` });
+      }
+      
+      const favorite = await activeStorage.addFavoriteCareer(userId, careerId);
       res.status(201).json(favorite);
     } catch (error) {
-      res.status(500).json({ message: "Failed to add favorite career" });
+      console.error("Error adding favorite career:", error);
+      res.status(500).json({ message: "Failed to add favorite career", error: String(error) });
     }
   });
 
   app.delete("/api/favorites/careers/:id", async (req: Request, res: Response) => {
     try {
-      await activeStorage.removeFavoriteCareer(parseInt(req.params.id));
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid favorite ID format" });
+      }
+      
+      // Check if favorite exists
+      const favorite = await activeStorage.getFavoriteCareer(id);
+      if (!favorite) {
+        return res.status(404).json({ message: `Favorite with ID ${id} not found` });
+      }
+      
+      await activeStorage.removeFavoriteCareer(id);
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ message: "Failed to remove favorite career" });
+      console.error("Error removing favorite career:", error);
+      res.status(500).json({ message: "Failed to remove favorite career", error: String(error) });
     }
   });
 
   app.get("/api/favorites/careers/:userId", async (req: Request, res: Response) => {
     try {
-      const favorites = await activeStorage.getFavoriteCareersByUserId(parseInt(req.params.userId));
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // For development purposes, check if user exists and create a demo user if needed
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
+        await activeStorage.createUser({
+          username: "demouser",
+          password: "password123",
+          firstName: "Demo",
+          lastName: "User",
+          email: "demo@example.com"
+        });
+      }
+      
+      const favorites = await activeStorage.getFavoriteCareersByUserId(userId);
       res.json(favorites);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get favorite careers" });
+      console.error("Error getting favorite careers:", error);
+      res.status(500).json({ message: "Failed to get favorite careers", error: String(error) });
     }
   });
 

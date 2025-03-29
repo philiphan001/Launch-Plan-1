@@ -69,10 +69,11 @@ const CollegeDiscovery = () => {
         variant: "default",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error adding college to favorites:", error);
       toast({
         title: "Failed to add to favorites",
-        description: "There was a problem adding this college to your favorites.",
+        description: "There was a problem adding this college to your favorites. Please try again later.",
         variant: "destructive",
       });
     }
@@ -92,10 +93,11 @@ const CollegeDiscovery = () => {
         variant: "default",
       });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Error removing college from favorites:", error);
       toast({
         title: "Failed to remove from favorites",
-        description: "There was a problem removing this college from your favorites.",
+        description: "There was a problem removing this college from your favorites. Please try again later.",
         variant: "destructive",
       });
     }
@@ -110,6 +112,9 @@ const CollegeDiscovery = () => {
     } else {
       addToFavoritesMutation.mutate(college.id);
     }
+
+    // Log for debugging
+    console.log(`Toggling favorite for college ID ${college.id} (${college.name}) by user ID ${temporaryUserId}`);
   };
   
   // Show error toast if API fetch fails
