@@ -1,0 +1,406 @@
+import { 
+  users, type User, type InsertUser,
+  financialProfiles, type FinancialProfile, type InsertFinancialProfile,
+  colleges, type College, type InsertCollege,
+  careers, type Career, type InsertCareer,
+  favoriteColleges, type FavoriteCollege, type InsertFavoriteCollege,
+  favoriteCareers, type FavoriteCareer, type InsertFavoriteCareer,
+  financialProjections, type FinancialProjection, type InsertFinancialProjection,
+  notificationPreferences, type NotificationPreference, type InsertNotificationPreference,
+  milestones, type Milestone, type InsertMilestone
+} from "@shared/schema";
+
+// Storage interface with CRUD methods for all entities
+export interface IStorage {
+  // User methods
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, data: Partial<InsertUser>): Promise<User | undefined>;
+  
+  // Financial profile methods
+  getFinancialProfile(id: number): Promise<FinancialProfile | undefined>;
+  getFinancialProfileByUserId(userId: number): Promise<FinancialProfile | undefined>;
+  createFinancialProfile(profile: InsertFinancialProfile): Promise<FinancialProfile>;
+  updateFinancialProfile(id: number, data: Partial<InsertFinancialProfile>): Promise<FinancialProfile | undefined>;
+  
+  // College methods
+  getCollege(id: number): Promise<College | undefined>;
+  getColleges(): Promise<College[]>;
+  createCollege(college: InsertCollege): Promise<College>;
+  
+  // Career methods
+  getCareer(id: number): Promise<Career | undefined>;
+  getCareers(): Promise<Career[]>;
+  createCareer(career: InsertCareer): Promise<Career>;
+  
+  // Favorite college methods
+  getFavoriteCollege(id: number): Promise<FavoriteCollege | undefined>;
+  getFavoriteCollegesByUserId(userId: number): Promise<(FavoriteCollege & { college: College })[]>;
+  addFavoriteCollege(userId: number, collegeId: number): Promise<FavoriteCollege>;
+  removeFavoriteCollege(id: number): Promise<void>;
+  
+  // Favorite career methods
+  getFavoriteCareer(id: number): Promise<FavoriteCareer | undefined>;
+  getFavoriteCareersByUserId(userId: number): Promise<(FavoriteCareer & { career: Career })[]>;
+  addFavoriteCareer(userId: number, careerId: number): Promise<FavoriteCareer>;
+  removeFavoriteCareer(id: number): Promise<void>;
+  
+  // Financial projection methods
+  getFinancialProjection(id: number): Promise<FinancialProjection | undefined>;
+  getFinancialProjectionsByUserId(userId: number): Promise<FinancialProjection[]>;
+  createFinancialProjection(projection: InsertFinancialProjection): Promise<FinancialProjection>;
+  deleteFinancialProjection(id: number): Promise<void>;
+  
+  // Notification preferences methods
+  getNotificationPreferences(id: number): Promise<NotificationPreference | undefined>;
+  getNotificationPreferencesByUserId(userId: number): Promise<NotificationPreference | undefined>;
+  createNotificationPreferences(preferences: InsertNotificationPreference): Promise<NotificationPreference>;
+  updateNotificationPreferences(id: number, data: Partial<InsertNotificationPreference>): Promise<NotificationPreference | undefined>;
+  
+  // Milestone methods
+  getMilestone(id: number): Promise<Milestone | undefined>;
+  getMilestonesByUserId(userId: number): Promise<Milestone[]>;
+  createMilestone(milestone: InsertMilestone): Promise<Milestone>;
+  updateMilestone(id: number, data: Partial<InsertMilestone>): Promise<Milestone | undefined>;
+  deleteMilestone(id: number): Promise<void>;
+}
+
+export class MemStorage implements IStorage {
+  private users: Map<number, User>;
+  private financialProfiles: Map<number, FinancialProfile>;
+  private colleges: Map<number, College>;
+  private careers: Map<number, Career>;
+  private favoriteColleges: Map<number, FavoriteCollege>;
+  private favoriteCareers: Map<number, FavoriteCareer>;
+  private financialProjections: Map<number, FinancialProjection>;
+  private notificationPreferences: Map<number, NotificationPreference>;
+  private milestones: Map<number, Milestone>;
+  
+  // Auto-increment IDs
+  private userId: number;
+  private financialProfileId: number;
+  private collegeId: number;
+  private careerId: number;
+  private favoriteCollegeId: number;
+  private favoriteCarerId: number;
+  private financialProjectionId: number;
+  private notificationPreferenceId: number;
+  private milestoneId: number;
+
+  constructor() {
+    this.users = new Map();
+    this.financialProfiles = new Map();
+    this.colleges = new Map();
+    this.careers = new Map();
+    this.favoriteColleges = new Map();
+    this.favoriteCareers = new Map();
+    this.financialProjections = new Map();
+    this.notificationPreferences = new Map();
+    this.milestones = new Map();
+    
+    this.userId = 1;
+    this.financialProfileId = 1;
+    this.collegeId = 1;
+    this.careerId = 1;
+    this.favoriteCollegeId = 1;
+    this.favoriteCarerId = 1;
+    this.financialProjectionId = 1;
+    this.notificationPreferenceId = 1;
+    this.milestoneId = 1;
+    
+    // Initialize with some sample data
+    this.initializeSampleData();
+  }
+
+  private initializeSampleData() {
+    // Add some sample colleges
+    this.createCollege({
+      name: "University of Washington",
+      location: "Seattle, WA",
+      state: "WA",
+      type: "Public Research",
+      tuition: 11465,
+      roomAndBoard: 13485,
+      acceptanceRate: 70,
+      rating: 4.5,
+      size: "large",
+      rank: 58,
+      feesByIncome: {
+        "0-30000": 4000,
+        "30001-48000": 6000,
+        "48001-75000": 9000,
+        "75001-110000": 15000,
+        "110001+": 24950
+      }
+    });
+    
+    this.createCollege({
+      name: "Stanford University",
+      location: "Stanford, CA",
+      state: "CA",
+      type: "Private Research",
+      tuition: 56169,
+      roomAndBoard: 17255,
+      acceptanceRate: 5,
+      rating: 4.8,
+      size: "medium",
+      rank: 3,
+      feesByIncome: {
+        "0-30000": 5000,
+        "30001-48000": 7500,
+        "48001-75000": 12000,
+        "75001-110000": 20000,
+        "110001+": 73424
+      }
+    });
+    
+    // Add some sample careers
+    this.createCareer({
+      title: "Software Developer",
+      description: "Design, develop, and test software applications",
+      salary: 107510,
+      growthRate: "fast",
+      education: "Bachelor's",
+      category: "Technology"
+    });
+    
+    this.createCareer({
+      title: "Financial Analyst",
+      description: "Analyze financial data and market trends",
+      salary: 83660,
+      growthRate: "stable",
+      education: "Bachelor's",
+      category: "Finance"
+    });
+  }
+  
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.username === username,
+    );
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.userId++;
+    const timestamp = new Date();
+    const user: User = { ...insertUser, id, createdAt: timestamp };
+    this.users.set(id, user);
+    return user;
+  }
+  
+  async updateUser(id: number, data: Partial<InsertUser>): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...data };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  // Financial profile methods
+  async getFinancialProfile(id: number): Promise<FinancialProfile | undefined> {
+    return this.financialProfiles.get(id);
+  }
+  
+  async getFinancialProfileByUserId(userId: number): Promise<FinancialProfile | undefined> {
+    return Array.from(this.financialProfiles.values()).find(
+      (profile) => profile.userId === userId,
+    );
+  }
+  
+  async createFinancialProfile(insertProfile: InsertFinancialProfile): Promise<FinancialProfile> {
+    const id = this.financialProfileId++;
+    const timestamp = new Date();
+    const profile: FinancialProfile = { ...insertProfile, id, updatedAt: timestamp };
+    this.financialProfiles.set(id, profile);
+    return profile;
+  }
+  
+  async updateFinancialProfile(id: number, data: Partial<InsertFinancialProfile>): Promise<FinancialProfile | undefined> {
+    const profile = await this.getFinancialProfile(id);
+    if (!profile) return undefined;
+    
+    const updatedProfile = { ...profile, ...data, updatedAt: new Date() };
+    this.financialProfiles.set(id, updatedProfile);
+    return updatedProfile;
+  }
+  
+  // College methods
+  async getCollege(id: number): Promise<College | undefined> {
+    return this.colleges.get(id);
+  }
+  
+  async getColleges(): Promise<College[]> {
+    return Array.from(this.colleges.values());
+  }
+  
+  async createCollege(insertCollege: InsertCollege): Promise<College> {
+    const id = this.collegeId++;
+    const college: College = { ...insertCollege, id };
+    this.colleges.set(id, college);
+    return college;
+  }
+  
+  // Career methods
+  async getCareer(id: number): Promise<Career | undefined> {
+    return this.careers.get(id);
+  }
+  
+  async getCareers(): Promise<Career[]> {
+    return Array.from(this.careers.values());
+  }
+  
+  async createCareer(insertCareer: InsertCareer): Promise<Career> {
+    const id = this.careerId++;
+    const career: Career = { ...insertCareer, id };
+    this.careers.set(id, career);
+    return career;
+  }
+  
+  // Favorite college methods
+  async getFavoriteCollege(id: number): Promise<FavoriteCollege | undefined> {
+    return this.favoriteColleges.get(id);
+  }
+  
+  async getFavoriteCollegesByUserId(userId: number): Promise<(FavoriteCollege & { college: College })[]> {
+    const favorites = Array.from(this.favoriteColleges.values()).filter(
+      (favorite) => favorite.userId === userId,
+    );
+    
+    return favorites.map(favorite => {
+      const college = this.colleges.get(favorite.collegeId);
+      return { ...favorite, college: college! };
+    });
+  }
+  
+  async addFavoriteCollege(userId: number, collegeId: number): Promise<FavoriteCollege> {
+    const id = this.favoriteCollegeId++;
+    const timestamp = new Date();
+    const favorite: FavoriteCollege = { id, userId, collegeId, createdAt: timestamp };
+    this.favoriteColleges.set(id, favorite);
+    return favorite;
+  }
+  
+  async removeFavoriteCollege(id: number): Promise<void> {
+    this.favoriteColleges.delete(id);
+  }
+  
+  // Favorite career methods
+  async getFavoriteCareer(id: number): Promise<FavoriteCareer | undefined> {
+    return this.favoriteCareers.get(id);
+  }
+  
+  async getFavoriteCareersByUserId(userId: number): Promise<(FavoriteCareer & { career: Career })[]> {
+    const favorites = Array.from(this.favoriteCareers.values()).filter(
+      (favorite) => favorite.userId === userId,
+    );
+    
+    return favorites.map(favorite => {
+      const career = this.careers.get(favorite.careerId);
+      return { ...favorite, career: career! };
+    });
+  }
+  
+  async addFavoriteCareer(userId: number, careerId: number): Promise<FavoriteCareer> {
+    const id = this.favoriteCarerId++;
+    const timestamp = new Date();
+    const favorite: FavoriteCareer = { id, userId, careerId, createdAt: timestamp };
+    this.favoriteCareers.set(id, favorite);
+    return favorite;
+  }
+  
+  async removeFavoriteCareer(id: number): Promise<void> {
+    this.favoriteCareers.delete(id);
+  }
+  
+  // Financial projection methods
+  async getFinancialProjection(id: number): Promise<FinancialProjection | undefined> {
+    return this.financialProjections.get(id);
+  }
+  
+  async getFinancialProjectionsByUserId(userId: number): Promise<FinancialProjection[]> {
+    return Array.from(this.financialProjections.values()).filter(
+      (projection) => projection.userId === userId,
+    );
+  }
+  
+  async createFinancialProjection(insertProjection: InsertFinancialProjection): Promise<FinancialProjection> {
+    const id = this.financialProjectionId++;
+    const timestamp = new Date();
+    const projection: FinancialProjection = { ...insertProjection, id, createdAt: timestamp };
+    this.financialProjections.set(id, projection);
+    return projection;
+  }
+  
+  async deleteFinancialProjection(id: number): Promise<void> {
+    this.financialProjections.delete(id);
+  }
+  
+  // Notification preferences methods
+  async getNotificationPreferences(id: number): Promise<NotificationPreference | undefined> {
+    return this.notificationPreferences.get(id);
+  }
+  
+  async getNotificationPreferencesByUserId(userId: number): Promise<NotificationPreference | undefined> {
+    return Array.from(this.notificationPreferences.values()).find(
+      (preferences) => preferences.userId === userId,
+    );
+  }
+  
+  async createNotificationPreferences(insertPreferences: InsertNotificationPreference): Promise<NotificationPreference> {
+    const id = this.notificationPreferenceId++;
+    const timestamp = new Date();
+    const preferences: NotificationPreference = { ...insertPreferences, id, updatedAt: timestamp };
+    this.notificationPreferences.set(id, preferences);
+    return preferences;
+  }
+  
+  async updateNotificationPreferences(id: number, data: Partial<InsertNotificationPreference>): Promise<NotificationPreference | undefined> {
+    const preferences = await this.getNotificationPreferences(id);
+    if (!preferences) return undefined;
+    
+    const updatedPreferences = { ...preferences, ...data, updatedAt: new Date() };
+    this.notificationPreferences.set(id, updatedPreferences);
+    return updatedPreferences;
+  }
+  
+  // Milestone methods
+  async getMilestone(id: number): Promise<Milestone | undefined> {
+    return this.milestones.get(id);
+  }
+  
+  async getMilestonesByUserId(userId: number): Promise<Milestone[]> {
+    return Array.from(this.milestones.values()).filter(
+      (milestone) => milestone.userId === userId,
+    );
+  }
+  
+  async createMilestone(insertMilestone: InsertMilestone): Promise<Milestone> {
+    const id = this.milestoneId++;
+    const timestamp = new Date();
+    const milestone: Milestone = { ...insertMilestone, id, createdAt: timestamp };
+    this.milestones.set(id, milestone);
+    return milestone;
+  }
+  
+  async updateMilestone(id: number, data: Partial<InsertMilestone>): Promise<Milestone | undefined> {
+    const milestone = await this.getMilestone(id);
+    if (!milestone) return undefined;
+    
+    const updatedMilestone = { ...milestone, ...data };
+    this.milestones.set(id, updatedMilestone);
+    return updatedMilestone;
+  }
+  
+  async deleteMilestone(id: number): Promise<void> {
+    this.milestones.delete(id);
+  }
+}
+
+export const storage = new MemStorage();
