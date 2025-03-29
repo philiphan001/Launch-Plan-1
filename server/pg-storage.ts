@@ -8,7 +8,10 @@ import {
   favoriteCareers, type FavoriteCareer, type InsertFavoriteCareer,
   financialProjections, type FinancialProjection, type InsertFinancialProjection,
   notificationPreferences, type NotificationPreference, type InsertNotificationPreference,
-  milestones, type Milestone, type InsertMilestone
+  milestones, type Milestone, type InsertMilestone,
+  careerPaths, type CareerPath, type InsertCareerPath,
+  locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
+  zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome
 } from "@shared/schema";
 import { IStorage } from './storage';
 import { eq, and } from 'drizzle-orm';
@@ -204,6 +207,65 @@ export class PgStorage implements IStorage {
   
   async deleteMilestone(id: number): Promise<void> {
     await db.delete(milestones).where(eq(milestones.id, id));
+  }
+  
+  // Career path methods
+  async getCareerPath(id: number): Promise<CareerPath | undefined> {
+    const result = await db.select().from(careerPaths).where(eq(careerPaths.id, id));
+    return result[0];
+  }
+  
+  async getCareerPathsByField(fieldOfStudy: string): Promise<CareerPath[]> {
+    return await db.select().from(careerPaths).where(eq(careerPaths.fieldOfStudy, fieldOfStudy));
+  }
+  
+  async getAllCareerPaths(): Promise<CareerPath[]> {
+    return await db.select().from(careerPaths);
+  }
+  
+  async createCareerPath(careerPath: InsertCareerPath): Promise<CareerPath> {
+    const result = await db.insert(careerPaths).values(careerPath).returning();
+    return result[0];
+  }
+  
+  // Location cost of living methods
+  async getLocationCostOfLiving(id: number): Promise<LocationCostOfLiving | undefined> {
+    const result = await db.select().from(locationCostOfLiving).where(eq(locationCostOfLiving.id, id));
+    return result[0];
+  }
+  
+  async getLocationCostOfLivingByZipCode(zipCode: string): Promise<LocationCostOfLiving | undefined> {
+    const result = await db.select().from(locationCostOfLiving).where(eq(locationCostOfLiving.zipCode, zipCode));
+    return result[0];
+  }
+  
+  async getAllLocationCostOfLiving(): Promise<LocationCostOfLiving[]> {
+    return await db.select().from(locationCostOfLiving);
+  }
+  
+  async createLocationCostOfLiving(data: InsertLocationCostOfLiving): Promise<LocationCostOfLiving> {
+    const result = await db.insert(locationCostOfLiving).values(data).returning();
+    return result[0];
+  }
+  
+  // Zip code income methods
+  async getZipCodeIncome(id: number): Promise<ZipCodeIncome | undefined> {
+    const result = await db.select().from(zipCodeIncome).where(eq(zipCodeIncome.id, id));
+    return result[0];
+  }
+  
+  async getZipCodeIncomeByZipCode(zipCode: string): Promise<ZipCodeIncome | undefined> {
+    const result = await db.select().from(zipCodeIncome).where(eq(zipCodeIncome.zipCode, zipCode));
+    return result[0];
+  }
+  
+  async getAllZipCodeIncomes(): Promise<ZipCodeIncome[]> {
+    return await db.select().from(zipCodeIncome);
+  }
+  
+  async createZipCodeIncome(data: InsertZipCodeIncome): Promise<ZipCodeIncome> {
+    const result = await db.insert(zipCodeIncome).values(data).returning();
+    return result[0];
   }
 }
 

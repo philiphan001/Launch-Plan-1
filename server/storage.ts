@@ -7,7 +7,10 @@ import {
   favoriteCareers, type FavoriteCareer, type InsertFavoriteCareer,
   financialProjections, type FinancialProjection, type InsertFinancialProjection,
   notificationPreferences, type NotificationPreference, type InsertNotificationPreference,
-  milestones, type Milestone, type InsertMilestone
+  milestones, type Milestone, type InsertMilestone,
+  careerPaths, type CareerPath, type InsertCareerPath,
+  locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
+  zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome
 } from "@shared/schema";
 
 // Storage interface with CRUD methods for all entities
@@ -64,6 +67,24 @@ export interface IStorage {
   createMilestone(milestone: InsertMilestone): Promise<Milestone>;
   updateMilestone(id: number, data: Partial<InsertMilestone>): Promise<Milestone | undefined>;
   deleteMilestone(id: number): Promise<void>;
+  
+  // Career path methods
+  getCareerPath(id: number): Promise<CareerPath | undefined>;
+  getCareerPathsByField(fieldOfStudy: string): Promise<CareerPath[]>;
+  getAllCareerPaths(): Promise<CareerPath[]>;
+  createCareerPath(careerPath: InsertCareerPath): Promise<CareerPath>;
+  
+  // Location cost of living methods
+  getLocationCostOfLiving(id: number): Promise<LocationCostOfLiving | undefined>;
+  getLocationCostOfLivingByZipCode(zipCode: string): Promise<LocationCostOfLiving | undefined>;
+  getAllLocationCostOfLiving(): Promise<LocationCostOfLiving[]>;
+  createLocationCostOfLiving(locationCostOfLiving: InsertLocationCostOfLiving): Promise<LocationCostOfLiving>;
+  
+  // Zip code income methods
+  getZipCodeIncome(id: number): Promise<ZipCodeIncome | undefined>;
+  getZipCodeIncomeByZipCode(zipCode: string): Promise<ZipCodeIncome | undefined>;
+  getAllZipCodeIncomes(): Promise<ZipCodeIncome[]>;
+  createZipCodeIncome(zipCodeIncome: InsertZipCodeIncome): Promise<ZipCodeIncome>;
 }
 
 export class MemStorage implements IStorage {
@@ -76,6 +97,9 @@ export class MemStorage implements IStorage {
   private financialProjections: Map<number, FinancialProjection>;
   private notificationPreferences: Map<number, NotificationPreference>;
   private milestones: Map<number, Milestone>;
+  private careerPaths: Map<number, CareerPath>;
+  private locationCostOfLivings: Map<number, LocationCostOfLiving>;
+  private zipCodeIncomes: Map<number, ZipCodeIncome>;
   
   // Auto-increment IDs
   private userId: number;
@@ -87,6 +111,9 @@ export class MemStorage implements IStorage {
   private financialProjectionId: number;
   private notificationPreferenceId: number;
   private milestoneId: number;
+  private careerPathId: number;
+  private locationCostOfLivingId: number;
+  private zipCodeIncomeId: number;
 
   constructor() {
     this.users = new Map();
@@ -98,6 +125,9 @@ export class MemStorage implements IStorage {
     this.financialProjections = new Map();
     this.notificationPreferences = new Map();
     this.milestones = new Map();
+    this.careerPaths = new Map();
+    this.locationCostOfLivings = new Map();
+    this.zipCodeIncomes = new Map();
     
     this.userId = 1;
     this.financialProfileId = 1;
@@ -108,6 +138,9 @@ export class MemStorage implements IStorage {
     this.financialProjectionId = 1;
     this.notificationPreferenceId = 1;
     this.milestoneId = 1;
+    this.careerPathId = 1;
+    this.locationCostOfLivingId = 1;
+    this.zipCodeIncomeId = 1;
     
     // Initialize with some sample data
     this.initializeSampleData();
@@ -172,6 +205,71 @@ export class MemStorage implements IStorage {
       growthRate: "stable",
       education: "Bachelor's",
       category: "Finance"
+    });
+    
+    // Add sample career paths
+    this.createCareerPath({
+      fieldOfStudy: "Computer Science",
+      careerTitle: "Software Engineer",
+      optionRank: 1
+    });
+    
+    this.createCareerPath({
+      fieldOfStudy: "Computer Science",
+      careerTitle: "Data Scientist",
+      optionRank: 2
+    });
+    
+    // Add sample location cost of living
+    this.createLocationCostOfLiving({
+      zipCode: "98101",
+      city: "Seattle",
+      state: "WA",
+      housing: 1850,
+      transportation: 450,
+      food: 550,
+      healthcare: 350,
+      personalInsurance: 120,
+      apparel: 100,
+      services: 200,
+      entertainment: 300,
+      other: 250,
+      monthlyExpense: 4170,
+      incomeAdjustmentFactor: 1.3
+    });
+    
+    this.createLocationCostOfLiving({
+      zipCode: "94305",
+      city: "Stanford",
+      state: "CA",
+      housing: 2600,
+      transportation: 500,
+      food: 650,
+      healthcare: 400,
+      personalInsurance: 150,
+      apparel: 120,
+      services: 250,
+      entertainment: 350,
+      other: 300,
+      monthlyExpense: 5320,
+      incomeAdjustmentFactor: 1.6
+    });
+    
+    // Add sample zip code income data
+    this.createZipCodeIncome({
+      zipCode: "98101",
+      state: "WA",
+      meanIncome: 98500,
+      estimatedInvestments: 350000,
+      homeValue: 750000
+    });
+    
+    this.createZipCodeIncome({
+      zipCode: "94305",
+      state: "CA",
+      meanIncome: 128000,
+      estimatedInvestments: 520000,
+      homeValue: 1800000
     });
   }
   
@@ -400,6 +498,72 @@ export class MemStorage implements IStorage {
   
   async deleteMilestone(id: number): Promise<void> {
     this.milestones.delete(id);
+  }
+  
+  // Career path methods
+  async getCareerPath(id: number): Promise<CareerPath | undefined> {
+    return this.careerPaths.get(id);
+  }
+  
+  async getCareerPathsByField(fieldOfStudy: string): Promise<CareerPath[]> {
+    return Array.from(this.careerPaths.values()).filter(
+      (careerPath) => careerPath.fieldOfStudy === fieldOfStudy,
+    );
+  }
+  
+  async getAllCareerPaths(): Promise<CareerPath[]> {
+    return Array.from(this.careerPaths.values());
+  }
+  
+  async createCareerPath(insertCareerPath: InsertCareerPath): Promise<CareerPath> {
+    const id = this.careerPathId++;
+    const careerPath: CareerPath = { ...insertCareerPath, id };
+    this.careerPaths.set(id, careerPath);
+    return careerPath;
+  }
+  
+  // Location cost of living methods
+  async getLocationCostOfLiving(id: number): Promise<LocationCostOfLiving | undefined> {
+    return this.locationCostOfLivings.get(id);
+  }
+  
+  async getLocationCostOfLivingByZipCode(zipCode: string): Promise<LocationCostOfLiving | undefined> {
+    return Array.from(this.locationCostOfLivings.values()).find(
+      (location) => location.zipCode === zipCode,
+    );
+  }
+  
+  async getAllLocationCostOfLiving(): Promise<LocationCostOfLiving[]> {
+    return Array.from(this.locationCostOfLivings.values());
+  }
+  
+  async createLocationCostOfLiving(insertLocationCostOfLiving: InsertLocationCostOfLiving): Promise<LocationCostOfLiving> {
+    const id = this.locationCostOfLivingId++;
+    const locationCostOfLiving: LocationCostOfLiving = { ...insertLocationCostOfLiving, id };
+    this.locationCostOfLivings.set(id, locationCostOfLiving);
+    return locationCostOfLiving;
+  }
+  
+  // Zip code income methods
+  async getZipCodeIncome(id: number): Promise<ZipCodeIncome | undefined> {
+    return this.zipCodeIncomes.get(id);
+  }
+  
+  async getZipCodeIncomeByZipCode(zipCode: string): Promise<ZipCodeIncome | undefined> {
+    return Array.from(this.zipCodeIncomes.values()).find(
+      (income) => income.zipCode === zipCode,
+    );
+  }
+  
+  async getAllZipCodeIncomes(): Promise<ZipCodeIncome[]> {
+    return Array.from(this.zipCodeIncomes.values());
+  }
+  
+  async createZipCodeIncome(insertZipCodeIncome: InsertZipCodeIncome): Promise<ZipCodeIncome> {
+    const id = this.zipCodeIncomeId++;
+    const zipCodeIncome: ZipCodeIncome = { ...insertZipCodeIncome, id };
+    this.zipCodeIncomes.set(id, zipCodeIncome);
+    return zipCodeIncome;
   }
 }
 

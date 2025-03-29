@@ -1,0 +1,832 @@
+﻿AREA_TITLE,OCC_CODE,Occupation,Alias 1,Alias 2,Alias 3,Alias 4,Alias 5,TOT_EMP,A_MEAN,A_PCT10,A_PCT25,A_MEDIAN,A_PCT75,A_PCT90,Monthly Income
+U.S.,11-1011,Chief Executives,CEO,President,Executive Director,,,"211,230","258,900","80,000","130,840","206,680",#,#,17223
+U.S.,11-1021,General and Operations Managers,General and Operations Mgrs,Operations Manager,General Manager,,,"3,507,810","129,330","46,340","65,180","101,280","160,290","232,110",8440
+U.S.,11-1031,Legislators,Lawmakers,Elected Officials,congressman,senator,,"32,460","68,140","21,010","28,810","47,290","82,200","129,510",3941
+U.S.,11-Nov,Advertising and Promotions Managers,Advertising and Promotions Mgrs,Advertising Manager,Promotions Manager,,,"20,630","152,620","63,580","88,810","131,870","188,530",#,10989
+U.S.,21-Nov,Marketing Managers,Marketing Mgrs,Marketing Director,Brand Manager,,,"368,940","166,410","79,600","108,000","157,620","208,000",#,13135
+U.S.,22-Nov,Sales Managers,Sales Mgrs,,,,,"575,880","157,610","63,700","93,540","135,160","196,700",#,11263
+U.S.,Nov-32,Public Relations Managers,Public Relations Mgrs,PR Manager,PR ,,,"72,760","159,420","76,160","99,180","134,760","191,840",#,11230
+U.S.,Nov-33,Fundraising Managers,Fundraising Mgrs,,,,,"31,810","133,620","68,800","86,880","119,200","162,660","212,730",9933
+U.S.,12-Nov,Administrative Services Managers,Administrative Services Mgrs,,,,,"242,520","121,200","62,470","81,420","106,470","140,870","188,820",8873
+U.S.,13-Nov,Facilities Managers,Facilities Mgrs,,,,,"131,400","111,110","60,840","78,130","102,340","133,990","169,020",8528
+U.S.,21-Nov,Computer and Information Systems Managers,Computer and Information Systems Mgrs,,,,,"592,600","180,720","101,590","131,770","169,510","214,050",#,14126
+U.S.,Nov-31,Financial Managers,Financial Mgrs,,,,,"787,340","174,820","82,870","110,190","156,100","210,830",#,13008
+U.S.,Nov-51,Industrial Production Managers,Industrial Production Mgrs,,,,,"222,890","125,900","72,010","91,590","116,970","151,220","190,480",9748
+U.S.,Nov-61,Purchasing Managers,Purchasing Mgrs,,,,,"77,530","146,710","83,510","105,300","136,380","172,110","215,170",11365
+U.S.,Nov-71,"Transportation, Storage, and Distribution Managers","Transportation, Storage, and Distribution Mgrs",,,,,"198,780","111,870","58,810","76,120","99,200","133,090","175,530",8267
+U.S.,11-Nov,Compensation and Benefits Managers,Compensation and Benefits Mgrs,HR Manager,,,,"18,690","150,940","76,550","102,540","136,380","181,030","229,970",11365
+U.S.,21-Nov,Human Resources Managers,Human Resources Mgrs,HR Manager,Personnel Manager,,,"200,600","154,740","81,060","103,340","136,350","182,120",#,11363
+U.S.,Nov-31,Training and Development Managers,Training and Development Mgrs,,,,,"41,540","138,450","73,410","94,240","125,040","166,780","220,060",10420
+U.S.,13-Nov,"Farmers, Ranchers, and Other Agricultural Managers","Farmers, Ranchers, and Other Agricultural Mgrs",Farm Manager,,,,"6,150","90,160","47,800","63,510","83,770","109,090","136,410",6981
+U.S.,21-Nov,Construction Managers,Construction Mgrs,Project Manager,Site Supervisor,,,"329,190","116,960","64,480","81,640","104,900","135,550","172,040",8742
+U.S.,Nov-31,"Education and Childcare Administrators, Preschool and Daycare","Education and Childcare Admins, Preschool and Daycare",,,,,"64,090","61,320","36,550","44,420","54,290","69,350","94,890",4524
+U.S.,Nov-32,"Education Administrators, Kindergarten through Secondary","Education Admins, Kindergarten through Secondary",,,,,"302,580","111,020","70,050","83,050","103,460","131,180","163,010",8622
+U.S.,Nov-33,"Education Administrators, Postsecondary","Education Admins, Postsecondary",,,,,"167,270","122,010","62,970","79,700","102,610","137,230","209,870",8551
+U.S.,Nov-39,"Education Administrators, All Other","Education Admins, All Other",,,,,"50,690","100,720","49,470","64,800","88,460","120,120","158,200",7372
+U.S.,Nov-41,Architectural and Engineering Managers,Architectural and Engineering Mgrs,Architectural and Enging Managers,,,,"207,800","172,290","107,390","132,890","165,370","203,030","233,590",13781
+U.S.,Nov-51,Food Service Managers,Food Service Mgrs,,,,,"246,070","69,580","42,990","50,390","63,060","79,630","101,240",5255
+U.S.,Nov-71,Gambling Managers,Gambling Mgrs,,,,,"4,590","98,270","49,940","65,210","82,380","113,720","159,440",6865
+U.S.,Nov-72,"Entertainment and Recreation Managers, Except Gambling","Entertainment and Recreation Mgrs, Except Gambling",,,,,"29,690","84,080","42,730","53,480","73,460","99,170","133,680",6122
+U.S.,Nov-81,Lodging Managers,Lodging Mgrs,,,,,"41,980","76,790","39,270","49,380","65,360","87,930","127,090",5447
+U.S.,11-Nov,Medical and Health Services Managers,Medical and Health Services Mgrs,,,,,"515,100","134,440","67,900","86,080","110,680","157,640","216,750",9223
+U.S.,21-Nov,Natural Sciences Managers,Natural Sciences Mgrs,,,,,"96,520","169,120","77,520","109,300","157,740","212,080",#,13145
+U.S.,Nov-31,Postmasters and Mail Superintendents,,,,,,"13,810","89,770","79,060","82,990","88,670","95,660","104,940",7389
+U.S.,Nov-41,"Property, Real Estate, and Community Association Managers","Property, Real Estate, and Community Association Mgrs",,,,,"284,120","78,400","37,540","47,940","62,850","92,560","135,990",5238
+U.S.,Nov-51,Social and Community Service Managers,Social and Community Service Mgrs,,,,,"173,650","83,400","48,880","60,860","77,030","98,740","127,550",6419
+U.S.,Nov-61,Emergency Management Directors,Emergency Management Dirs,,,,,"11,910","93,690","50,340","62,630","83,960","112,190","151,560",6997
+U.S.,Nov-71,Funeral Home Managers,Funeral Home Mgrs,,,,,"14,200","84,800","44,830","59,650","75,660","98,560","131,360",6305
+U.S.,Nov-79,"Personal Service Managers, All Other","Personal Service Mgrs, All Other",,,,,"11,170","62,980","31,000","41,410","57,570","73,650","99,900",4798
+U.S.,Nov-99,"Managers, All Other","Mgrs, All Other",,,,,"589,750","146,320","67,370","97,990","133,560","174,510","225,120",11130
+U.S.,13-1011,"Agents and Business Managers of Artists, Performers, and Athletes","Agents and Business Mgrs of Artists, Performers, and Athletes",,,,,"12,870","132,810","47,100","62,280","84,900","129,930",#,7075
+U.S.,13-1020,Buyers and Purchasing Agents,,,,,,"477,980","77,850","43,680","54,910","71,950","94,910","121,680",5996
+U.S.,13-1031,"Claims Adjusters, Examiners, and Investigators",,,,,,"293,780","75,770","47,390","58,770","75,050","91,100","105,440",6254
+U.S.,13-1032,"Insurance Appraisers, Auto Damage",,,,,,"8,670","75,660","56,890","63,690","74,520","82,740","100,240",6210
+U.S.,13-1041,Compliance Officers,,,,,,"383,620","80,190","43,790","56,180","75,670","100,340","123,710",6306
+U.S.,13-1051,Cost Estimators,,,,,,"220,970","79,520","44,820","57,130","74,740","96,740","124,520",6228
+U.S.,13-1071,Human Resources Specialists,Human Resources Specs,,,,,"895,970","76,060","42,900","51,510","67,650","92,390","121,800",5638
+U.S.,13-1074,Farm Labor Contractors,,,,,,460,"51,400","26,700","31,970","45,730","63,980","89,640",3811
+U.S.,13-1075,Labor Relations Specialists,Labor Relations Specs,,,,,"62,800","94,620","48,360","65,650","89,980","120,610","139,520",7498
+U.S.,13-1081,Logisticians,,,,,,"228,470","84,640","47,990","61,440","79,400","101,890","128,550",6617
+U.S.,13-1082,Project Management Specialists,Project Management Specs,,,,,"947,630","104,920","57,500","74,100","98,580","129,690","163,040",8215
+U.S.,13-1111,Management Analysts,,,,,,"838,140","115,530","57,840","74,540","99,410","130,800","172,280",8284
+U.S.,13-1121,"Meeting, Convention, and Event Planners",,,,,,"122,130","62,280","34,410","43,450","56,920","74,510","99,010",4743
+U.S.,13-1131,Fundraisers,,,,,,"101,730","70,760","39,440","49,560","64,160","83,120","106,700",5347
+U.S.,13-1141,"Compensation, Benefits, and Job Analysis Specialists","Compensation, Benefits, and Job Analysis Specs",,,,,"99,850","80,620","46,050","56,890","74,530","97,960","127,340",6211
+U.S.,13-1151,Training and Development Specialists,Training and Development Specs,,,,,"403,480","71,980","36,050","47,510","64,340","87,890","116,140",5362
+U.S.,13-1161,Market Research Analysts and Marketing Specialists,Market Research Analysts and Marketing Specs,,,,,"846,370","83,190","40,040","52,840","74,680","102,450","137,040",6223
+U.S.,13-1199,"Business Operations Specialists, All Other","Business Operations Specs, All Other",,,,,"1,103,440","89,130","44,370","59,010","79,590","106,300","140,300",6633
+U.S.,13-2011,Accountants and Auditors,,,,,,"1,435,770","90,780","50,440","62,720","79,880","103,990","137,280",6657
+U.S.,13-2020,Property Appraisers and Assessors,,,,,,"62,090","76,110","36,230","46,560","61,630","83,600","116,580",5136
+U.S.,13-2031,Budget Analysts,,,,,,"47,310","90,880","56,760","68,540","84,940","107,470","131,630",7078
+U.S.,13-2041,Credit Analysts,,,,,,"73,200","94,750","50,060","61,600","79,420","108,430","164,750",6618
+U.S.,13-2051,Financial and Investment Analysts,,,,,,"325,220","112,950","60,830","76,880","99,010","129,970","175,840",8251
+U.S.,13-2052,Personal Financial Advisors,,,,,,"272,190","150,670","48,730","65,320","99,580","169,910",#,8298
+U.S.,13-2053,Insurance Underwriters,,,,,,"101,310","85,610","48,480","61,370","77,860","102,000","132,010",6488
+U.S.,13-2054,Financial Risk Specialists,Financial Risk Specs,,,,,"55,290","118,950","61,090","79,140","106,090","141,030","184,330",8841
+U.S.,13-2061,Financial Examiners,,,,,,"63,440","98,140","49,710","63,430","84,300","121,280","165,670",7025
+U.S.,13-2071,Credit Counselors,,,,,,"27,950","53,440","37,460","41,980","48,570","59,990","75,030",4048
+U.S.,13-2072,Loan Officers,,,,,,"321,090","84,490","37,020","49,130","69,990","100,020","139,470",5833
+U.S.,13-2081,"Tax Examiners and Collectors, and Revenue Agents",,,,,,"50,250","65,370","37,690","45,360","58,530","78,520","107,660",4878
+U.S.,13-2082,Tax Preparers,,,,,,"81,650","58,160","29,170","35,670","49,010","76,020","98,810",4084
+U.S.,13-2099,"Financial Specialists, All Other","Financial Specs, All Other",,,,,"122,730","89,650","43,510","57,930","78,310","105,060","139,960",6526
+U.S.,15-1211,Computer Systems Analysts,,,,,,"498,810","110,800","63,230","80,380","103,800","132,580","165,700",8650
+U.S.,15-1212,Information Security Analysts,,,,,,"175,350","124,740","69,210","90,050","120,360","153,550","182,370",10030
+U.S.,15-1221,Computer and Information Research Scientists,,,,,,"35,210","157,160","81,450","109,990","145,080","185,160","233,110",12090
+U.S.,15-1231,Computer Network Support Specialists,Computer Network Support Specs,,,,,"158,720","78,640","45,660","54,700","71,530","92,570","121,920",5961
+U.S.,15-1232,Computer User Support Specialists,Computer User Support Specs,,,,,"689,700","63,640","37,690","46,550","59,240","75,950","97,020",4937
+U.S.,15-1241,Computer Network Architects,,,,,,"174,100","133,930","77,960","100,120","129,840","164,080","195,000",10820
+U.S.,15-1242,Database Administrators,Database Admins,,,,,"76,140","104,810","54,320","71,940","101,510","133,120","157,710",8459
+U.S.,15-1243,Database Architects,,,,,,"59,920","137,030","76,000","104,330","134,700","166,780","194,960",11225
+U.S.,15-1244,Network and Computer Systems Administrators,Network and Computer Systems Admins,,,,,"323,020","100,580","58,680","74,400","95,360","121,910","148,710",7947
+U.S.,15-1251,Computer Programmers,,,,,,"120,370","107,750","58,950","74,610","99,700","129,650","167,230",8308
+U.S.,15-1252,Software Developers,Programmer,Software Engineer,Coder,,,"1,656,880","138,110","77,020","101,200","132,270","167,540","208,620",11023
+U.S.,15-1253,Software Quality Assurance Analysts and Testers,,,,,,"203,040","108,460","58,740","78,470","101,800","130,630","164,520",8483
+U.S.,15-1254,Web Developers,Web Programmer,Front-End Developer,,,,"85,350","95,570","46,850","61,690","84,960","116,370","157,280",7080
+U.S.,15-1255,Web and Digital Interface Designers,,,,,,"111,060","108,820","48,210","66,020","98,540","139,500","176,490",8212
+U.S.,15-1299,"Computer Occupations, All Other",,,,,,"437,170","112,430","49,690","71,990","104,920","141,820","174,300",8743
+U.S.,15-2011,Actuaries,,,,,,"25,470","132,500","75,380","88,420","120,000","164,320","209,310",10000
+U.S.,15-2021,Mathematicians,,,,,,"2,220","119,770","62,260","81,910","116,440","148,240","183,500",9703
+U.S.,15-2031,Operations Research Analysts,,,,,,"117,880","95,600","52,930","66,250","83,640","115,190","148,920",6970
+U.S.,15-2041,Statisticians,,,,,,"29,950","109,190","58,690","78,140","104,110","134,950","163,360",8676
+U.S.,15-2051,Data Scientists,,,,,,"192,710","119,040","61,070","79,810","108,020","147,670","184,090",9002
+U.S.,15-2099,"Mathematical Science Occupations, All Other",,,,,,"4,320","83,330","38,400","49,800","70,620","99,730","155,150",5885
+U.S.,17-1011,"Architects, Except Landscape and Naval",,,,,,"111,170","100,400","58,870","73,240","93,310","116,780","151,300",7776
+U.S.,17-1012,Landscape Architects,,,,,,"20,370","83,990","50,000","61,520","79,320","97,170","125,600",6610
+U.S.,17-1021,Cartographers and Photogrammetrists,,,,,,"12,330","78,810","48,660","60,430","76,210","95,610","113,540",6351
+U.S.,17-1022,Surveyors,,,,,,"50,740","74,000","41,430","50,970","68,540","91,520","109,660",5712
+U.S.,17-2011,Aerospace Engineers,Aerospace Engs,,,,,"66,660","134,330","81,620","101,730","130,720","166,610","188,910",10893
+U.S.,17-2021,Agricultural Engineers,Agricultural Engs,Agricultural Scientist,,,,"1,860","93,490","62,150","79,620","88,750","101,030","127,590",7396
+U.S.,17-2031,Bioengineers and Biomedical Engineers,Bioengineers and Biomedical Engs,,,,,"19,320","106,700","68,100","81,370","100,730","125,780","154,350",8394
+U.S.,17-2041,Chemical Engineers,Chemical Engs,,,,,"21,140","122,910","75,650","91,630","112,100","142,810","176,420",9342
+U.S.,17-2051,Civil Engineers,Civil Engs,,,,,"327,950","101,160","63,220","76,500","95,890","123,010","150,640",7991
+U.S.,17-2061,Computer Hardware Engineers,Computer Hardware Engs,,,,,"82,660","147,770","81,630","108,670","138,080","175,400","212,770",11507
+U.S.,17-2071,Electrical Engineers,Electrical Engs,,,,,"185,430","117,680","69,320","83,200","106,950","137,140","172,050",8913
+U.S.,17-2072,"Electronics Engineers, Except Computer","Electronics Engs, Except Computer",,,,,"96,410","124,190","76,700","93,380","119,200","151,610","179,690",9933
+U.S.,17-2081,Environmental Engineers,Environmental Engs,,,,,"39,880","105,840","63,370","78,640","100,090","125,520","156,530",8341
+U.S.,17-2111,"Health and Safety Engineers, Except Mining Safety Engineers and Inspectors","Health and Safety Engs, Except Mining Safety Engs and Inspectors",,,,,"22,510","108,740","62,190","81,760","103,690","131,670","160,600",8641
+U.S.,17-2112,Industrial Engineers,Industrial Engs,,,,,"332,870","103,150","65,320","79,730","99,380","124,000","142,220",8282
+U.S.,17-2121,Marine Engineers and Naval Architects,Marine Engs and Naval Architects,,,,,"9,960","108,110","76,860","80,620","100,270","126,870","156,630",8356
+U.S.,17-2131,Materials Engineers,Materials Engs,,,,,"24,630","110,430","63,340","80,790","104,100","133,090","165,580",8675
+U.S.,17-2141,Mechanical Engineers,Mechanical Engs,,,,,"281,290","105,220","64,560","79,160","99,510","126,990","157,470",8293
+U.S.,17-2151,"Mining and Geological Engineers, Including Mining Safety Engineers","Mining and Geological Engs, Including Mining Safety Engs",,,,,"7,040","105,460","55,150","77,730","100,640","128,920","160,820",8387
+U.S.,17-2161,Nuclear Engineers,Nuclear Engs,,,,,"12,710","126,950","82,150","100,500","125,460","142,700","174,020",10455
+U.S.,17-2171,Petroleum Engineers,Petroleum Engs,,,,,"20,390","148,590","77,340","104,020","135,690","176,990","225,920",11308
+U.S.,17-2199,"Engineers, All Other","Engs, All Other",,,,,"150,990","118,350","62,130","83,250","111,970","146,060","177,020",9331
+U.S.,17-3011,Architectural and Civil Drafters,,,,,,"111,070","65,000","39,720","49,660","61,820","77,020","94,580",5152
+U.S.,17-3012,Electrical and Electronics Drafters,,,,,,"20,680","73,110","46,470","54,970","69,260","83,870","103,530",5772
+U.S.,17-3013,Mechanical Drafters,,,,,,"44,850","69,920","43,420","52,000","64,060","81,380","102,110",5338
+U.S.,17-3019,"Drafters, All Other",,,,,,"16,580","62,980","39,000","47,840","59,260","74,090","91,400",4938
+U.S.,17-3021,Aerospace Engineering and Operations Technologists and Technicians,Aerospace Enging and Operations Technologists and Technicians,Aerospace Engineering and Operations Technologists and Techs,,,,"10,640","81,280","50,050","61,490","77,830","99,440","113,970",6486
+U.S.,17-3022,Civil Engineering Technologists and Technicians,Civil Enging Technologists and Technicians,Civil Engineering Technologists and Techs,,,,"63,560","63,770","39,120","47,920","60,700","76,570","91,010",5058
+U.S.,17-3023,Electrical and Electronic Engineering Technologists and Technicians,Electrical and Electronic Enging Technologists and Technicians,Electrical and Electronic Engineering Technologists and Techs,,,,"97,420","74,440","46,420","57,990","72,800","85,680","105,320",6067
+U.S.,17-3024,Electro-Mechanical and Mechatronics Technologists and Technicians,Electro-Mechanical and Mechatronics Technologists and Techs,,,,,"15,360","72,430","44,210","51,650","65,080","82,990","104,690",5423
+U.S.,17-3025,Environmental Engineering Technologists and Technicians,Environmental Enging Technologists and Technicians,Environmental Engineering Technologists and Techs,,,,"13,780","58,780","36,150","45,330","54,000","68,790","84,640",4500
+U.S.,17-3026,Industrial Engineering Technologists and Technicians,Industrial Enging Technologists and Technicians,Industrial Engineering Technologists and Techs,,,,"73,020","66,640","44,950","50,680","62,610","77,390","94,540",5218
+U.S.,17-3027,Mechanical Engineering Technologists and Technicians,Mechanical Enging Technologists and Technicians,Mechanical Engineering Technologists and Techs,,,,"38,930","67,990","44,110","51,930","64,020","79,910","96,740",5335
+U.S.,17-3028,Calibration Technologists and Technicians,Calibration Technologists and Techs,,,,,"13,220","67,360","42,370","50,050","62,790","79,170","100,850",5233
+U.S.,17-3029,"Engineering Technologists and Technicians, Except Drafters, All Other","Enging Technologists and Technicians, Except Drafters, All Other","Engineering Technologists and Techs, Except Drafters, All Other",,,,"66,200","75,290","42,900","54,160","73,500","92,880","109,190",6125
+U.S.,17-3031,Surveying and Mapping Technicians,Surveying and Mapping Techs,,,,,"56,050","54,090","35,080","39,790","48,940","62,540","79,150",4078
+U.S.,19-1011,Animal Scientists,animal scientist,,,,,"2,460","89,450","46,240","52,870","70,140","103,260","162,000",5845
+U.S.,19-1012,Food Scientists and Technologists,,,,,,"14,100","88,350","48,480","63,980","82,090","105,640","135,430",6841
+U.S.,19-1013,Soil and Plant Scientists,agronomist,,,,,"15,800","77,080","43,790","54,030","68,240","93,500","119,410",5687
+U.S.,19-1021,Biochemists and Biophysicists,,,,,,"33,180","120,310","64,680","81,650","107,460","136,080","175,790",8955
+U.S.,19-1022,Microbiologists,,,,,,"21,540","93,380","49,070","62,770","85,470","120,240","147,470",7123
+U.S.,19-1023,Zoologists and Wildlife Biologists,,,,,,"17,100","75,740","45,840","57,120","70,600","88,190","110,590",5883
+U.S.,19-1029,"Biological Scientists, All Other",,,,,,"61,220","99,060","52,230","66,400","91,100","119,390","158,730",7592
+U.S.,19-1031,Conservation Scientists,,,,,,"22,790","73,160","42,850","53,000","68,750","87,460","105,460",5729
+U.S.,19-1032,Foresters,,,,,,"9,450","70,680","46,700","55,520","67,330","82,120","98,590",5611
+U.S.,19-1041,Epidemiologists,,,,,,"10,230","90,430","54,950","65,910","81,390","103,980","132,230",6783
+U.S.,19-1042,"Medical Scientists, Except Epidemiologists",,,,,,"136,620","112,380","61,810","76,690","100,890","133,870","168,020",8408
+U.S.,19-1099,"Life Scientists, All Other",,,,,,"7,490","101,520","50,340","64,460","86,950","127,580","172,060",7246
+U.S.,19-2011,Astronomers,,,,,,"2,080","128,940","56,500","85,600","127,930","172,210","183,500",10661
+U.S.,19-2012,Physicists,,,,,,"18,350","158,270","80,950","112,610","155,680","186,330","232,940",12973
+U.S.,19-2021,Atmospheric and Space Scientists,,,,,,"9,310","101,530","48,960","68,080","92,860","124,760","157,250",7738
+U.S.,19-2031,Chemists,,,,,,"83,530","95,560","52,950","64,940","84,680","118,800","149,550",7057
+U.S.,19-2032,Materials Scientists,,,,,,"8,810","112,440","64,130","82,670","106,160","134,580","170,900",8847
+U.S.,19-2041,"Environmental Scientists and Specialists, Including Health","Environmental Scientists and Specs, Including Health",,,,,"80,730","86,710","48,580","60,920","78,980","103,420","133,660",6582
+U.S.,19-2042,"Geoscientists, Except Hydrologists and Geographers",,,,,,"24,620","104,000","52,500","66,280","92,580","127,480","172,600",7715
+U.S.,19-2043,Hydrologists,,,,,,"6,150","96,410","57,120","69,240","88,770","114,710","141,790",7398
+U.S.,19-2099,"Physical Scientists, All Other",,,,,,"20,820","119,050","59,590","81,210","112,280","148,430","183,500",9357
+U.S.,19-3011,Economists,,,,,,"16,420","132,650","62,520","82,330","115,730","166,070","216,900",9644
+U.S.,19-3022,Survey Researchers,,,,,,"8,190","66,670","30,790","41,330","60,960","81,460","107,790",5080
+U.S.,19-3032,Industrial-Organizational Psychologists,,,,,,"1,030","154,380","45,860","90,100","147,420","219,410","219,810",12285
+U.S.,19-3033,Clinical and Counseling Psychologists,,,,,,"71,730","106,600","48,820","66,050","96,100","129,020","168,870",8008
+U.S.,19-3034,School Psychologists,,,,,,"62,790","91,990","59,250","70,520","84,940","107,400","131,470",7078
+U.S.,19-3039,"Psychologists, All Other",,,,,,"14,480","110,300","47,450","76,550","117,750","138,280","157,420",9813
+U.S.,19-3041,Sociologists,,,,,,"2,890","106,710","59,960","76,030","101,770","134,980","165,280",8481
+U.S.,19-3051,Urban and Regional Planners,,,,,,"42,690","85,940","51,470","63,830","81,800","102,930","126,120",6817
+U.S.,19-3091,Anthropologists and Archeologists,,,,,,"7,720","69,780","43,770","50,510","63,800","82,000","102,150",5317
+U.S.,19-3092,Geographers,,,,,,"1,460","92,460","59,850","70,600","90,880","110,240","126,940",7573
+U.S.,19-3093,Historians,,,,,,"3,040","76,120","35,760","51,720","72,890","93,580","124,720",6074
+U.S.,19-3094,Political Scientists,,,,,,"5,580","132,020","72,470","96,600","132,350","167,650","183,500",11029
+U.S.,19-3099,"Social Scientists and Related Workers, All Other",,,,,,"35,210","102,210","59,010","75,400","95,890","123,200","158,160",7991
+U.S.,19-4012,Agricultural Technicians,Agricultural Techs,Agricultural Scientist,,,,"13,150","46,810","30,750","36,400","43,180","53,120","65,470",3598
+U.S.,19-4013,Food Science Technicians,Food Science Techs,,,,,"15,190","54,000","37,290","41,770","49,090","61,390","74,630",4091
+U.S.,19-4021,Biological Technicians,Biological Techs,,,,,"76,990","56,540","36,970","42,390","51,430","65,510","80,330",4286
+U.S.,19-4031,Chemical Technicians,Chemical Techs,,,,,"55,880","60,920","38,240","45,920","56,750","73,280","93,340",4729
+U.S.,19-4042,"Environmental Science and Protection Technicians, Including Health","Environmental Science and Protection Techs, Including Health",,,,,"32,390","57,470","35,800","41,790","50,660","65,310","85,010",4222
+U.S.,19-4043,"Geological Technicians, Except Hydrologic Technicians","Geological Techs, Except Hydrologic Techs",,,,,"8,860","64,590","34,160","42,650","52,440","73,720","108,750",4370
+U.S.,19-4044,Hydrologic Technicians,Hydrologic Techs,,,,,"3,000","61,500","37,690","44,840","55,890","76,000","91,610",4658
+U.S.,19-4051,Nuclear Technicians,Nuclear Techs,,,,,"5,400","97,520","62,700","76,280","101,740","111,420","128,700",8478
+U.S.,19-4061,Social Science Research Assistants,Social Science Research Assts,,,,,"30,890","62,370","37,080","46,140","56,400","69,720","96,720",4700
+U.S.,19-4071,Forest and Conservation Technicians,Forest and Conservation Techs,,,,,"28,740","54,260","34,570","40,540","51,880","63,810","78,420",4323
+U.S.,19-4092,Forensic Science Technicians,Forensic Science Techs,,,,,"17,520","71,540","41,410","50,480","64,940","84,720","107,490",5412
+U.S.,19-4099,"Life, Physical, and Social Science Technicians, All Other","Life, Physical, and Social Science Techs, All Other",,,,,"72,230","62,640","36,650","44,040","58,350","76,080","100,550",4863
+U.S.,19-5011,Occupational Health and Safety Specialists,Occupational Health and Safety Specs,,,,,"122,300","85,570","49,550","62,630","81,140","102,690","128,040",6762
+U.S.,19-5012,Occupational Health and Safety Technicians,Occupational Health and Safety Techs,,,,,"27,270","64,250","40,030","48,980","57,920","75,410","97,360",4827
+U.S.,21-1012,"Educational, Guidance, and Career Counselors and Advisors",,,,,,"327,660","66,990","40,140","48,760","61,710","78,780","100,050",5143
+U.S.,21-1013,Marriage and Family Therapists,,,,,,"63,340","68,730","39,090","45,250","58,510","78,440","104,710",4876
+U.S.,21-1015,Rehabilitation Counselors,,,,,,"84,750","48,430","31,390","36,440","44,040","56,610","73,710",3670
+U.S.,21-1018,"Substance Abuse, Behavioral Disorder, and Mental Health Counselors",,,,,,"397,880","60,080","36,700","44,600","53,710","70,130","89,920",4476
+U.S.,21-1019,"Counselors, All Other",,,,,,"35,580","52,360","33,300","38,890","46,130","59,340","79,880",3844
+U.S.,21-1021,"Child, Family, and School Social Workers",,,,,,"352,160","59,190","37,900","45,120","53,940","68,450","85,590",4495
+U.S.,21-1022,Healthcare Social Workers,,,,,,"185,020","67,430","41,840","50,190","62,940","78,710","97,790",5245
+U.S.,21-1023,Mental Health and Substance Abuse Social Workers,,,,,,"114,680","63,870","37,150","43,750","55,960","74,810","100,090",4663
+U.S.,21-1029,"Social Workers, All Other",,,,,,"58,460","68,800","39,580","47,770","63,770","87,730","104,580",5314
+U.S.,21-1091,Health Education Specialists,Health Education Specs,,,,,"57,800","69,790","39,630","48,210","62,860","83,800","107,920",5238
+U.S.,21-1092,Probation Officers and Correctional Treatment Specialists,Probation Officers and Correctional Treatment Specs,,,,,"85,870","67,880","41,700","48,800","61,800","82,040","105,220",5150
+U.S.,21-1093,Social and Human Service Assistants,Social and Human Service Assts,,,,,"409,310","44,240","30,720","35,770","41,410","49,280","61,820",3451
+U.S.,21-1094,Community Health Workers,,,,,,"58,550","52,610","35,560","40,490","48,200","60,740","75,980",4017
+U.S.,21-1099,"Community and Social Service Specialists, All Other","Community and Social Service Specs, All Other",,,,,"95,310","54,020","34,030","39,980","49,690","62,460","79,320",4141
+U.S.,21-2011,Clergy,,,,,,"56,640","63,720","35,400","45,540","58,920","74,620","96,600",4910
+U.S.,21-2021,"Directors, Religious Activities and Education","Dirs, Religious Activities and Education",,,,,"23,270","61,740","32,030","39,150","50,140","70,600","104,430",4178
+U.S.,21-2099,"Religious Workers, All Other",,,,,,"11,870","45,050","28,530","31,200","37,960","50,280","73,310",3163
+U.S.,23-1011,Lawyers,Attorney,Counsel,,,,"731,340","176,470","69,760","98,030","145,760","217,360",#,12147
+U.S.,23-1012,Judicial Law Clerks,,,,,,"14,680","64,880","41,020","46,090","57,490","71,240","102,810",4791
+U.S.,23-1021,"Administrative Law Judges, Adjudicators, and Hearing Officers",,,,,,"14,670","119,940","53,140","75,730","111,090","160,350","195,000",9258
+U.S.,23-1022,"Arbitrators, Mediators, and Conciliators",,,,,,"7,060","95,370","35,960","51,200","71,540","107,060","152,730",5962
+U.S.,23-1023,"Judges, Magistrate Judges, and Magistrates",,,,,,"24,470","139,000","45,950","84,300","148,910","182,200","210,890",12409
+U.S.,23-2011,Paralegals and Legal Assistants,Paralegals and Legal Assts,,,,,"354,890","66,460","39,710","48,180","60,970","77,600","98,830",5081
+U.S.,23-2093,"Title Examiners, Abstractors, and Searchers",,,,,,"49,760","59,440","36,400","43,760","53,550","70,260","89,980",4463
+U.S.,23-2099,"Legal Support Workers, All Other",,,,,,"43,760","82,960","39,890","49,980","67,700","106,360","155,270",5642
+U.S.,25-1011,"Business Teachers, Postsecondary",,,,,,"82,980","113,240","48,580","64,670","97,130","140,070","211,230",8094
+U.S.,25-1021,"Computer Science Teachers, Postsecondary",,,,,,"36,150","106,380","49,770","65,660","96,430","133,800","175,150",8036
+U.S.,25-1022,"Mathematical Science Teachers, Postsecondary",,,,,,"48,230","95,320","48,740","62,280","81,020","108,840","165,880",6752
+U.S.,25-1031,"Architecture Teachers, Postsecondary",,,,,,"8,350","114,900","60,610","80,010","105,770","133,570","174,390",8814
+U.S.,25-1032,"Engineering Teachers, Postsecondary","Enging Teachers, Postsecondary",,,,,"38,370","120,630","60,250","81,960","106,910","139,300","200,030",8909
+U.S.,25-1041,"Agricultural Sciences Teachers, Postsecondary",,,,,,"7,550","95,610","49,240","64,120","85,260","110,310","149,660",7105
+U.S.,25-1042,"Biological Science Teachers, Postsecondary",,,,,,"52,050","102,270","51,670","64,990","83,920","126,760","171,410",6993
+U.S.,25-1043,"Forestry and Conservation Science Teachers, Postsecondary",,,,,,"1,260","102,230","58,120","81,040","101,650","118,460","141,800",8471
+U.S.,25-1051,"Atmospheric, Earth, Marine, and Space Sciences Teachers, Postsecondary",,,,,,"11,770","111,930","52,430","65,900","100,690","135,790","195,940",8391
+U.S.,25-1052,"Chemistry Teachers, Postsecondary",,,,,,"20,210","102,630","52,590","65,580","85,810","125,370","171,750",7151
+U.S.,25-1053,"Environmental Science Teachers, Postsecondary",,,,,,"7,120","100,910","51,280","66,060","88,410","126,160","166,150",7368
+U.S.,25-1054,"Physics Teachers, Postsecondary",,,,,,"14,030","106,950","55,150","66,780","98,020","131,140","171,820",8168
+U.S.,25-1061,"Anthropology and Archeology Teachers, Postsecondary",,,,,,"5,030","103,640","51,980","67,770","93,650","126,060","172,180",7804
+U.S.,25-1062,"Area, Ethnic, and Cultural Studies Teachers, Postsecondary",,,,,,"11,570","100,390","51,590","65,390","86,030","111,650","169,680",7169
+U.S.,25-1063,"Economics Teachers, Postsecondary",,,,,,"12,210","133,650","58,060","82,110","115,300","168,240","221,170",9608
+U.S.,25-1064,"Geography Teachers, Postsecondary",,,,,,"3,480","97,660","50,870","66,610","85,600","109,120","155,010",7133
+U.S.,25-1065,"Political Science Teachers, Postsecondary",,,,,,"17,090","104,910","51,610","66,330","93,810","127,940","172,910",7818
+U.S.,25-1066,"Psychology Teachers, Postsecondary",,,,,,"40,610","93,990","49,790","62,980","82,140","106,610","151,890",6845
+U.S.,25-1067,"Sociology Teachers, Postsecondary",,,,,,"12,870","97,580","49,900","64,320","82,670","109,450","169,920",6889
+U.S.,25-1069,"Social Sciences Teachers, Postsecondary, All Other",,,,,,"16,900","91,710","43,890","59,310","77,750","106,540","170,180",6479
+U.S.,25-1071,"Health Specialties Teachers, Postsecondary",,,,,,"225,360","134,440","52,300","69,140","105,650","172,990",#,8804
+U.S.,25-1072,"Nursing Instructors and Teachers, Postsecondary",,,,,,"72,700","86,530","49,120","63,050","80,780","103,370","130,320",6732
+U.S.,25-1081,"Education Teachers, Postsecondary",,,,,,"60,860","80,750","39,670","52,740","73,240","98,130","130,000",6103
+U.S.,25-1082,"Library Science Teachers, Postsecondary",,,,,,"4,220","88,190","53,660","64,430","80,310","101,750","131,310",6693
+U.S.,25-1111,"Criminal Justice and Law Enforcement Teachers, Postsecondary",,,,,,"13,390","83,470","46,320","56,020","69,030","102,110","134,580",5753
+U.S.,25-1112,"Law Teachers, Postsecondary",,,,,,"14,570","142,440","51,810","77,860","127,360","179,700",#,10613
+U.S.,25-1113,"Social Work Teachers, Postsecondary",,,,,,"11,730","80,840","46,790","53,640","75,020","96,670","127,760",6252
+U.S.,25-1121,"Art, Drama, and Music Teachers, Postsecondary",,,,,,"101,500","100,840","47,570","61,970","80,360","110,120","178,670",6697
+U.S.,25-1122,"Communications Teachers, Postsecondary",,,,,,"28,520","90,950","48,060","61,410","79,910","104,810","160,060",6659
+U.S.,25-1123,"English Language and Literature Teachers, Postsecondary",,,,,,"57,600","87,090","48,090","60,050","78,130","102,980","137,100",6511
+U.S.,25-1124,"Foreign Language and Literature Teachers, Postsecondary",,,,,,"20,820","88,490","48,230","61,530","78,760","103,340","136,260",6563
+U.S.,25-1125,"History Teachers, Postsecondary",,,,,,"20,610","93,120","48,760","63,650","82,140","106,840","141,840",6845
+U.S.,25-1126,"Philosophy and Religion Teachers, Postsecondary",,,,,,"20,320","89,680","48,450","61,830","79,930","103,340","137,310",6661
+U.S.,25-1192,"Family and Consumer Sciences Teachers, Postsecondary",,,,,,"2,660","89,630","48,410","59,170","78,410","105,280","146,020",6534
+U.S.,25-1193,"Recreation and Fitness Studies Teachers, Postsecondary",,,,,,"13,270","87,340","44,400","58,540","75,770","101,780","148,610",6314
+U.S.,25-1194,"Career/Technical Education Teachers, Postsecondary",,,,,,"111,180","68,300","39,120","48,890","62,060","80,200","105,200",5172
+U.S.,25-1199,"Postsecondary Teachers, All Other",,,,,,"166,980","96,570","45,930","59,260","79,870","120,620","177,050",6656
+U.S.,25-2011,"Preschool Teachers, Except Special Education",,,,,,"430,240","41,410","28,200","30,810","37,130","46,500","60,900",3094
+U.S.,25-2012,"Kindergarten Teachers, Except Special Education",,,,,,"118,580","67,790","45,650","50,970","62,690","78,950","100,390",5224
+U.S.,25-2021,"Elementary School Teachers, Except Special Education",,,,,,"1,410,070","70,740","46,960","51,260","63,680","81,480","104,440",5307
+U.S.,25-2022,"Middle School Teachers, Except Special and Career/Technical Education",,,,,,"626,690","71,460","47,490","52,040","64,290","82,120","104,410",5358
+U.S.,25-2023,"Career/Technical Education Teachers, Middle School",,,,,,"12,210","69,020","47,360","54,620","63,860","78,680","99,080",5322
+U.S.,25-2031,"Secondary School Teachers, Except Special and Career/Technical Education",,,,,,"1,045,170","73,800","48,040","54,290","65,220","83,340","106,380",5435
+U.S.,25-2032,"Career/Technical Education Teachers, Secondary School",,,,,,"90,070","70,810","49,420","57,530","65,130","81,000","100,380",5428
+U.S.,25-2051,"Special Education Teachers, Preschool",,,,,,"24,850","76,420","41,250","51,240","65,270","89,440","135,170",5439
+U.S.,25-2052,"Special Education Teachers, Kindergarten and Elementary School",,,,,,"212,850","71,770","47,710","54,360","64,910","81,990","103,430",5409
+U.S.,25-2057,"Special Education Teachers, Middle School",,,,,,"88,850","73,630","48,140","57,600","66,600","84,040","105,320",5550
+U.S.,25-2058,"Special Education Teachers, Secondary School",,,,,,"158,150","74,670","47,950","56,820","66,620","84,400","107,230",5552
+U.S.,25-2059,"Special Education Teachers, All Other",,,,,,"43,700","76,000","43,530","53,780","67,190","91,050","114,360",5599
+U.S.,25-3011,"Adult Basic Education, Adult Secondary Education, and English as a Second Language Instructors",,,,,,"36,890","65,430","39,710","48,580","60,560","78,230","97,980",5047
+U.S.,25-3021,Self-Enrichment Teachers,,,,,,"272,110","52,890","28,600","34,820","45,330","62,220","85,980",3778
+U.S.,25-3031,"Substitute Teachers, Short-Term",,,,,,"444,530","43,570","24,420","29,880","37,380","48,590","63,140",3115
+U.S.,25-3041,Tutors,,,,,,"162,300","48,580","27,710","32,800","39,580","55,620","80,440",3298
+U.S.,25-3099,"Teachers and Instructors, All Other",,,,,,"118,290","70,340","32,740","46,600","64,390","84,380","108,380",5366
+U.S.,25-4011,Archivists,,,,,,"7,150","65,700","37,720","46,450","59,910","79,190","103,000",4993
+U.S.,25-4012,Curators,,,,,,"12,510","70,870","38,000","48,080","61,750","81,950","107,860",5146
+U.S.,25-4013,Museum Technicians and Conservators,Museum Techs and Conservators,,,,,"12,670","54,890","30,730","37,580","48,670","65,020","84,400",4056
+U.S.,25-4022,Librarians and Media Collections Specialists,Librarians and Media Collections Specs,,,,,"133,760","68,570","38,690","50,930","64,370","80,980","101,970",5364
+U.S.,25-4031,Library Technicians,Library Techs,,,,,"76,670","42,570","27,040","32,240","39,310","49,860","61,620",3276
+U.S.,25-9021,Farm and Home Management Educators,,,,,,"8,110","61,430","36,710","46,080","59,770","75,310","84,770",4981
+U.S.,25-9031,Instructional Coordinators,Instructional Coords,,,,,"207,270","77,200","46,540","59,190","74,620","92,230","109,500",6218
+U.S.,25-9044,"Teaching Assistants, Postsecondary","Teaching Assts, Postsecondary",,,,,"145,960","47,030","29,540","33,000","43,750","60,450","73,450",3646
+U.S.,25-9045,"Teaching Assistants, Except Postsecondary","Teaching Assts, Except Postsecondary",,,,,"1,337,320","36,430","24,200","29,500","35,550","40,720","48,870",2963
+U.S.,25-9099,"Educational Instruction and Library Workers, All Other",,,,,,"113,490","54,910","25,090","33,640","49,800","66,270","86,660",4150
+U.S.,27-1011,Art Directors,Art Dirs,,,,,"51,200","125,920","60,440","78,970","106,500","155,680","209,800",8875
+U.S.,27-1012,Craft Artists,,,,,,"5,830","43,610","21,010","29,120","36,600","49,010","67,980",3050
+U.S.,27-1013,"Fine Artists, Including Painters, Sculptors, and Illustrators",,,,,,"10,910","71,420","28,390","38,160","59,300","88,690","135,420",4942
+U.S.,27-1014,Special Effects Artists and Animators,,,,,,"29,940","109,630","57,090","71,570","99,060","133,400","169,580",8255
+U.S.,27-1019,"Artists and Related Workers, All Other",,,,,,"7,420","78,890","31,310","41,830","74,750","108,590","128,270",6229
+U.S.,27-1021,Commercial and Industrial Designers,,,,,,"30,810","81,870","46,530","59,170","76,250","99,290","126,010",6354
+U.S.,27-1022,Fashion Designers,,,,,,"19,940","97,030","37,090","58,440","79,290","107,260","160,850",6608
+U.S.,27-1023,Floral Designers,,,,,,"43,350","35,500","24,960","29,120","34,690","38,940","46,650",2891
+U.S.,27-1024,Graphic Designers,Visual Designer,Creative Artist,,,,"212,720","64,700","36,420","45,560","58,910","77,570","100,450",4909
+U.S.,27-1025,Interior Designers,,,,,,"67,760","68,530","37,730","47,990","62,510","79,580","101,860",5209
+U.S.,27-1026,Merchandise Displayers and Window Trimmers,,,,,,"175,790","39,040","29,280","31,440","36,230","42,280","51,230",3019
+U.S.,27-1027,Set and Exhibit Designers,,,,,,"10,090","67,170","32,240","42,980","59,490","82,620","113,740",4958
+U.S.,27-1029,"Designers, All Other",,,,,,"9,880","75,960","36,160","46,450","67,500","91,740","125,730",5625
+U.S.,27-2011,Actors,,,,,,"62,560",*,*,*,*,*,*,#VALUE!
+U.S.,27-2012,Producers and Directors,Producers and Dirs,,,,,"154,470","107,170","42,040","58,540","82,510","128,040","174,540",6876
+U.S.,27-2021,Athletes and Sports Competitors,,,,,,"14,930","328,830","27,730","38,040","70,280","201,140",#,5857
+U.S.,27-2022,Coaches and Scouts,,,,,,"238,980","58,700","27,040","32,440","45,910","62,070","95,620",3826
+U.S.,27-2023,"Umpires, Referees, and Other Sports Officials",,,,,,"14,840","44,860","22,950","29,140","35,820","47,690","63,410",2985
+U.S.,27-2031,Dancers,,,,,,"11,510",*,*,*,*,*,*,#VALUE!
+U.S.,27-2032,Choreographers,,,,,,"4,190","59,090","30,040","37,440","52,000","77,330","91,140",4333
+U.S.,27-2041,Music Directors and Composers,Music Dirs and Composers,,,,,"10,770","87,840","34,240","46,910","62,590","101,690","173,810",5216
+U.S.,27-2042,Musicians and Singers,,,,,,"35,520",*,*,*,*,*,*,#VALUE!
+U.S.,27-2091,"Disc Jockeys, Except Radio",,,,,,"7,190",*,*,*,*,*,*,#VALUE!
+U.S.,27-2099,"Entertainers and Performers, Sports and Related Workers, All Other",,,,,,"14,720",*,*,*,*,*,*,#VALUE!
+U.S.,27-3011,Broadcast Announcers and Radio Disc Jockeys,,,,,,"25,070","86,950","24,400","30,920","44,890","66,070","127,560",3741
+U.S.,27-3023,"News Analysts, Reporters, and Journalists",,,,,,"45,020","101,430","31,550","38,160","57,500","91,890","160,360",4792
+U.S.,27-3031,Public Relations Specialists,Public Relations Specs,,,,,"275,550","77,720","38,570","50,280","66,750","92,290","126,220",5563
+U.S.,27-3041,Editors,,,,,,"95,700","85,110","38,790","51,810","75,020","101,100","138,920",6252
+U.S.,27-3042,Technical Writers,,,,,,"47,970","86,620","48,630","62,060","80,050","102,260","129,440",6671
+U.S.,27-3043,Writers and Authors,,,,,,"49,450","87,590","40,900","52,660","73,690","100,990","148,240",6141
+U.S.,27-3091,Interpreters and Translators,,,,,,"51,560","63,080","35,410","44,810","57,090","76,960","97,100",4758
+U.S.,27-3092,Court Reporters and Simultaneous Captioners,,,,,,"12,390","71,040","35,890","46,150","63,940","86,690","126,440",5328
+U.S.,27-3099,"Media and Communication Workers, All Other",,,,,,"23,230","87,140","36,880","49,980","61,900","85,310","136,000",5158
+U.S.,27-4011,Audio and Video Technicians,Audio and Video Techs,,,,,"66,700","59,260","33,790","41,440","51,640","69,980","95,640",4303
+U.S.,27-4012,Broadcast Technicians,Broadcast Techs,,,,,"26,190","71,600","28,080","36,770","57,690","96,710","125,410",4808
+U.S.,27-4014,Sound Engineering Technicians,Sound Enging Technicians,Sound Engineering Techs,,,,"14,600","74,100","36,160","45,820","59,430","94,550","132,940",4953
+U.S.,27-4015,Lighting Technicians,Lighting Techs,,,,,"9,520","73,250","37,680","47,470","62,240","82,980","126,590",5187
+U.S.,27-4021,Photographers,,,,,,"53,630","53,380","28,510","32,240","40,760","62,480","95,740",3397
+U.S.,27-4031,"Camera Operators, Television, Video, and Film",,,,,,"23,940","71,890","34,420","44,000","61,800","93,870","120,740",5150
+U.S.,27-4032,Film and Video Editors,,,,,,"29,240","83,470","38,990","48,920","66,600","101,910","154,480",5550
+U.S.,27-4099,"Media and Communication Equipment Workers, All Other",,,,,,"11,430","75,860","30,110","45,440","71,340","103,020","128,020",5945
+U.S.,29-1011,Chiropractors,,,,,,"41,480","89,760","39,960","57,980","76,530","101,930","142,580",6378
+U.S.,29-1021,"Dentists, General",dentist,,,,,"121,640","191,750","80,820","123,670","166,300","218,030",#,13858
+U.S.,29-1022,Oral and Maxillofacial Surgeons,surgeon,,,,,"4,160","334,310","88,060","212,300",#,#,#,#VALUE!
+U.S.,29-1023,Orthodontists,ortho,,,,,"6,400","243,620","89,980","132,000",#,#,#,#VALUE!
+U.S.,29-1024,Prosthodontists,,,,,,570,"240,750","93,600","176,800","234,000",#,#,19500
+U.S.,29-1029,"Dentists, All Other Specialists",dentist,,,,,"5,920","244,470","107,330","188,860","227,690",#,#,18974
+U.S.,29-1031,Dietitians and Nutritionists,,,,,,"73,860","71,280","44,910","58,290","69,680","81,860","98,830",5807
+U.S.,29-1041,Optometrists,eye doctor,,,,,"41,390","143,000","64,980","101,650","131,860","162,070","204,100",10988
+U.S.,29-1051,Pharmacists,Drug Specialist,Chemist,,,,"331,700","134,790","89,980","125,860","136,030","155,550","168,650",11336
+U.S.,29-1071,Physician Assistants,Physician Assts,,,,,"145,740","130,490","86,280","108,100","130,020","151,720","170,790",10835
+U.S.,29-1081,Podiatrists,,,,,,"9,470","162,520","58,550","87,200","141,650","216,070",#,11804
+U.S.,29-1122,Occupational Therapists,,,,,,"144,840","96,790","65,210","79,290","96,370","109,480","129,620",8031
+U.S.,29-1123,Physical Therapists,,,,,,"240,820","100,440","72,260","81,970","99,710","113,630","130,870",8309
+U.S.,29-1124,Radiation Therapists,,,,,,"16,640","104,420","72,280","82,300","98,300","112,040","136,910",8192
+U.S.,29-1125,Recreational Therapists,,,,,,"15,540","60,910","37,960","46,420","57,120","73,150","92,080",4760
+U.S.,29-1126,Respiratory Therapists,,,,,,"129,750","80,340","59,180","65,530","77,960","88,820","104,480",6497
+U.S.,29-1127,Speech-Language Pathologists,,,,,,"172,100","92,630","57,910","71,140","89,290","107,710","129,930",7441
+U.S.,29-1128,Exercise Physiologists,,,,,,"8,060","57,050","35,460","45,870","54,860","64,110","77,680",4572
+U.S.,29-1129,"Therapists, All Other",,,,,,"16,490","75,660","40,790","50,760","63,650","89,050","124,530",5304
+U.S.,29-1131,Veterinarians,veterinarian,,,,,"78,220","136,300","72,360","94,860","119,100","155,230","201,440",9925
+U.S.,29-1141,Registered Nurses,RN,Nurse,,,,"3,175,390","94,480","63,720","75,990","86,070","104,670","132,680",7173
+U.S.,29-1151,Nurse Anesthetists,,,,,,"47,810","214,200","139,980","180,840","212,650",#,#,17721
+U.S.,29-1161,Nurse Midwives,,,,,,"6,960","131,570","87,320","110,000","129,650","146,770","177,530",10804
+U.S.,29-1171,Nurse Practitioners,,,,,,"280,140","128,490","94,530","106,960","126,260","140,610","168,030",10522
+U.S.,29-1181,Audiologists,,,,,,"13,880","92,620","56,090","74,440","87,740","105,480","124,800",7312
+U.S.,29-1211,Anesthesiologists,doctor,,,,,"33,470","339,470","84,940","191,980",#,#,#,#VALUE!
+U.S.,29-1212,Cardiologists,doctor,,,,,"15,190","423,250","102,530","235,000",#,#,#,#VALUE!
+U.S.,29-1213,Dermatologists,doctor,,,,,"12,040","342,860","103,000","180,750",#,#,#,#VALUE!
+U.S.,29-1214,Emergency Medicine Physicians,doctor,,,,,"35,100","306,640","127,350","224,540",#,#,#,#VALUE!
+U.S.,29-1215,Family Medicine Physicians,doctor,,,,,"112,010","240,790","68,890","152,810","224,640",#,#,18720
+U.S.,29-1216,General Internal Medicine Physicians,doctor,,,,,"67,210","245,450","70,120","108,380","223,310",#,#,18609
+U.S.,29-1217,Neurologists,doctor,,,,,"9,350","271,470","82,990","130,790",#,#,#,#VALUE!
+U.S.,29-1218,Obstetricians and Gynecologists,obgyn,,,,,"19,820","278,660","89,850","186,290",#,#,#,#VALUE!
+U.S.,29-1221,"Pediatricians, General",doctor,,,,,"34,870","205,860","85,120","141,050","198,690",#,#,16558
+U.S.,29-1222,"Physicians, Pathologists",doctor,,,,,"11,020","270,560","74,220","181,090",#,#,#,#VALUE!
+U.S.,29-1223,Psychiatrists,doctor,,,,,"24,830","256,930","73,280","124,070",#,#,#,#VALUE!
+U.S.,29-1224,Radiologists,doctor,,,,,"31,960","353,960","79,760","206,430",#,#,#,#VALUE!
+U.S.,29-1229,"Physicians, All Other",doctor,,,,,"310,080","248,640","66,260","85,110","236,000",#,#,19667
+U.S.,29-1241,"Ophthalmologists, Except Pediatric",,,,,,"11,530","312,120","115,520","200,000",#,#,#,#VALUE!
+U.S.,29-1242,"Orthopedic Surgeons, Except Pediatric",,,,,,"14,820","378,250","129,360","212,760",#,#,#,#VALUE!
+U.S.,29-1243,Pediatric Surgeons,,,,,,"1,180","449,320","172,810",#,#,#,#,#VALUE!
+U.S.,29-1249,"Surgeons, All Other",surgeon,,,,,"26,370","343,990","78,000","120,000",#,#,#,#VALUE!
+U.S.,29-1291,Acupuncturists,,,,,,"9,370","84,260","41,600","52,000","78,220","99,740","140,660",6518
+U.S.,29-1292,Dental Hygienists,hygienist,,,,,"211,630","89,890","65,110","78,010","87,530","100,630","118,400",7294
+U.S.,29-1299,"Healthcare Diagnosing or Treating Practitioners, All Other",,,,,,"31,100","123,840","62,400","78,670","107,990","154,420","194,670",8999
+U.S.,29-2010,Clinical Laboratory Technologists and Technicians,Clinical Laboratory Technologists and Techs,,,,,"334,380","62,870","36,770","45,080","60,780","78,120","93,900",5065
+U.S.,29-2031,Cardiovascular Technologists and Technicians,Cardiovascular Technologists and Techs,,,,,"55,660","70,270","36,620","44,160","66,170","85,930","105,140",5514
+U.S.,29-2032,Diagnostic Medical Sonographers,,,,,,"82,780","89,020","63,680","75,640","84,470","100,580","116,300",7039
+U.S.,29-2033,Nuclear Medicine Technologists,,,,,,"16,560","95,080","69,300","80,050","92,500","104,540","123,910",7708
+U.S.,29-2034,Radiologic Technologists and Technicians,Radiologic Technologists and Techs,,,,,"221,170","75,250","50,020","60,690","73,410","84,670","102,380",6118
+U.S.,29-2035,Magnetic Resonance Imaging Technologists,MRI ,,,,,"41,340","86,600","61,470","75,360","83,740","99,340","112,420",6978
+U.S.,29-2036,Medical Dosimetrists,,,,,,"3,900","131,850","86,480","113,880","132,880","153,360","170,330",11073
+U.S.,29-2042,Emergency Medical Technicians,Emergency Medical Techs,,,,,"167,040","43,100","29,910","34,730","38,930","46,760","59,390",3244
+U.S.,29-2043,Paramedics,,,,,,"98,770","57,450","38,520","45,990","53,180","64,370","79,430",4432
+U.S.,29-2051,Dietetic Technicians,Dietetic Techs,,,,,"24,240","38,440","27,670","31,420","36,520","43,090","50,790",3043
+U.S.,29-2052,Pharmacy Technicians,Pharmacy Techs,,,,,"460,280","43,330","32,720","36,290","40,300","47,680","57,130",3358
+U.S.,29-2053,Psychiatric Technicians,Psychiatric Techs,,,,,"115,940","43,650","31,150","35,730","39,700","47,960","59,990",3308
+U.S.,29-2055,Surgical Technologists,,,,,,"110,320","62,250","40,640","49,940","60,610","72,520","83,150",5051
+U.S.,29-2056,Veterinary Technologists and Technicians,Veterinary Technologists and Techs,,,,,"122,000","44,040","30,180","36,340","43,740","48,900","59,310",3645
+U.S.,29-2057,Ophthalmic Medical Technicians,Ophthalmic Medical Techs,,,,,"73,390","44,290","31,200","36,330","41,780","49,740","59,930",3482
+U.S.,29-2061,Licensed Practical and Licensed Vocational Nurses,,,,,,"630,250","60,790","45,670","50,640","59,730","67,140","77,870",4978
+U.S.,29-2072,Medical Records Specialists,Medical Records Specs,,,,,"185,690","53,690","35,080","39,620","48,780","61,960","77,810",4065
+U.S.,29-2081,"Opticians, Dispensing",,,,,,"76,770","47,560","31,560","36,380","44,170","57,490","69,900",3681
+U.S.,29-2091,Orthotists and Prosthetists,,,,,,"8,820","80,500","42,020","57,120","78,100","98,160","117,250",6508
+U.S.,29-2092,Hearing Aid Specialists,Hearing Aid Specs,,,,,"10,250","61,550","34,480","42,520","58,670","74,900","85,870",4889
+U.S.,29-2099,"Health Technologists and Technicians, All Other","Health Technologists and Techs, All Other",,,,,"171,110","54,220","35,890","38,710","47,470","60,980","79,860",3956
+U.S.,29-9021,Health Information Technologists and Medical Registrars,,,,,,"34,430","70,260","38,310","46,580","62,990","86,950","107,650",5249
+U.S.,29-9091,Athletic Trainers,,,,,,"28,480","61,540","43,180","49,750","57,930","66,580","80,640",4828
+U.S.,29-9092,Genetic Counselors,,,,,,"3,050","98,130","72,530","83,380","95,770","108,090","132,190",7981
+U.S.,29-9093,Surgical Assistants,Surgical Assts,,,,,"18,780","65,190","37,210","45,100","59,160","79,190","101,180",4930
+U.S.,29-9099,"Healthcare Practitioners and Technical Workers, All Other",,,,,,"36,900","70,800","35,250","44,250","63,630","86,830","120,000",5303
+U.S.,31-1120,Home Health and Personal Care Aides,,,,,,"3,689,350","33,380","23,910","29,120","33,530","36,550","42,450",2794
+U.S.,31-1131,Nursing Assistants,Nursing Assts,,,,,"1,351,760","39,610","30,020","34,990","38,200","44,540","48,780",3183
+U.S.,31-1132,Orderlies,,,,,,"48,710","38,440","30,260","33,780","36,830","40,810","48,000",3069
+U.S.,31-1133,Psychiatric Aides,,,,,,"32,310","41,000","27,660","32,590","39,160","47,630","55,240",3263
+U.S.,31-2011,Occupational Therapy Assistants,Occupational Therapy Assts,,,,,"46,090","68,170","48,670","59,400","67,010","77,290","89,230",5584
+U.S.,31-2012,Occupational Therapy Aides,,,,,,"4,430","42,060","25,150","31,940","36,970","48,720","68,720",3081
+U.S.,31-2021,Physical Therapist Assistants,Physical Therapist Assts,,,,,"104,000","65,860","42,110","56,490","64,080","76,610","88,830",5340
+U.S.,31-2022,Physical Therapist Aides,,,,,,"42,390","34,810","23,070","28,550","33,520","37,010","43,980",2793
+U.S.,31-9011,Massage Therapists,,,,,,"92,650","62,560","32,240","41,600","55,310","74,970","95,700",4609
+U.S.,31-9091,Dental Assistants,Dental Assts,,,,,"370,690","47,350","35,470","38,220","46,540","54,430","61,060",3878
+U.S.,31-9092,Medical Assistants,Medical Assts,Clinical Assistant,Healthcare Assistant,,,"763,040","43,350","33,500","36,780","42,000","47,220","56,480",3500
+U.S.,31-9093,Medical Equipment Preparers,,,,,,"66,790","47,410","34,020","38,060","45,280","53,310","63,980",3773
+U.S.,31-9094,Medical Transcriptionists,,,,,,"52,420","39,090","27,190","31,200","37,060","45,780","52,880",3088
+U.S.,31-9095,Pharmacy Aides,,,,,,"43,830","38,980","27,560","32,240","36,200","42,580","56,800",3017
+U.S.,31-9096,Veterinary Assistants and Laboratory Animal Caretakers,Veterinary Assts and Laboratory Animal Caretakers,,,,,"115,770","37,310","28,550","31,120","36,440","42,290","46,630",3037
+U.S.,31-9097,Phlebotomists,,,,,,"137,080","43,130","33,310","36,720","41,810","47,410","55,330",3484
+U.S.,31-9099,"Healthcare Support Workers, All Other",,,,,,"102,230","47,010","31,630","36,540","44,490","54,630","65,250",3708
+U.S.,33-1011,First-Line Supervisors of Correctional Officers,First-Line Supvs of Correctional Officers,,,,,"52,280","76,840","42,600","53,890","70,530","95,870","116,750",5878
+U.S.,33-1012,First-Line Supervisors of Police and Detectives,First-Line Supvs of Police and Detectives,,,,,"138,140","106,000","60,090","77,750","101,750","128,460","160,710",8479
+U.S.,33-1021,First-Line Supervisors of Firefighting and Prevention Workers,First-Line Supvs of Firefighting and Prevention Workers,,,,,"84,120","90,740","49,910","66,390","86,220","108,380","135,050",7185
+U.S.,33-1091,First-Line Supervisors of Security Workers,First-Line Supvs of Security Workers,,,,,"64,900","59,580","36,560","43,460","54,580","70,040","87,400",4548
+U.S.,33-1099,"First-Line Supervisors of Protective Service Workers, All Other","First-Line Supvs of Protective Service Workers, All Other",,,,,"19,620","67,870","39,130","51,070","65,050","80,220","96,370",5421
+U.S.,33-2011,Firefighters,Fireman,Emergency Responder,,,,"315,460","60,390","31,600","40,230","57,120","75,320","93,720",4760
+U.S.,33-2021,Fire Inspectors and Investigators,,,,,,"14,200","82,510","46,360","57,110","74,160","101,530","137,220",6180
+U.S.,33-2022,Forest Fire Inspectors and Prevention Specialists,Forest Fire Inspectors and Prevention Specs,,,,,"2,270","61,090","35,000","39,250","54,080","76,540","92,170",4507
+U.S.,33-3011,Bailiffs,,,,,,"15,900","58,460","29,540","40,360","53,040","75,520","87,670",4420
+U.S.,33-3012,Correctional Officers and Jailers,,,,,,"351,420","58,810","38,340","44,890","53,300","68,580","87,250",4442
+U.S.,33-3021,Detectives and Criminal Investigators,,,,,,"106,730","95,930","50,670","64,830","91,100","116,170","154,360",7592
+U.S.,33-3031,Fish and Game Wardens,,,,,,"6,290","61,120","33,260","48,250","60,380","72,900","86,880",5032
+U.S.,33-3041,Parking Enforcement Workers,,,,,,"7,420","50,430","32,260","38,030","46,840","60,370","75,440",3903
+U.S.,33-3051,Police and Sheriff's Patrol Officers,,,,,,"646,310","76,550","45,200","54,770","72,280","92,410","111,700",6023
+U.S.,33-3052,Transit and Railroad Police,,,,,,"2,360","78,230","52,550","62,230","72,250","100,170","108,090",6021
+U.S.,33-9011,Animal Control Workers,,,,,,"11,600","48,150","30,820","36,030","43,170","54,490","67,930",3598
+U.S.,33-9021,Private Detectives and Investigators,,,,,,"34,600","60,270","36,060","40,130","49,540","74,830","96,600",4128
+U.S.,33-9031,Gambling Surveillance Officers and Gambling Investigators,,,,,,"10,660","42,460","29,790","35,080","39,210","46,590","57,870",3268
+U.S.,33-9032,Security Guards,,,,,,"1,202,940","40,440","28,500","31,660","37,070","44,630","57,400",3089
+U.S.,33-9091,Crossing Guards and Flaggers,,,,,,"90,780","40,650","28,400","31,680","36,370","44,750","60,690",3031
+U.S.,33-9092,"Lifeguards, Ski Patrol, and Other Recreational Protective Service Workers",,,,,,"123,560","31,340","22,750","26,150","30,380","35,300","39,150",2532
+U.S.,33-9093,Transportation Security Screeners,,,,,,"47,950","51,040","40,270","44,570","50,020","55,810","62,800",4168
+U.S.,33-9094,School Bus Monitors,,,,,,"72,320","33,970","26,530","29,540","33,130","37,890","41,090",2761
+U.S.,33-9099,"Protective Service Workers, All Other",,,,,,"82,500","47,420","30,920","34,690","39,360","51,540","70,990",3280
+U.S.,35-1011,Chefs and Head Cooks,,,,,,"172,370","62,640","36,040","45,590","58,920","75,590","93,900",4910
+U.S.,35-1012,First-Line Supervisors of Food Preparation and Serving Workers,First-Line Supvs of Food Preparation and Serving Workers,,,,,"1,176,540","43,310","28,830","34,480","38,520","48,680","62,320",3210
+U.S.,35-2011,"Cooks, Fast Food",,,,,,"673,490","29,760","21,800","24,960","29,260","34,320","36,510",2438
+U.S.,35-2012,"Cooks, Institution and Cafeteria",,,,,,"435,640","35,920","25,290","29,280","35,320","40,320","47,310",2943
+U.S.,35-2013,"Cooks, Private Household",,,,,,740,"49,790","27,140","34,120","42,590","57,370","87,410",3549
+U.S.,35-2014,"Cooks, Restaurant",,,,,,"1,412,350","36,060","26,980","29,860","35,780","39,630","46,420",2982
+U.S.,35-2015,"Cooks, Short Order",,,,,,"126,370","33,920","23,320","28,430","34,130","38,240","44,010",2844
+U.S.,35-2019,"Cooks, All Other",,,,,,"18,650","37,610","26,720","31,550","35,920","40,960","48,880",2993
+U.S.,35-2021,Food Preparation Workers,,,,,,"879,610","32,960","22,970","27,920","32,420","36,780","42,990",2702
+U.S.,35-3011,Bartenders,,,,,,"711,140","37,090","19,870","23,860","31,510","42,800","61,210",2626
+U.S.,35-3023,Fast Food and Counter Workers,,,,,,"3,676,580","30,110","22,190","26,280","29,540","34,430","36,880",2462
+U.S.,35-3031,Waiters and Waitresses,,,,,,"2,237,850","36,530","18,600","23,770","31,940","41,600","60,100",2662
+U.S.,35-3041,"Food Servers, Nonrestaurant",,,,,,"267,840","33,840","24,480","28,640","33,110","36,780","43,740",2759
+U.S.,35-9011,Dining Room and Cafeteria Attendants and Bartender Helpers,,,,,,"483,390","32,730","21,490","26,290","31,180","35,820","44,580",2598
+U.S.,35-9021,Dishwashers,,,,,,"463,940","31,650","22,880","27,500","31,200","35,610","38,620",2600
+U.S.,35-9031,"Hosts and Hostesses, Restaurant, Lounge, and Coffee Shop",,,,,,"425,020","30,750","21,530","24,690","29,220","34,670","38,830",2435
+U.S.,35-9099,"Food Preparation and Serving Related Workers, All Other",,,,,,"86,350","35,430","24,260","29,460","33,870","37,880","45,570",2823
+U.S.,37-1011,First-Line Supervisors of Housekeeping and Janitorial Workers,First-Line Supvs of Housekeeping and Janitorial Workers,,,,,"171,120","49,980","33,060","37,790","46,650","59,290","71,870",3888
+U.S.,37-1012,"First-Line Supervisors of Landscaping, Lawn Service, and Groundskeeping Workers","First-Line Supvs of Landscaping, Lawn Service, and Groundskeeping Workers",,,,,"126,020","58,920","39,030","45,980","55,740","69,200","82,880",4645
+U.S.,37-2011,"Janitors and Cleaners, Except Maids and Housekeeping Cleaners",,,,,,"2,172,500","36,250","25,770","29,570","35,020","39,630","48,210",2918
+U.S.,37-2012,Maids and Housekeeping Cleaners,,,,,,"836,230","34,650","24,520","28,600","33,450","37,640","45,680",2788
+U.S.,37-2019,"Building Cleaning Workers, All Other",,,,,,"13,740","43,740","29,410","34,910","39,900","47,860","60,840",3325
+U.S.,37-2021,Pest Control Workers,,,,,,"93,760","44,650","30,670","36,710","43,470","48,400","60,430",3623
+U.S.,37-3011,Landscaping and Groundskeeping Workers,,,,,,"929,930","39,790","29,070","33,810","37,360","45,350","51,290",3113
+U.S.,37-3012,"Pesticide Handlers, Sprayers, and Applicators, Vegetation",,,,,,"23,520","44,480","31,550","37,210","44,070","49,120","57,370",3673
+U.S.,37-3013,Tree Trimmers and Pruners,,,,,,"50,270","52,850","34,450","40,720","49,070","60,450","75,870",4089
+U.S.,37-3019,"Grounds Maintenance Workers, All Other",,,,,,"11,980","46,540","29,410","35,080","43,310","53,800","74,940",3609
+U.S.,39-1013,First-Line Supervisors of Gambling Services Workers,First-Line Supvs of Gambling Services Workers,,,,,"25,100","62,110","37,230","48,510","61,210","74,080","82,290",5101
+U.S.,39-1014,"First-Line Supervisors of Entertainment and Recreation Workers, Except Gambling Services","First-Line Supvs of Entertainment and Recreation Workers, Except Gambling Services",,,,,"88,140","50,650","31,400","37,220","46,060","59,540","75,550",3838
+U.S.,39-1022,First-Line Supervisors of Personal Service Workers,First-Line Supvs of Personal Service Workers,,,,,"106,440","50,090","31,330","37,430","46,690","58,410","72,000",3891
+U.S.,39-2011,Animal Trainers,,,,,,"19,240","44,910","28,960","33,120","38,810","49,080","65,320",3234
+U.S.,39-2021,Animal Caretakers,,,,,,"268,830","33,530","23,180","28,030","31,200","36,220","45,080",2600
+U.S.,39-3011,Gambling Dealers,,,,,,"80,570","40,030","21,410","23,350","32,240","47,010","75,200",2687
+U.S.,39-3012,Gambling and Sports Book Writers and Runners,,,,,,"8,700","32,030","21,580","24,260","29,170","35,880","43,440",2431
+U.S.,39-3019,"Gambling Service Workers, All Other",,,,,,"13,300","35,650","22,880","27,290","32,710","38,260","51,070",2726
+U.S.,39-3021,Motion Picture Projectionists,,,,,,"2,610","43,800","22,840","27,040","35,160","46,260","81,490",2930
+U.S.,39-3031,"Ushers, Lobby Attendants, and Ticket Takers",,,,,,"117,560","30,520","21,730","25,170","29,780","34,800","37,780",2482
+U.S.,39-3091,Amusement and Recreation Attendants,,,,,,"361,680","30,240","21,450","24,750","29,390","34,490","38,080",2449
+U.S.,39-3092,Costume Attendants,,,,,,"6,300","60,230","33,430","38,860","52,370","76,170","95,070",4364
+U.S.,39-3093,"Locker Room, Coatroom, and Dressing Room Attendants",,,,,,"14,720","34,590","21,580","27,210","33,450","38,490","47,320",2788
+U.S.,39-3099,"Entertainment Attendants and Related Workers, All Other",,,,,,"7,320","34,670","22,170","26,650","33,280","39,110","49,500",2773
+U.S.,39-4011,Embalmers,,,,,,"3,380","56,690","35,360","45,130","54,090","63,100","79,650",4508
+U.S.,39-4012,Crematory Operators,,,,,,"3,220","44,290","31,200","34,980","41,670","50,120","60,600",3473
+U.S.,39-4021,Funeral Attendants,,,,,,"32,620","35,200","24,120","28,820","33,850","38,110","46,580",2821
+U.S.,39-4031,"Morticians, Undertakers, and Funeral Arrangers",,,,,,"24,200","58,020","30,660","39,320","51,030","71,300","91,870",4253
+U.S.,39-5011,Barbers,,,,,,"15,990","41,570","26,770","30,130","36,150","49,220","61,090",3013
+U.S.,39-5012,"Hairdressers, Hairstylists, and Cosmetologists",,,,,,"294,840","41,780","23,520","28,850","34,970","47,420","63,310",2914
+U.S.,39-5091,"Makeup Artists, Theatrical and Performance",,,,,,"4,130","68,590","21,540","22,720","47,390","101,330","141,060",3949
+U.S.,39-5092,Manicurists and Pedicurists,,,,,,"144,810","36,480","27,260","31,180","34,250","36,920","48,080",2854
+U.S.,39-5093,Shampooers,,,,,,"7,360","29,260","22,190","26,620","29,530","32,600","35,850",2461
+U.S.,39-5094,Skincare Specialists,Skincare Specs,,,,,"65,270","51,100","27,600","33,310","43,200","58,730","81,320",3600
+U.S.,39-6011,Baggage Porters and Bellhops,,,,,,"28,780","36,100","24,710","30,180","34,840","39,290","47,610",2903
+U.S.,39-6012,Concierges,,,,,,"41,020","40,230","29,510","33,300","37,150","45,440","57,270",3096
+U.S.,39-7010,Tour and Travel Guides,,,,,,"46,760","40,280","25,930","30,530","36,060","44,520","58,620",3005
+U.S.,39-9011,Childcare Workers,,,,,,"497,450","32,070","22,450","27,040","30,370","36,200","43,270",2531
+U.S.,39-9031,Exercise Trainers and Group Fitness Instructors,,,,,,"279,450","51,270","26,840","33,700","46,480","61,610","80,740",3873
+U.S.,39-9032,Recreation Workers,,,,,,"281,750","36,270","24,040","29,120","34,410","39,840","49,690",2868
+U.S.,39-9041,Residential Advisors,,,,,,"88,700","40,200","27,520","32,510","37,950","46,310","55,640",3163
+U.S.,39-9099,"Personal Care and Service Workers, All Other",,,,,,"60,390","37,190","24,210","31,570","36,980","37,690","48,000",3082
+U.S.,41-1011,First-Line Supervisors of Retail Sales Workers,First-Line Supvs of Retail Sales Workers,,,,,"1,087,890","52,030","30,350","37,090","46,730","59,720","76,350",3894
+U.S.,41-1012,First-Line Supervisors of Non-Retail Sales Workers,First-Line Supvs of Non-Retail Sales Workers,,,,,"227,150","99,020","48,640","63,510","84,570","119,530","164,420",7048
+U.S.,41-2011,Cashiers,,,,,,"3,298,660","30,710","22,580","26,870","29,720","34,500","37,190",2477
+U.S.,41-2012,Gambling Change Persons and Booth Cashiers,,,,,,"20,560","36,030","22,630","27,570","33,230","39,340","53,540",2769
+U.S.,41-2021,Counter and Rental Clerks,,,,,,"390,300","41,630","27,330","32,240","37,400","46,790","59,600",3117
+U.S.,41-2022,Parts Salespersons,,,,,,"260,770","41,080","26,700","29,830","36,860","47,470","60,480",3072
+U.S.,41-2031,Retail Salespersons,,,,,,"3,684,740","36,690","23,740","28,600","33,680","37,390","48,110",2807
+U.S.,41-3011,Advertising Sales Agents,,,,,,"108,100","75,820","31,200","43,740","61,270","90,930","133,150",5106
+U.S.,41-3021,Insurance Sales Agents,,,,,,"457,510","79,700","34,940","43,440","59,080","83,420","134,420",4923
+U.S.,41-3031,"Securities, Commodities, and Financial Services Sales Agents",,,,,,"479,630","109,710","45,420","50,080","76,900","127,670","212,180",6408
+U.S.,41-3041,Travel Agents,,,,,,"58,250","50,040","30,580","37,720","47,410","59,290","69,640",3951
+U.S.,41-3091,"Sales Representatives of Services, Except Advertising, Insurance, Financial Services, and Travel",,,,,,"1,142,020","81,080","36,430","47,220","64,600","97,920","143,550",5383
+U.S.,41-4011,"Sales Representatives, Wholesale and Manufacturing, Technical and Scientific Products",,,,,,"311,780","113,520","48,140","64,700","99,710","143,220","193,470",8309
+U.S.,41-4012,"Sales Representatives, Wholesale and Manufacturing, Except Technical and Scientific Products",,,,,,"1,288,920","80,490","37,240","48,520","65,630","96,090","133,010",5469
+U.S.,41-9011,Demonstrators and Product Promoters,,,,,,"50,790","41,090","29,460","32,330","36,970","45,650","58,180",3081
+U.S.,41-9012,Models,,,,,,"3,090","68,700","31,680","34,390","47,430","64,480","140,310",3953
+U.S.,41-9021,Real Estate Brokers,,,,,,"51,350","86,130","36,490","47,200","63,060","98,060","160,980",5255
+U.S.,41-9022,Real Estate Sales Agents,,,,,,"197,720","69,610","31,410","38,050","54,300","81,460","119,590",4525
+U.S.,41-9031,Sales Engineers,Sales Engs,,,,,"59,340","130,550","67,760","87,030","116,950","160,720","202,660",9746
+U.S.,41-9041,Telemarketers,,,,,,"81,580","36,680","24,430","28,810","34,480","40,380","49,700",2873
+U.S.,41-9091,"Door-to-Door Sales Workers, News and Street Vendors, and Related Workers",,,,,,"6,220","42,200","22,140","29,540","34,910","46,140","62,400",2909
+U.S.,41-9099,"Sales and Related Workers, All Other",,,,,,"114,280","54,150","27,250","33,580","44,610","63,560","91,940",3718
+U.S.,43-1011,First-Line Supervisors of Office and Administrative Support Workers,First-Line Supvs of Office and Administrative Support Workers,,,,,"1,504,570","68,620","41,060","50,160","63,450","79,690","100,270",5288
+U.S.,43-2011,"Switchboard Operators, Including Answering Service",,,,,,"43,830","40,020","28,030","31,600","36,750","43,840","58,810",3063
+U.S.,43-2021,Telephone Operators,,,,,,"4,600","42,100","29,770","33,820","38,080","48,590","59,230",3173
+U.S.,43-2099,"Communications Equipment Operators, All Other",,,,,,"1,380","53,240","36,130","43,620","49,310","61,710","75,960",4109
+U.S.,43-3011,Bill and Account Collectors,,,,,,"190,910","46,020","31,960","37,260","44,250","50,680","62,360",3688
+U.S.,43-3021,Billing and Posting Clerks,,,,,,"430,220","47,120","34,360","38,390","45,590","52,170","62,530",3799
+U.S.,43-3031,"Bookkeeping, Accounting, and Auditing Clerks",,,,,,"1,501,910","49,580","32,460","38,790","47,440","58,040","68,860",3953
+U.S.,43-3041,Gambling Cage Workers,,,,,,"12,560","36,750","25,790","29,590","36,110","41,180","48,450",3009
+U.S.,43-3051,Payroll and Timekeeping Clerks,,,,,,"157,230","54,690","35,960","43,680","52,240","63,330","75,820",4353
+U.S.,43-3061,Procurement Clerks,,,,,,"61,580","47,940","34,520","38,940","46,670","54,790","63,140",3889
+U.S.,43-3071,Tellers,,,,,,"340,820","38,850","29,720","34,970","37,640","43,900","46,950",3137
+U.S.,43-3099,"Financial Clerks, All Other",,,,,,"44,520","52,690","36,800","44,340","49,940","58,050","72,120",4162
+U.S.,43-4011,Brokerage Clerks,,,,,,"48,060","63,130","45,750","50,830","60,150","72,080","86,300",5013
+U.S.,43-4021,Correspondence Clerks,,,,,,"4,650","46,940","31,200","36,250","42,120","57,660","68,650",3510
+U.S.,43-4031,"Court, Municipal, and License Clerks",,,,,,"157,960","48,760","32,190","37,850","46,110","57,010","67,330",3843
+U.S.,43-4041,"Credit Authorizers, Checkers, and Clerks",,,,,,"14,290","50,380","32,950","39,110","48,000","57,130","65,460",4000
+U.S.,43-4051,Customer Service Representatives,CSR,Customer Support,,,,"2,858,710","43,520","29,560","34,780","39,680","48,480","61,250",3307
+U.S.,43-4061,"Eligibility Interviewers, Government Programs",,,,,,"150,190","51,840","36,720","41,290","50,270","61,510","68,180",4189
+U.S.,43-4071,File Clerks,,,,,,"82,290","40,730","27,040","32,350","38,130","47,180","58,140",3178
+U.S.,43-4081,"Hotel, Motel, and Resort Desk Clerks",,,,,,"263,800","32,570","23,500","28,100","30,790","36,040","41,820",2566
+U.S.,43-4111,"Interviewers, Except Eligibility and Loan",,,,,,"160,550","42,750","30,110","35,600","40,300","48,350","58,090",3358
+U.S.,43-4121,"Library Assistants, Clerical","Library Assts, Clerical",,,,,"83,680","35,970","23,510","28,670","34,020","41,300","50,200",2835
+U.S.,43-4131,Loan Interviewers and Clerks,,,,,,"203,940","48,660","35,010","39,270","47,380","57,150","63,070",3948
+U.S.,43-4141,New Accounts Clerks,,,,,,"41,180","44,670","35,040","37,970","44,630","48,730","56,420",3719
+U.S.,43-4151,Order Clerks,,,,,,"91,830","43,530","30,730","35,590","41,600","49,660","59,560",3467
+U.S.,43-4161,"Human Resources Assistants, Except Payroll and Timekeeping","Human Resources Assts, Except Payroll and Timekeeping",,,,,"101,440","48,800","34,490","40,070","47,710","56,010","64,250",3976
+U.S.,43-4171,Receptionists and Information Clerks,,,,,,"1,003,820","36,590","26,940","30,450","35,840","40,720","47,360",2987
+U.S.,43-4181,Reservation and Transportation Ticket Agents and Travel Clerks,,,,,,"119,270","46,820","31,900","36,070","40,610","57,030","71,680",3384
+U.S.,43-4199,"Information and Record Clerks, All Other",,,,,,"151,760","47,840","31,390","37,610","46,210","55,800","65,730",3851
+U.S.,43-5011,Cargo and Freight Agents,,,,,,"105,220","52,460","36,520","40,410","48,330","60,140","72,820",4028
+U.S.,43-5021,Couriers and Messengers,,,,,,"72,010","38,350","28,040","32,870","36,710","42,270","49,310",3059
+U.S.,43-5031,Public Safety Telecommunicators,,,,,,"97,820","52,140","33,490","39,560","48,890","61,460","75,910",4074
+U.S.,43-5032,"Dispatchers, Except Police, Fire, and Ambulance",,,,,,"206,090","50,830","32,110","37,800","46,860","59,500","75,840",3905
+U.S.,43-5041,"Meter Readers, Utilities",,,,,,"19,900","53,610","31,320","37,660","47,720","65,600","82,150",3977
+U.S.,43-5051,Postal Service Clerks,,,,,,"78,130","59,240","41,700","53,440","59,570","71,840","73,150",4964
+U.S.,43-5052,Postal Service Mail Carriers,,,,,,"331,600","59,340","41,480","46,030","56,330","75,300","75,920",4694
+U.S.,43-5053,"Postal Service Mail Sorters, Processors, and Processing Machine Operators",,,,,,"116,540","56,350","41,700","42,810","53,440","70,740","71,840",4453
+U.S.,43-5061,"Production, Planning, and Expediting Clerks",,,,,,"393,980","57,610","36,640","44,330","53,900","67,290","81,410",4492
+U.S.,43-5071,"Shipping, Receiving, and Inventory Clerks",,,,,,"844,120","42,730","30,620","35,470","39,780","47,600","58,310",3315
+U.S.,43-5111,"Weighers, Measurers, Checkers, and Samplers, Recordkeeping",,,,,,"51,250","44,240","32,440","36,830","43,270","50,080","57,050",3606
+U.S.,43-6011,Executive Secretaries and Executive Administrative Assistants,Executive Secretaries and Executive Administrative Assts,,,,,"483,570","73,680","45,910","56,960","70,310","84,860","104,000",5859
+U.S.,43-6012,Legal Secretaries and Administrative Assistants,Legal Secretaries and Administrative Assts,,,,,"152,790","56,330","34,780","41,450","50,680","66,510","82,890",4223
+U.S.,43-6013,Medical Secretaries and Administrative Assistants,Medical Secretaries and Administrative Assts,,,,,"749,500","43,380","31,900","36,540","40,640","47,930","58,340",3387
+U.S.,43-6014,"Secretaries and Administrative Assistants, Except Legal, Medical, and Executive","Secretaries and Administrative Assts, Except Legal, Medical, and Executive",,,,,"1,785,430","45,490","30,280","36,330","44,280","52,200","62,340",3690
+U.S.,43-9021,Data Entry Keyers,,,,,,"154,230","40,130","28,250","32,660","37,790","46,020","55,330",3149
+U.S.,43-9022,Word Processors and Typists,,,,,,"37,200","47,170","33,160","38,460","46,450","53,020","62,280",3871
+U.S.,43-9031,Desktop Publishers,,,,,,"5,220","57,680","31,880","38,350","51,290","71,420","97,870",4274
+U.S.,43-9041,Insurance Claims and Policy Processing Clerks,,,,,,"241,650","49,530","35,510","38,810","46,900","57,420","68,370",3908
+U.S.,43-9051,"Mail Clerks and Mail Machine Operators, Except Postal Service",,,,,,"66,600","38,370","28,390","32,540","36,880","42,860","49,700",3073
+U.S.,43-9061,"Office Clerks, General",,,,,,"2,496,370","43,560","28,230","33,660","40,480","49,820","61,690",3373
+U.S.,43-9071,"Office Machine Operators, Except Computer",,,,,,"27,960","39,600","28,450","32,040","37,450","44,790","53,560",3121
+U.S.,43-9081,Proofreaders and Copy Markers,,,,,,"5,490","51,100","31,730","37,940","48,790","59,090","75,510",4066
+U.S.,43-9111,Statistical Assistants,Statistical Assts,,,,,"7,200","53,900","35,460","43,440","50,510","61,960","76,880",4209
+U.S.,43-9199,"Office and Administrative Support Workers, All Other",,,,,,"172,020","46,620","29,100","34,520","43,230","53,740","67,060",3603
+U.S.,45-1011,"First-Line Supervisors of Farming, Fishing, and Forestry Workers","First-Line Supvs of Farming, Fishing, and Forestry Workers",,,,,"27,150","60,790","37,980","45,510","57,320","73,460","88,360",4777
+U.S.,45-2011,Agricultural Inspectors,,,,,,"12,660","52,170","35,360","39,640","48,010","60,690","75,270",4001
+U.S.,45-2021,Animal Breeders,,,,,,"1,360","53,520","33,710","39,980","47,540","61,330","77,410",3962
+U.S.,45-2041,"Graders and Sorters, Agricultural Products",,,,,,"23,430","34,880","28,400","32,240","34,360","37,020","42,090",2863
+U.S.,45-2091,Agricultural Equipment Operators,,,,,,"28,910","41,850","30,050","35,190","39,690","46,650","54,550",3308
+U.S.,45-2092,"Farmworkers and Laborers, Crop, Nursery, and Greenhouse",,,,,,"258,730","36,140","30,590","32,980","34,470","37,010","44,010",2873
+U.S.,45-2093,"Farmworkers, Farm, Ranch, and Aquacultural Animals",,,,,,"32,590","37,060","25,500","29,600","35,120","42,850","50,300",2927
+U.S.,45-2099,"Agricultural Workers, All Other",,,,,,"6,040","45,660","26,720","32,840","40,620","54,170","77,420",3385
+U.S.,45-4011,Forest and Conservation Workers,,,,,,"5,750","36,860","28,600","31,200","33,940","40,100","50,450",2828
+U.S.,45-4021,Fallers,,,,,,"4,800","61,190","32,920","44,510","53,170","69,780","90,930",4431
+U.S.,45-4022,Logging Equipment Operators,,,,,,"23,720","49,790","30,930","37,900","48,240","60,000","68,750",4020
+U.S.,45-4023,Log Graders and Scalers,,,,,,"3,640","47,120","33,060","37,970","45,600","55,100","62,360",3800
+U.S.,45-4029,"Logging Workers, All Other",,,,,,"2,540","52,950","34,520","40,560","52,480","61,930","70,890",4373
+U.S.,47-1011,First-Line Supervisors of Construction Trades and Extraction Workers,First-Line Supvs of Construction Trades and Extraction Workers,,,,,"777,420","81,340","49,420","60,870","76,760","97,750","122,260",6397
+U.S.,47-2011,Boilermakers,,,,,,"11,130","73,840","49,510","61,220","71,140","85,270","102,120",5928
+U.S.,47-2021,Brickmasons and Blockmasons,,,,,,"56,830","63,430","38,360","48,250","59,640","74,900","94,220",4970
+U.S.,47-2022,Stonemasons,,,,,,"9,790","56,930","36,530","45,940","51,830","64,700","80,850",4319
+U.S.,47-2031,Carpenters,Woodworker,Builder,,,,"700,290","60,970","37,440","46,130","56,350","72,290","94,580",4696
+U.S.,47-2041,Carpet Installers,,,,,,"15,560","52,290","31,160","36,930","47,520","61,580","80,650",3960
+U.S.,47-2042,"Floor Layers, Except Carpet, Wood, and Hard Tiles",,,,,,"25,150","56,680","35,340","40,840","48,840","66,170","91,840",4070
+U.S.,47-2043,Floor Sanders and Finishers,,,,,,"5,070","49,910","33,080","38,530","47,760","57,520","69,540",3980
+U.S.,47-2044,Tile and Stone Setters,,,,,,"42,420","53,920","33,120","38,330","48,910","62,230","80,030",4076
+U.S.,47-2051,Cement Masons and Concrete Finishers,,,,,,"203,560","57,410","37,440","44,690","50,720","63,750","83,580",4227
+U.S.,47-2053,Terrazzo Workers and Finishers,,,,,,"1,460","54,220","34,990","39,010","48,900","60,320","78,610",4075
+U.S.,47-2061,Construction Laborers,,,,,,"1,019,090","49,280","31,510","37,070","45,300","56,780","76,010",3775
+U.S.,47-2071,"Paving, Surfacing, and Tamping Equipment Operators",,,,,,"43,080","55,170","36,470","41,600","48,980","62,400","81,730",4082
+U.S.,47-2072,Pile Driver Operators,,,,,,"3,010","70,260","40,840","49,370","63,550","91,460","109,030",5296
+U.S.,47-2073,Operating Engineers and Other Construction Equipment Operators,Operating Engs and Other Construction Equipment Operators,,,,,"450,370","62,180","38,410","46,270","56,160","72,970","95,570",4680
+U.S.,47-2081,Drywall and Ceiling Tile Installers,,,,,,"90,860","61,480","36,730","45,860","55,700","71,780","103,310",4642
+U.S.,47-2082,Tapers,,,,,,"15,560","69,300","43,870","52,000","63,350","84,610","103,130",5279
+U.S.,47-2111,Electricians,Electrical Technician,Wireman,,,,"712,580","67,810","38,470","48,100","61,590","80,260","104,180",5133
+U.S.,47-2121,Glaziers,,,,,,"53,390","58,320","36,440","43,840","51,100","64,470","97,030",4258
+U.S.,47-2131,"Insulation Workers, Floor, Ceiling, and Wall",,,,,,"38,510","52,080","33,210","38,330","47,540","60,510","78,000",3962
+U.S.,47-2132,"Insulation Workers, Mechanical",,,,,,"22,850","60,530","38,910","46,090","53,920","71,200","90,760",4493
+U.S.,47-2141,"Painters, Construction and Maintenance",,,,,,"215,910","52,110","35,570","38,970","47,700","59,480","76,030",3975
+U.S.,47-2142,Paperhangers,,,,,,"1,830","54,020","36,400","40,760","48,460","60,820","79,390",4038
+U.S.,47-2151,Pipelayers,,,,,,"34,840","52,840","35,820","39,660","47,330","60,480","79,150",3944
+U.S.,47-2152,"Plumbers, Pipefitters, and Steamfitters",,,,,,"436,160","67,840","38,690","47,810","61,550","80,190","103,140",5129
+U.S.,47-2161,Plasterers and Stucco Masons,,,,,,"22,310","59,050","36,880","44,810","52,640","68,650","92,780",4387
+U.S.,47-2171,Reinforcing Iron and Rebar Workers,,,,,,"17,400","60,290","38,260","46,460","54,850","65,490","96,370",4571
+U.S.,47-2181,Roofers,,,,,,"135,140","55,840","36,240","44,150","50,030","62,330","79,850",4169
+U.S.,47-2211,Sheet Metal Workers,,,,,,"116,190","64,270","37,000","45,840","58,780","78,620","100,850",4898
+U.S.,47-2221,Structural Iron and Steel Workers,,,,,,"63,780","68,220","40,510","48,860","62,760","80,040","105,010",5230
+U.S.,47-2231,Solar Photovoltaic Installers,,,,,,"24,510","53,140","37,920","42,740","48,800","60,180","73,560",4067
+U.S.,47-3011,"Helpers--Brickmasons, Blockmasons, Stonemasons, and Tile and Marble Setters",,,,,,"16,460","45,590","33,270","37,070","42,470","50,430","61,930",3539
+U.S.,47-3012,Helpers--Carpenters,,,,,,"21,770","40,860","29,930","34,450","39,380","46,540","53,780",3282
+U.S.,47-3013,Helpers--Electricians,,,,,,"68,670","41,240","29,970","35,040","38,340","46,470","55,900",3195
+U.S.,47-3014,"Helpers--Painters, Paperhangers, Plasterers, and Stucco Masons",,,,,,"7,700","38,750","29,060","32,180","37,010","43,680","50,750",3084
+U.S.,47-3015,"Helpers--Pipelayers, Plumbers, Pipefitters, and Steamfitters",,,,,,"45,300","39,460","29,780","34,320","37,650","44,140","50,920",3138
+U.S.,47-3016,Helpers--Roofers,,,,,,"4,540","42,280","30,040","35,010","38,620","45,400","55,250",3218
+U.S.,47-3019,"Helpers, Construction Trades, All Other",,,,,,"27,250","43,090","30,670","35,910","40,220","48,050","57,660",3352
+U.S.,47-4011,Construction and Building Inspectors,,,,,,"133,640","72,880","43,740","53,400","67,700","86,530","106,200",5642
+U.S.,47-4021,Elevator and Escalator Installers and Repairers,,,,,,"23,990","100,060","51,960","75,570","102,420","127,310","138,910",8535
+U.S.,47-4031,Fence Erectors,,,,,,"21,470","46,650","32,120","37,220","44,410","50,950","64,170",3701
+U.S.,47-4041,Hazardous Materials Removal Workers,,,,,,"49,960","53,430","35,550","39,200","47,280","60,870","81,610",3940
+U.S.,47-4051,Highway Maintenance Workers,,,,,,"150,860","49,070","32,280","38,810","47,360","57,260","66,450",3947
+U.S.,47-4061,Rail-Track Laying and Maintenance Equipment Operators,,,,,,"18,770","67,330","46,350","59,350","67,000","80,480","82,340",5583
+U.S.,47-4071,Septic Tank Servicers and Sewer Pipe Cleaners,,,,,,"27,900","49,590","33,890","38,590","46,910","57,270","68,700",3909
+U.S.,47-4090,Miscellaneous Construction and Related Workers,,,,,,"28,930","51,670","34,840","38,800","47,090","58,690","77,500",3924
+U.S.,47-5011,"Derrick Operators, Oil and Gas",,,,,,"11,510","58,330","42,230","47,420","58,210","66,800","75,750",4851
+U.S.,47-5012,"Rotary Drill Operators, Oil and Gas",,,,,,"12,180","67,320","40,290","50,060","61,770","79,560","89,810",5148
+U.S.,47-5013,"Service Unit Operators, Oil and Gas",,,,,,"46,150","59,390","38,090","45,570","55,750","67,790","87,350",4646
+U.S.,47-5022,"Excavating and Loading Machine and Dragline Operators, Surface Mining",,,,,,"32,630","55,500","38,080","44,460","50,050","61,760","77,240",4171
+U.S.,47-5023,"Earth Drillers, Except Oil and Gas",,,,,,"18,010","60,250","40,560","47,840","56,660","67,700","82,280",4722
+U.S.,47-5032,"Explosives Workers, Ordnance Handling Experts, and Blasters",,,,,,"4,610","65,600","42,670","49,710","61,590","79,580","89,400",5133
+U.S.,47-5041,Continuous Mining Machine Operators,,,,,,"15,700","62,110","40,120","49,450","61,420","75,730","80,840",5118
+U.S.,47-5043,"Roof Bolters, Mining",,,,,,"1,960","68,540","53,970","59,520","66,660","75,540","78,030",5555
+U.S.,47-5044,"Loading and Moving Machine Operators, Underground Mining",,,,,,"5,160","63,620","45,250","56,740","64,070","72,590","75,400",5339
+U.S.,47-5049,"Underground Mining Machine Operators, All Other",,,,,,"2,560","65,290","40,140","54,560","68,910","77,390","79,240",5743
+U.S.,47-5051,"Rock Splitters, Quarry",,,,,,"3,610","47,830","32,050","37,440","46,530","56,940","64,020",3878
+U.S.,47-5071,"Roustabouts, Oil and Gas",,,,,,"43,830","47,730","35,150","38,410","46,340","53,590","61,350",3862
+U.S.,47-5081,Helpers--Extraction Workers,,,,,,"7,360","46,990","34,970","38,280","45,520","55,100","63,320",3793
+U.S.,47-5099,"Extraction Workers, All Other",,,,,,"7,120","53,050","34,180","38,830","49,580","62,610","76,570",4132
+U.S.,49-1011,"First-Line Supervisors of Mechanics, Installers, and Repairers","First-Line Supvs of Mechanics, Installers, and Repairers",,,,,"589,880","79,020","46,070","58,900","75,820","96,310","118,980",6318
+U.S.,49-2011,"Computer, Automated Teller, and Office Machine Repairers",,,,,,"77,580","48,290","33,430","37,210","45,760","58,240","65,820",3813
+U.S.,49-2021,"Radio, Cellular, and Tower Equipment Installers and Repairers",,,,,,"11,810","64,360","38,880","48,380","61,310","79,800","95,680",5109
+U.S.,49-2022,"Telecommunications Equipment Installers and Repairers, Except Line Installers",,,,,,"159,670","64,010","38,360","47,870","61,270","78,230","91,740",5106
+U.S.,49-2091,Avionics Technicians,Avionics Techs,,,,,"21,280","77,080","46,570","61,880","77,420","91,910","107,370",6452
+U.S.,49-2092,"Electric Motor, Power Tool, and Related Repairers",,,,,,"16,010","52,550","34,590","40,440","49,230","61,160","74,520",4103
+U.S.,49-2093,"Electrical and Electronics Installers and Repairers, Transportation Equipment",,,,,,"7,920","76,380","46,720","64,060","79,160","86,500","99,570",6597
+U.S.,49-2094,"Electrical and Electronics Repairers, Commercial and Industrial Equipment",,,,,,"58,320","69,810","41,600","53,350","66,680","81,330","100,510",5557
+U.S.,49-2095,"Electrical and Electronics Repairers, Powerhouse, Substation, and Relay",,,,,,"24,790","92,840","58,890","78,340","96,600","107,830","122,840",8050
+U.S.,49-2096,"Electronic Equipment Installers and Repairers, Motor Vehicles",,,,,,"8,900","47,570","32,380","37,790","45,570","54,690","64,880",3798
+U.S.,49-2097,Audiovisual Equipment Installers and Repairers,,,,,,"24,720","52,720","33,260","39,940","48,380","62,340","78,780",4032
+U.S.,49-2098,Security and Fire Alarm Systems Installers,,,,,,"83,540","57,400","36,790","45,580","56,430","65,570","79,650",4703
+U.S.,49-3011,Aircraft Mechanics and Service Technicians,Aircraft Mechanics and Service Techs,,,,,"137,630","76,260","45,760","59,190","75,020","88,350","114,750",6252
+U.S.,49-3021,Automotive Body and Related Repairers,,,,,,"151,910","55,220","35,250","41,430","48,740","62,060","80,380",4062
+U.S.,49-3022,Automotive Glass Installers and Repairers,,,,,,"16,890","46,010","31,370","37,180","45,320","51,970","62,000",3777
+U.S.,49-3023,Automotive Service Technicians and Mechanics,Automotive Service Techs and Mechanics,,,,,"676,570","51,940","30,600","36,910","47,770","62,310","77,630",3981
+U.S.,49-3031,Bus and Truck Mechanics and Diesel Engine Specialists,Bus and Truck Mechanics and Diesel Engine Specs,,,,,"285,030","59,920","39,020","47,730","58,970","70,470","82,430",4914
+U.S.,49-3041,Farm Equipment Mechanics and Service Technicians,Farm Equipment Mechanics and Service Techs,,,,,"36,830","52,120","34,870","41,290","49,210","61,310","72,450",4101
+U.S.,49-3042,"Mobile Heavy Equipment Mechanics, Except Engines",,,,,,"177,280","64,340","42,990","50,420","61,900","75,260","85,720",5158
+U.S.,49-3043,Rail Car Repairers,,,,,,"19,480","65,690","44,140","49,900","65,030","78,240","88,280",5419
+U.S.,49-3051,Motorboat Mechanics and Service Technicians,Motorboat Mechanics and Service Techs,,,,,"23,230","52,620","35,010","41,540","49,990","61,210","73,600",4166
+U.S.,49-3052,Motorcycle Mechanics,,,,,,"14,330","47,960","30,200","36,980","46,270","58,110","67,730",3856
+U.S.,49-3053,Outdoor Power Equipment and Other Small Engine Mechanics,,,,,,"36,080","45,180","30,840","36,430","44,140","51,120","60,900",3678
+U.S.,49-3091,Bicycle Repairers,,,,,,"13,980","39,360","28,670","34,140","38,320","45,130","48,910",3193
+U.S.,49-3092,Recreational Vehicle Service Technicians,Recreational Vehicle Service Techs,,,,,"17,360","50,690","33,660","38,690","47,950","60,200","72,500",3996
+U.S.,49-3093,Tire Repairers and Changers,,,,,,"101,520","37,280","28,820","31,140","35,790","39,910","47,680",2983
+U.S.,49-9011,Mechanical Door Repairers,,,,,,"27,800","51,640","36,240","42,330","48,650","59,700","69,750",4054
+U.S.,49-9012,"Control and Valve Installers and Repairers, Except Mechanical Door",,,,,,"47,780","72,360","38,820","49,520","70,100","94,670","105,250",5842
+U.S.,49-9021,"Heating, Air Conditioning, and Refrigeration Mechanics and Installers",,,,,,"397,450","59,620","37,270","46,550","57,300","71,120","84,250",4775
+U.S.,49-9031,Home Appliance Repairers,,,,,,"29,950","50,640","31,100","37,660","47,170","59,240","72,660",3931
+U.S.,49-9041,Industrial Machinery Mechanics,,,,,,"412,650","63,690","42,390","49,780","61,420","75,030","85,970",5118
+U.S.,49-9043,"Maintenance Workers, Machinery",,,,,,"58,040","58,500","37,440","46,280","57,350","67,320","80,770",4779
+U.S.,49-9044,Millwrights,,,,,,"37,930","64,310","43,160","51,530","62,980","76,380","82,700",5248
+U.S.,49-9045,"Refractory Materials Repairers, Except Brickmasons",,,,,,540,"49,900","31,130","35,730","48,410","62,670","69,990",4034
+U.S.,49-9051,Electrical Power-Line Installers and Repairers,,,,,,"120,170","85,900","48,220","63,120","85,420","104,230","119,920",7118
+U.S.,49-9052,Telecommunications Line Installers and Repairers,,,,,,"98,950","69,040","40,180","48,540","64,640","91,500","101,120",5387
+U.S.,49-9061,Camera and Photographic Equipment Repairers,,,,,,"2,540","58,870","34,710","42,840","46,850","63,940","120,090",3904
+U.S.,49-9062,Medical Equipment Repairers,,,,,,"64,400","64,140","36,810","45,180","60,670","78,160","97,780",5056
+U.S.,49-9063,Musical Instrument Repairers and Tuners,,,,,,"6,170","46,250","29,330","34,980","42,800","52,590","63,970",3567
+U.S.,49-9064,Watch and Clock Repairers,,,,,,"1,880","56,140","28,390","43,660","58,140","68,340","79,150",4845
+U.S.,49-9069,"Precision Instrument and Equipment Repairers, All Other",,,,,,"10,330","65,710","41,250","48,380","62,040","79,430","95,620",5170
+U.S.,49-9071,"Maintenance and Repair Workers, General",,,,,,"1,503,150","49,650","30,860","37,160","46,700","59,640","73,490",3892
+U.S.,49-9081,Wind Turbine Service Technicians,Wind Turbine Service Techs,,,,,"9,800","65,380","47,360","52,770","61,770","74,940","90,300",5148
+U.S.,49-9091,"Coin, Vending, and Amusement Machine Servicers and Repairers",,,,,,"36,100","45,840","28,840","35,420","44,980","53,550","63,300",3748
+U.S.,49-9092,Commercial Divers,,,,,,"2,790","75,570","39,430","46,440","61,300","89,750","136,990",5108
+U.S.,49-9094,Locksmiths and Safe Repairers,,,,,,"14,790","52,130","31,620","37,950","48,380","62,070","76,460",4032
+U.S.,49-9095,Manufactured Building and Mobile Home Installers,,,,,,"2,910","39,820","26,560","33,860","38,980","45,650","54,080",3248
+U.S.,49-9096,Riggers,,,,,,"23,870","62,020","37,420","45,220","56,220","75,350","97,080",4685
+U.S.,49-9097,Signal and Track Switch Repairers,,,,,,"9,200","81,810","61,910","76,760","82,710","91,050","95,460",6893
+U.S.,49-9098,"Helpers--Installation, Maintenance, and Repair Workers",,,,,,"101,890","38,720","27,080","31,310","36,710","44,230","52,590",3059
+U.S.,49-9099,"Installation, Maintenance, and Repair Workers, All Other",,,,,,"175,860","50,480","32,400","37,770","46,500","59,250","74,780",3875
+U.S.,51-1011,First-Line Supervisors of Production and Operating Workers,First-Line Supvs of Production and Operating Workers,,,,,"671,160","71,730","43,540","52,000","65,930","82,680","103,780",5494
+U.S.,51-2011,"Aircraft Structure, Surfaces, Rigging, and Systems Assemblers",,,,,,"29,810","62,860","39,550","49,080","61,240","78,030","93,180",5103
+U.S.,51-2021,"Coil Winders, Tapers, and Finishers",,,,,,"11,900","46,020","32,890","37,480","44,890","52,040","61,220",3741
+U.S.,51-2028,"Electrical, Electronic, and Electromechanical Assemblers, Except Coil Winders, Tapers, and Finishers",,,,,,"267,440","43,740","31,290","36,190","40,490","48,230","59,310",3374
+U.S.,51-2031,Engine and Other Machine Assemblers,,,,,,"47,960","53,470","36,250","40,480","50,270","67,210","72,160",4189
+U.S.,51-2041,Structural Metal Fabricators and Fitters,,,,,,"57,810","50,640","36,180","41,180","48,480","57,520","66,500",4040
+U.S.,51-2051,Fiberglass Laminators and Fabricators,,,,,,"20,380","43,920","31,400","36,720","40,200","48,430","58,140",3350
+U.S.,51-2061,Timing Device Assemblers and Adjusters,,,,,,400,"52,840","37,800","42,190","48,840","59,090","69,240",4070
+U.S.,51-2090,Miscellaneous Assemblers and Fabricators,,,,,,"1,489,280","42,400","30,030","34,980","38,920","47,310","59,840",3243
+U.S.,51-3011,Bakers,,,,,,"220,230","35,550","24,960","29,570","34,950","38,760","46,980",2913
+U.S.,51-3021,Butchers and Meat Cutters,,,,,,"136,330","39,680","27,500","32,240","37,650","46,020","54,600",3138
+U.S.,51-3022,"Meat, Poultry, and Fish Cutters and Trimmers",,,,,,"138,300","36,840","28,700","31,820","36,300","40,670","46,150",3025
+U.S.,51-3023,Slaughterers and Meat Packers,,,,,,"71,310","38,710","30,450","34,560","38,160","44,280","47,120",3180
+U.S.,51-3091,"Food and Tobacco Roasting, Baking, and Drying Machine Operators and Tenders",,,,,,"19,570","42,410","29,650","34,740","39,850","48,480","59,020",3321
+U.S.,51-3092,Food Batchmakers,,,,,,"169,190","40,890","29,480","33,610","38,460","47,170","55,640",3205
+U.S.,51-3093,Food Cooking Machine Operators and Tenders,,,,,,"29,730","39,770","28,720","33,430","38,550","45,870","50,910",3213
+U.S.,51-3099,"Food Processing Workers, All Other",,,,,,"63,970","37,630","28,870","33,930","36,890","40,630","46,100",3074
+U.S.,51-4021,"Extruding and Drawing Machine Setters, Operators, and Tenders, Metal and Plastic",,,,,,"63,370","45,440","32,050","37,320","44,390","50,800","59,930",3699
+U.S.,51-4022,"Forging Machine Setters, Operators, and Tenders, Metal and Plastic",,,,,,"9,170","47,350","31,860","38,390","46,990","54,220","64,070",3916
+U.S.,51-4023,"Rolling Machine Setters, Operators, and Tenders, Metal and Plastic",,,,,,"24,750","49,290","35,690","40,240","47,040","55,220","65,830",3920
+U.S.,51-4031,"Cutting, Punching, and Press Machine Setters, Operators, and Tenders, Metal and Plastic",,,,,,"179,230","44,260","32,640","36,620","42,400","49,030","59,810",3533
+U.S.,51-4032,"Drilling and Boring Machine Tool Setters, Operators, and Tenders, Metal and Plastic",,,,,,"5,740","47,490","34,550","38,840","44,620","53,410","62,820",3718
+U.S.,51-4033,"Grinding, Lapping, Polishing, and Buffing Machine Tool Setters, Operators, and Tenders, Metal and Plastic",,,,,,"75,260","44,450","32,960","37,020","42,610","48,800","59,990",3551
+U.S.,51-4034,"Lathe and Turning Machine Tool Setters, Operators, and Tenders, Metal and Plastic",,,,,,"19,560","48,850","35,760","39,460","47,110","55,860","64,470",3926
+U.S.,51-4035,"Milling and Planing Machine Setters, Operators, and Tenders, Metal and Plastic",,,,,,"13,990","50,020","35,140","38,390","47,200","59,280","69,920",3933
+U.S.,51-4041,Machinists,,,,,,"290,720","54,600","36,690","43,680","50,840","62,860","75,820",4237
+U.S.,51-4051,Metal-Refining Furnace Operators and Tenders,,,,,,"20,870","54,340","37,180","44,080","50,250","63,820","82,530",4188
+U.S.,51-4052,"Pourers and Casters, Metal",,,,,,"5,460","50,110","36,220","40,140","48,690","57,780","68,280",4058
+U.S.,51-4061,"Model Makers, Metal and Plastic",,,,,,"2,840","64,920","42,470","49,270","64,190","76,960","88,420",5349
+U.S.,51-4062,"Patternmakers, Metal and Plastic",,,,,,"2,150","54,550","36,280","44,090","49,670","64,830","77,230",4139
+U.S.,51-4071,Foundry Mold and Coremakers,,,,,,"11,780","45,130","33,070","37,390","44,300","50,380","61,300",3692
+U.S.,51-4072,"Molding, Coremaking, and Casting Machine Setters, Operators, and Tenders, Metal and Plastic",,,,,,"158,980","42,060","30,280","34,900","38,870","47,320","57,970",3239
+U.S.,51-4081,"Multiple Machine Tool Setters, Operators, and Tenders, Metal and Plastic",,,,,,"127,790","43,990","31,240","36,330","41,600","49,660","59,700",3467
+U.S.,51-4111,Tool and Die Makers,,,,,,"58,150","62,020","40,560","49,070","61,490","74,030","81,720",5124
+U.S.,51-4121,"Welders, Cutters, Solderers, and Brazers",,,,,,"421,730","52,640","36,830","42,760","48,940","59,900","72,970",4078
+U.S.,51-4122,"Welding, Soldering, and Brazing Machine Setters, Operators, and Tenders",,,,,,"33,020","47,120","35,270","38,600","45,350","52,430","63,260",3779
+U.S.,51-4191,"Heat Treating Equipment Setters, Operators, and Tenders, Metal and Plastic",,,,,,"14,950","46,540","34,850","38,330","44,240","51,570","61,410",3687
+U.S.,51-4192,"Layout Workers, Metal and Plastic",,,,,,"6,660","60,110","41,480","48,180","62,270","66,580","79,370",5189
+U.S.,51-4193,"Plating Machine Setters, Operators, and Tenders, Metal and Plastic",,,,,,"31,970","42,550","30,730","35,480","39,740","47,530","57,550",3312
+U.S.,51-4194,"Tool Grinders, Filers, and Sharpeners",,,,,,"6,660","48,520","32,020","38,030","46,410","56,950","68,150",3868
+U.S.,51-4199,"Metal Workers and Plastic Workers, All Other",,,,,,"20,370","44,780","32,580","36,910","41,200","48,910","61,080",3433
+U.S.,51-5111,Prepress Technicians and Workers,Prepress Techs and Workers,,,,,"23,590","46,540","31,330","36,390","45,070","54,330","63,440",3756
+U.S.,51-5112,Printing Press Operators,,,,,,"151,450","44,450","29,790","35,560","41,860","50,160","61,500",3488
+U.S.,51-5113,Print Binding and Finishing Workers,,,,,,"38,880","40,860","29,220","34,520","38,100","46,740","56,090",3175
+U.S.,51-6011,Laundry and Dry-Cleaning Workers,,,,,,"185,000","31,880","23,670","27,690","31,050","35,460","38,920",2588
+U.S.,51-6021,"Pressers, Textile, Garment, and Related Materials",,,,,,"28,700","32,340","23,650","28,460","32,240","36,050","39,360",2687
+U.S.,51-6031,Sewing Machine Operators,,,,,,"116,130","35,000","25,360","29,690","34,440","38,340","45,360",2870
+U.S.,51-6041,Shoe and Leather Workers and Repairers,,,,,,"7,230","37,030","25,620","29,600","36,020","41,990","48,440",3002
+U.S.,51-6042,Shoe Machine Operators and Tenders,,,,,,"4,630","36,570","27,950","30,420","36,970","42,650","45,380",3081
+U.S.,51-6051,"Sewers, Hand",,,,,,"3,390","33,860","26,000","29,020","32,240","37,170","43,880",2687
+U.S.,51-6052,"Tailors, Dressmakers, and Custom Sewers",,,,,,"14,950","40,190","27,560","31,820","36,650","44,510","55,810",3054
+U.S.,51-6061,Textile Bleaching and Dyeing Machine Operators and Tenders,,,,,,"6,650","37,570","27,580","30,410","35,340","40,520","46,260",2945
+U.S.,51-6062,"Textile Cutting Machine Setters, Operators, and Tenders",,,,,,"9,760","37,040","27,540","31,490","36,620","41,100","46,790",3052
+U.S.,51-6063,"Textile Knitting and Weaving Machine Setters, Operators, and Tenders",,,,,,"15,980","37,880","28,700","31,950","37,130","41,860","46,940",3094
+U.S.,51-6064,"Textile Winding, Twisting, and Drawing Out Machine Setters, Operators, and Tenders",,,,,,"23,550","37,100","29,530","32,950","35,530","39,780","46,840",2961
+U.S.,51-6091,"Extruding and Forming Machine Setters, Operators, and Tenders, Synthetic and Glass Fibers",,,,,,"14,520","45,270","33,510","37,980","44,030","49,990","60,380",3669
+U.S.,51-6092,Fabric and Apparel Patternmakers,,,,,,"2,670","66,750","31,780","40,760","62,510","82,340","106,870",5209
+U.S.,51-6093,Upholsterers,,,,,,"25,740","44,820","30,450","36,090","42,730","49,740","61,800",3561
+U.S.,51-6099,"Textile, Apparel, and Furnishings Workers, All Other",,,,,,"15,080","37,430","28,030","30,150","35,130","40,710","49,810",2928
+U.S.,51-7011,Cabinetmakers and Bench Carpenters,,,,,,"88,460","44,620","30,850","36,550","43,260","49,470","60,800",3605
+U.S.,51-7021,Furniture Finishers,,,,,,"14,380","42,490","29,660","34,980","39,790","47,640","57,120",3316
+U.S.,51-7031,"Model Makers, Wood",,,,,,590,"52,510","33,880","37,440","45,040","63,740","84,090",3753
+U.S.,51-7032,"Patternmakers, Wood",,,,,,260,"52,330","38,700","43,730","48,630","55,030","75,460",4053
+U.S.,51-7041,"Sawing Machine Setters, Operators, and Tenders, Wood",,,,,,"43,570","40,120","28,790","33,470","38,000","45,970","51,780",3167
+U.S.,51-7042,"Woodworking Machine Setters, Operators, and Tenders, Except Sawing",,,,,,"61,250","40,360","29,620","34,500","38,260","46,100","52,280",3188
+U.S.,51-7099,"Woodworkers, All Other",,,,,,"7,830","39,520","28,250","32,540","37,760","44,840","54,660",3147
+U.S.,51-8011,Nuclear Power Reactor Operators,,,,,,"5,760","121,240","92,270","103,880","120,350","134,100","151,980",10029
+U.S.,51-8012,Power Distributors and Dispatchers,,,,,,"9,040","105,460","68,360","87,440","104,750","122,830","138,950",8729
+U.S.,51-8013,Power Plant Operators,,,,,,"31,490","91,880","54,080","72,860","97,010","106,780","123,120",8084
+U.S.,51-8021,Stationary Engineers and Boiler Operators,Stationary Engs and Boiler Operators,,,,,"33,840","73,170","41,360","51,970","67,640","89,160","113,660",5637
+U.S.,51-8031,Water and Wastewater Treatment Plant and System Operators,,,,,,"120,710","58,050","36,680","44,720","54,890","67,790","83,090",4574
+U.S.,51-8091,Chemical Plant and System Operators,,,,,,"17,980","79,450","47,650","59,830","80,030","99,960","108,470",6669
+U.S.,51-8092,Gas Plant Operators,,,,,,"15,930","83,020","53,330","66,250","82,560","99,180","108,340",6880
+U.S.,51-8093,"Petroleum Pump System Operators, Refinery Operators, and Gaugers",,,,,,"33,360","88,120","57,970","76,130","94,580","102,410","110,220",7882
+U.S.,51-8099,"Plant and System Operators, All Other",,,,,,"15,370","59,890","36,120","45,390","56,940","71,500","85,950",4745
+U.S.,51-9011,Chemical Equipment Operators and Tenders,,,,,,"120,260","57,350","36,200","43,580","51,720","66,810","84,310",4310
+U.S.,51-9012,"Separating, Filtering, Clarifying, Precipitating, and Still Machine Setters, Operators, and Tenders",,,,,,"53,170","51,960","34,100","39,010","48,120","59,560","72,950",4010
+U.S.,51-9021,"Crushing, Grinding, and Polishing Machine Setters, Operators, and Tenders",,,,,,"26,210","46,390","32,650","36,920","44,510","53,850","63,180",3709
+U.S.,51-9022,"Grinding and Polishing Workers, Hand",,,,,,"12,290","41,490","30,140","34,600","38,940","47,050","57,990",3245
+U.S.,51-9023,"Mixing and Blending Machine Setters, Operators, and Tenders",,,,,,"105,740","47,950","34,090","38,610","46,100","55,470","63,700",3842
+U.S.,51-9031,"Cutters and Trimmers, Hand",,,,,,"7,220","39,260","28,770","32,090","37,040","43,400","54,350",3087
+U.S.,51-9032,"Cutting and Slicing Machine Setters, Operators, and Tenders",,,,,,"52,720","44,700","32,760","37,430","44,310","50,570","58,240",3693
+U.S.,51-9041,"Extruding, Forming, Pressing, and Compacting Machine Setters, Operators, and Tenders",,,,,,"57,080","44,610","32,100","36,810","42,670","49,730","61,350",3556
+U.S.,51-9051,"Furnace, Kiln, Oven, Drier, and Kettle Operators and Tenders",,,,,,"14,820","47,540","34,430","38,200","45,640","54,660","63,340",3803
+U.S.,51-9061,"Inspectors, Testers, Sorters, Samplers, and Weighers",,,,,,"584,630","49,260","31,950","37,190","45,850","58,030","72,210",3821
+U.S.,51-9071,Jewelers and Precious Stone and Metal Workers,,,,,,"24,060","52,000","30,790","36,510","47,450","62,070","78,500",3954
+U.S.,51-9081,Dental Laboratory Technicians,Dental Laboratory Techs,,,,,"34,190","52,390","33,940","38,250","47,690","60,880","77,460",3974
+U.S.,51-9082,Medical Appliance Technicians,Medical Appliance Techs,,,,,"12,550","48,860","35,160","38,220","44,960","52,880","70,060",3747
+U.S.,51-9083,Ophthalmic Laboratory Technicians,Ophthalmic Laboratory Techs,,,,,"18,240","41,280","30,030","34,630","37,720","45,540","55,580",3143
+U.S.,51-9111,Packaging and Filling Machine Operators and Tenders,,,,,,"371,600","41,200","30,050","34,440","38,330","46,540","56,070",3194
+U.S.,51-9123,"Painting, Coating, and Decorating Workers",,,,,,"10,700","44,050","30,660","34,980","40,230","48,980","59,160",3353
+U.S.,51-9124,"Coating, Painting, and Spraying Machine Setters, Operators, and Tenders",,,,,,"155,880","48,480","33,300","37,790","45,560","54,440","66,390",3797
+U.S.,51-9141,Semiconductor Processing Technicians,Semiconductor Processing Techs,,,,,"26,450","48,970","31,610","38,510","45,850","56,660","67,870",3821
+U.S.,51-9151,Photographic Process Workers and Processing Machine Operators,,,,,,"5,770","41,900","29,390","31,950","35,620","44,650","65,480",2968
+U.S.,51-9161,Computer Numerically Controlled Tool Operators,,,,,,"187,670","51,030","36,380","40,390","48,550","59,630","66,970",4046
+U.S.,51-9162,Computer Numerically Controlled Tool Programmers,,,,,,"28,030","67,650","45,980","53,750","63,440","78,200","94,880",5287
+U.S.,51-9191,Adhesive Bonding Machine Operators and Tenders,,,,,,"12,510","44,400","31,200","35,660","43,540","50,350","58,840",3628
+U.S.,51-9192,"Cleaning, Washing, and Metal Pickling Equipment Operators and Tenders",,,,,,"15,210","41,500","31,370","35,370","39,340","46,530","54,180",3278
+U.S.,51-9193,Cooling and Freezing Equipment Operators and Tenders,,,,,,"6,500","44,840","31,370","36,760","42,420","51,530","62,120",3535
+U.S.,51-9194,Etchers and Engravers,,,,,,"8,140","42,780","29,120","33,280","40,040","47,920","61,360",3337
+U.S.,51-9195,"Molders, Shapers, and Casters, Except Metal and Plastic",,,,,,"38,480","44,710","32,540","37,150","43,310","49,330","59,740",3609
+U.S.,51-9196,"Paper Goods Machine Setters, Operators, and Tenders",,,,,,"96,460","48,910","35,590","39,040","47,250","56,690","64,290",3938
+U.S.,51-9197,Tire Builders,,,,,,"20,660","53,930","37,940","46,280","54,080","62,330","66,700",4507
+U.S.,51-9198,Helpers--Production Workers,,,,,,"181,810","38,160","28,630","32,400","36,700","42,600","49,910",3058
+U.S.,51-9199,"Production Workers, All Other",,,,,,"243,500","41,400","29,220","33,070","37,430","46,520","59,090",3119
+U.S.,53-1041,Aircraft Cargo Handling Supervisors,Aircraft Cargo Handling Supvs,,,,,"9,020","64,950","45,770","50,390","58,920","76,270","91,400",4910
+U.S.,53-1047,"First-Line Supervisors of Transportation and Material Moving Workers, Except Aircraft Cargo Handling Supervisors","First-Line Supvs of Transportation and Material Moving Workers, Except Aircraft Cargo Handling Supvs",,,,,"594,330","63,840","39,440","47,560","60,510","75,940","92,140",5043
+U.S.,53-2011,"Airline Pilots, Copilots, and Flight Engineers","Airline Pilots, Copilots, and Flight Engs",,,,,"93,670","250,050","101,710","142,770","219,140",#,#,18262
+U.S.,53-2012,Commercial Pilots,,,,,,"52,750","138,010","56,260","79,440","113,080","168,700",#,9423
+U.S.,53-2021,Air Traffic Controllers,,,,,,"22,310","136,790","76,190","96,870","137,380","176,720","200,990",11448
+U.S.,53-2022,Airfield Operations Specialists,Airfield Operations Specs,,,,,"18,320","62,140","33,870","39,700","51,140","74,410","106,860",4262
+U.S.,53-2031,Flight Attendants,,,,,,"126,020","70,980","39,580","49,690","68,370","86,610","104,100",5698
+U.S.,53-3011,"Ambulance Drivers and Attendants, Except Emergency Medical Technicians","Ambulance Drivers and Attendants, Except Emergency Medical Techs",,,,,"11,520","34,420","23,410","27,850","32,580","36,900","45,930",2715
+U.S.,53-3031,Driver/Sales Workers,,,,,,"463,120","38,230","20,800","25,900","35,420","46,640","61,080",2952
+U.S.,53-3032,Heavy and Tractor-Trailer Truck Drivers,,,,,,"2,044,400","55,990","37,440","45,920","54,320","63,010","76,780",4527
+U.S.,53-3033,Light Truck Drivers,,,,,,"1,003,960","46,090","28,070","35,110","42,470","51,110","75,090",3539
+U.S.,53-3051,"Bus Drivers, School",,,,,,"371,530","45,210","27,380","36,290","45,660","52,900","61,320",3805
+U.S.,53-3052,"Bus Drivers, Transit and Intercity",,,,,,"184,990","59,860","37,630","46,210","60,170","76,700","82,660",5014
+U.S.,53-3053,Shuttle Drivers and Chauffeurs,,,,,,"204,930","36,920","25,750","29,790","35,240","41,600","49,920",2937
+U.S.,53-3054,Taxi Drivers,,,,,,"17,770","35,120","27,040","29,920","34,680","37,280","40,630",2890
+U.S.,53-3099,"Motor Vehicle Operators, All Other",,,,,,"51,140","39,970","24,550","28,890","35,690","46,440","63,410",2974
+U.S.,53-4011,Locomotive Engineers,Locomotive Engs,,,,,"32,390","75,870","59,450","73,240","74,770","80,340","92,670",6231
+U.S.,53-4013,"Rail Yard Engineers, Dinkey Operators, and Hostlers","Rail Yard Engs, Dinkey Operators, and Hostlers",,,,,"2,430","57,580","38,800","49,080","57,070","63,050","76,470",4756
+U.S.,53-4022,"Railroad Brake, Signal, and Switch Operators and Locomotive Firers",,,,,,"13,610","62,840","44,350","57,220","63,540","67,540","78,120",5295
+U.S.,53-4031,Railroad Conductors and Yardmasters,,,,,,"46,490","72,220","54,610","62,180","71,130","78,490","99,210",5928
+U.S.,53-4041,Subway and Streetcar Operators,,,,,,"14,860","77,370","54,690","73,570","84,270","84,310","87,110",7023
+U.S.,53-4099,"Rail Transportation Workers, All Other",,,,,,"1,830","50,730","35,420","39,330","44,660","54,320","85,490",3722
+U.S.,53-5011,Sailors and Marine Oilers,,,,,,"29,960","53,470","32,240","37,960","48,400","62,700","79,180",4033
+U.S.,53-5021,"Captains, Mates, and Pilots of Water Vessels",,,,,,"34,520","97,820","44,600","60,550","88,730","123,640","161,510",7394
+U.S.,53-5022,Motorboat Operators,,,,,,"2,710","51,810","28,890","35,860","46,420","64,490","80,960",3868
+U.S.,53-5031,Ship Engineers,Ship Engs,,,,,"8,860","100,550","57,140","68,880","94,270","122,390","141,910",7856
+U.S.,53-6011,Bridge and Lock Tenders,,,,,,"3,460","50,070","28,990","33,340","49,120","64,250","69,880",4093
+U.S.,53-6021,Parking Attendants,,,,,,"118,130","32,700","22,890","28,470","32,840","36,420","40,500",2737
+U.S.,53-6031,Automotive and Watercraft Service Attendants,,,,,,"92,530","34,530","27,430","29,640","33,820","37,170","43,830",2818
+U.S.,53-6032,Aircraft Service Attendants,,,,,,"24,940","42,110","32,040","35,980","39,110","46,010","53,820",3259
+U.S.,53-6041,Traffic Technicians,Traffic Techs,,,,,"7,530","56,680","36,290","42,770","52,240","67,370","78,840",4353
+U.S.,53-6051,Transportation Inspectors,,,,,,"27,670","83,920","39,790","60,110","87,290","97,630","129,020",7274
+U.S.,53-6061,Passenger Attendants,,,,,,"20,190","36,780","27,040","32,020","35,620","39,470","47,680",2968
+U.S.,53-6099,"Transportation Workers, All Other",,,,,,"10,940","43,530","27,340","31,700","40,300","52,000","63,680",3358
+U.S.,53-7011,Conveyor Operators and Tenders,,,,,,"24,660","42,900","32,770","35,290","39,260","47,000","59,910",3272
+U.S.,53-7021,Crane and Tower Operators,,,,,,"42,260","68,040","39,200","48,380","64,690","78,720","98,820",5391
+U.S.,53-7031,Dredge Operators,,,,,,940,"53,700","37,870","43,670","50,440","60,670","72,570",4203
+U.S.,53-7041,Hoist and Winch Operators,,,,,,"2,230","65,810","33,760","40,490","55,950","93,630","111,470",4663
+U.S.,53-7051,Industrial Truck and Tractor Operators,,,,,,"778,920","45,720","35,260","38,270","44,470","50,010","59,860",3706
+U.S.,53-7061,Cleaners of Vehicles and Equipment,,,,,,"365,290","35,250","24,560","28,880","34,150","38,500","46,450",2846
+U.S.,53-7062,"Laborers and Freight, Stock, and Material Movers, Hand",,,,,,"3,008,300","39,760","29,480","34,040","37,660","44,950","50,280",3138
+U.S.,53-7063,Machine Feeders and Offbearers,,,,,,"44,500","41,000","29,880","34,610","39,250","46,590","53,320",3271
+U.S.,53-7064,"Packers and Packagers, Hand",,,,,,"645,210","35,450","25,880","30,220","34,830","39,580","45,100",2903
+U.S.,53-7065,Stockers and Order Fillers,,,,,,"2,872,680","37,990","29,150","32,160","36,390","41,370","48,890",3033
+U.S.,53-7071,Gas Compressor and Gas Pumping Station Operators,,,,,,"4,400","63,810","36,480","47,470","61,870","75,370","93,450",5156
+U.S.,53-7072,"Pump Operators, Except Wellhead Pumpers",,,,,,"11,570","58,650","36,290","43,720","54,690","72,680","85,430",4558
+U.S.,53-7073,Wellhead Pumpers,,,,,,"18,230","69,930","38,490","55,700","71,830","81,080","96,600",5986
+U.S.,53-7081,Refuse and Recyclable Material Collectors,,,,,,"135,430","47,810","30,050","36,100","45,760","58,360","67,970",3813
+U.S.,53-7121,"Tank Car, Truck, and Ship Loaders",,,,,,"11,400","60,530","38,850","46,500","58,620","72,710","88,810",4885
+U.S.,53-7199,"Material Moving Workers, All Other",,,,,,"23,970","45,840","32,240","34,830","40,310","48,460","63,430",3359

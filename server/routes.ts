@@ -181,6 +181,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Career paths routes
+  app.get("/api/career-paths", async (req: Request, res: Response) => {
+    try {
+      const careerPaths = await activeStorage.getAllCareerPaths();
+      res.json(careerPaths);
+    } catch (error) {
+      console.error("Error fetching career paths:", error);
+      res.status(500).json({ message: "Failed to get career paths", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/api/career-paths/field/:fieldOfStudy", async (req: Request, res: Response) => {
+    try {
+      const careerPaths = await activeStorage.getCareerPathsByField(req.params.fieldOfStudy);
+      res.json(careerPaths);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get career paths" });
+    }
+  });
+
+  app.get("/api/career-paths/:id", async (req: Request, res: Response) => {
+    try {
+      const careerPath = await activeStorage.getCareerPath(parseInt(req.params.id));
+      if (!careerPath) {
+        return res.status(404).json({ message: "Career path not found" });
+      }
+      res.json(careerPath);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get career path" });
+    }
+  });
+
+  // Location cost of living routes
+  app.get("/api/location-cost-of-living", async (req: Request, res: Response) => {
+    try {
+      const locations = await activeStorage.getAllLocationCostOfLiving();
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching location cost of living data:", error);
+      res.status(500).json({ message: "Failed to get location cost of living data", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/api/location-cost-of-living/zip/:zipCode", async (req: Request, res: Response) => {
+    try {
+      const location = await activeStorage.getLocationCostOfLivingByZipCode(req.params.zipCode);
+      if (!location) {
+        return res.status(404).json({ message: "Location cost of living data not found" });
+      }
+      res.json(location);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get location cost of living data" });
+    }
+  });
+
+  app.get("/api/location-cost-of-living/:id", async (req: Request, res: Response) => {
+    try {
+      const location = await activeStorage.getLocationCostOfLiving(parseInt(req.params.id));
+      if (!location) {
+        return res.status(404).json({ message: "Location cost of living data not found" });
+      }
+      res.json(location);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get location cost of living data" });
+    }
+  });
+
+  // Zip code income routes
+  app.get("/api/zip-code-income", async (req: Request, res: Response) => {
+    try {
+      const incomes = await activeStorage.getAllZipCodeIncomes();
+      res.json(incomes);
+    } catch (error) {
+      console.error("Error fetching zip code income data:", error);
+      res.status(500).json({ message: "Failed to get zip code income data", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.get("/api/zip-code-income/zip/:zipCode", async (req: Request, res: Response) => {
+    try {
+      const income = await activeStorage.getZipCodeIncomeByZipCode(req.params.zipCode);
+      if (!income) {
+        return res.status(404).json({ message: "Zip code income data not found" });
+      }
+      res.json(income);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get zip code income data" });
+    }
+  });
+
+  app.get("/api/zip-code-income/:id", async (req: Request, res: Response) => {
+    try {
+      const income = await activeStorage.getZipCodeIncome(parseInt(req.params.id));
+      if (!income) {
+        return res.status(404).json({ message: "Zip code income data not found" });
+      }
+      res.json(income);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get zip code income data" });
+    }
+  });
+
   // Python financial calculator route
   app.post("/api/calculate/financial-projection", async (req: Request, res: Response) => {
     try {
