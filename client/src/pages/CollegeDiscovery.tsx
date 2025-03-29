@@ -237,12 +237,12 @@ const CollegeDiscovery = () => {
       console.log('Condition check:', college.usNewsTop150 !== null && college.usNewsTop150 !== undefined && college.usNewsTop150 <= 150);
     }
     
-    // The issue might be in how we're comparing - let's try to parse values to numbers for comparison
+    // Use proper numeric parsing and exclude 0 values
     const usNewsRank = college.usNewsTop150 !== null && college.usNewsTop150 !== undefined ? 
       Number(college.usNewsTop150) : null;
       
     const matchesUsNewsTop150 = !usNewsTop150Filter || 
-      (usNewsRank !== null && !isNaN(usNewsRank) && usNewsRank <= 150);
+      (usNewsRank !== null && !isNaN(usNewsRank) && usNewsRank > 0 && usNewsRank <= 150);
     
     // Check if the college is among the top liberal arts colleges (rank <= 300)
     // Also debug liberal arts colleges
@@ -287,9 +287,9 @@ const CollegeDiscovery = () => {
   // Debug logging - must be placed after filteredColleges and currentColleges are defined
   useEffect(() => {
     if (colleges.length > 0) {
-      // Log counts for each filter
-      const usNewsCount = colleges.filter(c => c.usNewsTop150 !== null && c.usNewsTop150 !== undefined && c.usNewsTop150 <= 150).length;
-      const liberalArtsCount = colleges.filter(c => c.bestLiberalArtsColleges !== null && c.bestLiberalArtsColleges !== undefined && c.bestLiberalArtsColleges <= 300).length;
+      // Log counts for each filter - only count colleges with ranks between 1-150 for US News
+      const usNewsCount = colleges.filter(c => c.usNewsTop150 !== null && c.usNewsTop150 !== undefined && c.usNewsTop150 > 0 && c.usNewsTop150 <= 150).length;
+      const liberalArtsCount = colleges.filter(c => c.bestLiberalArtsColleges !== null && c.bestLiberalArtsColleges !== undefined && c.bestLiberalArtsColleges > 0 && c.bestLiberalArtsColleges <= 300).length;
       
       console.log('Filter debugging:');
       console.log(`- US News Top 150 colleges: ${usNewsCount}`);
@@ -595,6 +595,7 @@ const CollegeDiscovery = () => {
                       const matchingColleges = colleges.filter(c => 
                         c.usNewsTop150 !== null && 
                         c.usNewsTop150 !== undefined && 
+                        c.usNewsTop150 > 0 && 
                         c.usNewsTop150 <= 150
                       );
                       console.log(`Found ${matchingColleges.length} matching colleges`);
@@ -622,6 +623,7 @@ const CollegeDiscovery = () => {
                       const matchingColleges = colleges.filter(c => 
                         c.bestLiberalArtsColleges !== null && 
                         c.bestLiberalArtsColleges !== undefined && 
+                        c.bestLiberalArtsColleges > 0 && 
                         c.bestLiberalArtsColleges <= 300
                       );
                       console.log(`Found ${matchingColleges.length} matching colleges`);
@@ -661,7 +663,7 @@ const CollegeDiscovery = () => {
                           {college.type && ` • ${college.type}`}
                         </p>
                         <div className="flex flex-wrap items-center mt-2">
-                          {college.usNewsTop150 !== null && college.usNewsTop150 !== undefined && college.usNewsTop150 <= 150 && (
+                          {college.usNewsTop150 !== null && college.usNewsTop150 !== undefined && college.usNewsTop150 > 0 && college.usNewsTop150 <= 150 && (
                             <div className="flex items-center text-xs text-emerald-600 mr-4 mb-1 bg-emerald-50 px-1.5 py-0.5 rounded">
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-0.5">
                                 <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
@@ -669,7 +671,7 @@ const CollegeDiscovery = () => {
                               US News Top 150
                             </div>
                           )}
-                          {college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined && college.bestLiberalArtsColleges <= 300 && (
+                          {college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined && college.bestLiberalArtsColleges > 0 && college.bestLiberalArtsColleges <= 300 && (
                             <div className="flex items-center text-xs text-indigo-600 mr-4 mb-1 bg-indigo-50 px-1.5 py-0.5 rounded">
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-0.5">
                                 <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
