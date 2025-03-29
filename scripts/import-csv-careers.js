@@ -75,7 +75,12 @@ async function importCareers() {
         salary: salary,
         growth_rate: growthRate,
         education: education,
-        category: category
+        category: category,
+        alias1: record['Alias 1'] || null,
+        alias2: record['Alias 2'] || null,
+        alias3: record['Alias 3'] || null,
+        alias4: record['Alias 4'] || null,
+        alias5: record['Alias 5'] || null
       };
     });
     

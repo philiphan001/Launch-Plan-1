@@ -195,7 +195,12 @@ export class MemStorage implements IStorage {
       salary: 107510,
       growthRate: "fast",
       education: "Bachelor's",
-      category: "Technology"
+      category: "Technology",
+      alias1: "Programmer",
+      alias2: "Software Engineer",
+      alias3: "Web Developer",
+      alias4: "Application Developer",
+      alias5: "Coder"
     });
     
     this.createCareer({
@@ -204,7 +209,12 @@ export class MemStorage implements IStorage {
       salary: 83660,
       growthRate: "stable",
       education: "Bachelor's",
-      category: "Finance"
+      category: "Finance",
+      alias1: "Investment Analyst",
+      alias2: "Financial Advisor",
+      alias3: "Portfolio Manager",
+      alias4: "Finance Specialist",
+      alias5: "Budget Analyst"
     });
     
     // Add sample career paths

@@ -85,6 +85,11 @@ export const careers = pgTable("careers", {
   growthRate: text("growth_rate"),
   education: text("education"),
   category: text("category"),
+  alias1: text("alias1"),
+  alias2: text("alias2"),
+  alias3: text("alias3"),
+  alias4: text("alias4"),
+  alias5: text("alias5"),
 });
 
 export const insertCareerSchema = createInsertSchema(careers).pick({
@@ -94,6 +99,11 @@ export const insertCareerSchema = createInsertSchema(careers).pick({
   growthRate: true,
   education: true,
   category: true,
+  alias1: true,
+  alias2: true,
+  alias3: true,
+  alias4: true,
+  alias5: true,
 });
 
 // Favorites tables
