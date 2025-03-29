@@ -5,13 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { College } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+
+// Define the types for our favorites
+type FavoriteCollege = {
+  id: number;
+  userId: number;
+  collegeId: number;
+  createdAt: string;
+};
 
 const CollegeDiscovery = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [maxTuition, setMaxTuition] = useState(60000);
   const [acceptanceRange, setAcceptanceRange] = useState([0, 100]);
@@ -21,12 +31,86 @@ const CollegeDiscovery = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
+  // For demo purposes, we'll use a temporary userId
+  // In a real application, this would come from auth
+  const temporaryUserId = 1;
+  
   // Fetch colleges from API
-  const { data: colleges, isLoading, isError } = useQuery({
+  const { data: colleges = [], isLoading, isError } = useQuery<College[]>({
     queryKey: ['/api/colleges'],
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+  
+  // Fetch user's favorite colleges
+  const { data: favoriteColleges = [] } = useQuery<FavoriteCollege[]>({
+    queryKey: ['/api/favorites/colleges', temporaryUserId],
+    staleTime: 60 * 1000, // 1 minute
+  });
+  
+  // Check if a college is in favorites
+  const isCollegeFavorite = (collegeId: number) => {
+    return favoriteColleges.some((favorite) => favorite.collegeId === collegeId);
+  };
+  
+  // Add to favorites mutation
+  const addToFavoritesMutation = useMutation({
+    mutationFn: (collegeId: number) => 
+      apiRequest('/api/favorites/colleges', {
+        method: 'POST',
+        body: JSON.stringify({ userId: temporaryUserId, collegeId }),
+        headers: { 'Content-Type': 'application/json' }
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', temporaryUserId] });
+      toast({
+        title: "College added to favorites",
+        description: "You can view your favorite colleges in the settings page.",
+        variant: "default",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to add to favorites",
+        description: "There was a problem adding this college to your favorites.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Remove from favorites mutation
+  const removeFromFavoritesMutation = useMutation({
+    mutationFn: (favoriteId: number) => 
+      apiRequest(`/api/favorites/colleges/${favoriteId}`, {
+        method: 'DELETE'
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', temporaryUserId] });
+      toast({
+        title: "College removed from favorites",
+        description: "The college has been removed from your favorites.",
+        variant: "default",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to remove from favorites",
+        description: "There was a problem removing this college from your favorites.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Handle adding/removing college from favorites
+  const toggleFavorite = (college: College) => {
+    const favorite = favoriteColleges.find((fav) => fav.collegeId === college.id);
+    
+    if (favorite) {
+      removeFromFavoritesMutation.mutate(favorite.id);
+    } else {
+      addToFavoritesMutation.mutate(college.id);
+    }
+  };
   
   // Show error toast if API fetch fails
   useEffect(() => {
@@ -40,12 +124,12 @@ const CollegeDiscovery = () => {
   }, [isError, toast]);
   
   // Extract unique types, states and sizes from the fetched colleges
-  const types = Array.from(new Set(colleges?.map(college => college.type).filter(Boolean) || []));
-  const states = Array.from(new Set(colleges?.map(college => college.state).filter(Boolean) || []));
-  const sizes = Array.from(new Set(colleges?.map(college => college.size).filter(Boolean) || []));
+  const types = Array.from(new Set(colleges.map(college => college.type).filter(Boolean) || [])) as string[];
+  const states = Array.from(new Set(colleges.map(college => college.state).filter(Boolean) || [])) as string[];
+  const sizes = Array.from(new Set(colleges.map(college => college.size).filter(Boolean) || [])) as string[];
   
   // Filter colleges based on search and filters
-  const filteredColleges = colleges?.filter(college => {
+  const filteredColleges = colleges.filter((college: College) => {
     // Basic data check - skip colleges with missing core data
     if (!college.name) return false;
     
@@ -63,7 +147,7 @@ const CollegeDiscovery = () => {
                        (college.size && selectedSizes.includes(college.size));
     
     return matchesSearch && matchesTuition && matchesAcceptance && matchesType && matchesState && matchesSize;
-  }) || [];
+  });
   
   // Calculate pagination
   const totalPages = Math.ceil(filteredColleges.length / itemsPerPage);
@@ -118,7 +202,7 @@ const CollegeDiscovery = () => {
                   <div>
                     <Label className="mb-2 block">College Type</Label>
                     <div className="space-y-2">
-                      {types.map(type => type && (
+                      {types.map((type: string) => (
                         <div key={type} className="flex items-center">
                           <Checkbox 
                             id={`type-${type}`}
@@ -147,7 +231,7 @@ const CollegeDiscovery = () => {
                   <div>
                     <Label className="mb-2 block">States</Label>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {states.map(state => state && (
+                      {states.map((state: string) => (
                         <div key={state} className="flex items-center">
                           <Checkbox 
                             id={`state-${state}`}
@@ -176,7 +260,7 @@ const CollegeDiscovery = () => {
                   <div>
                     <Label className="mb-2 block">College Size</Label>
                     <div className="space-y-2">
-                      {sizes.map(size => size && (
+                      {sizes.map((size: string) => (
                         <div key={size} className="flex items-center">
                           <Checkbox 
                             id={`size-${size}`}
@@ -346,7 +430,33 @@ const CollegeDiscovery = () => {
                         </div>
                         <div className="mt-3 flex space-x-2">
                           <Button size="sm" variant="outline">View Details</Button>
-                          <Button size="sm">Add to Favorites</Button>
+                          <Button 
+                            size="sm"
+                            variant={isCollegeFavorite(college.id) ? "default" : "outline"}
+                            className={isCollegeFavorite(college.id) ? "bg-primary" : ""}
+                            onClick={() => toggleFavorite(college)}
+                            disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
+                          >
+                            {isCollegeFavorite(college.id) ? (
+                              <>
+                                <svg 
+                                  xmlns="http://www.w3.org/2000/svg" 
+                                  className="h-4 w-4 mr-1" 
+                                  viewBox="0 0 20 20" 
+                                  fill="currentColor"
+                                >
+                                  <path 
+                                    fillRule="evenodd" 
+                                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" 
+                                    clipRule="evenodd" 
+                                  />
+                                </svg>
+                                Favorited
+                              </>
+                            ) : (
+                              "Add to Favorites"
+                            )}
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
