@@ -93,14 +93,14 @@ const CollegeDiscovery = () => {
       console.log("College data sample:", data[0]);
       
       // Check for colleges with US News Top 150 flag
-      const usNewsTop150Colleges = data.filter(c => c.usNewsTop150 === 1);
+      const usNewsTop150Colleges = data.filter(c => c.usNewsTop150 !== null && c.usNewsTop150 !== undefined);
       console.log("US News Top 150 colleges count:", usNewsTop150Colleges.length);
       if (usNewsTop150Colleges.length > 0) {
         console.log("US News Top 150 sample:", usNewsTop150Colleges[0]);
       }
       
       // Check for colleges with Best Liberal Arts flag
-      const bestLiberalArtsColleges = data.filter(c => c.bestLiberalArtsColleges === 1);
+      const bestLiberalArtsColleges = data.filter(c => c.bestLiberalArtsColleges !== null && c.bestLiberalArtsColleges !== undefined);
       console.log("Best Liberal Arts colleges count:", bestLiberalArtsColleges.length);
       if (bestLiberalArtsColleges.length > 0) {
         console.log("Best Liberal Arts sample:", bestLiberalArtsColleges[0]);
@@ -244,8 +244,10 @@ const CollegeDiscovery = () => {
                        (college.size && selectedSizes.includes(college.size));
     
     // Check preset filter matches
-    const matchesUsNewsTop150 = !usNewsTop150Filter || (college.usNewsTop150 === 1);
-    const matchesBestLiberalArts = !bestLiberalArtsFilter || (college.bestLiberalArtsColleges === 1);
+    // If usNewsTop150 contains a numeric value (any rank), consider it a match
+    const matchesUsNewsTop150 = !usNewsTop150Filter || (college.usNewsTop150 !== null && college.usNewsTop150 !== undefined);
+    // If bestLiberalArtsColleges contains a numeric value (any rank), consider it a match
+    const matchesBestLiberalArts = !bestLiberalArtsFilter || (college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined);
     
     // If we're searching for Skidmore specifically and this is Skidmore, log details
     if (cleanSearchQuery.includes('skidmore') && college.id === 2189) {
@@ -543,7 +545,7 @@ const CollegeDiscovery = () => {
                           {college.type && ` • ${college.type}`}
                         </p>
                         <div className="flex flex-wrap items-center mt-2">
-                          {college.usNewsTop150 === 1 && (
+                          {college.usNewsTop150 !== null && college.usNewsTop150 !== undefined && (
                             <div className="flex items-center text-xs text-emerald-600 mr-4 mb-1 bg-emerald-50 px-1.5 py-0.5 rounded">
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-0.5">
                                 <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
@@ -551,7 +553,7 @@ const CollegeDiscovery = () => {
                               US News Top 150
                             </div>
                           )}
-                          {college.bestLiberalArtsColleges === 1 && (
+                          {college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined && (
                             <div className="flex items-center text-xs text-indigo-600 mr-4 mb-1 bg-indigo-50 px-1.5 py-0.5 rounded">
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-0.5">
                                 <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>

@@ -69,7 +69,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get raw fields from the database result using any type to bypass TypeScript checks
         const rawCollege = college as any;
         
-        return {
+        // Create transformed college object
+        const transformed = {
           ...college,
           roomAndBoard: college.roomAndBoard,
           feesByIncome: college.feesByIncome,
@@ -77,6 +78,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           usNewsTop150: rawCollege.us_news_top_150,
           bestLiberalArtsColleges: rawCollege.best_liberal_arts_colleges
         };
+        
+        // Debug output for the first few colleges with these flags set
+        if (rawCollege.us_news_top_150 === 1) {
+          console.log(`Found US News Top 150 college: ${college.name} (ID: ${college.id})`);
+        }
+        
+        if (rawCollege.best_liberal_arts_colleges === 1) {
+          console.log(`Found Best Liberal Arts college: ${college.name} (ID: ${college.id})`);
+        }
+        
+        return transformed;
       });
       
       res.json(transformedColleges);
