@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { College } from "@shared/schema";
@@ -36,6 +37,8 @@ const CollegeDiscovery = () => {
       types: params.get('types')?.split(',').filter(Boolean) || [],
       states: params.get('states')?.split(',').filter(Boolean) || [],
       sizes: params.get('sizes')?.split(',').filter(Boolean) || [],
+      usNewsTop150: params.get('usNewsTop150') === 'true',
+      bestLiberalArts: params.get('bestLiberalArts') === 'true',
       page: parseInt(params.get('page') || "1")
     };
   };
@@ -48,6 +51,8 @@ const CollegeDiscovery = () => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(initialParams.types);
   const [selectedStates, setSelectedStates] = useState<string[]>(initialParams.states);
   const [selectedSizes, setSelectedSizes] = useState<string[]>(initialParams.sizes);
+  const [usNewsTop150Filter, setUsNewsTop150Filter] = useState<boolean>(initialParams.usNewsTop150);
+  const [bestLiberalArtsFilter, setBestLiberalArtsFilter] = useState<boolean>(initialParams.bestLiberalArts);
   const [currentPage, setCurrentPage] = useState(initialParams.page);
   const itemsPerPage = 10;
   
@@ -63,6 +68,8 @@ const CollegeDiscovery = () => {
     if (selectedTypes.length) params.set('types', selectedTypes.join(','));
     if (selectedStates.length) params.set('states', selectedStates.join(','));
     if (selectedSizes.length) params.set('sizes', selectedSizes.join(','));
+    if (usNewsTop150Filter) params.set('usNewsTop150', 'true');
+    if (bestLiberalArtsFilter) params.set('bestLiberalArts', 'true');
     if (currentPage !== 1) params.set('page', currentPage.toString());
     
     // Construct new URL with search params
@@ -182,6 +189,8 @@ const CollegeDiscovery = () => {
     selectedTypes, 
     selectedStates, 
     selectedSizes, 
+    usNewsTop150Filter,
+    bestLiberalArtsFilter,
     currentPage
   ]);
   
@@ -216,6 +225,10 @@ const CollegeDiscovery = () => {
     const matchesSize = selectedSizes.length === 0 || 
                        (college.size && selectedSizes.includes(college.size));
     
+    // Check preset filter matches
+    const matchesUsNewsTop150 = !usNewsTop150Filter || (college.usNewsTop150 === 1);
+    const matchesBestLiberalArts = !bestLiberalArtsFilter || (college.bestLiberalArtsColleges === 1);
+    
     // If we're searching for Skidmore specifically and this is Skidmore, log details
     if (cleanSearchQuery.includes('skidmore') && college.id === 2189) {
       console.log('Found Skidmore:', college);
@@ -225,9 +238,13 @@ const CollegeDiscovery = () => {
       console.log('Type matches:', matchesType);
       console.log('State matches:', matchesState);
       console.log('Size matches:', matchesSize);
+      console.log('US News Top 150 matches:', matchesUsNewsTop150);
+      console.log('Best Liberal Arts matches:', matchesBestLiberalArts);
     }
     
-    return matchesSearch && matchesTuition && matchesAcceptance && matchesType && matchesState && matchesSize;
+    return matchesSearch && matchesTuition && matchesAcceptance && 
+           matchesType && matchesState && matchesSize && 
+           matchesUsNewsTop150 && matchesBestLiberalArts;
   });
   
   // Calculate pagination
@@ -375,11 +392,51 @@ const CollegeDiscovery = () => {
                     setSelectedTypes([]);
                     setSelectedStates([]);
                     setSelectedSizes([]);
+                    setUsNewsTop150Filter(false);
+                    setBestLiberalArtsFilter(false);
                     setCurrentPage(1);
                   }}
                 >
                   Reset Filters
                 </Button>
+                
+                <div>
+                  <Label className="mb-2 block">Preset Filters</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id="us-news-top-150"
+                        checked={usNewsTop150Filter}
+                        onCheckedChange={(checked) => {
+                          setUsNewsTop150Filter(checked === true);
+                          setCurrentPage(1); // Reset to first page on filter change
+                        }}
+                      />
+                      <label 
+                        htmlFor="us-news-top-150"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        US News Top 150
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id="best-liberal-arts"
+                        checked={bestLiberalArtsFilter}
+                        onCheckedChange={(checked) => {
+                          setBestLiberalArtsFilter(checked === true);
+                          setCurrentPage(1); // Reset to first page on filter change
+                        }}
+                      />
+                      <label 
+                        htmlFor="best-liberal-arts"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Best Liberal Arts Colleges
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -468,6 +525,23 @@ const CollegeDiscovery = () => {
                           {college.type && ` • ${college.type}`}
                         </p>
                         <div className="flex flex-wrap items-center mt-2">
+                          {college.usNewsTop150 === 1 && (
+                            <div className="flex items-center text-xs text-emerald-600 mr-4 mb-1 bg-emerald-50 px-1.5 py-0.5 rounded">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-0.5">
+                                <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
+                              </svg>
+                              US News Top 150
+                            </div>
+                          )}
+                          {college.bestLiberalArtsColleges === 1 && (
+                            <div className="flex items-center text-xs text-indigo-600 mr-4 mb-1 bg-indigo-50 px-1.5 py-0.5 rounded">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-0.5">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                              </svg>
+                              Best Liberal Arts
+                            </div>
+                          )}
                           {college.tuition !== null && college.tuition !== undefined && (
                             <div className="flex items-center text-xs text-gray-500 mr-4 mb-1">
                               <svg 
