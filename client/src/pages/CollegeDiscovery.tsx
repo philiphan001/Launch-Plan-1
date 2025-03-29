@@ -89,10 +89,22 @@ const CollegeDiscovery = () => {
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
     onSuccess: (data) => {
-      // Log first college with either flag set to check property names
-      console.log("College data sample:", 
-        data.find(c => c.us_news_top_150 === 1 || c.best_liberal_arts_colleges === 1) || data[0]
-      );
+      // Log first few colleges with either flag set to check property names
+      console.log("College data sample:", data[0]);
+      
+      // Check for colleges with US News Top 150 flag
+      const usNewsTop150Colleges = data.filter(c => c.usNewsTop150 === 1);
+      console.log("US News Top 150 colleges count:", usNewsTop150Colleges.length);
+      if (usNewsTop150Colleges.length > 0) {
+        console.log("US News Top 150 sample:", usNewsTop150Colleges[0]);
+      }
+      
+      // Check for colleges with Best Liberal Arts flag
+      const bestLiberalArtsColleges = data.filter(c => c.bestLiberalArtsColleges === 1);
+      console.log("Best Liberal Arts colleges count:", bestLiberalArtsColleges.length);
+      if (bestLiberalArtsColleges.length > 0) {
+        console.log("Best Liberal Arts sample:", bestLiberalArtsColleges[0]);
+      }
     }
   });
   
