@@ -229,16 +229,36 @@ const CollegeDiscovery = () => {
     
     // Check preset filter matches
     // Check if the college is in the US News Top 150 rankings (rank <= 150)
+    // For debugging very specific issues
+    if (usNewsTop150Filter && college.id === 12) { // Auburn University has rank 105
+      console.log('Checking Auburn University:', college);
+      console.log('usNewsTop150 value:', college.usNewsTop150);
+      console.log('usNewsTop150 type:', typeof college.usNewsTop150);
+      console.log('Condition check:', college.usNewsTop150 !== null && college.usNewsTop150 !== undefined && college.usNewsTop150 <= 150);
+    }
+    
+    // The issue might be in how we're comparing - let's try to parse values to numbers for comparison
+    const usNewsRank = college.usNewsTop150 !== null && college.usNewsTop150 !== undefined ? 
+      Number(college.usNewsTop150) : null;
+      
     const matchesUsNewsTop150 = !usNewsTop150Filter || 
-      (college.usNewsTop150 !== null && 
-       college.usNewsTop150 !== undefined && 
-       college.usNewsTop150 <= 150);
+      (usNewsRank !== null && !isNaN(usNewsRank) && usNewsRank <= 150);
     
     // Check if the college is among the top liberal arts colleges (rank <= 300)
+    // Also debug liberal arts colleges
+    if (bestLiberalArtsFilter && college.id === 111) { // Lyon College has liberal arts rank 169
+      console.log('Checking Lyon College:', college);
+      console.log('bestLiberalArtsColleges value:', college.bestLiberalArtsColleges);
+      console.log('bestLiberalArtsColleges type:', typeof college.bestLiberalArtsColleges);
+      console.log('Condition check:', college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined && college.bestLiberalArtsColleges <= 300);
+    }
+    
+    // Apply the same numeric parsing approach to liberal arts
+    const liberalArtsRank = college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined ? 
+      Number(college.bestLiberalArtsColleges) : null;
+      
     const matchesBestLiberalArts = !bestLiberalArtsFilter || 
-      (college.bestLiberalArtsColleges !== null && 
-       college.bestLiberalArtsColleges !== undefined && 
-       college.bestLiberalArtsColleges <= 300);
+      (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank <= 300);
     
     // If we're searching for Skidmore specifically and this is Skidmore, log details
     if (cleanSearchQuery.includes('skidmore') && college.id === 2189) {
