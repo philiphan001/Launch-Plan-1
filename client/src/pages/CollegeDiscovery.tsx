@@ -66,7 +66,7 @@ const CollegeDiscovery = () => {
     if (currentPage !== 1) params.set('page', currentPage.toString());
     
     // Construct new URL with search params
-    const newUrl = `/CollegeDiscovery${params.toString() ? `?${params.toString()}` : ''}`;
+    const newUrl = `/colleges${params.toString() ? `?${params.toString()}` : ''}`;
     
     // Update URL without causing a page reload
     window.history.pushState({}, '', newUrl);
