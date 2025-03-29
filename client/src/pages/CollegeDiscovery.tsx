@@ -258,7 +258,7 @@ const CollegeDiscovery = () => {
       Number(college.bestLiberalArtsColleges) : null;
       
     const matchesBestLiberalArts = !bestLiberalArtsFilter || 
-      (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank <= 300);
+      (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank > 0 && liberalArtsRank <= 300);
     
     // If we're searching for Skidmore specifically and this is Skidmore, log details
     if (cleanSearchQuery.includes('skidmore') && college.id === 2189) {
@@ -299,7 +299,12 @@ const CollegeDiscovery = () => {
       
       if (usNewsTop150Filter) {
         console.log('US News Top 150 filter is active');
-        const matchingColleges = colleges.filter(c => c.usNewsTop150 !== null && c.usNewsTop150 !== undefined && c.usNewsTop150 <= 150);
+        const matchingColleges = colleges.filter(c => 
+          c.usNewsTop150 !== null && 
+          c.usNewsTop150 !== undefined && 
+          c.usNewsTop150 > 0 && 
+          c.usNewsTop150 <= 150
+        );
         console.log(`Found ${matchingColleges.length} matching colleges`);
         if (matchingColleges.length > 0) {
           console.log('Sample colleges:', matchingColleges.slice(0, 3).map(c => c.name));
@@ -308,7 +313,12 @@ const CollegeDiscovery = () => {
       
       if (bestLiberalArtsFilter) {
         console.log('Best Liberal Arts filter is active');
-        const matchingColleges = colleges.filter(c => c.bestLiberalArtsColleges !== null && c.bestLiberalArtsColleges !== undefined && c.bestLiberalArtsColleges <= 300);
+        const matchingColleges = colleges.filter(c => 
+          c.bestLiberalArtsColleges !== null && 
+          c.bestLiberalArtsColleges !== undefined && 
+          c.bestLiberalArtsColleges > 0 && 
+          c.bestLiberalArtsColleges <= 300
+        );
         console.log(`Found ${matchingColleges.length} matching colleges`);
         if (matchingColleges.length > 0) {
           console.log('Sample colleges:', matchingColleges.slice(0, 3).map(c => c.name));
