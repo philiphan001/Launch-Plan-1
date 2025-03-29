@@ -219,7 +219,7 @@ export type InsertMilestone = z.infer<typeof insertMilestoneSchema>;
 // Career paths table
 export const careerPaths = pgTable("career_paths", {
   id: serial("id").primaryKey(),
-  field_of_study: text("field_of_study").notNull(),
+  field_of_study: text("field_of_study"),
   career_title: text("career_title").notNull(),
   option_rank: integer("option_rank"), // The position/rank of the career option for the field
 });

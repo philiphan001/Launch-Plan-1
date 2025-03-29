@@ -40,14 +40,28 @@ async function importCareerPaths() {
       
       // Process and transform each record in the batch
       const careerPathData = batch.map(record => {
+        // Debug record to see all keys and values
+        console.log("Record:", JSON.stringify(record));
+        
+        // Iterate over keys to find the right field
+        let fieldOfStudyKey = '';
+        for (const key of Object.keys(record)) {
+          if (key.trim() === 'Field of Study') {
+            fieldOfStudyKey = key;
+            break;
+          }
+        }
+        
         // Make sure all fields have valid values
-        const fieldOfStudy = record['Field of Study'] || '';
+        const fieldOfStudy = record[fieldOfStudyKey] || '';
         const careerTitle = record['Career'] || '';
         // Parse option rank carefully
         let optionRank = null;
         if (record['Career Option #'] && !isNaN(parseInt(record['Career Option #']))) {
           optionRank = parseInt(record['Career Option #']);
         }
+        
+        console.log(`Processed: Field of Study=${fieldOfStudy}, Career=${careerTitle}, Rank=${optionRank}`);
         
         return {
           field_of_study: fieldOfStudy,

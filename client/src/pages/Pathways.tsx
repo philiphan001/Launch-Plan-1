@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 type EducationType = "4year" | "2year" | "vocational" | null;
@@ -13,6 +14,13 @@ interface StepProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
+}
+
+interface CareerPath {
+  id: number;
+  field_of_study: string;
+  career_title: string;
+  option_rank: number;
 }
 
 const Step = ({ children, title, subtitle }: StepProps) => (
@@ -31,15 +39,23 @@ const Pathways = () => {
   const [militaryBranch, setMilitaryBranch] = useState<MilitaryBranch>(null);
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
+  const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   
-  const { data: recommendedPaths } = useQuery({
-    queryKey: ['/api/pathways/recommendations'],
-    queryFn: async () => {
-      // This would be replaced with actual API call
-      return [];
-    },
-    // Disable actual fetching for now
-    enabled: false
+  // Fetch all career paths for the field selection dropdown
+  const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
+    queryKey: ['/api/career-paths'],
+    enabled: currentStep === 4 && educationType === '4year'
+  });
+  
+  // Get unique fields of study from the career paths
+  const fieldsOfStudy = allCareerPaths && Array.isArray(allCareerPaths)
+    ? Array.from(new Set(allCareerPaths.map((path: CareerPath) => path.field_of_study))).sort() 
+    : [];
+  
+  // Fetch career paths for a specific field when selected
+  const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery({
+    queryKey: ['/api/career-paths/field', selectedFieldOfStudy],
+    enabled: !!selectedFieldOfStudy && currentStep === 4
   });
 
   const handlePathSelect = (path: PathChoice) => {
@@ -64,6 +80,7 @@ const Pathways = () => {
     setMilitaryBranch(null);
     setGapYearActivity(null);
     setNeedsGuidance(null);
+    setSelectedFieldOfStudy(null);
   };
   
   const renderCurrentStep = () => {
@@ -98,6 +115,12 @@ const Pathways = () => {
                 </CardContent>
               </Card>
             </div>
+            
+            {needsGuidance !== null && (
+              <div className="flex justify-end">
+                <Button onClick={handleNext}>Next Step</Button>
+              </div>
+            )}
           </Step>
         );
       
@@ -154,7 +177,10 @@ const Pathways = () => {
                     </div>
                   </div>
                   
-                  <Button onClick={handleNext}>See Recommendations</Button>
+                  <div className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>Back</Button>
+                    <Button onClick={handleNext}>See Recommendations</Button>
+                  </div>
                 </CardContent>
               </Card>
             </Step>
@@ -207,6 +233,13 @@ const Pathways = () => {
                   <p className="text-sm text-gray-600 mt-1">Explore before deciding</p>
                 </div>
               </div>
+              
+              {selectedPath && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
             </Step>
           );
         }
@@ -276,6 +309,11 @@ const Pathways = () => {
                   </CardContent>
                 </Card>
               </div>
+              
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={handleBack}>Back</Button>
+                <Button onClick={handleStartOver}>Start Over</Button>
+              </div>
             </Step>
           );
         } else if (selectedPath === 'education') {
@@ -288,10 +326,10 @@ const Pathways = () => {
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">apartment</span>
+                      <span className="material-icons text-sm">school</span>
                     </div>
                     <div>
-                      <h5 className={`font-medium ${educationType === '4year' ? 'text-primary' : ''}`}>4-Year College</h5>
+                      <h5 className={`font-medium ${educationType === '4year' ? 'text-primary' : ''}`}>4-Year College/University</h5>
                       <p className="text-sm text-gray-600">Bachelor's degree programs</p>
                     </div>
                   </div>
@@ -303,7 +341,7 @@ const Pathways = () => {
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === '2year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '2year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">account_balance</span>
+                      <span className="material-icons text-sm">menu_book</span>
                     </div>
                     <div>
                       <h5 className={`font-medium ${educationType === '2year' ? 'text-primary' : ''}`}>2-Year College</h5>
@@ -327,6 +365,13 @@ const Pathways = () => {
                   </div>
                 </div>
               </div>
+              
+              {educationType && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
             </Step>
           );
         } else if (selectedPath === 'job') {
@@ -378,6 +423,13 @@ const Pathways = () => {
                   </div>
                 </div>
               </div>
+              
+              {jobType && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
             </Step>
           );
         } else if (selectedPath === 'military') {
@@ -474,6 +526,13 @@ const Pathways = () => {
                   </div>
                 </div>
               </div>
+              
+              {militaryBranch && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
             </Step>
           );
         } else if (selectedPath === 'gap') {
@@ -505,7 +564,7 @@ const Pathways = () => {
                     </div>
                     <div>
                       <h5 className={`font-medium ${gapYearActivity === 'volunteer' ? 'text-primary' : ''}`}>Volunteer</h5>
-                      <p className="text-sm text-gray-600">Serve communities in need</p>
+                      <p className="text-sm text-gray-600">Give back to the community</p>
                     </div>
                   </div>
                 </div>
@@ -516,11 +575,11 @@ const Pathways = () => {
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${gapYearActivity === 'work' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'work' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">savings</span>
+                      <span className="material-icons text-sm">payments</span>
                     </div>
                     <div>
-                      <h5 className={`font-medium ${gapYearActivity === 'work' ? 'text-primary' : ''}`}>Work & Save</h5>
-                      <p className="text-sm text-gray-600">Build savings for future</p>
+                      <h5 className={`font-medium ${gapYearActivity === 'work' ? 'text-primary' : ''}`}>Work</h5>
+                      <p className="text-sm text-gray-600">Save money for future plans</p>
                     </div>
                   </div>
                 </div>
@@ -534,98 +593,129 @@ const Pathways = () => {
                       <span className="material-icons text-sm">more_horiz</span>
                     </div>
                     <div>
-                      <h5 className={`font-medium ${gapYearActivity === 'other' ? 'text-primary' : ''}`}>Other Plans</h5>
-                      <p className="text-sm text-gray-600">Pursue personal interests</p>
+                      <h5 className={`font-medium ${gapYearActivity === 'other' ? 'text-primary' : ''}`}>Other Activities</h5>
+                      <p className="text-sm text-gray-600">Learn new skills, pursue hobbies</p>
                     </div>
                   </div>
                 </div>
               </div>
+              
+              {gapYearActivity && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
             </Step>
           );
         }
         return null;
       
       case 4:
-        return (
-          <Step
-            title="Financial Impact"
-            subtitle="Here's how your chosen path might affect your finances over time"
-          >
-            <Card>
-              <CardContent className="p-6">
-                <div className="mb-6">
-                  <h4 className="font-medium mb-4">Financial Summary for Your Path</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-sm text-gray-500 uppercase">Initial Investment</p>
-                      <p className="text-2xl font-mono font-medium text-gray-800">
-                        {selectedPath === 'education' && educationType === '4year' ? '$120,000' : 
-                         selectedPath === 'education' && educationType === '2year' ? '$30,000' : 
-                         selectedPath === 'education' && educationType === 'vocational' ? '$15,000' : 
-                         selectedPath === 'military' ? '$0' : 
-                         selectedPath === 'gap' ? '$5,000' : '$0'}
-                      </p>
+        if (educationType === '4year') {
+          return (
+            <Step title="Explore Career Paths by Field of Study" subtitle="Select a field of study to see potential career paths">
+              <Card>
+                <CardContent className="p-6">
+                  {isLoadingAllPaths ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-4 text-gray-600">Loading fields of study...</p>
                     </div>
-                    
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-sm text-gray-500 uppercase">10-Year Earnings</p>
-                      <p className="text-2xl font-mono font-medium text-gray-800">
-                        {selectedPath === 'education' && educationType === '4year' ? '$650,000' : 
-                         selectedPath === 'education' && educationType === '2year' ? '$480,000' : 
-                         selectedPath === 'education' && educationType === 'vocational' ? '$420,000' : 
-                         selectedPath === 'job' ? '$380,000' : 
-                         selectedPath === 'military' ? '$450,000' : 
-                         '$400,000'}
-                      </p>
-                    </div>
-                    
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-sm text-gray-500 uppercase">Est. Net Worth at 30</p>
-                      <p className="text-2xl font-mono font-medium text-gray-800">
-                        {selectedPath === 'education' && educationType === '4year' ? '$150,000' : 
-                         selectedPath === 'education' && educationType === '2year' ? '$120,000' : 
-                         selectedPath === 'education' && educationType === 'vocational' ? '$130,000' : 
-                         selectedPath === 'job' ? '$90,000' : 
-                         selectedPath === 'military' ? '$110,000' : 
-                         '$100,000'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-100 p-4 rounded-lg mb-6">
-                    <h5 className="font-medium mb-2">Key Financial Considerations</h5>
-                    <ul className="space-y-2 text-sm">
-                      {selectedPath === 'education' && educationType === '4year' && (
-                        <>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            4-year degrees typically lead to higher lifetime earnings, but come with significant upfront costs.
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Student loans may be necessary - average debt at graduation is $30,000.
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Consider in-state public universities to reduce costs.
-                          </li>
-                        </>
+                  ) : (
+                    <>
+                      <div className="mb-6">
+                        <label htmlFor="field-select" className="block text-sm font-medium mb-2">Field of Study</label>
+                        <Select 
+                          value={selectedFieldOfStudy || ""}
+                          onValueChange={(value) => setSelectedFieldOfStudy(value)}
+                        >
+                          <SelectTrigger id="field-select" className="w-full">
+                            <SelectValue placeholder="Select a field of study" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fieldsOfStudy.map((field) => (
+                              <SelectItem key={field} value={field}>
+                                {field}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {selectedFieldOfStudy && (
+                        <div className="mt-6">
+                          <h4 className="font-medium mb-4">Career Paths in {selectedFieldOfStudy}</h4>
+                          
+                          {isLoadingFieldPaths ? (
+                            <div className="text-center py-4">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                              <p className="mt-2 text-sm text-gray-600">Loading career paths...</p>
+                            </div>
+                          ) : fieldCareerPaths && fieldCareerPaths.length > 0 ? (
+                            <div className="space-y-3">
+                              {fieldCareerPaths.map((path: CareerPath) => (
+                                <Card key={path.id} className="border-gray-200 hover:border-primary transition-colors">
+                                  <CardContent className="p-4">
+                                    <div className="flex items-center">
+                                      <div className="rounded-full bg-primary/10 text-primary h-8 w-8 flex items-center justify-center mr-3 flex-shrink-0">
+                                        <span className="font-medium">{path.option_rank}</span>
+                                      </div>
+                                      <div>
+                                        <h5 className="font-medium">{path.career_title}</h5>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-600 text-sm py-4">No career paths found for this field of study</p>
+                          )}
+                        </div>
                       )}
                       
+                      <div className="flex justify-between mt-6">
+                        <Button variant="outline" onClick={handleBack}>Back</Button>
+                        <Button onClick={handleStartOver}>Explore Another Path</Button>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </Step>
+          );
+        } else {
+          return (
+            <Step title="Next Steps" subtitle="Here's what you need to know">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center mb-6">
+                    <div className="rounded-full bg-green-100 text-green-800 h-16 w-16 flex items-center justify-center mx-auto mb-4">
+                      <span className="material-icons text-2xl">check_circle</span>
+                    </div>
+                    <h3 className="text-xl font-medium mb-2">You've chosen your path!</h3>
+                    <p className="text-gray-600">
+                      {selectedPath === 'education' && educationType === '2year' && 'Pursuing a 2-year college degree can be a great way to enter the workforce quickly or transfer to a 4-year program later.'}
+                      {selectedPath === 'education' && educationType === 'vocational' && 'Vocational training provides specialized skills that are in high demand in many industries.'}
+                      {selectedPath === 'job' && 'Entering the workforce directly can provide valuable experience and help you save money.'}
+                      {selectedPath === 'military' && 'Military service offers training, education benefits, and the opportunity to serve your country.'}
+                      {selectedPath === 'gap' && 'A gap year can provide time for personal growth and clarity about your future goals.'}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6">
+                    <h4 className="font-medium">Resources to explore:</h4>
+                    <ul className="space-y-2 text-sm">
                       {selectedPath === 'education' && educationType === '2year' && (
                         <>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Associate degrees provide a good return on investment with lower costs.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Community College Finder: Find colleges in your area</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Many students transfer to 4-year schools after completing their associate degree.
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Community colleges often offer affordable tuition and flexible scheduling.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Financial Aid Information: Learn about grants and scholarships</span>
                           </li>
                         </>
                       )}
@@ -633,16 +723,12 @@ const Pathways = () => {
                       {selectedPath === 'education' && educationType === 'vocational' && (
                         <>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Vocational programs typically offer faster entry into the workforce.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Trade School Directory: Find vocational schools by program</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Many skilled trades offer apprenticeships with paid training.
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Some trades see earnings increase significantly with experience.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Industry Certifications: Credentials that boost your resume</span>
                           </li>
                         </>
                       )}
@@ -650,16 +736,12 @@ const Pathways = () => {
                       {selectedPath === 'job' && (
                         <>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Starting work immediately provides earlier income and work experience.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Resume Builder: Create a professional resume</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Consider employers that offer tuition assistance for future education.
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Advancement opportunities may be limited without further education.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Job Search Platforms: Find opportunities in your area</span>
                           </li>
                         </>
                       )}
@@ -667,16 +749,12 @@ const Pathways = () => {
                       {selectedPath === 'military' && (
                         <>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Military service includes benefits like healthcare, housing allowances, and retirement plans.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Military Recruiter Locator: Connect with a recruiter</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            The GI Bill can cover college expenses after service.
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Veterans preference can help with federal job applications after service.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>ASVAB Practice Tests: Prepare for the entrance exam</span>
                           </li>
                         </>
                       )}
@@ -684,78 +762,57 @@ const Pathways = () => {
                       {selectedPath === 'gap' && (
                         <>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            A gap year may delay earnings but can provide valuable experiences.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Gap Year Programs: Structured experiences with travel, service, or work</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Consider working part-time to offset costs during your gap year.
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">info</span>
-                            Have a plan for what comes after your gap year.
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Volunteer Opportunities: Make a difference while gaining experience</span>
                           </li>
                         </>
                       )}
                     </ul>
                   </div>
                   
-                  <div className="flex space-x-2">
-                    <Button variant="outline" className="flex items-center" onClick={handleStartOver}>
-                      <span className="material-icons mr-1 text-sm">refresh</span>
-                      Start Over
-                    </Button>
-                    <Button className="flex items-center">
-                      <span className="material-icons mr-1 text-sm">save</span>
-                      Save to My Profile
-                    </Button>
-                    <Button className="flex items-center">
-                      <span className="material-icons mr-1 text-sm">bar_chart</span>
-                      Create Financial Projection
-                    </Button>
+                  <div className="flex justify-between">
+                    <Button variant="outline" onClick={handleBack}>Back</Button>
+                    <Button onClick={handleStartOver}>Explore Another Path</Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Step>
-        );
+                </CardContent>
+              </Card>
+            </Step>
+          );
+        }
       
       default:
         return null;
     }
   };
-
+  
   return (
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Planning Your Path</h1>
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Explore Your Pathways</h1>
       
-      <Card className="overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-200">
-          <h3 className="font-medium text-gray-700">Decision Tree</h3>
-          <p className="text-sm text-gray-500 mt-1">Map out your post-high school journey</p>
+      {/* Step indicator */}
+      <div className="flex items-center mb-8">
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          1
         </div>
-        <CardContent className="p-6">
-          {renderCurrentStep()}
-          
-          {currentStep > 1 && currentStep < 4 && (
-            <div className="mt-6 flex justify-between">
-              <Button variant="outline" onClick={handleBack}>
-                Back
-              </Button>
-              <Button 
-                onClick={handleNext}
-                disabled={(currentStep === 2 && !selectedPath && !needsGuidance) || 
-                         (currentStep === 3 && selectedPath === 'education' && !educationType) ||
-                         (currentStep === 3 && selectedPath === 'job' && !jobType) ||
-                         (currentStep === 3 && selectedPath === 'military' && !militaryBranch) ||
-                         (currentStep === 3 && selectedPath === 'gap' && !gapYearActivity)}
-              >
-                Continue
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <div className={`h-1 flex-1 ${currentStep >= 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          2
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 3 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          3
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 4 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 4 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          4
+        </div>
+      </div>
+      
+      {renderCurrentStep()}
     </div>
   );
 };
