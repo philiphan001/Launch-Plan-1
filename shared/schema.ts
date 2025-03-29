@@ -60,6 +60,8 @@ export const colleges = pgTable("colleges", {
   size: text("size"),
   rank: integer("rank"),
   feesByIncome: jsonb("fees_by_income"),
+  usNewsTop150: integer("us_news_top_150"), // Ranking or identifier in US News Top 150
+  bestLiberalArtsColleges: integer("best_liberal_arts_colleges"), // Ranking or identifier for best liberal arts colleges
 });
 
 export const insertCollegeSchema = createInsertSchema(colleges).pick({
@@ -74,6 +76,8 @@ export const insertCollegeSchema = createInsertSchema(colleges).pick({
   size: true,
   rank: true,
   feesByIncome: true,
+  usNewsTop150: true,
+  bestLiberalArtsColleges: true,
 });
 
 // Careers table

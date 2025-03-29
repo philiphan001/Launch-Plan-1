@@ -10,6 +10,7 @@ import type { College } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 
 // Define the types for our favorites
 type FavoriteCollege = {
@@ -22,14 +23,54 @@ type FavoriteCollege = {
 const CollegeDiscovery = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [maxTuition, setMaxTuition] = useState(80000);
-  const [acceptanceRange, setAcceptanceRange] = useState([0, 100]);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedStates, setSelectedStates] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [location] = useLocation();
+  
+  // Parse URL query parameters when the component loads
+  const parseQueryParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      q: params.get('q') || "",
+      tuition: parseInt(params.get('tuition') || "80000"),
+      acceptMin: parseInt(params.get('acceptMin') || "0"),
+      acceptMax: parseInt(params.get('acceptMax') || "100"),
+      types: params.get('types')?.split(',').filter(Boolean) || [],
+      states: params.get('states')?.split(',').filter(Boolean) || [],
+      sizes: params.get('sizes')?.split(',').filter(Boolean) || [],
+      page: parseInt(params.get('page') || "1")
+    };
+  };
+  
+  // Initial state from URL or defaults
+  const initialParams = parseQueryParams();
+  const [searchQuery, setSearchQuery] = useState(initialParams.q);
+  const [maxTuition, setMaxTuition] = useState(initialParams.tuition);
+  const [acceptanceRange, setAcceptanceRange] = useState([initialParams.acceptMin, initialParams.acceptMax]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(initialParams.types);
+  const [selectedStates, setSelectedStates] = useState<string[]>(initialParams.states);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(initialParams.sizes);
+  const [currentPage, setCurrentPage] = useState(initialParams.page);
   const itemsPerPage = 10;
+  
+  // Update URL when filters change
+  const updateUrlParams = () => {
+    const params = new URLSearchParams();
+    
+    // Only add parameters if they're not empty/default
+    if (searchQuery) params.set('q', searchQuery);
+    if (maxTuition !== 80000) params.set('tuition', maxTuition.toString());
+    if (acceptanceRange[0] !== 0) params.set('acceptMin', acceptanceRange[0].toString());
+    if (acceptanceRange[1] !== 100) params.set('acceptMax', acceptanceRange[1].toString());
+    if (selectedTypes.length) params.set('types', selectedTypes.join(','));
+    if (selectedStates.length) params.set('states', selectedStates.join(','));
+    if (selectedSizes.length) params.set('sizes', selectedSizes.join(','));
+    if (currentPage !== 1) params.set('page', currentPage.toString());
+    
+    // Construct new URL with search params
+    const newUrl = `/CollegeDiscovery${params.toString() ? `?${params.toString()}` : ''}`;
+    
+    // Update URL without causing a page reload
+    window.history.pushState({}, '', newUrl);
+  };
   
   // For demo purposes, we'll use a temporary userId
   // In a real application, this would come from auth
@@ -127,6 +168,22 @@ const CollegeDiscovery = () => {
       });
     }
   }, [isError, toast]);
+  
+  // Update URL when any filter changes
+  useEffect(() => {
+    // Only update URL after initial data load
+    if (colleges.length > 0) {
+      updateUrlParams();
+    }
+  }, [
+    searchQuery, 
+    maxTuition, 
+    acceptanceRange, 
+    selectedTypes, 
+    selectedStates, 
+    selectedSizes, 
+    currentPage
+  ]);
   
   // Extract unique types, states and sizes from the fetched colleges
   const types = Array.from(new Set(colleges.map(college => college.type).filter(Boolean) || [])) as string[];
