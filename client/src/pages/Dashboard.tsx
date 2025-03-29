@@ -6,11 +6,8 @@ import ProjectionSection from "@/components/dashboard/ProjectionSection";
 import CareerExplorationCard from "@/components/dashboard/CareerExplorationCard";
 import CollegeDiscoveryCard from "@/components/dashboard/CollegeDiscoveryCard";
 import PathwaysSection from "@/components/dashboard/PathwaysSection";
-import { CSVUploader } from "@/components/ui/csv-uploader";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const Dashboard = () => {
   const [username, setUsername] = useState("Alex");
@@ -62,19 +59,7 @@ const Dashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <WelcomeCard username={username} />
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-              Upload CSV Data
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <CSVUploader />
-          </DialogContent>
-        </Dialog>
-      </div>
+      <WelcomeCard username={username} />
       
       <div className="mb-6">
         <h2 className="text-xl font-display font-semibold text-gray-800 mb-4">Financial Overview</h2>
