@@ -23,7 +23,7 @@ const CollegeDiscovery = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
-  const [maxTuition, setMaxTuition] = useState(60000);
+  const [maxTuition, setMaxTuition] = useState(80000);
   const [acceptanceRange, setAcceptanceRange] = useState([0, 100]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedStates, setSelectedStates] = useState<string[]>([]);
@@ -199,7 +199,7 @@ const CollegeDiscovery = () => {
                     value={[maxTuition]}
                     onValueChange={(value) => setMaxTuition(value[0])}
                     min={0}
-                    max={60000}
+                    max={80000}
                     step={1000}
                     className="mt-2"
                   />
@@ -308,7 +308,7 @@ const CollegeDiscovery = () => {
                   variant="outline" 
                   className="w-full"
                   onClick={() => {
-                    setMaxTuition(60000);
+                    setMaxTuition(80000);
                     setAcceptanceRange([0, 100]);
                     setSelectedTypes([]);
                     setSelectedStates([]);
