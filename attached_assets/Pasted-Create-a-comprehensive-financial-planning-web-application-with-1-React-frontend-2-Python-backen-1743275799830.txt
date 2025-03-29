@@ -1,0 +1,27 @@
+Create a comprehensive financial planning web application with (1) React frontend; (2) Python backend; (3) PostgreSQL database"
+The requirements include building a full-stack application with:
+1.	A robust, clean and modern React/TypeScript frontend for the user interface
+2.	A Python backend for complex financial calculations and data processing.  The requirements included structuring the Python backend using proper object-oriented principles:
+•	Clear class hierarchies.  Main classes include assets, liabilities, income, expenditures and within these subclasses including depreciable assets, investments, mortgages, student loans, auto loans, spouse income, spouse assets, spouse liabilities (note spouse items factor in under a get married scenario to be discussed in marriage milestone below), taxes (including payroll, federal and state taxes)
+•	Encapsulation of related functionality
+•	Separation of concerns with distinct classes for different domains (financial calculations, data processing, API handling)
+•	Using inheritance and composition patterns where appropriate
+ 
+3.	PostgreSQL database for data storage
+4.	Five main data sources (csv files to be provided – PLEASE START BUILD ONLY AFTER SEEING THESE FILES AND ADDING TO DATABASE)
+•	BLS occupational data – including occupation title (various aliases for search), total employment data, median income, incomes at different percentiles, etc)
+•	IRS income and property data by zipcode – shows incomes, estimated investment assets, and average home values by zip code
+•	COLI (Cost of Living Index) data by zip code – various cost of living expenses
+•	Career paths by field of study
+•	College institutional data – from IPEDS a database of 4 year, 2 year and vocational schools with data related to average cost, admissions, net price, etc.
+ 
+The initial MVP that I am working on is intended to help college students visualize their financial futures based on where they live and/or plan to live, the target school they are thinking and target occupation.
+ 
+I see the following main modules:
+Financial Projection – this is core to the app.  Starting from HS graduation – provide a multi-year (10+) annual financial projection based on their intended pathway.  The projection will have robust and interactive graphs and charts that show how their financial lives will manifest over time.  These graphs will include net worth, cash flow projection - income/expense, assets and liabilities over time.  The app will also have the ability to add major life milestones – a) get married, b) have a child, c) buy a car, d) purchase a house, d) go to graduate school.  Within each of these milestones the app will provide the relevant decision points.  As the user adds/edits/deletes these milestones, the financial projections and graphs/charts should change.  The user should be able to save “favorite” financial projections.
+Career exploration:  this should be a filtering option for the BLS occupation database – for instance by income levels, by area (e.g.health care, technology, etc).  The user should be able to save “favorite” careers.
+College discovery: similar to career exploration, this should be a filtering option based on the IPEDS college database csv that will be made available.  We should add filters for top 150 US news schools,top liberal arts collges, filters by public, private non-profit, private for-profit, admissions rate, filter by size, filter by price, etc.  User should be able to save “favorite” schools.
+Net price calculator:  for schools designated as favorites, based on the user’s zip code (which will output users income and estimated investments) and the net price data (stratified by income) in the IPEDS college database csv, provide an estimate of the users cost to attend a particular school.
+Pathways:  student decision tree – with one path “I know what I want to do after high school” and the other “Help me with some ideas”.  The first path should have four choices – continue my education, get a job, go to military and take a gap year.  Let’s just leave as place holders for now.
+User profile – ability to save preferences – location, college, occupation and pathway preferences.
+
