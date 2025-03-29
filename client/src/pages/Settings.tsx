@@ -7,7 +7,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+// Types for the favorites
+type FavoriteCollege = {
+  id: number;
+  userId: number;
+  collegeId: number;
+  college: {
+    id: number;
+    name: string;
+    location: string | null;
+    state: string | null;
+    type: string | null;
+    // Other college properties...
+  };
+};
 
 const Settings = () => {
   const { toast } = useToast();
@@ -32,17 +47,18 @@ const Settings = () => {
   const [careerUpdates, setCareerUpdates] = useState(true);
   const [scholarshipAlerts, setScholarshipAlerts] = useState(true);
   
-  // Favorites
-  const { data: favoriteColleges } = useQuery({
-    queryKey: ['/api/user/favorites/colleges'],
+  // Temporary user ID for demo purposes
+  const temporaryUserId = 1;
+
+  // Fetch favorite colleges
+  const { data: favoriteColleges = [], isLoading: isLoadingColleges } = useQuery({
+    queryKey: ['/api/favorites/colleges', temporaryUserId],
     queryFn: async () => {
-      return [
-        { id: "1", name: "University of Washington" },
-        { id: "2", name: "Stanford University" }
-      ];
-    },
-    // Disable actual fetching for now
-    enabled: false
+      const response = await fetch(`/api/favorites/colleges/${temporaryUserId}`);
+      if (!response.ok) throw new Error('Failed to fetch favorite colleges');
+      const data = await response.json();
+      return data;
+    }
   });
   
   const { data: favoriteCareers } = useQuery({
@@ -78,11 +94,39 @@ const Settings = () => {
     });
   };
   
-  const removeFavoriteCollege = (id: string) => {
-    toast({
-      title: "College removed",
-      description: "College has been removed from your favorites.",
-    });
+  // Query client for cache invalidation
+  const queryClient = useQueryClient();
+
+  // Remove favorite college mutation
+  const removeFavoriteMutation = useMutation({
+    mutationFn: async (favoriteId: number) => {
+      const response = await fetch(`/api/favorites/colleges/${favoriteId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to remove favorite college');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', temporaryUserId] });
+      toast({
+        title: "College removed",
+        description: "College has been removed from your favorites.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error removing favorite college:", error);
+      toast({
+        title: "Error removing college",
+        description: "There was a problem removing this college from your favorites.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const removeFavoriteCollege = (id: number) => {
+    removeFavoriteMutation.mutate(id);
   };
   
   const removeFavoriteCareer = (id: string) => {
@@ -303,23 +347,23 @@ const Settings = () => {
                 
                 {favoriteColleges && favoriteColleges.length > 0 ? (
                   <div className="space-y-3">
-                    {favoriteColleges.map((college) => (
+                    {favoriteColleges.map((favoriteCollege: FavoriteCollege) => (
                       <div 
-                        key={college.id} 
+                        key={favoriteCollege.id} 
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
                       >
                         <div className="flex items-center">
-                          <span className="material-icons text-primary mr-2">school</span>
-                          <span>{college.name}</span>
+                          <span className="font-bold text-primary mr-2">🎓</span>
+                          <span>{favoriteCollege.college.name}</span>
                         </div>
                         <div className="flex space-x-1">
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => removeFavoriteCollege(college.id)}
+                            className="h-8 w-8 p-0 text-destructive"
+                            onClick={() => removeFavoriteCollege(favoriteCollege.id)}
                           >
-                            <span className="material-icons text-gray-500">close</span>
+                            ✕
                           </Button>
                         </div>
                       </div>
@@ -327,9 +371,11 @@ const Settings = () => {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <span className="material-icons text-gray-400 text-3xl">bookmark_border</span>
+                    <span className="text-gray-400 text-3xl">📚</span>
                     <p className="text-gray-500 mt-2">No favorite colleges added yet</p>
-                    <Button className="mt-4">Explore Colleges</Button>
+                    <Button className="mt-4" onClick={() => window.location.href = "/college-discovery"}>
+                      Explore Colleges
+                    </Button>
                   </div>
                 )}
               </CardContent>
