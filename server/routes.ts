@@ -64,28 +64,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const colleges = await activeStorage.getColleges();
       console.log("Colleges fetched successfully:", colleges.length);
       
+      // Debug first few colleges to understand the structure
+      if (colleges.length > 0) {
+        console.log(`Sample college structure:`, colleges[0]);
+      }
+      
       // Transform snake_case properties to camelCase for frontend compatibility
       const transformedColleges = colleges.map(college => {
-        // Get raw fields from the database result using any type to bypass TypeScript checks
-        const rawCollege = college as any;
-        
-        // Create transformed college object
+        // Create transformed college object, handling both camelCase and snake_case
         const transformed = {
-          ...college,
+          id: college.id,
+          name: college.name,
+          location: college.location,
+          state: college.state,
+          type: college.type,
+          tuition: college.tuition,
           roomAndBoard: college.roomAndBoard,
+          acceptanceRate: college.acceptanceRate,
+          rating: college.rating,
+          size: college.size,
+          rank: college.rank,
           feesByIncome: college.feesByIncome,
-          // Convert the database columns to expected frontend property names
-          usNewsTop150: rawCollege.us_news_top_150,
-          bestLiberalArtsColleges: rawCollege.best_liberal_arts_colleges
+          // Handle both camelCase and snake_case possibilities
+          usNewsTop150: college.usNewsTop150 !== undefined ? Number(college.usNewsTop150) : 
+                      (college as any).us_news_top_150 !== undefined ? Number((college as any).us_news_top_150) : null,
+          bestLiberalArtsColleges: college.bestLiberalArtsColleges !== undefined ? Number(college.bestLiberalArtsColleges) : 
+                                 (college as any).best_liberal_arts_colleges !== undefined ? Number((college as any).best_liberal_arts_colleges) : null
         };
         
-        // Debug output for the first few colleges with these flags set
-        if (rawCollege.us_news_top_150 === 1) {
-          console.log(`Found US News Top 150 college: ${college.name} (ID: ${college.id})`);
+        // Debug output for top colleges
+        const usNewsRank = transformed.usNewsTop150;
+        if (usNewsRank !== null && usNewsRank <= 150) {
+          console.log(`Found US News Top 150 college: ${college.name} (ID: ${college.id}, Rank: ${usNewsRank})`);
         }
         
-        if (rawCollege.best_liberal_arts_colleges === 1) {
-          console.log(`Found Best Liberal Arts college: ${college.name} (ID: ${college.id})`);
+        const liberalArtsRank = transformed.bestLiberalArtsColleges;
+        if (liberalArtsRank !== null && liberalArtsRank <= 300) {
+          console.log(`Found Best Liberal Arts college: ${college.name} (ID: ${college.id}, Rank: ${liberalArtsRank})`);
         }
         
         return transformed;
@@ -105,15 +120,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "College not found" });
       }
       
+      // Debug the actual raw college object
+      console.log(`Raw college object from database:`, college);
+      
       // Transform snake_case properties to camelCase for frontend compatibility
-      const rawCollege = college as any;
       const transformedCollege = {
-        ...college,
+        id: college.id,
+        name: college.name,
+        location: college.location,
+        state: college.state,
+        type: college.type,
+        tuition: college.tuition,
         roomAndBoard: college.roomAndBoard,
+        acceptanceRate: college.acceptanceRate,
+        rating: college.rating,
+        size: college.size,
+        rank: college.rank,
         feesByIncome: college.feesByIncome,
-        // Convert the database columns to expected frontend property names
-        usNewsTop150: rawCollege.us_news_top_150,
-        bestLiberalArtsColleges: rawCollege.best_liberal_arts_colleges
+        // Handle both camelCase and snake_case possibilities
+        usNewsTop150: college.usNewsTop150 !== undefined ? Number(college.usNewsTop150) : 
+                      (college as any).us_news_top_150 !== undefined ? Number((college as any).us_news_top_150) : null,
+        bestLiberalArtsColleges: college.bestLiberalArtsColleges !== undefined ? Number(college.bestLiberalArtsColleges) : 
+                                (college as any).best_liberal_arts_colleges !== undefined ? Number((college as any).best_liberal_arts_colleges) : null
       };
       
       res.json(transformedCollege);

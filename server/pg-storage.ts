@@ -62,11 +62,14 @@ export class PgStorage implements IStorage {
   // College methods
   async getCollege(id: number): Promise<College | undefined> {
     const result = await db.select().from(colleges).where(eq(colleges.id, id));
+    console.log(`Raw college (ID: ${id}) from database:`, result[0]);
     return result[0];
   }
   
   async getColleges(): Promise<College[]> {
-    return await db.select().from(colleges);
+    const result = await db.select().from(colleges);
+    console.log(`Retrieved ${result.length} colleges from database. First college:`, result[0]);
+    return result;
   }
   
   async createCollege(college: InsertCollege): Promise<College> {
@@ -105,7 +108,12 @@ export class PgStorage implements IStorage {
       .where(eq(favoriteColleges.userId, userId));
       
     // Transform results to match expected return type
-    return favs.map(({ favorite, college }) => ({ ...favorite, college }));
+    return favs.map(({ favorite, college }) => {
+      if (!college) {
+        throw new Error(`College not found for favorite ID ${favorite.id}`);
+      }
+      return { ...favorite, college };
+    });
   }
   
   async addFavoriteCollege(userId: number, collegeId: number): Promise<FavoriteCollege> {
@@ -133,7 +141,12 @@ export class PgStorage implements IStorage {
       .where(eq(favoriteCareers.userId, userId));
       
     // Transform results to match expected return type
-    return favs.map(({ favorite, career }) => ({ ...favorite, career }));
+    return favs.map(({ favorite, career }) => {
+      if (!career) {
+        throw new Error(`Career not found for favorite ID ${favorite.id}`);
+      }
+      return { ...favorite, career };
+    });
   }
   
   async addFavoriteCareer(userId: number, careerId: number): Promise<FavoriteCareer> {
