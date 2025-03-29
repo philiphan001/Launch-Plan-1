@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { activeStorage } from "./index";
 import { validateRequest } from "../shared/middleware";
@@ -6,9 +6,46 @@ import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjecti
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
+import multer from "multer";
+
+// We'll import the function dynamically when needed
+// Note: No import statement here
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Configure multer for CSV uploads
+  const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      const dataDir = path.join(process.cwd(), 'server', 'data');
+      // Ensure the directory exists
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      cb(null, dataDir);
+    },
+    filename: function (req, file, cb) {
+      // Extract file type from originalname
+      const type = file.originalname.includes('college') ? 'college_data.csv' :
+                  file.originalname.includes('career') || file.originalname.includes('occupation') ? 'occupation_data.csv' :
+                  file.originalname.includes('coli') ? 'coli_data.csv' : file.originalname;
+      
+      cb(null, type);
+    }
+  });
+  
+  const upload = multer({ 
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+      // Accept only CSV files
+      if (file.mimetype.includes('csv') || file.mimetype.includes('text/plain')) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+        return cb(new Error('Only CSV files are allowed'));
+      }
+    }
+  });
 
   // API routes
   // User routes
@@ -181,6 +218,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CSV Upload routes
+  app.post("/api/upload/csv", upload.array('csvFiles', 3), async (req: Request, res: Response) => {
+    try {
+      if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+      
+      console.log("Files uploaded:", (req.files as Express.Multer.File[]).map(f => f.filename));
+      
+      // Run direct database import from uploaded files
+      // This replaces the call to the external importCsvData function
+      try {
+        const dataDir = path.join(process.cwd(), 'server', 'data');
+        
+        // Process colleges
+        try {
+          const collegeFilePath = path.join(dataDir, 'college_data.csv');
+          if (fs.existsSync(collegeFilePath)) {
+            console.log('Processing college data from:', collegeFilePath);
+            const collegeData = fs.readFileSync(collegeFilePath, 'utf8');
+            
+            // Use the csv-parse module directly
+            const { parse } = await import('csv-parse/sync');
+            const collegeRecords = parse(collegeData, { columns: true, skip_empty_lines: true });
+            console.log(`Found ${collegeRecords.length} colleges to import`);
+            
+            // Import to database using activeStorage
+            for (const record of collegeRecords) {
+              // Parse numeric values
+              const tuition = parseInt(record.tuition || '0', 10);
+              const roomAndBoard = parseInt(record.room_and_board || '0', 10);
+              const acceptanceRate = parseFloat(record.acceptance_rate || '0');
+              const rating = parseFloat(record.rating || '0');
+              const rank = parseInt(record.rank || '0', 10);
+              
+              // Parse fees by income (could be JSON string or object)
+              let feesByIncome = {};
+              try {
+                feesByIncome = record.fees_by_income ? 
+                  (typeof record.fees_by_income === 'string' ? 
+                    JSON.parse(record.fees_by_income) : 
+                    record.fees_by_income) : 
+                  {};
+              } catch (e) {
+                console.warn(`Warning: Could not parse fees_by_income for ${record.name}`);
+              }
+              
+              // Insert into database through the storage interface
+              await activeStorage.createCollege({
+                name: record.name,
+                location: record.location,
+                state: record.state,
+                type: record.type,
+                tuition: tuition,
+                roomAndBoard: roomAndBoard,
+                acceptanceRate: acceptanceRate,
+                rating: rating,
+                size: record.size,
+                rank: rank,
+                feesByIncome: feesByIncome
+              });
+            }
+            console.log('College data imported successfully!');
+          }
+        } catch (err) {
+          console.error('Error processing college data:', err);
+        }
+        
+        // Process careers
+        try {
+          const careerFilePath = path.join(dataDir, 'occupation_data.csv');
+          if (fs.existsSync(careerFilePath)) {
+            console.log('Processing career data from:', careerFilePath);
+            const careerData = fs.readFileSync(careerFilePath, 'utf8');
+            
+            // Use the csv-parse module directly
+            const { parse } = await import('csv-parse/sync');
+            const careerRecords = parse(careerData, { columns: true, skip_empty_lines: true });
+            console.log(`Found ${careerRecords.length} careers to import`);
+            
+            // Import to database using activeStorage
+            for (const record of careerRecords) {
+              // Parse numeric values
+              const salary = parseInt(record.salary || '0', 10);
+              
+              // Insert into database through the storage interface
+              await activeStorage.createCareer({
+                title: record.title,
+                description: record.description,
+                salary: salary,
+                growthRate: record.growth_rate,
+                education: record.education,
+                category: record.category
+              });
+            }
+            console.log('Career data imported successfully!');
+          }
+        } catch (err) {
+          console.error('Error processing career data:', err);
+        }
+        
+        console.log('CSV import completed successfully!');
+        
+      } catch (importError) {
+        console.error('Error importing CSV data:', importError);
+        return res.status(500).json({ 
+          message: "Error processing uploaded files", 
+          error: importError instanceof Error ? importError.message : String(importError) 
+        });
+      }
+      
+      res.status(200).json({ 
+        message: "Files uploaded and processed successfully", 
+        files: (req.files as Express.Multer.File[]).map(f => f.filename)
+      });
+    } catch (error) {
+      console.error("Error uploading CSV files:", error);
+      res.status(500).json({ 
+        message: "Failed to upload and process CSV files", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
   // Python financial calculator route
   app.post("/api/calculate/financial-projection", async (req: Request, res: Response) => {
     try {

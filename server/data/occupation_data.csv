@@ -1,0 +1,11 @@
+title,description,salary,growth_rate,education,category
+Software Developer,"Design, create, and maintain software applications and systems.",110140,22.2,Bachelor's degree,Technology
+Data Scientist,"Analyze complex data sets to find patterns and insights for business decision-making.",100910,31.4,Master's degree,Technology
+Financial Advisor,"Provide advice on investments, insurance, mortgages, and other financial matters.",89330,15.0,Bachelor's degree,Finance
+Nurse Practitioner,"Diagnose and treat acute, episodic, or chronic illness independently or as part of a healthcare team.",117670,45.7,Master's degree,Healthcare
+Physical Therapist,"Help injured or ill people improve movement and manage pain.",91010,21.9,Doctoral degree,Healthcare
+Marketing Manager,"Plan programs to generate interest in products or services.",142170,10.0,Bachelor's degree,Business
+Biomedical Engineer,"Design equipment, devices, and systems for use in healthcare.",92620,5.2,Bachelor's degree,Engineering
+Environmental Scientist,"Use knowledge of natural sciences to protect the environment and human health.",73230,8.1,Bachelor's degree,Science
+Occupational Therapist,"Treat injured, ill, or disabled patients through everyday activities.",86280,17.9,Master's degree,Healthcare
+Civil Engineer,"Design, build, and supervise infrastructure projects and systems.",88570,6.3,Bachelor's degree,Engineering
