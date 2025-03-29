@@ -63,7 +63,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Attempting to fetch colleges from database");
       const colleges = await activeStorage.getColleges();
       console.log("Colleges fetched successfully:", colleges.length);
-      res.json(colleges);
+      
+      // Transform snake_case properties to camelCase for frontend compatibility
+      const transformedColleges = colleges.map(college => {
+        // Get raw fields from the database result using any type to bypass TypeScript checks
+        const rawCollege = college as any;
+        
+        return {
+          ...college,
+          roomAndBoard: college.roomAndBoard,
+          feesByIncome: college.feesByIncome,
+          // Convert the database columns to expected frontend property names
+          usNewsTop150: rawCollege.us_news_top_150,
+          bestLiberalArtsColleges: rawCollege.best_liberal_arts_colleges
+        };
+      });
+      
+      res.json(transformedColleges);
     } catch (error) {
       console.error("Error fetching colleges:", error);
       res.status(500).json({ message: "Failed to get colleges", error: error instanceof Error ? error.message : String(error) });
@@ -76,7 +92,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!college) {
         return res.status(404).json({ message: "College not found" });
       }
-      res.json(college);
+      
+      // Transform snake_case properties to camelCase for frontend compatibility
+      const rawCollege = college as any;
+      const transformedCollege = {
+        ...college,
+        roomAndBoard: college.roomAndBoard,
+        feesByIncome: college.feesByIncome,
+        // Convert the database columns to expected frontend property names
+        usNewsTop150: rawCollege.us_news_top_150,
+        bestLiberalArtsColleges: rawCollege.best_liberal_arts_colleges
+      };
+      
+      res.json(transformedCollege);
     } catch (error) {
       res.status(500).json({ message: "Failed to get college" });
     }
