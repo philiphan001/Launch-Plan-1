@@ -791,7 +791,7 @@ const NetPriceCalculator = () => {
                       <h5 className="font-medium text-gray-700 mb-3">How Do I Pay For College?</h5>
                       
                       {/* Payment breakdown chart - VERTICAL VERSION */}
-                      <div className="mb-6 flex justify-between items-end h-60 border-b border-gray-300 relative">
+                      <div className="mb-8 flex justify-between items-end h-80 border-b border-gray-300 relative">
                         {/* Horizontal guide lines */}
                         <div className="absolute inset-0">
                           <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '75%' }}></div>
@@ -806,20 +806,20 @@ const NetPriceCalculator = () => {
                             {calculateEFC() > 0 && (
                               <>
                                 <div 
-                                  className="w-20 bg-primary rounded-t-md mb-2 flex flex-col items-center justify-end" 
+                                  className="w-24 bg-primary rounded-t-md mb-3 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
                                     height: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
-                                    minHeight: '20px'
+                                    minHeight: '32px'
                                   }}
                                 >
-                                  <span className="text-xs text-white font-medium p-1">
+                                  <span className="text-sm text-white font-medium py-2">
                                     ${calculateEFC().toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-xs font-medium">Expected Family</p>
-                                  <p className="text-xs font-medium">Contribution</p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-sm font-medium">Expected Family</p>
+                                  <p className="text-sm font-medium">Contribution</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     ({Math.round((calculateEFC() / netPrice) * 100)}% of cost)
                                   </p>
                                 </div>
@@ -832,19 +832,19 @@ const NetPriceCalculator = () => {
                             {calculateWorkStudy() > 0 && (
                               <>
                                 <div 
-                                  className="w-20 bg-amber-400 rounded-t-md mb-2 flex flex-col items-center justify-end" 
+                                  className="w-24 bg-amber-400 rounded-t-md mb-3 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
                                     height: `${Math.min(100, Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
-                                    minHeight: '20px'
+                                    minHeight: '32px'
                                   }}
                                 >
-                                  <span className="text-xs text-white font-medium p-1">
+                                  <span className="text-sm text-white font-medium py-2">
                                     ${calculateWorkStudy().toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-xs font-medium">Work-Study</p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-sm font-medium">Work-Study</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     ({Math.round((calculateWorkStudy() / netPrice) * 100)}% of cost)
                                   </p>
                                 </div>
@@ -857,19 +857,19 @@ const NetPriceCalculator = () => {
                             {calculateStudentLoan() > 0 && (
                               <>
                                 <div 
-                                  className="w-20 bg-blue-500 rounded-t-md mb-2 flex flex-col items-center justify-end" 
+                                  className="w-24 bg-blue-500 rounded-t-md mb-3 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
                                     height: `${Math.min(100, Math.round((calculateStudentLoan() / netPrice) * 100))}%`,
-                                    minHeight: '20px'
+                                    minHeight: '32px'
                                   }}
                                 >
-                                  <span className="text-xs text-white font-medium p-1">
+                                  <span className="text-sm text-white font-medium py-2">
                                     ${calculateStudentLoan().toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-xs font-medium">Student Loans</p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-sm font-medium">Student Loans</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     ({Math.round((calculateStudentLoan() / netPrice) * 100)}% of cost)
                                   </p>
                                 </div>
