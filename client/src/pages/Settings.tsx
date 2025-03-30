@@ -178,12 +178,11 @@ const Settings = () => {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Account Settings</h1>
       
-      <Tabs defaultValue="calculations">
+      <Tabs defaultValue="financial">
         <TabsList className="mb-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="financial">Financial Profile</TabsTrigger>
           <TabsTrigger value="favorites">My Favorites</TabsTrigger>
-          <TabsTrigger value="calculations">College Calculations</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
         
@@ -376,6 +375,10 @@ const Settings = () => {
               <Button className="mt-6" onClick={handleSaveFinancial}>Save Financial Information</Button>
             </CardContent>
           </Card>
+          
+          <div className="mt-6">
+            <SavedCalculationsSection />
+          </div>
         </TabsContent>
         
         <TabsContent value="favorites">
@@ -506,10 +509,6 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="calculations">
-          <SavedCalculationsSection />
         </TabsContent>
         
         <TabsContent value="notifications">

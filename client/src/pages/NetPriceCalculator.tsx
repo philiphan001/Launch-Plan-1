@@ -14,6 +14,14 @@ import { Loader2, DollarSign, Check, X, Search, Home, Building, Save } from "luc
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import PriceCharts from "@/components/calculator/PriceCharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface College {
   id: number;
@@ -93,6 +101,8 @@ const NetPriceCalculator = () => {
   const [onCampusHousing, setOnCampusHousing] = useState(true);
   const [isInState, setIsInState] = useState(false);
   const [userState, setUserState] = useState<string | null>(null);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [calculationName, setCalculationName] = useState("");
   
   // Temporary user ID for demo purposes - would normally come from auth context
   const userId = 1;
@@ -444,6 +454,15 @@ const NetPriceCalculator = () => {
       return;
     }
     
+    // Set default calculation name and open dialog
+    setCalculationName(`${selectedCollege.name} (${new Date().toLocaleDateString()})`);
+    setShowSaveDialog(true);
+  };
+  
+  // Function that actually saves the calculation after name is provided
+  const handleSaveCalculation = () => {
+    if (!selectedCollege || !netPrice) return;
+    
     // Calculate financial aid amount based on sticker price minus net price
     // This represents scholarships and grants that don't need to be repaid
     const stickerPrice = selectedCollege.type.includes("Public") && !isInState
@@ -469,8 +488,11 @@ const NetPriceCalculator = () => {
       roomAndBoardUsed: selectedCollege.roomAndBoard,
       onCampusHousing,
       totalCost: stickerPrice,
-      notes: `${selectedCollege.name} cost calculation with ${efcPercentage}% family contribution and ${workStudyPercentage}% work-study.`
+      notes: calculationName || `${selectedCollege.name} cost calculation with ${efcPercentage}% family contribution and ${workStudyPercentage}% work-study.`
     };
+    
+    // Close the dialog
+    setShowSaveDialog(false);
     
     // Save the calculation
     saveCalculation(calculationData);
@@ -1282,6 +1304,51 @@ const NetPriceCalculator = () => {
           </Card>
         </div>
       </div>
+      
+      {/* Save Calculation Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save Calculation</DialogTitle>
+            <DialogDescription>
+              Enter a name for this calculation scenario to help you identify it later in your profile.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="calculationName" className="mb-2 block">Calculation Name</Label>
+            <Input
+              id="calculationName"
+              value={calculationName}
+              onChange={(e) => setCalculationName(e.target.value)}
+              placeholder="e.g. Fall 2023 with Housing"
+              className="w-full"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveCalculation} 
+              disabled={!calculationName.trim() || isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Calculation
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

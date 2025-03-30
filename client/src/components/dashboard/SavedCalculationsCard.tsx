@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Calculator, School } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,40 @@ const ProfileCalculationsSection = () => {
   const { toast } = useToast();
   // Default user ID (would come from auth context in a real app)
   const userId = 1;
+  const queryClient = useQueryClient();
+  
+  // Mutation to remove a calculation
+  const deleteMutation = useMutation({
+    mutationFn: async (calculationId: number) => {
+      const response = await fetch(`/api/college-calculations/${calculationId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete calculation');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
+      toast({
+        title: "Calculation removed",
+        description: "The college calculation has been removed from your profile.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error removing calculation:", error);
+      toast({
+        title: "Error removing calculation",
+        description: "There was a problem removing this calculation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Function to remove a calculation
+  const removeCalculation = (id: number) => {
+    deleteMutation.mutate(id);
+  };
   
   // Fetch saved calculations
   const { data: calculations, isLoading, error } = useQuery({
@@ -166,10 +200,18 @@ const ProfileCalculationsSection = () => {
                   <p>Calculation date: {formatDate(new Date(calc.calculationDate))}</p>
                 </div>
                 
-                <div className="mt-4 pt-3 border-t flex justify-end">
+                <div className="mt-4 pt-3 border-t flex justify-end space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => removeCalculation(calc.id)}
+                  >
+                    Remove
+                  </Button>
                   <Link href={`/net-price-calculator?collegeId=${calc.collegeId}`}>
                     <Button variant="outline" size="sm">
-                      Recalculate
+                      View Details
                     </Button>
                   </Link>
                 </div>
