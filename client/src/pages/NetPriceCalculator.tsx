@@ -43,6 +43,33 @@ const NetPriceCalculator = () => {
   const [calculated, setCalculated] = useState(false);
   const [fetchingZipCode, setFetchingZipCode] = useState(false);
   
+  // Temporary user ID for demo purposes - would normally come from auth context
+  const userId = 1;
+  
+  // Query to fetch the user profile
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/users', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+      return response.json();
+    }
+  });
+  
+  // Set the user's zip code once the profile is loaded
+  useEffect(() => {
+    if (userData && userData.zipCode) {
+      setZipCode(userData.zipCode);
+      
+      // Optionally auto-fetch income data if zip code is available
+      if (userData.zipCode.length === 5) {
+        fetchIncomeData(userData.zipCode);
+      }
+    }
+  }, [userData]);
+  
   const { data: collegeData, isLoading } = useQuery({
     queryKey: ['/api/colleges'],
     queryFn: async () => {
@@ -66,6 +93,40 @@ const NetPriceCalculator = () => {
     },
     enabled: false // We'll trigger this manually
   });
+  
+  // Function to fetch income data based on zip code
+  const fetchIncomeData = (zip: string) => {
+    if (zip.length === 5) {
+      setFetchingZipCode(true);
+      fetch(`/api/zip-code-income/zip/${zip}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Zip code data not found');
+          }
+          return response.json();
+        })
+        .then(data => {
+          setEstimatedIncome(data.mean_income);
+          setUsingEstimatedIncome(true);
+          setHouseholdIncome(data.mean_income.toString());
+          toast({
+            title: "Income Estimate Found",
+            description: `The average household income in ${zip} is $${data.mean_income.toLocaleString()}.`,
+          });
+        })
+        .catch(err => {
+          console.error("Error fetching zip code income:", err);
+          toast({
+            variant: "destructive", 
+            title: "No data available",
+            description: "We couldn't find income data for this zip code. Please enter your income manually.",
+          });
+        })
+        .finally(() => {
+          setFetchingZipCode(false);
+        });
+    }
+  };
   
   const defaultColleges: College[] = [
     {
@@ -152,23 +213,25 @@ const NetPriceCalculator = () => {
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-2">Net Price Calculator</h1>
       <p className="text-gray-600 mb-6">Find out how much a college will cost after financial aid by entering your information below.</p>
       
-      {/* Add Alert explaining the zip code income feature */}
-      <Alert className="mb-6">
-        <AlertDescription>
-          <div className="flex items-start">
-            <div className="mr-3 mt-0.5 flex-shrink-0">
-              <DollarSign className="h-5 w-5 text-primary" />
+      {/* Add Alert explaining the zip code income feature - only shown when we have user data with a zip code */}
+      {userData && userData.zipCode && estimatedIncome && (
+        <Alert className="mb-6">
+          <AlertDescription>
+            <div className="flex items-start">
+              <div className="mr-3 mt-0.5 flex-shrink-0">
+                <DollarSign className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium">Automatic Income Estimation</p>
+                <p className="text-sm text-muted-foreground">
+                  We've automatically used the zip code from your profile ({userData.zipCode}) to estimate your household income based on your area's average. 
+                  You can always adjust this estimate if needed.
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium">New Feature: Income Estimation</p>
-              <p className="text-sm text-muted-foreground">
-                Enter your zip code to automatically estimate your household income based on your area's average. 
-                You can always adjust this estimate if needed.
-              </p>
-            </div>
-          </div>
-        </AlertDescription>
-      </Alert>
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
@@ -178,7 +241,14 @@ const NetPriceCalculator = () => {
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="zipCode">Your Zip Code</Label>
+                  <Label htmlFor="zipCode" className="flex justify-between">
+                    <span>Your Zip Code</span>
+                    {userData && userData.zipCode && (
+                      <span className="text-xs text-muted-foreground flex items-center">
+                        <Check className="h-3 w-3 mr-1" /> From your profile
+                      </span>
+                    )}
+                  </Label>
                   <div className="flex mt-1">
                     <Input 
                       id="zipCode" 
@@ -190,39 +260,7 @@ const NetPriceCalculator = () => {
                     <Button 
                       variant="outline" 
                       className="ml-2" 
-                      onClick={() => {
-                        if (zipCode.length === 5) {
-                          setFetchingZipCode(true);
-                          refetchZipCode()
-                            .then(result => {
-                              if (result.data) {
-                                setEstimatedIncome(result.data.mean_income);
-                                setUsingEstimatedIncome(true);
-                                setHouseholdIncome(result.data.mean_income.toString());
-                                toast({
-                                  title: "Income Estimate Found",
-                                  description: `The average household income in ${zipCode} is $${result.data.mean_income.toLocaleString()}.`,
-                                });
-                              }
-                            })
-                            .catch(err => {
-                              toast({
-                                variant: "destructive",
-                                title: "No data available",
-                                description: "We couldn't find income data for this zip code. Please enter your income manually.",
-                              });
-                            })
-                            .finally(() => {
-                              setFetchingZipCode(false);
-                            });
-                        } else {
-                          toast({
-                            variant: "destructive",
-                            title: "Invalid Zip Code",
-                            description: "Please enter a valid 5-digit zip code.",
-                          });
-                        }
-                      }}
+                      onClick={() => fetchIncomeData(zipCode)}
                       disabled={zipCode.length !== 5 || fetchingZipCode}
                     >
                       {fetchingZipCode ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find"}
@@ -230,6 +268,11 @@ const NetPriceCalculator = () => {
                   </div>
                   {zipCode.length > 0 && zipCode.length < 5 && (
                     <p className="text-xs text-destructive mt-1">Please enter a valid 5-digit zip code</p>
+                  )}
+                  {isLoadingUser && (
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center">
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" /> Loading your profile data...
+                    </p>
                   )}
                 </div>
                 
