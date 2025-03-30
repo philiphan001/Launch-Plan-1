@@ -10,6 +10,7 @@ const navItems: NavItem[] = [
   { path: "/", label: "Dashboard", icon: "dashboard" },
   { path: "/projections", label: "Financial Projections", icon: "trending_up" },
   { path: "/careers", label: "Career Exploration", icon: "work" },
+  { path: "/career-builder", label: "Career Builder", icon: "insights" },
   { path: "/colleges", label: "College Discovery", icon: "school" },
   { path: "/calculator", label: "Net Price Calculator", icon: "calculate" },
   { path: "/pathways", label: "Pathways", icon: "alt_route" },

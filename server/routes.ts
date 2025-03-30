@@ -6,6 +6,7 @@ import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjecti
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
+import { generateCareerInsights } from "./openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -172,6 +173,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(career);
     } catch (error) {
       res.status(500).json({ message: "Failed to get career" });
+    }
+  });
+  
+  // Career insights route using OpenAI
+  app.get("/api/career-insights/:id", async (req: Request, res: Response) => {
+    try {
+      const careerId = parseInt(req.params.id);
+      if (isNaN(careerId)) {
+        return res.status(400).json({ message: "Invalid career ID format" });
+      }
+      
+      const career = await activeStorage.getCareer(careerId);
+      if (!career) {
+        return res.status(404).json({ message: "Career not found" });
+      }
+      
+      // Generate insights using OpenAI
+      const insights = await generateCareerInsights(career.title, career.description);
+      
+      res.json(insights);
+    } catch (error) {
+      console.error("Error generating career insights:", error);
+      res.status(500).json({ 
+        message: "Failed to generate career insights", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

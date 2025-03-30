@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import Dashboard from "@/pages/Dashboard";
 import FinancialProjections from "@/pages/FinancialProjections";
 import CareerExploration from "@/pages/CareerExploration";
+import CareerBuilder from "@/pages/CareerBuilder";
 import CollegeDiscovery from "@/pages/CollegeDiscovery";
 import NetPriceCalculator from "@/pages/NetPriceCalculator";
 import Pathways from "@/pages/Pathways";
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" component={Dashboard} />
         <Route path="/projections" component={FinancialProjections} />
         <Route path="/careers" component={CareerExploration} />
+        <Route path="/career-builder" component={CareerBuilder} />
         <Route path="/colleges" component={CollegeDiscovery} />
         <Route path="/calculator" component={NetPriceCalculator} />
         <Route path="/pathways" component={Pathways} />
