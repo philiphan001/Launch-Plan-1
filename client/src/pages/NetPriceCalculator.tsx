@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, DollarSign, Check, X, Search, Home, Building } from "lucide-react";
@@ -290,6 +291,9 @@ const NetPriceCalculator = () => {
     }
   };
   
+  // State to manage EFC adjustment percentage
+  const [efcAdjustment, setEfcAdjustment] = useState<number>(100); // 100% means the default calculated EFC
+  
   // Calculate expected family contribution (EFC) based on income and assets
   const calculateEFC = (): number => {
     if (!householdIncome) return 0;
@@ -302,6 +306,9 @@ const NetPriceCalculator = () => {
     let efc = income * 0.12; // 12% of income
     efc += investments * 0.07; // 7% of investment assets
     efc += homeEquity; // Small percentage of home equity
+    
+    // Apply the user's adjustment
+    efc = efc * (efcAdjustment / 100);
     
     return Math.min(Math.round(efc), netPrice || 0);
   };
@@ -760,88 +767,120 @@ const NetPriceCalculator = () => {
                     <div className="bg-gray-100 p-4 rounded-lg">
                       <h5 className="font-medium text-gray-700 mb-3">How Do I Pay For College?</h5>
                       
-                      {/* Payment breakdown chart */}
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center">
-                          <div className="w-full bg-gray-200 rounded-full h-6 relative">
-                            {/* EFC bar */}
+                      {/* EFC adjustment slider */}
+                      <div className="mb-4">
+                        <Label htmlFor="efc-adjustment" className="text-sm">
+                          <span className="flex justify-between">
+                            <span>Adjust Your Expected Family Contribution (EFC)</span>
+                            <span className="text-primary font-medium">{efcAdjustment}%</span>
+                          </span>
+                        </Label>
+                        <Slider
+                          id="efc-adjustment"
+                          value={[efcAdjustment]} 
+                          min={20}
+                          max={180}
+                          step={10}
+                          onValueChange={(values) => setEfcAdjustment(values[0])}
+                          className="mt-2"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Adjust the slider to see how changing your contribution affects loans and work-study.
+                        </p>
+                      </div>
+                      
+                      {/* Payment breakdown chart - VERTICAL VERSION */}
+                      <div className="mt-6 flex justify-between items-end h-60 border-b border-gray-300 relative">
+                        {/* Horizontal guide lines */}
+                        <div className="absolute inset-0">
+                          <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '75%' }}></div>
+                          <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '50%' }}></div>
+                          <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '25%' }}></div>
+                        </div>
+                        
+                        {/* Main bar chart */}
+                        <div className="relative z-10 flex items-end justify-around w-full h-full px-4">
+                          {/* EFC Column */}
+                          <div className="flex flex-col items-center w-1/3">
                             {calculateEFC() > 0 && (
-                              <div 
-                                className="h-6 rounded-l-full bg-primary" 
-                                style={{ 
-                                  width: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
-                                  minWidth: '30px'
-                                }}
-                              >
-                                <span className="text-xs text-white font-medium pl-2 leading-6 whitespace-nowrap">
-                                  EFC
-                                </span>
-                              </div>
+                              <>
+                                <div 
+                                  className="w-20 bg-primary rounded-t-md mb-2 flex flex-col items-center justify-end" 
+                                  style={{ 
+                                    height: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
+                                    minHeight: '20px'
+                                  }}
+                                >
+                                  <span className="text-xs text-white font-medium p-1">
+                                    ${calculateEFC().toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-xs font-medium">Expected Family</p>
+                                  <p className="text-xs font-medium">Contribution</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    ({Math.round((calculateEFC() / netPrice) * 100)}% of cost)
+                                  </p>
+                                </div>
+                              </>
                             )}
-                            
-                            {/* Work Study bar */}
+                          </div>
+                          
+                          {/* Work-Study Column */}
+                          <div className="flex flex-col items-center w-1/3">
                             {calculateWorkStudy() > 0 && (
-                              <div 
-                                className="h-6 bg-amber-400 absolute top-0" 
-                                style={{ 
-                                  width: `${Math.min(100, Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
-                                  left: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
-                                  minWidth: '40px'
-                                }}
-                              >
-                                <span className="text-xs text-white font-medium pl-2 leading-6 whitespace-nowrap">
-                                  Work-Study
-                                </span>
-                              </div>
+                              <>
+                                <div 
+                                  className="w-20 bg-amber-400 rounded-t-md mb-2 flex flex-col items-center justify-end" 
+                                  style={{ 
+                                    height: `${Math.min(100, Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
+                                    minHeight: '20px'
+                                  }}
+                                >
+                                  <span className="text-xs text-white font-medium p-1">
+                                    ${calculateWorkStudy().toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-xs font-medium">Work-Study</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    ({Math.round((calculateWorkStudy() / netPrice) * 100)}% of cost)
+                                  </p>
+                                </div>
+                              </>
                             )}
-                            
-                            {/* Student Loan bar */}
+                          </div>
+                          
+                          {/* Student Loans Column */}
+                          <div className="flex flex-col items-center w-1/3">
                             {calculateStudentLoan() > 0 && (
-                              <div 
-                                className="h-6 bg-blue-500 rounded-r-full absolute top-0" 
-                                style={{ 
-                                  width: `${Math.min(100, Math.round((calculateStudentLoan() / netPrice) * 100))}%`,
-                                  left: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100) + Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
-                                  minWidth: '40px'
-                                }}
-                              >
-                                <span className="text-xs text-white font-medium pl-2 leading-6 whitespace-nowrap">
-                                  Loans
-                                </span>
-                              </div>
+                              <>
+                                <div 
+                                  className="w-20 bg-blue-500 rounded-t-md mb-2 flex flex-col items-center justify-end" 
+                                  style={{ 
+                                    height: `${Math.min(100, Math.round((calculateStudentLoan() / netPrice) * 100))}%`,
+                                    minHeight: '20px'
+                                  }}
+                                >
+                                  <span className="text-xs text-white font-medium p-1">
+                                    ${calculateStudentLoan().toLocaleString()}
+                                  </span>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-xs font-medium">Student Loans</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    ({Math.round((calculateStudentLoan() / netPrice) * 100)}% of cost)
+                                  </p>
+                                </div>
+                              </>
                             )}
                           </div>
                         </div>
-                        
-                        {/* Values breakdown */}
-                        <div className="grid grid-cols-3 gap-2 text-center mt-2">
-                          <div>
-                            <p className="text-xs font-medium">Expected Family Contribution</p>
-                            <p className="text-sm font-mono font-semibold text-primary">${calculateEFC().toLocaleString()}</p>
-                            <p className="text-xs text-muted-foreground">
-                              ({Math.round((calculateEFC() / netPrice) * 100)}% of cost)
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium">Work-Study</p>
-                            <p className="text-sm font-mono font-semibold text-amber-500">${calculateWorkStudy().toLocaleString()}</p>
-                            <p className="text-xs text-muted-foreground">
-                              ({Math.round((calculateWorkStudy() / netPrice) * 100)}% of cost)
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium">Student Loans</p>
-                            <p className="text-sm font-mono font-semibold text-blue-500">${calculateStudentLoan().toLocaleString()}</p>
-                            <p className="text-xs text-muted-foreground">
-                              ({Math.round((calculateStudentLoan() / netPrice) * 100)}% of cost)
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3 text-xs text-gray-600">
-                          <p>* This is an estimate based on average financial aid packages. Actual amounts may vary.</p>
-                          <p>* Don't forget to explore additional scholarship opportunities!</p>
-                        </div>
+                      </div>
+                      
+                      <div className="mt-3 text-xs text-gray-600">
+                        <p>* This is an estimate based on average financial aid packages. Actual amounts may vary.</p>
+                        <p>* Don't forget to explore additional scholarship opportunities!</p>
                       </div>
                     </div>
                   </div>
