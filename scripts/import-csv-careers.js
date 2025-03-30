@@ -47,8 +47,39 @@ async function importCareers() {
     
     // Process and transform each record in the batch
     const careerData = batch.map(record => {
-      // Extract salary information
-      const salary = parseInt(record['A_MEDIAN']) || parseInt(record['A_MEAN']) || 0;
+      // Extract salary information and handle comma-separated numbers
+      let salary = 0;
+      
+      try {
+        // Clean and parse median salary if available
+        if (record['A_MEDIAN'] && record['A_MEDIAN'] !== '#') {
+          const cleanMedian = record['A_MEDIAN'].replace(/,/g, '');
+          const parsedMedian = parseInt(cleanMedian);
+          if (!isNaN(parsedMedian)) {
+            salary = parsedMedian;
+          }
+        }
+        
+        // If median is not available or invalid, try mean salary
+        if (salary === 0 && record['A_MEAN'] && record['A_MEAN'] !== '#') {
+          const cleanMean = record['A_MEAN'].replace(/,/g, '');
+          const parsedMean = parseInt(cleanMean);
+          if (!isNaN(parsedMean)) {
+            salary = parsedMean;
+          }
+        }
+        
+        // If both are unavailable or invalid, fallback to monthly income
+        if (salary === 0 && record['Monthly Income'] && record['Monthly Income'] !== '#') {
+          const monthlyClean = record['Monthly Income'].replace(/,/g, '');
+          const parsedMonthly = parseInt(monthlyClean);
+          if (!isNaN(parsedMonthly)) {
+            salary = parsedMonthly * 12; // Convert monthly to annual
+          }
+        }
+      } catch (error) {
+        console.warn(`Could not parse salary for ${record['Occupation']}:`, error);
+      }
       
       // Determine growth rate based on position in list (just a placeholder logic)
       let growthRate = 'stable';
