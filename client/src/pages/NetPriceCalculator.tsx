@@ -56,6 +56,13 @@ const NetPriceCalculator = () => {
   const [householdIncome, setHouseholdIncome] = useState("");
   const [estimatedIncome, setEstimatedIncome] = useState<number | null>(null);
   const [usingEstimatedIncome, setUsingEstimatedIncome] = useState(false);
+  const [investmentAssets, setInvestmentAssets] = useState("");
+  const [estimatedInvestments, setEstimatedInvestments] = useState<number | null>(null);
+  const [usingEstimatedInvestments, setUsingEstimatedInvestments] = useState(false);
+  const [homeValue, setHomeValue] = useState("");
+  const [estimatedHomeValue, setEstimatedHomeValue] = useState<number | null>(null);
+  const [usingEstimatedHomeValue, setUsingEstimatedHomeValue] = useState(false);
+  const [homeOwnership, setHomeOwnership] = useState<"own" | "rent">("rent");
   const [householdSize, setHouseholdSize] = useState("4");
   const [householdStructure, setHouseholdStructure] = useState("two_parents");
   const [calculated, setCalculated] = useState(false);
@@ -129,12 +136,28 @@ const NetPriceCalculator = () => {
           return response.json();
         })
         .then(data => {
+          // Set income data
           setEstimatedIncome(data.mean_income);
           setUsingEstimatedIncome(true);
           setHouseholdIncome(data.mean_income.toString());
+          
+          // Set investment assets data
+          if (data.estimated_investments) {
+            setEstimatedInvestments(data.estimated_investments);
+            setUsingEstimatedInvestments(true);
+            setInvestmentAssets(data.estimated_investments.toString());
+          }
+          
+          // Set home value data if available
+          if (data.home_value) {
+            setEstimatedHomeValue(data.home_value);
+            setUsingEstimatedHomeValue(true);
+            setHomeValue(data.home_value.toString());
+          }
+          
           toast({
-            title: "Income Estimate Found",
-            description: `The average household income in ${zip} is $${data.mean_income.toLocaleString()}.`,
+            title: "Financial Estimates Found",
+            description: `Based on ${zip}, we've estimated your financial information.`,
           });
         })
         .catch(err => {
@@ -142,7 +165,7 @@ const NetPriceCalculator = () => {
           toast({
             variant: "destructive", 
             title: "No data available",
-            description: "We couldn't find income data for this zip code. Please enter your income manually.",
+            description: "We couldn't find data for this zip code. Please enter your information manually.",
           });
         })
         .finally(() => {
@@ -196,6 +219,18 @@ const NetPriceCalculator = () => {
     if (zipCodeData) {
       if (zipCodeData.mean_income) {
         setEstimatedIncome(zipCodeData.mean_income);
+        setUsingEstimatedIncome(true);
+        setHouseholdIncome(zipCodeData.mean_income.toString());
+      }
+      if (zipCodeData.estimated_investments) {
+        setEstimatedInvestments(zipCodeData.estimated_investments);
+        setUsingEstimatedInvestments(true);
+        setInvestmentAssets(zipCodeData.estimated_investments.toString());
+      }
+      if (zipCodeData.home_value) {
+        setEstimatedHomeValue(zipCodeData.home_value);
+        setUsingEstimatedHomeValue(true);
+        setHomeValue(zipCodeData.home_value.toString());
       }
       if (zipCodeData.state) {
         setUserState(zipCodeData.state);
@@ -238,6 +273,55 @@ const NetPriceCalculator = () => {
   };
   
   const netPrice = calculated ? calculateNetPrice() : null;
+  
+  // Helper function to calculate average fees
+  const calculateAverageFees = (feesByIncome: any): number => {
+    if (!feesByIncome) return 0;
+    
+    try {
+      const fees = Object.values(feesByIncome) as number[];
+      if (fees.length === 0) return 0;
+      
+      const sum = fees.reduce((total, fee) => total + (fee || 0), 0);
+      return sum / fees.length;
+    } catch (err) {
+      console.error("Error calculating average fees", err);
+      return 0;
+    }
+  };
+  
+  // Calculate expected family contribution (EFC) based on income and assets
+  const calculateEFC = (): number => {
+    if (!householdIncome) return 0;
+    
+    const income = parseInt(householdIncome, 10) || 0;
+    const investments = parseInt(investmentAssets, 10) || 0;
+    const homeEquity = homeOwnership === 'own' ? (parseInt(homeValue, 10) || 0) * 0.05 : 0;
+    
+    // Simplified EFC calculation - in reality this is much more complex
+    let efc = income * 0.12; // 12% of income
+    efc += investments * 0.07; // 7% of investment assets
+    efc += homeEquity; // Small percentage of home equity
+    
+    return Math.min(Math.round(efc), netPrice || 0);
+  };
+  
+  // Calculate student loan amount (simplified)
+  const calculateStudentLoan = (): number => {
+    if (!netPrice) return 0;
+    const efc = calculateEFC();
+    // Students can borrow up to $5,500 for their first year
+    return Math.min(5500, Math.max(0, (netPrice - efc) * 0.6));
+  };
+  
+  // Calculate work-study amount (simplified)
+  const calculateWorkStudy = (): number => {
+    if (!netPrice) return 0;
+    const efc = calculateEFC();
+    const loan = calculateStudentLoan();
+    // Work-study typically covers remaining gap after EFC and loans
+    return Math.min(3000, Math.max(0, netPrice - efc - loan));
+  };
   
   const handleCalculate = () => {
     setCalculated(true);
@@ -355,6 +439,112 @@ const NetPriceCalculator = () => {
                     </p>
                   )}
                 </div>
+                
+                <div>
+                  <Label htmlFor="investmentAssets" className="flex justify-between">
+                    <span>Investment Assets</span>
+                    {estimatedInvestments !== null && (
+                      <span className="text-xs text-muted-foreground">
+                        {usingEstimatedInvestments ? (
+                          <span className="flex items-center text-primary">
+                            <Check className="h-3 w-3 mr-1" /> Using zip code estimate
+                          </span>
+                        ) : (
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-xs"
+                            onClick={() => {
+                              setInvestmentAssets(estimatedInvestments.toString());
+                              setUsingEstimatedInvestments(true);
+                            }}
+                          >
+                            Use zip code estimate (${estimatedInvestments.toLocaleString()})
+                          </Button>
+                        )}
+                      </span>
+                    )}
+                  </Label>
+                  <div className="flex items-center mt-1">
+                    <span className="mr-2">$</span>
+                    <Input 
+                      id="investmentAssets" 
+                      placeholder={estimatedInvestments ? estimatedInvestments.toString() : "e.g. 50000"}
+                      value={investmentAssets}
+                      onChange={(e) => {
+                        setInvestmentAssets(e.target.value);
+                        if (usingEstimatedInvestments) {
+                          setUsingEstimatedInvestments(false);
+                        }
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Stocks, bonds, retirement accounts, etc.
+                  </p>
+                </div>
+                
+                <div>
+                  <Label>Home Ownership</Label>
+                  <RadioGroup 
+                    value={homeOwnership} 
+                    onValueChange={(value) => setHomeOwnership(value as "own" | "rent")}
+                    className="mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="own" id="own_home" />
+                      <Label htmlFor="own_home">Own Home</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="rent" id="rent_home" />
+                      <Label htmlFor="rent_home">Rent</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                
+                {homeOwnership === "own" && (
+                  <div>
+                    <Label htmlFor="homeValue" className="flex justify-between">
+                      <span>Home Value</span>
+                      {estimatedHomeValue !== null && (
+                        <span className="text-xs text-muted-foreground">
+                          {usingEstimatedHomeValue ? (
+                            <span className="flex items-center text-primary">
+                              <Check className="h-3 w-3 mr-1" /> Using zip code estimate
+                            </span>
+                          ) : (
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto text-xs"
+                              onClick={() => {
+                                setHomeValue(estimatedHomeValue.toString());
+                                setUsingEstimatedHomeValue(true);
+                              }}
+                            >
+                              Use zip code estimate (${estimatedHomeValue.toLocaleString()})
+                            </Button>
+                          )}
+                        </span>
+                      )}
+                    </Label>
+                    <div className="flex items-center mt-1">
+                      <span className="mr-2">$</span>
+                      <Input 
+                        id="homeValue" 
+                        placeholder={estimatedHomeValue ? estimatedHomeValue.toString() : "e.g. 350000"}
+                        value={homeValue}
+                        onChange={(e) => {
+                          setHomeValue(e.target.value);
+                          if (usingEstimatedHomeValue) {
+                            setUsingEstimatedHomeValue(false);
+                          }
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Estimated market value of your home
+                    </p>
+                  </div>
+                )}
                 
                 <div>
                   <Label htmlFor="householdSize">Household Size</Label>
@@ -568,19 +758,89 @@ const NetPriceCalculator = () => {
                     </div>
                     
                     <div className="bg-gray-100 p-4 rounded-lg">
-                      <h5 className="font-medium text-gray-700 mb-3">Financing Options</h5>
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-sm font-medium mb-1">Federal Student Loans</p>
-                          <p className="text-xs text-gray-600">Undergraduate students can borrow up to $12,500 annually in Federal loans.</p>
+                      <h5 className="font-medium text-gray-700 mb-3">How Do I Pay For College?</h5>
+                      
+                      {/* Payment breakdown chart */}
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-200 rounded-full h-6 relative">
+                            {/* EFC bar */}
+                            {calculateEFC() > 0 && (
+                              <div 
+                                className="h-6 rounded-l-full bg-primary" 
+                                style={{ 
+                                  width: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
+                                  minWidth: '30px'
+                                }}
+                              >
+                                <span className="text-xs text-white font-medium pl-2 leading-6 whitespace-nowrap">
+                                  EFC
+                                </span>
+                              </div>
+                            )}
+                            
+                            {/* Work Study bar */}
+                            {calculateWorkStudy() > 0 && (
+                              <div 
+                                className="h-6 bg-amber-400 absolute top-0" 
+                                style={{ 
+                                  width: `${Math.min(100, Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
+                                  left: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
+                                  minWidth: '40px'
+                                }}
+                              >
+                                <span className="text-xs text-white font-medium pl-2 leading-6 whitespace-nowrap">
+                                  Work-Study
+                                </span>
+                              </div>
+                            )}
+                            
+                            {/* Student Loan bar */}
+                            {calculateStudentLoan() > 0 && (
+                              <div 
+                                className="h-6 bg-blue-500 rounded-r-full absolute top-0" 
+                                style={{ 
+                                  width: `${Math.min(100, Math.round((calculateStudentLoan() / netPrice) * 100))}%`,
+                                  left: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100) + Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
+                                  minWidth: '40px'
+                                }}
+                              >
+                                <span className="text-xs text-white font-medium pl-2 leading-6 whitespace-nowrap">
+                                  Loans
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium mb-1">Work-Study Opportunities</p>
-                          <p className="text-xs text-gray-600">Campus employment can provide $2,000-$5,000 annually to help with expenses.</p>
+                        
+                        {/* Values breakdown */}
+                        <div className="grid grid-cols-3 gap-2 text-center mt-2">
+                          <div>
+                            <p className="text-xs font-medium">Expected Family Contribution</p>
+                            <p className="text-sm font-mono font-semibold text-primary">${calculateEFC().toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">
+                              ({Math.round((calculateEFC() / netPrice) * 100)}% of cost)
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium">Work-Study</p>
+                            <p className="text-sm font-mono font-semibold text-amber-500">${calculateWorkStudy().toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">
+                              ({Math.round((calculateWorkStudy() / netPrice) * 100)}% of cost)
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium">Student Loans</p>
+                            <p className="text-sm font-mono font-semibold text-blue-500">${calculateStudentLoan().toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">
+                              ({Math.round((calculateStudentLoan() / netPrice) * 100)}% of cost)
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium mb-1">Scholarships</p>
-                          <p className="text-xs text-gray-600">Many schools offer merit scholarships not included in this estimate.</p>
+                        
+                        <div className="mt-3 text-xs text-gray-600">
+                          <p>* This is an estimate based on average financial aid packages. Actual amounts may vary.</p>
+                          <p>* Don't forget to explore additional scholarship opportunities!</p>
                         </div>
                       </div>
                     </div>
@@ -593,9 +853,9 @@ const NetPriceCalculator = () => {
                       collegeName={selectedCollege.name}
                       priceData={{
                         stickerPrice: selectedCollege.tuition + selectedCollege.roomAndBoard,
+                        // Calculate average price from fees by income brackets
                         averagePrice: selectedCollege.feesByIncome ? 
-                          Object.values(selectedCollege.feesByIncome).reduce((a, b) => a + b, 0) / Object.values(selectedCollege.feesByIncome).length : 
-                          null,
+                          calculateAverageFees(selectedCollege.feesByIncome) : null,
                         myPrice: netPrice,
                         tuition: selectedCollege.tuition,
                         roomAndBoard: selectedCollege.roomAndBoard,
