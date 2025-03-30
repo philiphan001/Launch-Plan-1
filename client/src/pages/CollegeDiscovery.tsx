@@ -240,8 +240,8 @@ const CollegeDiscovery = () => {
     const usNewsRank = college.usNewsTop150 !== null && college.usNewsTop150 !== undefined ? 
       Number(college.usNewsTop150) : null;
       
-    const matchesUsNewsTop150 = !usNewsTop150Filter || 
-      (usNewsRank !== null && !isNaN(usNewsRank) && usNewsRank > 0 && usNewsRank <= 150);
+    const matchesUsNewsTop150 = usNewsTop150Filter ? 
+      (usNewsRank !== null && !isNaN(usNewsRank) && usNewsRank > 0 && usNewsRank <= 150) : true;
     
     // Check if the college is among the top liberal arts colleges (rank <= 300)
     
@@ -249,8 +249,8 @@ const CollegeDiscovery = () => {
     const liberalArtsRank = college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined ? 
       Number(college.bestLiberalArtsColleges) : null;
       
-    const matchesBestLiberalArts = !bestLiberalArtsFilter || 
-      (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank > 0 && liberalArtsRank <= 300);
+    const matchesBestLiberalArts = bestLiberalArtsFilter ? 
+      (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank > 0 && liberalArtsRank <= 300) : true;
     
     return matchesSearch && matchesTuition && matchesAcceptance && 
            matchesType && matchesState && matchesSize && 
@@ -596,66 +596,7 @@ const CollegeDiscovery = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Debug info to help diagnose filtering issues */}
-              <div className="bg-gray-100 p-4 mb-4 rounded-md">
-                <h3 className="text-sm font-medium mb-2">Debug Information:</h3>
-                <div className="text-xs space-y-1">
-                  <p>Total colleges: {colleges.length}</p>
-                  <p>Filtered colleges: {filteredColleges.length}</p>
-                  <p>Sort by: {sortBy}, Order: {sortOrder}</p>
-                  <p>US News filter active: {usNewsTop150Filter ? 'Yes' : 'No'}</p>
-                  <p>Liberal Arts filter active: {bestLiberalArtsFilter ? 'Yes' : 'No'}</p>
-                  <p>Max tuition: ${maxTuition}</p>
-                  <p>Acceptance range: {acceptanceRange[0]}% - {acceptanceRange[1]}%</p>
-                  <p>Selected types: {selectedTypes.length ? selectedTypes.join(', ') : 'None'}</p>
-                  <p>Selected states: {selectedStates.length ? selectedStates.join(', ') : 'None'}</p>
-                  <p>Selected sizes: {selectedSizes.length ? selectedSizes.join(', ') : 'None'}</p>
-                </div>
-                <div className="mt-2 space-x-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => {
-                      // Show only US News Top 150
-                      setMaxTuition(80000);
-                      setAcceptanceRange([0, 100]);
-                      setSelectedTypes([]);
-                      setSelectedStates([]);
-                      setSelectedSizes([]);
-                      setBestLiberalArtsFilter(false);
-                      setUsNewsTop150Filter(true);
-                      setSortBy('usNewsTop150');  // Sort by US News Rank
-                      setSortOrder('asc');  // Show lowest (best) ranks first
-                      setCurrentPage(1);
-                      
-                      // Apply the US News Top 150 filter
-                    }}
-                  >
-                    Show US News Top 150 Only
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => {
-                      // Show only Liberal Arts
-                      setMaxTuition(80000);
-                      setAcceptanceRange([0, 100]);
-                      setSelectedTypes([]);
-                      setSelectedStates([]);
-                      setSelectedSizes([]);
-                      setUsNewsTop150Filter(false);
-                      setBestLiberalArtsFilter(true);
-                      setSortBy('bestLiberalArtsColleges');  // Sort by Liberal Arts Rank
-                      setSortOrder('asc');  // Show lowest (best) ranks first
-                      setCurrentPage(1);
-                      
-                      // Apply the Best Liberal Arts filter
-                    }}
-                  >
-                    Show Liberal Arts Only
-                  </Button>
-                </div>
-              </div>
+
             
               {currentColleges.length > 0 ? (
                 <>
