@@ -167,9 +167,6 @@ const CollegeDiscovery = () => {
     } else {
       addToFavoritesMutation.mutate(college.id);
     }
-
-    // Log for debugging
-    console.log(`Toggling favorite for college ID ${college.id} (${college.name}) by user ID ${temporaryUserId}`);
   };
   
   // Show error toast if API fetch fails
@@ -238,13 +235,6 @@ const CollegeDiscovery = () => {
     
     // Check preset filter matches
     // Check if the college is in the US News Top 150 rankings (rank <= 150)
-    // For debugging very specific issues
-    if (usNewsTop150Filter && college.id === 12) { // Auburn University has rank 105
-      console.log('Checking Auburn University:', college);
-      console.log('usNewsTop150 value:', college.usNewsTop150);
-      console.log('usNewsTop150 type:', typeof college.usNewsTop150);
-      console.log('Condition check:', college.usNewsTop150 !== null && college.usNewsTop150 !== undefined && college.usNewsTop150 <= 150);
-    }
     
     // Use proper numeric parsing and exclude 0 values
     const usNewsRank = college.usNewsTop150 !== null && college.usNewsTop150 !== undefined ? 
@@ -254,13 +244,6 @@ const CollegeDiscovery = () => {
       (usNewsRank !== null && !isNaN(usNewsRank) && usNewsRank > 0 && usNewsRank <= 150);
     
     // Check if the college is among the top liberal arts colleges (rank <= 300)
-    // Also debug liberal arts colleges
-    if (bestLiberalArtsFilter && college.id === 111) { // Lyon College has liberal arts rank 169
-      console.log('Checking Lyon College:', college);
-      console.log('bestLiberalArtsColleges value:', college.bestLiberalArtsColleges);
-      console.log('bestLiberalArtsColleges type:', typeof college.bestLiberalArtsColleges);
-      console.log('Condition check:', college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined && college.bestLiberalArtsColleges <= 300);
-    }
     
     // Apply the same numeric parsing approach to liberal arts
     const liberalArtsRank = college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined ? 
@@ -268,19 +251,6 @@ const CollegeDiscovery = () => {
       
     const matchesBestLiberalArts = !bestLiberalArtsFilter || 
       (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank > 0 && liberalArtsRank <= 300);
-    
-    // If we're searching for Skidmore specifically and this is Skidmore, log details
-    if (cleanSearchQuery.includes('skidmore') && college.id === 2189) {
-      console.log('Found Skidmore:', college);
-      console.log('Search matches:', matchesSearch);
-      console.log('Tuition matches:', matchesTuition);
-      console.log('Acceptance matches:', matchesAcceptance);
-      console.log('Type matches:', matchesType);
-      console.log('State matches:', matchesState);
-      console.log('Size matches:', matchesSize);
-      console.log('US News Top 150 matches:', matchesUsNewsTop150);
-      console.log('Best Liberal Arts matches:', matchesBestLiberalArts);
-    }
     
     return matchesSearch && matchesTuition && matchesAcceptance && 
            matchesType && matchesState && matchesSize && 
@@ -336,49 +306,6 @@ const CollegeDiscovery = () => {
   const pageStart = (currentPage - 1) * itemsPerPage;
   const pageEnd = pageStart + itemsPerPage;
   const currentColleges = sortedColleges.slice(pageStart, pageEnd);
-  
-  // Debug logging - must be placed after filteredColleges and currentColleges are defined
-  useEffect(() => {
-    if (colleges.length > 0) {
-      // Log counts for each filter - only count colleges with ranks between 1-150 for US News
-      const usNewsCount = colleges.filter(c => c.usNewsTop150 !== null && c.usNewsTop150 !== undefined && c.usNewsTop150 > 0 && c.usNewsTop150 <= 150).length;
-      const liberalArtsCount = colleges.filter(c => c.bestLiberalArtsColleges !== null && c.bestLiberalArtsColleges !== undefined && c.bestLiberalArtsColleges > 0 && c.bestLiberalArtsColleges <= 300).length;
-      
-      console.log('Filter debugging:');
-      console.log(`- US News Top 150 colleges: ${usNewsCount}`);
-      console.log(`- Best Liberal Arts colleges: ${liberalArtsCount}`);
-      console.log(`- Filtered colleges count: ${filteredColleges.length}`);
-      console.log(`- Current page colleges: ${currentColleges.length}`);
-      
-      if (usNewsTop150Filter) {
-        console.log('US News Top 150 filter is active');
-        const matchingColleges = colleges.filter(c => 
-          c.usNewsTop150 !== null && 
-          c.usNewsTop150 !== undefined && 
-          c.usNewsTop150 > 0 && 
-          c.usNewsTop150 <= 150
-        );
-        console.log(`Found ${matchingColleges.length} matching colleges`);
-        if (matchingColleges.length > 0) {
-          console.log('Sample colleges:', matchingColleges.slice(0, 3).map(c => c.name));
-        }
-      }
-      
-      if (bestLiberalArtsFilter) {
-        console.log('Best Liberal Arts filter is active');
-        const matchingColleges = colleges.filter(c => 
-          c.bestLiberalArtsColleges !== null && 
-          c.bestLiberalArtsColleges !== undefined && 
-          c.bestLiberalArtsColleges > 0 && 
-          c.bestLiberalArtsColleges <= 300
-        );
-        console.log(`Found ${matchingColleges.length} matching colleges`);
-        if (matchingColleges.length > 0) {
-          console.log('Sample colleges:', matchingColleges.slice(0, 3).map(c => c.name));
-        }
-      }
-    }
-  }, [colleges, filteredColleges, currentColleges, usNewsTop150Filter, bestLiberalArtsFilter]);
   
   // Function to handle pagination
   const changePage = (newPage: number) => {
@@ -701,16 +628,7 @@ const CollegeDiscovery = () => {
                       setSortOrder('asc');  // Show lowest (best) ranks first
                       setCurrentPage(1);
                       
-                      // Log for debugging
-                      console.log("Showing only US News Top 150 colleges");
-                      const matchingColleges = colleges.filter(c => 
-                        c.usNewsTop150 !== null && 
-                        c.usNewsTop150 !== undefined && 
-                        c.usNewsTop150 > 0 && 
-                        c.usNewsTop150 <= 150
-                      );
-                      console.log(`Found ${matchingColleges.length} matching colleges`);
-                      console.log("Sample colleges:", matchingColleges.slice(0, 5).map(c => c.name));
+                      // Apply the US News Top 150 filter
                     }}
                   >
                     Show US News Top 150 Only
@@ -731,16 +649,7 @@ const CollegeDiscovery = () => {
                       setSortOrder('asc');  // Show lowest (best) ranks first
                       setCurrentPage(1);
                       
-                      // Log for debugging
-                      console.log("Showing only Best Liberal Arts colleges");
-                      const matchingColleges = colleges.filter(c => 
-                        c.bestLiberalArtsColleges !== null && 
-                        c.bestLiberalArtsColleges !== undefined && 
-                        c.bestLiberalArtsColleges > 0 && 
-                        c.bestLiberalArtsColleges <= 300
-                      );
-                      console.log(`Found ${matchingColleges.length} matching colleges`);
-                      console.log("Sample colleges:", matchingColleges.slice(0, 5).map(c => c.name));
+                      // Apply the Best Liberal Arts filter
                     }}
                   >
                     Show Liberal Arts Only
