@@ -70,14 +70,15 @@ const NetPriceCalculator = () => {
     }
   }, [userData]);
   
-  const { data: collegeData, isLoading } = useQuery({
+  const { data: collegeData, isLoading: isLoadingColleges } = useQuery({
     queryKey: ['/api/colleges'],
     queryFn: async () => {
-      // This would be replaced with actual API call
-      return [] as College[];
-    },
-    // Disable actual fetching for now
-    enabled: false
+      const response = await fetch('/api/colleges');
+      if (!response.ok) {
+        throw new Error('Failed to fetch colleges');
+      }
+      return response.json();
+    }
   });
   
   // Query for fetching income data by zip code
@@ -178,7 +179,7 @@ const NetPriceCalculator = () => {
   
   const collegeList = collegeData || defaultColleges;
   
-  const selectedCollege = collegeList.find(college => college.id === selectedCollegeId);
+  const selectedCollege = collegeList.find((college: College) => college.id === selectedCollegeId);
   
   // Add an effect to update the UI when zip code income data is available
   useEffect(() => {
@@ -373,21 +374,27 @@ const NetPriceCalculator = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="college">Choose a College</Label>
-                  <Select 
-                    value={selectedCollegeId} 
-                    onValueChange={setSelectedCollegeId}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select a college" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {collegeList.map(college => (
-                        <SelectItem key={college.id} value={college.id}>
-                          {college.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isLoadingColleges ? (
+                    <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading colleges...
+                    </div>
+                  ) : (
+                    <Select 
+                      value={selectedCollegeId} 
+                      onValueChange={setSelectedCollegeId}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select a college" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {collegeList.map((college: College) => (
+                          <SelectItem key={college.id} value={college.id}>
+                            {college.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 
                 {selectedCollege && (
