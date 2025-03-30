@@ -387,7 +387,7 @@ const NetPriceCalculator = () => {
                     <div className="mt-2 text-sm text-muted-foreground space-y-3">
                       <p>You haven't added any colleges to your favorites yet.</p>
                       <div className="flex items-center">
-                        <Link to="/college-discovery" className="text-primary flex items-center">
+                        <Link to="/colleges" className="text-primary flex items-center">
                           <Search className="h-4 w-4 mr-1" /> Browse colleges and add favorites
                         </Link>
                       </div>
