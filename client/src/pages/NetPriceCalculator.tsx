@@ -864,9 +864,23 @@ const NetPriceCalculator = () => {
                         <div className="flex justify-between text-sm text-success">
                           <span>Estimated Financial Aid</span>
                           <span className="font-mono">
-                            - ${selectedCollege.type.includes("Public") && !isInState ? 
-                              ((selectedCollege.tuition * 3) + selectedCollege.roomAndBoard - netPrice).toLocaleString() : 
-                              (selectedCollege.tuition + selectedCollege.roomAndBoard - netPrice).toLocaleString()}
+                            {(() => {
+                              // Calculate the gross cost based on in-state vs out-of-state status
+                              const grossCost = selectedCollege.type.includes("Public") && !isInState
+                                ? (selectedCollege.tuition * 3) + selectedCollege.roomAndBoard
+                                : selectedCollege.tuition + selectedCollege.roomAndBoard;
+                                
+                              // Calculate financial aid as gross cost minus net price
+                              const financialAid = grossCost - netPrice;
+                              
+                              // Only show as aid if it's a positive number
+                              if (financialAid >= 0) {
+                                return `- $${financialAid.toLocaleString()}`;
+                              } else {
+                                // If negative, show it as an extra cost (no financial aid)
+                                return "$0";
+                              }
+                            })()}
                           </span>
                         </div>
                         <div className="flex justify-between text-primary font-semibold pt-2 border-t border-gray-300">
