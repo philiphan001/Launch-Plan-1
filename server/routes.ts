@@ -191,11 +191,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create a demo user if not found (for development purposes)
         console.log(`User with ID ${userId} not found, creating demo user...`);
         await activeStorage.createUser({
-          username: "demouser",
+          username: "philiphan",
           password: "password123", // This is a demo app, in production you'd use proper auth
-          firstName: "Demo",
-          lastName: "User",
-          email: "demo@example.com"
+          firstName: "Philip",
+          lastName: "Han",
+          email: "philip.han@example.com"
         });
       }
       
@@ -247,11 +247,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
         await activeStorage.createUser({
-          username: "demouser",
+          username: "philiphan",
           password: "password123",
-          firstName: "Demo",
-          lastName: "User",
-          email: "demo@example.com"
+          firstName: "Philip",
+          lastName: "Han",
+          email: "philip.han@example.com"
         });
       }
       
@@ -278,11 +278,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create a demo user if not found (for development purposes)
         console.log(`User with ID ${userId} not found, creating demo user...`);
         await activeStorage.createUser({
-          username: "demouser",
+          username: "philiphan",
           password: "password123", // This is a demo app, in production you'd use proper auth
-          firstName: "Demo",
-          lastName: "User",
-          email: "demo@example.com"
+          firstName: "Philip",
+          lastName: "Han",
+          email: "philip.han@example.com"
         });
       }
       
@@ -333,11 +333,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
         await activeStorage.createUser({
-          username: "demouser",
+          username: "philiphan",
           password: "password123",
-          firstName: "Demo",
-          lastName: "User",
-          email: "demo@example.com"
+          firstName: "Philip",
+          lastName: "Han",
+          email: "philip.han@example.com"
         });
       }
       

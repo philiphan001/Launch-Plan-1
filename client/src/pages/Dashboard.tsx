@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 const Dashboard = () => {
-  const [username, setUsername] = useState("Alex");
+  const [username, setUsername] = useState("Philip");
 
   // Example of how we would fetch dashboard data
   const { data: dashboardData, isLoading } = useQuery({
@@ -18,7 +18,7 @@ const Dashboard = () => {
     queryFn: async () => {
       // This would be replaced with actual API call
       return {
-        username: "Alex",
+        username: "Philip",
         netWorth: {
           projectedAmount: 127540,
           percentageChange: 12.4,

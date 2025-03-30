@@ -41,9 +41,9 @@ const Settings = () => {
   const { toast } = useToast();
   
   // User info state
-  const [firstName, setFirstName] = useState("Alex");
-  const [lastName, setLastName] = useState("Johnson");
-  const [email, setEmail] = useState("alex.johnson@example.com");
+  const [firstName, setFirstName] = useState("Philip");
+  const [lastName, setLastName] = useState("Han");
+  const [email, setEmail] = useState("philip.han@example.com");
   const [currentLocation, setCurrentLocation] = useState("Seattle, WA");
   const [zipCode, setZipCode] = useState("98101");
   
