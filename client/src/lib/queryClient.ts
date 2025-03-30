@@ -13,6 +13,10 @@ export async function apiRequest(
 ): Promise<Response> {
   const res = await fetch(url, {
     ...options,
+    headers: {
+      ...options?.headers,
+      'Content-Type': 'application/json',
+    },
     credentials: "include",
   });
 
