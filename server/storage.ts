@@ -94,6 +94,7 @@ export interface IStorage {
   createCollegeCalculation(calculation: InsertCollegeCalculation): Promise<CollegeCalculation>;
   updateCollegeCalculation(id: number, data: Partial<InsertCollegeCalculation>): Promise<CollegeCalculation | undefined>;
   deleteCollegeCalculation(id: number): Promise<void>;
+  toggleProjectionInclusion(id: number, userId: number): Promise<CollegeCalculation | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -646,6 +647,24 @@ export class MemStorage implements IStorage {
     if (this.collegeCalculations) {
       this.collegeCalculations.delete(id);
     }
+  }
+  
+  async toggleProjectionInclusion(id: number, userId: number): Promise<CollegeCalculation | undefined> {
+    const calculation = await this.getCollegeCalculation(id);
+    if (!calculation || calculation.userId !== userId) {
+      return undefined;
+    }
+    
+    // First reset all calculations for this user
+    const userCalculations = await this.getCollegeCalculationsByUserId(userId);
+    for (const calc of userCalculations) {
+      if (calc.includedInProjection) {
+        await this.updateCollegeCalculation(calc.id, { includedInProjection: false });
+      }
+    }
+    
+    // Then set this specific calculation to true
+    return await this.updateCollegeCalculation(id, { includedInProjection: true });
   }
 }
 

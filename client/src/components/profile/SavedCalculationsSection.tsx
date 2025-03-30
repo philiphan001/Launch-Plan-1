@@ -28,6 +28,7 @@ interface CollegeCalculation {
   totalCost: number;
   notes: string;
   calculationDate: string;
+  includedInProjection: boolean;
 }
 
 interface College {
@@ -97,9 +98,48 @@ const SavedCalculationsSection = () => {
     }
   });
   
+  // Mutation to toggle projection inclusion
+  const toggleProjectionMutation = useMutation({
+    mutationFn: async (calculationId: number) => {
+      const response = await fetch(`/api/college-calculations/${calculationId}/toggle-projection`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle projection inclusion');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
+      toast({
+        title: "Financial Projection Updated",
+        description: "This college scenario will now be included in your financial projections.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error toggling projection inclusion:", error);
+      toast({
+        title: "Error updating projection",
+        description: "There was a problem including this calculation in your projections. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
   // Function to remove a calculation
   const removeCalculation = (id: number) => {
     deleteMutation.mutate(id);
+  };
+  
+  // Function to toggle projection inclusion
+  const toggleProjectionInclusion = (id: number) => {
+    toggleProjectionMutation.mutate(id);
   };
   
   // Function to get college name by ID
@@ -204,24 +244,21 @@ const SavedCalculationsSection = () => {
                 
                 <div className="mt-2 pt-2 border-t flex justify-end gap-2">
                   <Button 
-                    variant="outline" 
+                    variant={calc.includedInProjection ? "default" : "outline"} 
                     size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      toast({
-                        title: "Added to Financial Projection",
-                        description: "This college scenario has been included in your financial projections.",
-                      });
-                    }}
+                    className={`h-7 text-xs ${calc.includedInProjection ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                    onClick={() => toggleProjectionInclusion(calc.id)}
+                    disabled={toggleProjectionMutation.isPending}
                   >
                     <Calculator className="h-3 w-3 mr-1" />
-                    Include in Projection
+                    {calc.includedInProjection ? "✓ Included in Projection" : "Include in Projection"}
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
                     className="h-7 text-xs text-destructive hover:bg-destructive/10"
                     onClick={() => removeCalculation(calc.id)}
+                    disabled={deleteMutation.isPending}
                   >
                     <Trash2 className="h-3 w-3 mr-1" />
                     Remove

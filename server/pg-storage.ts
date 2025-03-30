@@ -313,6 +313,32 @@ export class PgStorage implements IStorage {
   async deleteCollegeCalculation(id: number): Promise<void> {
     await db.delete(collegeCalculations).where(eq(collegeCalculations.id, id));
   }
+  
+  async toggleProjectionInclusion(id: number, userId: number): Promise<CollegeCalculation | undefined> {
+    // First find the calculation to make sure it exists and belongs to the user
+    const calculation = await this.getCollegeCalculation(id);
+    if (!calculation || calculation.userId !== userId) {
+      return undefined;
+    }
+    
+    // Begin a transaction
+    return await db.transaction(async (tx) => {
+      // First, reset all other calculations for this user
+      await tx
+        .update(collegeCalculations)
+        .set({ includedInProjection: false })
+        .where(eq(collegeCalculations.userId, userId));
+      
+      // Then set this specific calculation to true
+      const result = await tx
+        .update(collegeCalculations)
+        .set({ includedInProjection: true })
+        .where(eq(collegeCalculations.id, id))
+        .returning();
+        
+      return result[0];
+    });
+  }
 }
 
 // Export the PostgreSQL storage instance

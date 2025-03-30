@@ -317,6 +317,7 @@ export const collegeCalculations = pgTable("college_calculations", {
   totalCost: integer("total_cost"),
   calculationDate: timestamp("calculation_date").defaultNow(),
   notes: text("notes"),
+  includedInProjection: boolean("included_in_projection").default(false),
 });
 
 export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculations).pick({
@@ -336,6 +337,7 @@ export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculat
   onCampusHousing: true,
   totalCost: true,
   notes: true,
+  includedInProjection: true,
 });
 
 export type CollegeCalculation = typeof collegeCalculations.$inferSelect;

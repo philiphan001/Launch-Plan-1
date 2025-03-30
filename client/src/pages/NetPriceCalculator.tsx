@@ -78,6 +78,7 @@ interface CollegeCalculation {
   totalCost: number;
   notes: string;
   calculationDate?: string;
+  includedInProjection?: boolean;
 }
 
 const NetPriceCalculator = () => {
@@ -488,7 +489,8 @@ const NetPriceCalculator = () => {
       roomAndBoardUsed: selectedCollege.roomAndBoard,
       onCampusHousing,
       totalCost: stickerPrice,
-      notes: calculationName || `${selectedCollege.name} cost calculation with ${efcPercentage}% family contribution and ${workStudyPercentage}% work-study.`
+      notes: calculationName || `${selectedCollege.name} cost calculation with ${efcPercentage}% family contribution and ${workStudyPercentage}% work-study.`,
+      includedInProjection: false // By default, new calculations are not included in projections
     };
     
     // Close the dialog

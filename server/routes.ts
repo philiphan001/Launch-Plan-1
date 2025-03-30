@@ -628,6 +628,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete college calculation", error: String(error) });
     }
   });
+  
+  app.post("/api/college-calculations/:id/toggle-projection", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = parseInt(req.body.userId);
+      
+      if (isNaN(id) || isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const calculation = await activeStorage.toggleProjectionInclusion(id, userId);
+      if (!calculation) {
+        return res.status(404).json({ message: `College calculation with ID ${id} not found or does not belong to the user` });
+      }
+      
+      res.json(calculation);
+    } catch (error) {
+      console.error("Error toggling projection inclusion:", error);
+      res.status(500).json({ message: "Failed to toggle projection inclusion", error: String(error) });
+    }
+  });
 
   return httpServer;
 }
