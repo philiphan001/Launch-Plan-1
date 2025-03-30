@@ -26,17 +26,16 @@ const Sidebar = () => {
         <ul>
           {navItems.map((item) => (
             <li className="mb-1" key={item.path}>
-              <Link href={item.path}>
-                <a 
-                  className={`flex items-center px-4 py-3 ${
-                    location === item.path
-                      ? "text-primary bg-blue-50 border-l-4 border-primary"
-                      : "text-gray-700 hover:bg-gray-100 hover:text-primary"
-                  }`}
-                >
-                  <span className="material-icons md:mr-3">{item.icon}</span>
-                  <span className="hidden md:inline">{item.label}</span>
-                </a>
+              <Link 
+                href={item.path}
+                className={`flex items-center px-4 py-3 ${
+                  location === item.path
+                    ? "text-primary bg-blue-50 border-l-4 border-primary"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-primary"
+                }`}
+              >
+                <span className="material-icons md:mr-3">{item.icon}</span>
+                <span className="hidden md:inline">{item.label}</span>
               </Link>
             </li>
           ))}

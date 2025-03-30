@@ -29,13 +29,14 @@ export interface Milestone {
   date: string;
   yearsAway: number;
   color?: string;
+  userId?: number;
 }
 
 // Career related types
 export type GrowthRate = "fast" | "stable" | "slow";
 
 export interface Career {
-  id: string;
+  id: number;
   title: string;
   salary: number;
   description: string;
@@ -49,7 +50,7 @@ export type CollegeSize = "small" | "medium" | "large";
 export type CollegeType = "Public Research" | "Private Research" | "Public Liberal Arts" | "Private Liberal Arts" | "Community College" | "For-Profit";
 
 export interface College {
-  id: string;
+  id: number;
   name: string;
   rating: number;
   location: string;

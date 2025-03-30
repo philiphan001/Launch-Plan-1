@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { College, Career, Milestone, PathChoice, ProjectionData, SavedProjection } from "@/lib/types";
-import { ArrowRight, Calendar, Briefcase, GraduationCap, Home, PlusCircle, Save, AlertCircle, ChevronRight, Landmark, DollarSign, BuildingLibrary } from "lucide-react";
+import { Calendar, Briefcase, GraduationCap, Home, PlusCircle, Save, AlertCircle, ChevronRight, Landmark, DollarSign } from "lucide-react";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities";
 type ProjectionPathway = "education" | "job" | "military" | "gap";
@@ -240,25 +240,25 @@ const FinancialProjections = () => {
   const chartInstance = useRef<any>(null);
   
   // Fetch colleges
-  const { data: colleges = [] } = useQuery({
+  const { data: colleges = [] } = useQuery<College[]>({
     queryKey: ['/api/colleges'],
     staleTime: 60000
   });
   
   // Fetch careers
-  const { data: careers = [] } = useQuery({
+  const { data: careers = [] } = useQuery<Career[]>({
     queryKey: ['/api/careers'],
     staleTime: 60000
   });
   
   // Fetch locations/cost of living data
-  const { data: locations = [] } = useQuery({
+  const { data: locations = [] } = useQuery<LocationData[]>({
     queryKey: ['/api/location-cost-of-living'],
     staleTime: 60000
   });
   
   // Fetch saved projections
-  const { data: savedProjections = [] } = useQuery({
+  const { data: savedProjections = [] } = useQuery<SavedProjection[]>({
     queryKey: ['/api/financial-projections', DEFAULT_USER_ID],
     staleTime: 30000
   });
