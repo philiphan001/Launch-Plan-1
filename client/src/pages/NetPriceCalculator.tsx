@@ -293,7 +293,15 @@ const NetPriceCalculator = () => {
   
   // State to manage payment adjustment percentages
   const [efcPercentage, setEfcPercentage] = useState<number>(40); // User can pay 0-100% of net price
-  const [workStudyPercentage, setWorkStudyPercentage] = useState<number>(30); // Work-study covers 0-50% of remainder
+  const [workStudyPercentage, setWorkStudyPercentage] = useState<number>(30); // Work-study covers 0-100% of remainder
+  
+  // Enforce that EFC + work-study <= 100%
+  useEffect(() => {
+    // If the combined percentage exceeds 100%, adjust work-study down
+    if (efcPercentage + workStudyPercentage > 100) {
+      setWorkStudyPercentage(100 - efcPercentage);
+    }
+  }, [efcPercentage, workStudyPercentage]);
   
   // Calculate the base EFC amount (without user adjustment)
   const calculateBaseEFC = (): number => {
@@ -316,29 +324,22 @@ const NetPriceCalculator = () => {
   const calculateEFC = (): number => {
     if (!netPrice) return 0;
     
-    // Base EFC is calculated from income and assets
-    const baseEfc = calculateBaseEFC();
-    
     // User can adjust how much of net price they want to pay (0-100%)
-    const maxEfc = netPrice;
-    const adjustedEfc = maxEfc * (efcPercentage / 100);
+    const adjustedEfc = netPrice * (efcPercentage / 100);
     
-    // Return the minimum of adjusted EFC or baseEfc (can't pay more than calculated)
-    return Math.min(Math.round(adjustedEfc), baseEfc);
+    return Math.round(adjustedEfc);
   };
   
   // Calculate work-study amount with user's slider adjustment
   const calculateWorkStudy = (): number => {
     if (!netPrice) return 0;
     
-    const efc = calculateEFC();
-    const remaining = netPrice - efc;
+    // Work-study is also based on total net price, not just the remainder
+    const maxWorkStudyPercentage = 100 - efcPercentage; // Can't exceed what's left after EFC
+    const actualWorkStudyPercentage = Math.min(workStudyPercentage, maxWorkStudyPercentage);
     
-    // Maximum work-study amount (based on typical limits)
-    const maxWorkStudy = Math.min(3000, remaining);
-    
-    // Apply work-study percentage chosen by user (0-50% of remaining amount)
-    return Math.round(maxWorkStudy * (workStudyPercentage / 100));
+    // Apply work-study percentage to the total net price
+    return Math.round(netPrice * (actualWorkStudyPercentage / 100));
   };
   
   // Calculate student loan amount (the rest is covered by loans)
@@ -796,7 +797,7 @@ const NetPriceCalculator = () => {
                           <Label htmlFor="efc-percentage" className="text-sm">
                             <span className="flex justify-between">
                               <span>Your Family Contribution (EFC)</span>
-                              <span className="text-primary font-medium">{efcPercentage}%</span>
+                              <span className="text-primary font-medium">{efcPercentage}% of Net Price</span>
                             </span>
                           </Label>
                           <Slider
@@ -805,15 +806,21 @@ const NetPriceCalculator = () => {
                             min={0}
                             max={100}
                             step={5}
-                            onValueChange={(values: number[]) => setEfcPercentage(values[0])}
+                            onValueChange={(values: number[]) => {
+                              setEfcPercentage(values[0]);
+                              // If EFC increased and now the sum exceeds 100%, adjust work-study down
+                              if (values[0] + workStudyPercentage > 100) {
+                                setWorkStudyPercentage(Math.max(0, 100 - values[0]));
+                              }
+                            }}
                             className="mt-2"
                           />
                           <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Pay Less (0%)</span>
-                            <span>Pay More (100%)</span>
+                            <span>Pay Nothing (0%)</span>
+                            <span>Pay Everything (100%)</span>
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Amount your family will contribute toward college costs
+                            Percentage of total college costs your family will contribute directly ({efcPercentage}% = ${calculateEFC().toLocaleString()})
                           </p>
                         </div>
                         
@@ -829,17 +836,25 @@ const NetPriceCalculator = () => {
                             id="work-study-percentage"
                             value={[workStudyPercentage]} 
                             min={0}
-                            max={100}
+                            max={Math.max(0, 100 - efcPercentage)}
                             step={5}
-                            onValueChange={(values: number[]) => setWorkStudyPercentage(values[0])}
+                            onValueChange={(values: number[]) => {
+                              // Ensure we don't exceed the maximum allowed work-study percentage
+                              const maxAllowed = Math.max(0, 100 - efcPercentage);
+                              const newValue = Math.min(values[0], maxAllowed);
+                              setWorkStudyPercentage(newValue);
+                            }}
                             className="mt-2"
                           />
                           <div className="flex justify-between text-xs text-muted-foreground mt-1">
                             <span>No Work-Study (0%)</span>
-                            <span>Max Work-Study (100%)</span>
+                            <span>Max ({Math.max(0, 100 - efcPercentage)}%)</span>
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Working part-time on campus to offset college costs
+                            Working part-time on campus to cover {workStudyPercentage}% of your total college costs
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            (EFC + Work-Study cannot exceed 100%)
                           </p>
                         </div>
                         
