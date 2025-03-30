@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, DollarSign, Check, X, Search } from "lucide-react";
+import { Loader2, DollarSign, Check, X, Search, Home, Building } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
+import PriceCharts from "@/components/calculator/PriceCharts";
 
 interface College {
   id: number;
@@ -58,6 +60,9 @@ const NetPriceCalculator = () => {
   const [householdStructure, setHouseholdStructure] = useState("two_parents");
   const [calculated, setCalculated] = useState(false);
   const [fetchingZipCode, setFetchingZipCode] = useState(false);
+  const [onCampusHousing, setOnCampusHousing] = useState(true);
+  const [isInState, setIsInState] = useState(false);
+  const [userState, setUserState] = useState<string | null>(null);
   
   // Temporary user ID for demo purposes - would normally come from auth context
   const userId = 1;
@@ -188,10 +193,23 @@ const NetPriceCalculator = () => {
   
   // Add an effect to update the UI when zip code income data is available
   useEffect(() => {
-    if (zipCodeData && zipCodeData.mean_income) {
-      setEstimatedIncome(zipCodeData.mean_income);
+    if (zipCodeData) {
+      if (zipCodeData.mean_income) {
+        setEstimatedIncome(zipCodeData.mean_income);
+      }
+      if (zipCodeData.state) {
+        setUserState(zipCodeData.state);
+      }
     }
   }, [zipCodeData]);
+  
+  // Update in-state status when college or user state changes
+  useEffect(() => {
+    if (selectedCollege && userState) {
+      const collegeState = selectedCollege.state;
+      setIsInState(userState.toUpperCase() === collegeState.toUpperCase());
+    }
+  }, [selectedCollege, userState]);
   
   const calculateNetPrice = () => {
     if (!selectedCollege || !householdIncome) return null;
@@ -205,7 +223,18 @@ const NetPriceCalculator = () => {
     else if (income <= 75000) incomeBracket = "48001-75000";
     else if (income <= 110000) incomeBracket = "75001-110000";
     
-    return selectedCollege.feesByIncome[incomeBracket];
+    // For public colleges, apply out-of-state tuition adjustment if needed
+    let adjustedPrice = selectedCollege.feesByIncome[incomeBracket];
+    
+    // Apply housing adjustment for off-campus housing
+    // This is a simplified adjustment - in a real app, we'd have more accurate data
+    if (!onCampusHousing) {
+      // Off-campus housing might be 10% cheaper or more expensive depending on the area
+      // This is just an example adjustment
+      adjustedPrice = adjustedPrice - (selectedCollege.roomAndBoard * 0.1);
+    }
+    
+    return Math.max(0, Math.round(adjustedPrice)); // Ensure we don't return negative values
   };
   
   const netPrice = calculated ? calculateNetPrice() : null;
@@ -412,22 +441,73 @@ const NetPriceCalculator = () => {
                 </div>
                 
                 {selectedCollege && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Location:</span> {selectedCollege.location}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Type:</span> {selectedCollege.type}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Published Tuition:</span> ${selectedCollege.tuition.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Room & Board:</span> ${selectedCollege.roomAndBoard.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Total Cost:</span> ${(selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}
-                    </p>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Location:</span> {selectedCollege.location}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Type:</span> {selectedCollege.type}
+                      </p>
+                      
+                      {/* Show in-state badge for public colleges if the user is in-state */}
+                      {selectedCollege.type.includes("Public") && userState && (
+                        <div className="flex items-center mt-1">
+                          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 flex items-center">
+                            {isInState ? (
+                              <>
+                                <Check className="h-3 w-3 text-success mr-1" />
+                                <span className="text-success">In-state tuition eligible</span>
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-3 w-3 text-destructive mr-1" />
+                                <span className="text-destructive">Out-of-state tuition applies</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Published Tuition:</span> ${selectedCollege.tuition.toLocaleString()}
+                        {selectedCollege.type.includes("Public") && !isInState && (
+                          <span className="text-xs text-destructive ml-2">(out-of-state rate)</span>
+                        )}
+                      </p>
+                      
+                      {/* Housing section with on/off campus toggle */}
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="housing-type" className="text-sm text-gray-600 font-medium">Housing:</Label>
+                          <div className="flex items-center space-x-2">
+                            <div className={`text-xs px-2 py-1 rounded-full flex items-center ${onCampusHousing ? 'bg-primary/20 text-primary' : 'bg-gray-100'}`}>
+                              <Home className="h-3 w-3 mr-1" />
+                              <span>On Campus</span>
+                            </div>
+                            <Switch
+                              id="housing-type"
+                              checked={!onCampusHousing}
+                              onCheckedChange={(checked) => setOnCampusHousing(!checked)}
+                            />
+                            <div className={`text-xs px-2 py-1 rounded-full flex items-center ${!onCampusHousing ? 'bg-primary/20 text-primary' : 'bg-gray-100'}`}>
+                              <Building className="h-3 w-3 mr-1" />
+                              <span>Off Campus</span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Room & Board:</span> ${selectedCollege.roomAndBoard.toLocaleString()}
+                          {!onCampusHousing && (
+                            <span className="text-xs text-muted-foreground ml-2">(estimated for off-campus)</span>
+                          )}
+                        </p>
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 font-medium pt-2 border-t border-gray-200 mt-2">
+                        <span>Total Cost:</span> ${(selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
                 )}
                 
@@ -504,6 +584,25 @@ const NetPriceCalculator = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Add price charts for visualization */}
+                  <div className="mt-8">
+                    <h4 className="text-lg font-medium mb-4">Cost Visualizations</h4>
+                    <PriceCharts 
+                      collegeName={selectedCollege.name}
+                      priceData={{
+                        stickerPrice: selectedCollege.tuition + selectedCollege.roomAndBoard,
+                        averagePrice: selectedCollege.feesByIncome ? 
+                          Object.values(selectedCollege.feesByIncome).reduce((a, b) => a + b, 0) / Object.values(selectedCollege.feesByIncome).length : 
+                          null,
+                        myPrice: netPrice,
+                        tuition: selectedCollege.tuition,
+                        roomAndBoard: selectedCollege.roomAndBoard,
+                        fees: 1200, // Example value for fees
+                        books: 1000, // Example value for books and supplies
+                      }}
+                    />
                   </div>
                   
                   <div className="mt-6">
