@@ -327,6 +327,54 @@ const CollegeDiscovery = () => {
               
               <div className="space-y-6">
                 <div>
+                  <Label className="mb-2 block">Preset Filters</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id="us-news-top-150"
+                        checked={usNewsTop150Filter}
+                        onCheckedChange={(checked) => {
+                          setUsNewsTop150Filter(checked === true);
+                          // If checked, automatically sort by rank
+                          if (checked === true) {
+                            setSortBy('usNewsTop150');
+                            setSortOrder('asc');
+                          }
+                          setCurrentPage(1); // Reset to first page on filter change
+                        }}
+                      />
+                      <label 
+                        htmlFor="us-news-top-150"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        US News Top 150
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id="best-liberal-arts"
+                        checked={bestLiberalArtsFilter}
+                        onCheckedChange={(checked) => {
+                          setBestLiberalArtsFilter(checked === true);
+                          // If checked, automatically sort by rank
+                          if (checked === true) {
+                            setSortBy('bestLiberalArtsColleges');
+                            setSortOrder('asc');
+                          }
+                          setCurrentPage(1); // Reset to first page on filter change
+                        }}
+                      />
+                      <label 
+                        htmlFor="best-liberal-arts"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Best Liberal Arts Colleges
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
                   <Label>Maximum Tuition: ${maxTuition.toLocaleString()}</Label>
                   <Slider
                     value={[maxTuition]}
@@ -455,44 +503,7 @@ const CollegeDiscovery = () => {
                 >
                   Reset Filters
                 </Button>
-                
-                <div>
-                  <Label className="mb-2 block">Preset Filters</Label>
-                  <div className="space-y-2">
-                    <div className="flex items-center">
-                      <Checkbox 
-                        id="us-news-top-150"
-                        checked={usNewsTop150Filter}
-                        onCheckedChange={(checked) => {
-                          setUsNewsTop150Filter(checked === true);
-                          setCurrentPage(1); // Reset to first page on filter change
-                        }}
-                      />
-                      <label 
-                        htmlFor="us-news-top-150"
-                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        US News Top 150
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <Checkbox 
-                        id="best-liberal-arts"
-                        checked={bestLiberalArtsFilter}
-                        onCheckedChange={(checked) => {
-                          setBestLiberalArtsFilter(checked === true);
-                          setCurrentPage(1); // Reset to first page on filter change
-                        }}
-                      />
-                      <label 
-                        htmlFor="best-liberal-arts"
-                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Best Liberal Arts Colleges
-                      </label>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </CardContent>
           </Card>
