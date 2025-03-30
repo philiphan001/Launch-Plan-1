@@ -259,11 +259,23 @@ const NetPriceCalculator = () => {
     else if (income <= 75000) incomeBracket = "48001-75000";
     else if (income <= 110000) incomeBracket = "75001-110000";
     
-    // For public colleges, apply out-of-state tuition adjustment if needed
+    // Get the base price from the fees by income bracket
     let adjustedPrice = selectedCollege.feesByIncome[incomeBracket];
     
+    // For public colleges, apply out-of-state tuition adjustment if needed
+    if (selectedCollege.type.includes("Public") && !isInState) {
+      // Out-of-state tuition is typically 2-3x higher than in-state
+      // Apply a multiplier to the tuition component
+      const outOfStateMultiplier = 2.5; // This is an approximation
+      const tuitionDifference = (selectedCollege.tuition * outOfStateMultiplier) - selectedCollege.tuition;
+      
+      // Add the additional out-of-state tuition to the net price
+      adjustedPrice += tuitionDifference;
+      
+      console.log("Applied out-of-state tuition adjustment:", tuitionDifference);
+    }
+    
     // Apply housing adjustment for off-campus housing
-    // This is a simplified adjustment - in a real app, we'd have more accurate data
     if (!onCampusHousing) {
       // Off-campus housing might be 10% cheaper or more expensive depending on the area
       // This is just an example adjustment
@@ -750,35 +762,76 @@ const NetPriceCalculator = () => {
               
               {calculated && netPrice !== null && selectedCollege ? (
                 <div>
-                  <div className="flex flex-col items-center mb-8">
-                    <h4 className="text-xl font-medium text-gray-700 mb-3">{selectedCollege.name}</h4>
-                    <div className="bg-primary/10 p-8 rounded-full">
-                      <p className="text-3xl font-mono font-bold text-primary">
-                        ${netPrice.toLocaleString()}
-                      </p>
+                  <div className="flex justify-between items-center mb-8">
+                    <div>
+                      <h4 className="text-xl font-medium text-gray-700 mb-1">{selectedCollege.name}</h4>
+                      {selectedCollege.type.includes("Public") && (
+                        <div className="mb-2">
+                          <span className="text-xs px-2 py-1 rounded-full bg-gray-100 flex items-center inline-flex mr-2">
+                            {isInState ? (
+                              <>
+                                <Check className="h-3 w-3 text-success mr-1" />
+                                <span className="text-success">In-state</span>
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-3 w-3 text-destructive mr-1" />
+                                <span className="text-destructive">Out-of-state</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-3">Estimated annual cost after financial aid</p>
+                    <div className="flex flex-col items-center">
+                      <div className="bg-primary/10 px-6 py-4 rounded-lg">
+                        <p className="text-3xl font-mono font-bold text-primary">
+                          ${netPrice.toLocaleString()}
+                        </p>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-3">Estimated annual cost after financial aid</p>
+                    </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Cost breakdown and net price row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {/* Cost breakdown section */}
                     <div className="bg-gray-100 p-4 rounded-lg">
                       <h5 className="font-medium text-gray-700 mb-3">Cost Breakdown</h5>
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>Published Tuition</span>
-                          <span className="font-mono">${selectedCollege.tuition.toLocaleString()}</span>
+                          <span className="font-mono">${selectedCollege.tuition.toLocaleString()}
+                            {selectedCollege.type.includes("Public") && !isInState && (
+                              <span className="text-xs text-destructive ml-2">(in-state rate)</span>
+                            )}
+                          </span>
                         </div>
+                        {selectedCollege.type.includes("Public") && !isInState && (
+                          <div className="flex justify-between text-sm">
+                            <span>Out-of-State Tuition Adjustment</span>
+                            <span className="font-mono text-destructive">+ ${((selectedCollege.tuition * 2.5) - selectedCollege.tuition).toLocaleString()}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-sm">
                           <span>Room & Board</span>
                           <span className="font-mono">${selectedCollege.roomAndBoard.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm font-medium pt-2 border-t border-gray-300">
                           <span>Total Cost</span>
-                          <span className="font-mono">${(selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}</span>
+                          <span className="font-mono">
+                            ${isInState ? 
+                              (selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString() : 
+                              ((selectedCollege.tuition * 2.5) + selectedCollege.roomAndBoard).toLocaleString()}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm text-success">
                           <span>Estimated Financial Aid</span>
-                          <span className="font-mono">- ${((selectedCollege.tuition + selectedCollege.roomAndBoard) - netPrice).toLocaleString()}</span>
+                          <span className="font-mono">
+                            - ${isInState ? 
+                              ((selectedCollege.tuition + selectedCollege.roomAndBoard) - netPrice).toLocaleString() : 
+                              (((selectedCollege.tuition * 2.5) + selectedCollege.roomAndBoard) - netPrice).toLocaleString()}
+                          </span>
                         </div>
                         <div className="flex justify-between text-primary font-semibold pt-2 border-t border-gray-300">
                           <span>Your Net Cost</span>
@@ -787,11 +840,12 @@ const NetPriceCalculator = () => {
                       </div>
                     </div>
                     
+                    {/* Payment visualization */}
                     <div className="bg-gray-100 p-4 rounded-lg">
-                      <h5 className="font-medium text-gray-700 mb-3">How Do I Pay For College?</h5>
+                      <h5 className="font-medium text-gray-700 mb-3">Payment Breakdown</h5>
                       
                       {/* Payment breakdown chart - VERTICAL VERSION */}
-                      <div className="mb-8 flex justify-between items-end h-80 border-b border-gray-300 relative">
+                      <div className="mb-4 flex justify-between items-end h-60 border-b border-gray-300 relative">
                         {/* Horizontal guide lines */}
                         <div className="absolute inset-0">
                           <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '75%' }}></div>
@@ -806,20 +860,19 @@ const NetPriceCalculator = () => {
                             {calculateEFC() > 0 && (
                               <>
                                 <div 
-                                  className="w-24 bg-primary rounded-t-md mb-3 flex flex-col items-center justify-end shadow-md" 
+                                  className="w-24 bg-primary rounded-t-md mb-2 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
                                     height: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
                                     minHeight: '32px'
                                   }}
                                 >
-                                  <span className="text-sm text-white font-medium py-2">
+                                  <span className="text-sm text-white font-medium py-1">
                                     ${calculateEFC().toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-sm font-medium">Expected Family</p>
-                                  <p className="text-sm font-medium">Contribution</p>
-                                  <p className="text-xs text-muted-foreground mt-1">
+                                  <p className="text-sm font-medium">Family</p>
+                                  <p className="text-xs text-muted-foreground">
                                     ({Math.round((calculateEFC() / netPrice) * 100)}% of cost)
                                   </p>
                                 </div>
@@ -832,19 +885,19 @@ const NetPriceCalculator = () => {
                             {calculateWorkStudy() > 0 && (
                               <>
                                 <div 
-                                  className="w-24 bg-amber-400 rounded-t-md mb-3 flex flex-col items-center justify-end shadow-md" 
+                                  className="w-24 bg-amber-400 rounded-t-md mb-2 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
                                     height: `${Math.min(100, Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
                                     minHeight: '32px'
                                   }}
                                 >
-                                  <span className="text-sm text-white font-medium py-2">
+                                  <span className="text-sm text-white font-medium py-1">
                                     ${calculateWorkStudy().toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
                                   <p className="text-sm font-medium">Work-Study</p>
-                                  <p className="text-xs text-muted-foreground mt-1">
+                                  <p className="text-xs text-muted-foreground">
                                     ({Math.round((calculateWorkStudy() / netPrice) * 100)}% of cost)
                                   </p>
                                 </div>
@@ -857,19 +910,19 @@ const NetPriceCalculator = () => {
                             {calculateStudentLoan() > 0 && (
                               <>
                                 <div 
-                                  className="w-24 bg-blue-500 rounded-t-md mb-3 flex flex-col items-center justify-end shadow-md" 
+                                  className="w-24 bg-blue-500 rounded-t-md mb-2 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
                                     height: `${Math.min(100, Math.round((calculateStudentLoan() / netPrice) * 100))}%`,
                                     minHeight: '32px'
                                   }}
                                 >
-                                  <span className="text-sm text-white font-medium py-2">
+                                  <span className="text-sm text-white font-medium py-1">
                                     ${calculateStudentLoan().toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-sm font-medium">Student Loans</p>
-                                  <p className="text-xs text-muted-foreground mt-1">
+                                  <p className="text-sm font-medium">Loans</p>
+                                  <p className="text-xs text-muted-foreground">
                                     ({Math.round((calculateStudentLoan() / netPrice) * 100)}% of cost)
                                   </p>
                                 </div>
@@ -879,90 +932,94 @@ const NetPriceCalculator = () => {
                         </div>
                       </div>
                       
-                      <div className="border-t border-gray-300 pt-4 mb-4">
-                        <p className="text-sm font-medium mb-2">Adjust Your Payment Options</p>
+                      <div className="text-xs text-gray-600 pb-2">
+                        <p>* This is an estimate based on average financial aid packages.</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Payment adjustment section */}
+                  <div className="bg-gray-100 p-4 rounded-lg mb-6">
+                    <h5 className="font-medium text-gray-700 mb-3">How Do I Pay For College?</h5>
+                    
+                    {/* Payment adjustment sliders */}
+                    <div className="space-y-6 mb-4">
+                      {/* EFC percentage slider */}
+                      <div>
+                        <Label htmlFor="efc-percentage" className="text-sm">
+                          <span className="flex justify-between">
+                            <span>Your Family Contribution (EFC)</span>
+                            <span className="text-primary font-medium">{efcPercentage}% of Net Price</span>
+                          </span>
+                        </Label>
+                        <Slider
+                          id="efc-percentage"
+                          value={[efcPercentage]} 
+                          min={0}
+                          max={100}
+                          step={5}
+                          onValueChange={(values: number[]) => {
+                            setEfcPercentage(values[0]);
+                            // If EFC increased and now the sum exceeds 100%, adjust work-study down
+                            if (values[0] + workStudyPercentage > 100) {
+                              setWorkStudyPercentage(Math.max(0, 100 - values[0]));
+                            }
+                          }}
+                          className="mt-2"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                          <span>Pay Nothing (0%)</span>
+                          <span>Pay Everything (100%)</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Percentage of total college costs your family will contribute directly ({efcPercentage}% = ${calculateEFC().toLocaleString()})
+                        </p>
                       </div>
                       
-                      {/* Payment adjustment sliders */}
-                      <div className="space-y-6 mb-4">
-                        {/* EFC percentage slider */}
-                        <div>
-                          <Label htmlFor="efc-percentage" className="text-sm">
-                            <span className="flex justify-between">
-                              <span>Your Family Contribution (EFC)</span>
-                              <span className="text-primary font-medium">{efcPercentage}% of Net Price</span>
-                            </span>
-                          </Label>
-                          <Slider
-                            id="efc-percentage"
-                            value={[efcPercentage]} 
-                            min={0}
-                            max={100}
-                            step={5}
-                            onValueChange={(values: number[]) => {
-                              setEfcPercentage(values[0]);
-                              // If EFC increased and now the sum exceeds 100%, adjust work-study down
-                              if (values[0] + workStudyPercentage > 100) {
-                                setWorkStudyPercentage(Math.max(0, 100 - values[0]));
-                              }
-                            }}
-                            className="mt-2"
-                          />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Pay Nothing (0%)</span>
-                            <span>Pay Everything (100%)</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Percentage of total college costs your family will contribute directly ({efcPercentage}% = ${calculateEFC().toLocaleString()})
-                          </p>
+                      {/* Work-study percentage slider */}
+                      <div>
+                        <Label htmlFor="work-study-percentage" className="text-sm">
+                          <span className="flex justify-between">
+                            <span>Work-Study Participation</span>
+                            <span className="text-amber-500 font-medium">{workStudyPercentage}%</span>
+                          </span>
+                        </Label>
+                        <Slider
+                          id="work-study-percentage"
+                          value={[workStudyPercentage]} 
+                          min={0}
+                          max={Math.max(0, 100 - efcPercentage)}
+                          step={5}
+                          onValueChange={(values: number[]) => {
+                            // Ensure we don't exceed the maximum allowed work-study percentage
+                            const maxAllowed = Math.max(0, 100 - efcPercentage);
+                            const newValue = Math.min(values[0], maxAllowed);
+                            setWorkStudyPercentage(newValue);
+                          }}
+                          className="mt-2"
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                          <span>No Work-Study (0%)</span>
+                          <span>Max ({Math.max(0, 100 - efcPercentage)}%)</span>
                         </div>
-                        
-                        {/* Work-study percentage slider */}
-                        <div>
-                          <Label htmlFor="work-study-percentage" className="text-sm">
-                            <span className="flex justify-between">
-                              <span>Work-Study Participation</span>
-                              <span className="text-amber-500 font-medium">{workStudyPercentage}%</span>
-                            </span>
-                          </Label>
-                          <Slider
-                            id="work-study-percentage"
-                            value={[workStudyPercentage]} 
-                            min={0}
-                            max={Math.max(0, 100 - efcPercentage)}
-                            step={5}
-                            onValueChange={(values: number[]) => {
-                              // Ensure we don't exceed the maximum allowed work-study percentage
-                              const maxAllowed = Math.max(0, 100 - efcPercentage);
-                              const newValue = Math.min(values[0], maxAllowed);
-                              setWorkStudyPercentage(newValue);
-                            }}
-                            className="mt-2"
-                          />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>No Work-Study (0%)</span>
-                            <span>Max ({Math.max(0, 100 - efcPercentage)}%)</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Working part-time on campus to cover {workStudyPercentage}% of your total college costs
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            (EFC + Work-Study cannot exceed 100%)
-                          </p>
-                        </div>
-                        
-                        <div className="text-sm border-t border-gray-200 pt-3 mt-3">
-                          <p className="font-medium">Student Loans: ${calculateStudentLoan().toLocaleString()}</p>
-                          <p className="text-xs text-muted-foreground">
-                            After EFC and work-study, the remaining costs are covered by student loans
-                          </p>
-                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Working part-time on campus to cover {workStudyPercentage}% of your total college costs
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          (EFC + Work-Study cannot exceed 100%)
+                        </p>
                       </div>
                       
-                      <div className="mt-3 text-xs text-gray-600">
-                        <p>* This is an estimate based on average financial aid packages. Actual amounts may vary.</p>
-                        <p>* Don't forget to explore additional scholarship opportunities!</p>
+                      <div className="text-sm border-t border-gray-200 pt-3 mt-3">
+                        <p className="font-medium">Student Loans: ${calculateStudentLoan().toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">
+                          After EFC and work-study, the remaining costs are covered by student loans
+                        </p>
                       </div>
+                    </div>
+                    
+                    <div className="mt-3 text-xs text-gray-600">
+                      <p>* Don't forget to explore additional scholarship opportunities!</p>
                     </div>
                   </div>
                   
