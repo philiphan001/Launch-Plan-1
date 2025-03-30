@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import SavedCalculationsSection from "@/components/profile/SavedCalculationsSection";
 
 // Types for the favorites
 type FavoriteCollege = {
@@ -177,11 +178,12 @@ const Settings = () => {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Account Settings</h1>
       
-      <Tabs defaultValue="profile">
+      <Tabs defaultValue="calculations">
         <TabsList className="mb-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="financial">Financial Profile</TabsTrigger>
           <TabsTrigger value="favorites">My Favorites</TabsTrigger>
+          <TabsTrigger value="calculations">College Calculations</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
         
@@ -504,6 +506,10 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="calculations">
+          <SavedCalculationsSection />
         </TabsContent>
         
         <TabsContent value="notifications">
