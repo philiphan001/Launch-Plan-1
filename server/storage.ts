@@ -10,7 +10,8 @@ import {
   milestones, type Milestone, type InsertMilestone,
   careerPaths, type CareerPath, type InsertCareerPath,
   locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
-  zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome
+  zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
+  collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation
 } from "@shared/schema";
 
 // Storage interface with CRUD methods for all entities
@@ -85,6 +86,14 @@ export interface IStorage {
   getZipCodeIncomeByZipCode(zipCode: string): Promise<ZipCodeIncome | undefined>;
   getAllZipCodeIncomes(): Promise<ZipCodeIncome[]>;
   createZipCodeIncome(zipCodeIncome: InsertZipCodeIncome): Promise<ZipCodeIncome>;
+
+  // College calculations methods
+  getCollegeCalculation(id: number): Promise<CollegeCalculation | undefined>;
+  getCollegeCalculationsByUserId(userId: number): Promise<CollegeCalculation[]>;
+  getCollegeCalculationsByUserAndCollege(userId: number, collegeId: number): Promise<CollegeCalculation[]>;
+  createCollegeCalculation(calculation: InsertCollegeCalculation): Promise<CollegeCalculation>;
+  updateCollegeCalculation(id: number, data: Partial<InsertCollegeCalculation>): Promise<CollegeCalculation | undefined>;
+  deleteCollegeCalculation(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -100,6 +109,7 @@ export class MemStorage implements IStorage {
   private careerPaths: Map<number, CareerPath>;
   private locationCostOfLivings: Map<number, LocationCostOfLiving>;
   private zipCodeIncomes: Map<number, ZipCodeIncome>;
+  private collegeCalculations: Map<number, CollegeCalculation>;
   
   // Auto-increment IDs
   private userId: number;
@@ -114,6 +124,7 @@ export class MemStorage implements IStorage {
   private careerPathId: number;
   private locationCostOfLivingId: number;
   private zipCodeIncomeId: number;
+  private collegeCalculationId: number;
 
   constructor() {
     this.users = new Map();
@@ -128,6 +139,7 @@ export class MemStorage implements IStorage {
     this.careerPaths = new Map();
     this.locationCostOfLivings = new Map();
     this.zipCodeIncomes = new Map();
+    this.collegeCalculations = new Map();
     
     this.userId = 1;
     this.financialProfileId = 1;
@@ -141,6 +153,7 @@ export class MemStorage implements IStorage {
     this.careerPathId = 1;
     this.locationCostOfLivingId = 1;
     this.zipCodeIncomeId = 1;
+    this.collegeCalculationId = 1;
     
     // Initialize with some sample data
     this.initializeSampleData();
@@ -574,6 +587,65 @@ export class MemStorage implements IStorage {
     const zipCodeIncome: ZipCodeIncome = { ...insertZipCodeIncome, id };
     this.zipCodeIncomes.set(id, zipCodeIncome);
     return zipCodeIncome;
+  }
+
+  // College calculation methods
+
+  async getCollegeCalculation(id: number): Promise<CollegeCalculation | undefined> {
+    return this.collegeCalculations?.get(id);
+  }
+
+  async getCollegeCalculationsByUserId(userId: number): Promise<CollegeCalculation[]> {
+    if (!this.collegeCalculations) {
+      this.collegeCalculations = new Map();
+      return [];
+    }
+    
+    return Array.from(this.collegeCalculations.values()).filter(
+      (calculation) => calculation.userId === userId,
+    );
+  }
+
+  async getCollegeCalculationsByUserAndCollege(userId: number, collegeId: number): Promise<CollegeCalculation[]> {
+    if (!this.collegeCalculations) {
+      this.collegeCalculations = new Map();
+      return [];
+    }
+    
+    return Array.from(this.collegeCalculations.values()).filter(
+      (calculation) => calculation.userId === userId && calculation.collegeId === collegeId,
+    );
+  }
+
+  async createCollegeCalculation(insertCalculation: InsertCollegeCalculation): Promise<CollegeCalculation> {
+    if (!this.collegeCalculations) {
+      this.collegeCalculations = new Map();
+    }
+    
+    const id = this.collegeCalculationId++;
+    const timestamp = new Date();
+    const calculation: CollegeCalculation = { 
+      ...insertCalculation, 
+      id, 
+      calculationDate: timestamp 
+    };
+    this.collegeCalculations.set(id, calculation);
+    return calculation;
+  }
+
+  async updateCollegeCalculation(id: number, data: Partial<InsertCollegeCalculation>): Promise<CollegeCalculation | undefined> {
+    const calculation = await this.getCollegeCalculation(id);
+    if (!calculation) return undefined;
+    
+    const updatedCalculation = { ...calculation, ...data };
+    this.collegeCalculations.set(id, updatedCalculation);
+    return updatedCalculation;
+  }
+
+  async deleteCollegeCalculation(id: number): Promise<void> {
+    if (this.collegeCalculations) {
+      this.collegeCalculations.delete(id);
+    }
   }
 }
 

@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { activeStorage } from "./index";
 import { validateRequest } from "../shared/middleware";
-import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema } from "../shared/schema";
+import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema } from "../shared/schema";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -522,6 +522,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Exception in financial calculation:", error);
       res.status(500).json({ message: "Financial calculation failed" });
+    }
+  });
+
+  // College calculations routes
+  app.post("/api/college-calculations", validateRequest({ body: insertCollegeCalculationSchema }), async (req: Request, res: Response) => {
+    try {
+      const calculation = await activeStorage.createCollegeCalculation(req.body);
+      res.status(201).json(calculation);
+    } catch (error) {
+      console.error("Error creating college calculation:", error);
+      res.status(500).json({ message: "Failed to create college calculation", error: String(error) });
+    }
+  });
+
+  app.get("/api/college-calculations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid calculation ID format" });
+      }
+      
+      const calculation = await activeStorage.getCollegeCalculation(id);
+      if (!calculation) {
+        return res.status(404).json({ message: `College calculation with ID ${id} not found` });
+      }
+      
+      res.json(calculation);
+    } catch (error) {
+      console.error("Error getting college calculation:", error);
+      res.status(500).json({ message: "Failed to get college calculation", error: String(error) });
+    }
+  });
+
+  app.get("/api/college-calculations/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const calculations = await activeStorage.getCollegeCalculationsByUserId(userId);
+      res.json(calculations);
+    } catch (error) {
+      console.error("Error getting college calculations by user:", error);
+      res.status(500).json({ message: "Failed to get college calculations", error: String(error) });
+    }
+  });
+
+  app.get("/api/college-calculations/user/:userId/college/:collegeId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const collegeId = parseInt(req.params.collegeId);
+      
+      if (isNaN(userId) || isNaN(collegeId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const calculations = await activeStorage.getCollegeCalculationsByUserAndCollege(userId, collegeId);
+      res.json(calculations);
+    } catch (error) {
+      console.error("Error getting college calculations by user and college:", error);
+      res.status(500).json({ message: "Failed to get college calculations", error: String(error) });
+    }
+  });
+
+  app.put("/api/college-calculations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid calculation ID format" });
+      }
+      
+      // Check if calculation exists
+      const calculation = await activeStorage.getCollegeCalculation(id);
+      if (!calculation) {
+        return res.status(404).json({ message: `College calculation with ID ${id} not found` });
+      }
+      
+      const updatedCalculation = await activeStorage.updateCollegeCalculation(id, req.body);
+      res.json(updatedCalculation);
+    } catch (error) {
+      console.error("Error updating college calculation:", error);
+      res.status(500).json({ message: "Failed to update college calculation", error: String(error) });
+    }
+  });
+
+  app.delete("/api/college-calculations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid calculation ID format" });
+      }
+      
+      // Check if calculation exists
+      const calculation = await activeStorage.getCollegeCalculation(id);
+      if (!calculation) {
+        return res.status(404).json({ message: `College calculation with ID ${id} not found` });
+      }
+      
+      await activeStorage.deleteCollegeCalculation(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting college calculation:", error);
+      res.status(500).json({ message: "Failed to delete college calculation", error: String(error) });
     }
   });
 

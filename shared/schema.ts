@@ -296,3 +296,47 @@ export const insertZipCodeIncomeSchema = createInsertSchema(zipCodeIncome).pick(
 
 export type ZipCodeIncome = typeof zipCodeIncome.$inferSelect;
 export type InsertZipCodeIncome = z.infer<typeof insertZipCodeIncomeSchema>;
+
+// College net price calculation results table
+export const collegeCalculations = pgTable("college_calculations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  collegeId: integer("college_id").references(() => colleges.id).notNull(),
+  netPrice: integer("net_price").notNull(),
+  inState: boolean("in_state").default(true),
+  familyContribution: integer("family_contribution"),
+  workStudy: integer("work_study"),
+  studentLoanAmount: integer("student_loan_amount"),
+  financialAid: integer("financial_aid"),
+  householdIncome: integer("household_income"),
+  householdSize: integer("household_size"),
+  zip: text("zip"),
+  tuitionUsed: integer("tuition_used"), // The actual tuition value used in the calculation
+  roomAndBoardUsed: integer("room_and_board_used"),
+  onCampusHousing: boolean("on_campus_housing").default(true),
+  totalCost: integer("total_cost"),
+  calculationDate: timestamp("calculation_date").defaultNow(),
+  notes: text("notes"),
+});
+
+export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculations).pick({
+  userId: true,
+  collegeId: true,
+  netPrice: true,
+  inState: true,
+  familyContribution: true,
+  workStudy: true,
+  studentLoanAmount: true,
+  financialAid: true,
+  householdIncome: true,
+  householdSize: true,
+  zip: true,
+  tuitionUsed: true,
+  roomAndBoardUsed: true,
+  onCampusHousing: true,
+  totalCost: true,
+  notes: true,
+});
+
+export type CollegeCalculation = typeof collegeCalculations.$inferSelect;
+export type InsertCollegeCalculation = z.infer<typeof insertCollegeCalculationSchema>;

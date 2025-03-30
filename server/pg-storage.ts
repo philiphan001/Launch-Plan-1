@@ -11,7 +11,8 @@ import {
   milestones, type Milestone, type InsertMilestone,
   careerPaths, type CareerPath, type InsertCareerPath,
   locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
-  zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome
+  zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
+  collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation
 } from "@shared/schema";
 import { IStorage } from './storage';
 import { eq, and } from 'drizzle-orm';
@@ -279,6 +280,38 @@ export class PgStorage implements IStorage {
   async createZipCodeIncome(data: InsertZipCodeIncome): Promise<ZipCodeIncome> {
     const result = await db.insert(zipCodeIncome).values(data).returning();
     return result[0];
+  }
+
+  // College calculations methods
+  async getCollegeCalculation(id: number): Promise<CollegeCalculation | undefined> {
+    const result = await db.select().from(collegeCalculations).where(eq(collegeCalculations.id, id));
+    return result[0];
+  }
+
+  async getCollegeCalculationsByUserId(userId: number): Promise<CollegeCalculation[]> {
+    return await db.select().from(collegeCalculations).where(eq(collegeCalculations.userId, userId));
+  }
+
+  async getCollegeCalculationsByUserAndCollege(userId: number, collegeId: number): Promise<CollegeCalculation[]> {
+    return await db.select().from(collegeCalculations)
+      .where(and(
+        eq(collegeCalculations.userId, userId),
+        eq(collegeCalculations.collegeId, collegeId)
+      ));
+  }
+
+  async createCollegeCalculation(calculation: InsertCollegeCalculation): Promise<CollegeCalculation> {
+    const result = await db.insert(collegeCalculations).values(calculation).returning();
+    return result[0];
+  }
+
+  async updateCollegeCalculation(id: number, data: Partial<InsertCollegeCalculation>): Promise<CollegeCalculation | undefined> {
+    const result = await db.update(collegeCalculations).set(data).where(eq(collegeCalculations.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCollegeCalculation(id: number): Promise<void> {
+    await db.delete(collegeCalculations).where(eq(collegeCalculations.id, id));
   }
 }
 

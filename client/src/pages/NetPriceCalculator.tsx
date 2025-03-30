@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, DollarSign, Check, X, Search, Home, Building } from "lucide-react";
+import { Loader2, DollarSign, Check, X, Search, Home, Building, Save } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import PriceCharts from "@/components/calculator/PriceCharts";
@@ -48,6 +49,27 @@ interface ZipCodeIncome {
   mean_income: number;
   estimated_investments: number;
   home_value: number | null;
+}
+
+interface CollegeCalculation {
+  id?: number;
+  userId: number;
+  collegeId: number;
+  netPrice: number;
+  inState: boolean;
+  familyContribution: number;
+  workStudy: number;
+  studentLoanAmount: number;
+  financialAid: number;
+  householdIncome: number;
+  householdSize: number;
+  zip: string;
+  tuitionUsed: number;
+  roomAndBoardUsed: number;
+  onCampusHousing: boolean;
+  totalCost: number;
+  notes: string;
+  calculationDate?: string;
 }
 
 const NetPriceCalculator = () => {
@@ -373,6 +395,85 @@ const NetPriceCalculator = () => {
   
   const handleCalculate = () => {
     setCalculated(true);
+  };
+  
+  // Mutation for saving calculations
+  const { mutate: saveCalculation, isPending: isSaving } = useMutation({
+    mutationFn: async (calculationData: CollegeCalculation) => {
+      const response = await fetch('/api/college-calculations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(calculationData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save calculation');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Calculation Saved",
+        description: "Your college cost calculation has been saved to your profile.",
+      });
+      
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
+    },
+    onError: (error) => {
+      console.error("Error saving calculation:", error);
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: "We couldn't save your calculation. Please try again.",
+      });
+    }
+  });
+  
+  // Function to save calculation to user profile
+  const saveToProfile = () => {
+    if (!selectedCollege || !netPrice) {
+      toast({
+        variant: "destructive",
+        title: "Unable to Save",
+        description: "Please complete your calculation first.",
+      });
+      return;
+    }
+    
+    // Calculate financial aid amount based on sticker price minus net price
+    // This represents scholarships and grants that don't need to be repaid
+    const stickerPrice = selectedCollege.type.includes("Public") && !isInState
+      ? (selectedCollege.tuition * 3) + selectedCollege.roomAndBoard
+      : selectedCollege.tuition + selectedCollege.roomAndBoard;
+    
+    const financialAid = Math.max(0, stickerPrice - netPrice);
+    
+    // Create the calculation data object
+    const calculationData: CollegeCalculation = {
+      userId,
+      collegeId: selectedCollege.id,
+      netPrice,
+      inState: isInState,
+      familyContribution: calculateEFC(),
+      workStudy: calculateWorkStudy(),
+      studentLoanAmount: calculateStudentLoan(),
+      financialAid,
+      householdIncome: parseInt(householdIncome, 10) || 0,
+      householdSize: parseInt(householdSize, 10) || 0,
+      zip: zipCode,
+      tuitionUsed: selectedCollege.tuition,
+      roomAndBoardUsed: selectedCollege.roomAndBoard,
+      onCampusHousing,
+      totalCost: stickerPrice,
+      notes: `${selectedCollege.name} cost calculation with ${efcPercentage}% family contribution and ${workStudyPercentage}% work-study.`
+    };
+    
+    // Save the calculation
+    saveCalculation(calculationData);
   };
 
   return (
@@ -1119,7 +1220,23 @@ const NetPriceCalculator = () => {
                   
                   <div className="mt-6">
                     <Button variant="outline" className="mr-2">Download Estimate</Button>
-                    <Button>Save to My Profile</Button>
+                    <Button 
+                      onClick={saveToProfile}
+                      disabled={isSaving}
+                      className="flex items-center"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Save to My Profile
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
               ) : (
