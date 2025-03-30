@@ -222,12 +222,12 @@ const FinancialProjections = () => {
   
   // Projection input state
   const [inputs, setInputs] = useState<ProjectionInputs>({
-    pathway: "education",
+    pathway: "education", // Keeping this as it's used in the code logic
     age: 18,
     startingSavings: 5000,
-    selectedCollegeId: null,
-    selectedCareerId: null,
-    selectedLocationId: null,
+    selectedCollegeId: null, // Keeping but won't be displayed in UI
+    selectedCareerId: null, // Keeping but won't be displayed in UI
+    selectedLocationId: null, // Keeping but won't be displayed in UI
     timeframe: 10,
     studentLoanAmount: 30000,
     incomeGrowth: 3,
