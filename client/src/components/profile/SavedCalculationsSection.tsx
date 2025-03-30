@@ -161,9 +161,14 @@ const SavedCalculationsSection = () => {
             {calculations.map((calc) => (
               <div key={calc.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center">
-                    <School className="h-5 w-5 text-primary mr-2" />
-                    <h3 className="font-medium">{getCollegeName(calc.collegeId)}</h3>
+                  <div>
+                    <div className="flex items-center">
+                      <School className="h-5 w-5 text-primary mr-2" />
+                      <h3 className="font-medium">{getCollegeName(calc.collegeId)}</h3>
+                    </div>
+                    {calc.notes && (
+                      <p className="text-sm text-muted-foreground mt-1">{calc.notes}</p>
+                    )}
                   </div>
                   <Badge variant={calc.inState ? "outline" : "secondary"}>
                     {calc.inState ? "In-State" : "Out-of-State"}
