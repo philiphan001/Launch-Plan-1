@@ -899,23 +899,46 @@ const CollegeDiscovery = () => {
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-lg font-medium mb-2">Financial Aid</h3>
-                    {selectedCollege.feesByIncome ? (
-                      <div className="bg-gray-50 p-3 rounded">
-                        <p className="text-sm text-gray-600 mb-2">
-                          Net price by family income range:
-                        </p>
-                        <div className="space-y-2">
-                          {Object.entries(JSON.parse(selectedCollege.feesByIncome)).map(([income, cost]) => (
-                            <div key={income} className="flex justify-between items-center text-sm">
-                              <span>{income}</span>
-                              <span className="font-medium">${Number(cost).toLocaleString()}</span>
+                    {(() => {
+                      // JSONB can come directly as an object or as a string that needs parsing
+                      let feeData: Record<string, number> | null = null;
+                      
+                      if (selectedCollege.feesByIncome) {
+                        // Check if it's already an object
+                        if (typeof selectedCollege.feesByIncome === 'object') {
+                          feeData = selectedCollege.feesByIncome as Record<string, number>;
+                        } 
+                        // Otherwise try to parse it as a string
+                        else if (typeof selectedCollege.feesByIncome === 'string' && 
+                                 selectedCollege.feesByIncome !== 'null') {
+                          try {
+                            feeData = JSON.parse(selectedCollege.feesByIncome as string);
+                          } catch (error) {
+                            console.error("Error parsing fees by income data:", error);
+                          }
+                        }
+                      }
+                      
+                      if (feeData && Object.keys(feeData).length > 0) {
+                        return (
+                          <div className="bg-gray-50 p-3 rounded">
+                            <p className="text-sm text-gray-600 mb-2">
+                              Net price by family income range:
+                            </p>
+                            <div className="space-y-2">
+                              {Object.entries(feeData).map(([income, cost]) => (
+                                <div key={income} className="flex justify-between items-center text-sm">
+                                  <span>{income}</span>
+                                  <span className="font-medium">${Number(cost).toLocaleString()}</span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 italic">No financial aid information available.</p>
-                    )}
+                          </div>
+                        );
+                      } else {
+                        return <p className="text-gray-500 italic">No financial aid information available.</p>;
+                      }
+                    })()}
                   </div>
                   
                   <div className="mt-4">
