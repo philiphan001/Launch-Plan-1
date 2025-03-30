@@ -291,43 +291,65 @@ const NetPriceCalculator = () => {
     }
   };
   
-  // State to manage EFC adjustment percentage
-  const [efcAdjustment, setEfcAdjustment] = useState<number>(100); // 100% means the default calculated EFC
+  // State to manage payment adjustment percentages
+  const [efcPercentage, setEfcPercentage] = useState<number>(40); // User can pay 0-100% of net price
+  const [workStudyPercentage, setWorkStudyPercentage] = useState<number>(30); // Work-study covers 0-50% of remainder
   
-  // Calculate expected family contribution (EFC) based on income and assets
-  const calculateEFC = (): number => {
-    if (!householdIncome) return 0;
+  // Calculate the base EFC amount (without user adjustment)
+  const calculateBaseEFC = (): number => {
+    if (!householdIncome || !netPrice) return 0;
     
     const income = parseInt(householdIncome, 10) || 0;
     const investments = parseInt(investmentAssets, 10) || 0;
     const homeEquity = homeOwnership === 'own' ? (parseInt(homeValue, 10) || 0) * 0.05 : 0;
     
     // Simplified EFC calculation - in reality this is much more complex
-    let efc = income * 0.12; // 12% of income
-    efc += investments * 0.07; // 7% of investment assets
-    efc += homeEquity; // Small percentage of home equity
+    let baseEfc = income * 0.12; // 12% of income
+    baseEfc += investments * 0.07; // 7% of investment assets
+    baseEfc += homeEquity; // Small percentage of home equity
     
-    // Apply the user's adjustment
-    efc = efc * (efcAdjustment / 100);
-    
-    return Math.min(Math.round(efc), netPrice || 0);
+    // Limit to no more than netPrice
+    return Math.min(Math.round(baseEfc), netPrice);
   };
   
-  // Calculate student loan amount (simplified)
-  const calculateStudentLoan = (): number => {
+  // Calculate expected family contribution (EFC) with user's slider adjustment
+  const calculateEFC = (): number => {
     if (!netPrice) return 0;
-    const efc = calculateEFC();
-    // Students can borrow up to $5,500 for their first year
-    return Math.min(5500, Math.max(0, (netPrice - efc) * 0.6));
+    
+    // Base EFC is calculated from income and assets
+    const baseEfc = calculateBaseEFC();
+    
+    // User can adjust how much of net price they want to pay (0-100%)
+    const maxEfc = netPrice;
+    const adjustedEfc = maxEfc * (efcPercentage / 100);
+    
+    // Return the minimum of adjusted EFC or baseEfc (can't pay more than calculated)
+    return Math.min(Math.round(adjustedEfc), baseEfc);
   };
   
-  // Calculate work-study amount (simplified)
+  // Calculate work-study amount with user's slider adjustment
   const calculateWorkStudy = (): number => {
     if (!netPrice) return 0;
+    
     const efc = calculateEFC();
-    const loan = calculateStudentLoan();
-    // Work-study typically covers remaining gap after EFC and loans
-    return Math.min(3000, Math.max(0, netPrice - efc - loan));
+    const remaining = netPrice - efc;
+    
+    // Maximum work-study amount (based on typical limits)
+    const maxWorkStudy = Math.min(3000, remaining);
+    
+    // Apply work-study percentage chosen by user (0-50% of remaining amount)
+    return Math.round(maxWorkStudy * (workStudyPercentage / 100));
+  };
+  
+  // Calculate student loan amount (the rest is covered by loans)
+  const calculateStudentLoan = (): number => {
+    if (!netPrice) return 0;
+    
+    const efc = calculateEFC();
+    const workStudy = calculateWorkStudy();
+    
+    // Loans cover what's left after EFC and work-study
+    return Math.round(Math.max(0, netPrice - efc - workStudy));
   };
   
   const handleCalculate = () => {
@@ -767,26 +789,66 @@ const NetPriceCalculator = () => {
                     <div className="bg-gray-100 p-4 rounded-lg">
                       <h5 className="font-medium text-gray-700 mb-3">How Do I Pay For College?</h5>
                       
-                      {/* EFC adjustment slider */}
-                      <div className="mb-4">
-                        <Label htmlFor="efc-adjustment" className="text-sm">
-                          <span className="flex justify-between">
-                            <span>Adjust Your Expected Family Contribution (EFC)</span>
-                            <span className="text-primary font-medium">{efcAdjustment}%</span>
-                          </span>
-                        </Label>
-                        <Slider
-                          id="efc-adjustment"
-                          value={[efcAdjustment]} 
-                          min={20}
-                          max={180}
-                          step={10}
-                          onValueChange={(values) => setEfcAdjustment(values[0])}
-                          className="mt-2"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Adjust the slider to see how changing your contribution affects loans and work-study.
-                        </p>
+                      {/* Payment adjustment sliders */}
+                      <div className="space-y-6 mb-4">
+                        {/* EFC percentage slider */}
+                        <div>
+                          <Label htmlFor="efc-percentage" className="text-sm">
+                            <span className="flex justify-between">
+                              <span>Your Family Contribution (EFC)</span>
+                              <span className="text-primary font-medium">{efcPercentage}%</span>
+                            </span>
+                          </Label>
+                          <Slider
+                            id="efc-percentage"
+                            value={[efcPercentage]} 
+                            min={0}
+                            max={100}
+                            step={5}
+                            onValueChange={(values: number[]) => setEfcPercentage(values[0])}
+                            className="mt-2"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Pay Less (0%)</span>
+                            <span>Pay More (100%)</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Amount your family will contribute toward college costs
+                          </p>
+                        </div>
+                        
+                        {/* Work-study percentage slider */}
+                        <div>
+                          <Label htmlFor="work-study-percentage" className="text-sm">
+                            <span className="flex justify-between">
+                              <span>Work-Study Participation</span>
+                              <span className="text-amber-500 font-medium">{workStudyPercentage}%</span>
+                            </span>
+                          </Label>
+                          <Slider
+                            id="work-study-percentage"
+                            value={[workStudyPercentage]} 
+                            min={0}
+                            max={100}
+                            step={5}
+                            onValueChange={(values: number[]) => setWorkStudyPercentage(values[0])}
+                            className="mt-2"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>No Work-Study (0%)</span>
+                            <span>Max Work-Study (100%)</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Working part-time on campus to offset college costs
+                          </p>
+                        </div>
+                        
+                        <div className="text-sm border-t border-gray-200 pt-3 mt-3">
+                          <p className="font-medium">Student Loans: ${calculateStudentLoan().toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">
+                            After EFC and work-study, the remaining costs are covered by student loans
+                          </p>
+                        </div>
                       </div>
                       
                       {/* Payment breakdown chart - VERTICAL VERSION */}
