@@ -7,19 +7,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, DollarSign, Check, X } from "lucide-react";
+import { Loader2, DollarSign, Check, X, Search } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "wouter";
 
 interface College {
-  id: string;
+  id: number;
   name: string;
   location: string;
+  state: string;
   type: string;
   tuition: number;
   roomAndBoard: number;
-  feesByIncome: {
+  acceptanceRate: number | null;
+  rating: number | null;
+  size: string | null;
+  rank: number | null;
+  feesByIncome: string | null | {
     [key: string]: number;
   };
+  usNewsTop150: number | null;
+  bestLiberalArtsColleges: number | null;
+}
+
+interface FavoriteCollege {
+  id: number;
+  userId: number;
+  collegeId: number;
+  createdAt: string;
+  college: College;
 }
 
 interface ZipCodeIncome {
@@ -33,7 +49,7 @@ interface ZipCodeIncome {
 
 const NetPriceCalculator = () => {
   const { toast } = useToast();
-  const [selectedCollegeId, setSelectedCollegeId] = useState("");
+  const [selectedCollegeId, setSelectedCollegeId] = useState<number | null>(null);
   const [zipCode, setZipCode] = useState("");
   const [householdIncome, setHouseholdIncome] = useState("");
   const [estimatedIncome, setEstimatedIncome] = useState<number | null>(null);
@@ -70,12 +86,13 @@ const NetPriceCalculator = () => {
     }
   }, [userData]);
   
-  const { data: collegeData, isLoading: isLoadingColleges } = useQuery({
-    queryKey: ['/api/colleges'],
+  // Query to fetch favorite colleges
+  const { data: favoriteColleges = [], isLoading: isLoadingFavorites } = useQuery({
+    queryKey: ['/api/favorites/colleges', userId],
     queryFn: async () => {
-      const response = await fetch('/api/colleges');
+      const response = await fetch(`/api/favorites/colleges/${userId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch colleges');
+        throw new Error('Failed to fetch favorite colleges');
       }
       return response.json();
     }
@@ -129,57 +146,45 @@ const NetPriceCalculator = () => {
     }
   };
   
-  const defaultColleges: College[] = [
-    {
-      id: "1",
-      name: "University of Washington",
-      location: "Seattle, WA",
-      type: "Public Research",
-      tuition: 11465,
-      roomAndBoard: 13485,
-      feesByIncome: {
-        "0-30000": 4000,
-        "30001-48000": 6000,
-        "48001-75000": 9000,
-        "75001-110000": 15000,
-        "110001+": 24950
+  // Extract college data from favorite colleges
+  const favoriteCollegesList = favoriteColleges.length 
+    ? favoriteColleges.map((favorite: FavoriteCollege) => favorite.college)
+    : [];
+  
+  // Function to parse fees by income if it's a string
+  const parseFeesByIncome = (college: College) => {
+    if (typeof college.feesByIncome === 'string' && college.feesByIncome) {
+      try {
+        college.feesByIncome = JSON.parse(college.feesByIncome);
+      } catch (e) {
+        console.error("Error parsing feesByIncome for college:", college.name);
+        college.feesByIncome = {
+          "0-30000": 0,
+          "30001-48000": 0,
+          "48001-75000": 0,
+          "75001-110000": 0,
+          "110001+": 0
+        };
       }
-    },
-    {
-      id: "2",
-      name: "Stanford University",
-      location: "Stanford, CA",
-      type: "Private Research",
-      tuition: 56169,
-      roomAndBoard: 17255,
-      feesByIncome: {
-        "0-30000": 5000,
-        "30001-48000": 7500,
-        "48001-75000": 12000,
-        "75001-110000": 20000,
-        "110001+": 73424
-      }
-    },
-    {
-      id: "3",
-      name: "Harvard University",
-      location: "Cambridge, MA",
-      type: "Private Research",
-      tuition: 55587,
-      roomAndBoard: 18389,
-      feesByIncome: {
-        "0-30000": 4500,
-        "30001-48000": 7000,
-        "48001-75000": 11500,
-        "75001-110000": 19000,
-        "110001+": 73976
-      }
+    } else if (!college.feesByIncome) {
+      college.feesByIncome = {
+        "0-30000": 0,
+        "30001-48000": 0,
+        "48001-75000": 0,
+        "75001-110000": 0,
+        "110001+": 0
+      };
     }
-  ];
+    return college;
+  };
   
-  const collegeList = collegeData || defaultColleges;
+  // Process college data to ensure feesByIncome is an object not a string
+  const processedColleges = favoriteCollegesList.map(parseFeesByIncome);
   
-  const selectedCollege = collegeList.find((college: College) => college.id === selectedCollegeId);
+  // Find the selected college
+  const selectedCollege = selectedCollegeId 
+    ? processedColleges.find((college: College) => college.id === selectedCollegeId)
+    : null;
   
   // Add an effect to update the UI when zip code income data is available
   useEffect(() => {
@@ -374,21 +379,30 @@ const NetPriceCalculator = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="college">Choose a College</Label>
-                  {isLoadingColleges ? (
+                  {isLoadingFavorites ? (
                     <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading colleges...
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading favorite colleges...
+                    </div>
+                  ) : favoriteCollegesList.length === 0 ? (
+                    <div className="mt-2 text-sm text-muted-foreground space-y-3">
+                      <p>You haven't added any colleges to your favorites yet.</p>
+                      <div className="flex items-center">
+                        <Link to="/college-discovery" className="text-primary flex items-center">
+                          <Search className="h-4 w-4 mr-1" /> Browse colleges and add favorites
+                        </Link>
+                      </div>
                     </div>
                   ) : (
                     <Select 
-                      value={selectedCollegeId} 
-                      onValueChange={setSelectedCollegeId}
+                      value={selectedCollegeId?.toString()} 
+                      onValueChange={(value) => setSelectedCollegeId(parseInt(value, 10))}
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select a college" />
                       </SelectTrigger>
                       <SelectContent>
-                        {collegeList.map((college: College) => (
-                          <SelectItem key={college.id} value={college.id}>
+                        {processedColleges.map((college: College) => (
+                          <SelectItem key={college.id} value={college.id.toString()}>
                             {college.name}
                           </SelectItem>
                         ))}
