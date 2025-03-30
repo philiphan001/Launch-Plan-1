@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Calculator, School } from "lucide-react";
+import { Loader2, Calculator, School, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -159,59 +159,71 @@ const SavedCalculationsSection = () => {
         {calculations && calculations.length > 0 ? (
           <div className="space-y-4">
             {calculations.map((calc) => (
-              <div key={calc.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
+              <div key={calc.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex-1">
                     <div className="flex items-center">
-                      <School className="h-5 w-5 text-primary mr-2" />
-                      <h3 className="font-medium">{getCollegeName(calc.collegeId)}</h3>
+                      <School className="h-4 w-4 text-primary mr-1.5" />
+                      <h3 className="font-medium text-sm">{getCollegeName(calc.collegeId)}</h3>
+                      <Badge variant={calc.inState ? "outline" : "secondary"} className="ml-2 text-xs">
+                        {calc.inState ? "In-State" : "Out-of-State"}
+                      </Badge>
                     </div>
                     {calc.notes && (
-                      <p className="text-sm text-muted-foreground mt-1">{calc.notes}</p>
+                      <p className="text-xs text-muted-foreground">{calc.notes}</p>
                     )}
                   </div>
-                  <Badge variant={calc.inState ? "outline" : "secondary"}>
-                    {calc.inState ? "In-State" : "Out-of-State"}
-                  </Badge>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mt-3">
+                <div className="grid grid-cols-2 gap-2 mt-2">
                   <div>
-                    <p className="text-sm text-muted-foreground">Net Price</p>
-                    <p className="font-medium text-lg">{formatCurrency(calc.netPrice)}</p>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-muted-foreground">Net Price:</span>
+                      <span className="font-medium text-sm">{formatCurrency(calc.netPrice)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-muted-foreground">Total Cost:</span>
+                      <span className="font-medium text-sm">{formatCurrency(calc.totalCost)}</span>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Cost</p>
-                    <p className="font-medium text-lg">{formatCurrency(calc.totalCost)}</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Family Contribution</p>
-                    <p className="font-medium">{formatCurrency(calc.familyContribution)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Work-Study</p>
-                    <p className="font-medium">{formatCurrency(calc.workStudy)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Student Loans</p>
-                    <p className="font-medium">{formatCurrency(calc.studentLoanAmount)}</p>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-muted-foreground">Family:</span>
+                      <span className="font-medium text-sm">{formatCurrency(calc.familyContribution)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-muted-foreground">Loans:</span>
+                      <span className="font-medium text-sm">{formatCurrency(calc.studentLoanAmount)}</span>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="text-sm text-muted-foreground mt-3">
-                  <p>Calculation date: {formatDate(new Date(calc.calculationDate))}</p>
+                <div className="text-2xs text-muted-foreground mt-1">
+                  <p>{formatDate(new Date(calc.calculationDate))}</p>
                 </div>
                 
-                <div className="mt-4 pt-3 border-t flex justify-end">
+                <div className="mt-2 pt-2 border-t flex justify-end gap-2">
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="text-destructive hover:bg-destructive/10"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      toast({
+                        title: "Added to Financial Projection",
+                        description: "This college scenario has been included in your financial projections.",
+                      });
+                    }}
+                  >
+                    <Calculator className="h-3 w-3 mr-1" />
+                    Include in Projection
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:bg-destructive/10"
                     onClick={() => removeCalculation(calc.id)}
                   >
+                    <Trash2 className="h-3 w-3 mr-1" />
                     Remove
                   </Button>
                 </div>
