@@ -24,6 +24,19 @@ type FavoriteCollege = {
   };
 };
 
+type FavoriteCareer = {
+  id: number;
+  userId: number;
+  careerId: number;
+  createdAt?: string;
+  career?: {
+    id: number;
+    title: string;
+    description?: string;
+    salary?: number;
+  };
+};
+
 const Settings = () => {
   const { toast } = useToast();
   
@@ -61,16 +74,15 @@ const Settings = () => {
     }
   });
   
-  const { data: favoriteCareers } = useQuery({
-    queryKey: ['/api/user/favorites/careers'],
+  // Fetch favorite careers
+  const { data: favoriteCareers = [], isLoading: isLoadingCareers } = useQuery({
+    queryKey: ['/api/favorites/careers', temporaryUserId],
     queryFn: async () => {
-      return [
-        { id: "1", title: "Software Developer" },
-        { id: "2", title: "Financial Analyst" }
-      ];
-    },
-    // Disable actual fetching for now
-    enabled: false
+      const response = await fetch(`/api/favorites/careers/${temporaryUserId}`);
+      if (!response.ok) throw new Error('Failed to fetch favorite careers');
+      const data = await response.json();
+      return data;
+    }
   });
   
   const handleSaveProfile = () => {
@@ -129,11 +141,36 @@ const Settings = () => {
     removeFavoriteMutation.mutate(id);
   };
   
-  const removeFavoriteCareer = (id: string) => {
-    toast({
-      title: "Career removed",
-      description: "Career has been removed from your favorites.",
-    });
+  // Remove favorite career mutation
+  const removeFavoriteCareerMutation = useMutation({
+    mutationFn: async (favoriteId: number) => {
+      const response = await fetch(`/api/favorites/careers/${favoriteId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to remove favorite career');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/careers', temporaryUserId] });
+      toast({
+        title: "Career removed",
+        description: "Career has been removed from your favorites.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error removing favorite career:", error);
+      toast({
+        title: "Error removing career",
+        description: "There was a problem removing this career from your favorites.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const removeFavoriteCareer = (id: number) => {
+    removeFavoriteCareerMutation.mutate(id);
   };
 
   return (
@@ -387,14 +424,14 @@ const Settings = () => {
                 
                 {favoriteCareers && favoriteCareers.length > 0 ? (
                   <div className="space-y-3">
-                    {favoriteCareers.map((career) => (
+                    {favoriteCareers.map((career: FavoriteCareer) => (
                       <div 
                         key={career.id} 
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
                       >
                         <div className="flex items-center">
                           <span className="material-icons text-primary mr-2">work</span>
-                          <span>{career.title}</span>
+                          <span>{career.career ? career.career.title : `Career #${career.careerId}`}</span>
                         </div>
                         <div className="flex space-x-1">
                           <Button 
