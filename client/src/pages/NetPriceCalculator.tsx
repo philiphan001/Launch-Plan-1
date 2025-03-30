@@ -790,84 +790,8 @@ const NetPriceCalculator = () => {
                     <div className="bg-gray-100 p-4 rounded-lg">
                       <h5 className="font-medium text-gray-700 mb-3">How Do I Pay For College?</h5>
                       
-                      {/* Payment adjustment sliders */}
-                      <div className="space-y-6 mb-4">
-                        {/* EFC percentage slider */}
-                        <div>
-                          <Label htmlFor="efc-percentage" className="text-sm">
-                            <span className="flex justify-between">
-                              <span>Your Family Contribution (EFC)</span>
-                              <span className="text-primary font-medium">{efcPercentage}% of Net Price</span>
-                            </span>
-                          </Label>
-                          <Slider
-                            id="efc-percentage"
-                            value={[efcPercentage]} 
-                            min={0}
-                            max={100}
-                            step={5}
-                            onValueChange={(values: number[]) => {
-                              setEfcPercentage(values[0]);
-                              // If EFC increased and now the sum exceeds 100%, adjust work-study down
-                              if (values[0] + workStudyPercentage > 100) {
-                                setWorkStudyPercentage(Math.max(0, 100 - values[0]));
-                              }
-                            }}
-                            className="mt-2"
-                          />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>Pay Nothing (0%)</span>
-                            <span>Pay Everything (100%)</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Percentage of total college costs your family will contribute directly ({efcPercentage}% = ${calculateEFC().toLocaleString()})
-                          </p>
-                        </div>
-                        
-                        {/* Work-study percentage slider */}
-                        <div>
-                          <Label htmlFor="work-study-percentage" className="text-sm">
-                            <span className="flex justify-between">
-                              <span>Work-Study Participation</span>
-                              <span className="text-amber-500 font-medium">{workStudyPercentage}%</span>
-                            </span>
-                          </Label>
-                          <Slider
-                            id="work-study-percentage"
-                            value={[workStudyPercentage]} 
-                            min={0}
-                            max={Math.max(0, 100 - efcPercentage)}
-                            step={5}
-                            onValueChange={(values: number[]) => {
-                              // Ensure we don't exceed the maximum allowed work-study percentage
-                              const maxAllowed = Math.max(0, 100 - efcPercentage);
-                              const newValue = Math.min(values[0], maxAllowed);
-                              setWorkStudyPercentage(newValue);
-                            }}
-                            className="mt-2"
-                          />
-                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                            <span>No Work-Study (0%)</span>
-                            <span>Max ({Math.max(0, 100 - efcPercentage)}%)</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Working part-time on campus to cover {workStudyPercentage}% of your total college costs
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            (EFC + Work-Study cannot exceed 100%)
-                          </p>
-                        </div>
-                        
-                        <div className="text-sm border-t border-gray-200 pt-3 mt-3">
-                          <p className="font-medium">Student Loans: ${calculateStudentLoan().toLocaleString()}</p>
-                          <p className="text-xs text-muted-foreground">
-                            After EFC and work-study, the remaining costs are covered by student loans
-                          </p>
-                        </div>
-                      </div>
-                      
                       {/* Payment breakdown chart - VERTICAL VERSION */}
-                      <div className="mt-6 flex justify-between items-end h-60 border-b border-gray-300 relative">
+                      <div className="mb-6 flex justify-between items-end h-60 border-b border-gray-300 relative">
                         {/* Horizontal guide lines */}
                         <div className="absolute inset-0">
                           <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '75%' }}></div>
@@ -952,6 +876,86 @@ const NetPriceCalculator = () => {
                               </>
                             )}
                           </div>
+                        </div>
+                      </div>
+                      
+                      <div className="border-t border-gray-300 pt-4 mb-4">
+                        <p className="text-sm font-medium mb-2">Adjust Your Payment Options</p>
+                      </div>
+                      
+                      {/* Payment adjustment sliders */}
+                      <div className="space-y-6 mb-4">
+                        {/* EFC percentage slider */}
+                        <div>
+                          <Label htmlFor="efc-percentage" className="text-sm">
+                            <span className="flex justify-between">
+                              <span>Your Family Contribution (EFC)</span>
+                              <span className="text-primary font-medium">{efcPercentage}% of Net Price</span>
+                            </span>
+                          </Label>
+                          <Slider
+                            id="efc-percentage"
+                            value={[efcPercentage]} 
+                            min={0}
+                            max={100}
+                            step={5}
+                            onValueChange={(values: number[]) => {
+                              setEfcPercentage(values[0]);
+                              // If EFC increased and now the sum exceeds 100%, adjust work-study down
+                              if (values[0] + workStudyPercentage > 100) {
+                                setWorkStudyPercentage(Math.max(0, 100 - values[0]));
+                              }
+                            }}
+                            className="mt-2"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>Pay Nothing (0%)</span>
+                            <span>Pay Everything (100%)</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Percentage of total college costs your family will contribute directly ({efcPercentage}% = ${calculateEFC().toLocaleString()})
+                          </p>
+                        </div>
+                        
+                        {/* Work-study percentage slider */}
+                        <div>
+                          <Label htmlFor="work-study-percentage" className="text-sm">
+                            <span className="flex justify-between">
+                              <span>Work-Study Participation</span>
+                              <span className="text-amber-500 font-medium">{workStudyPercentage}%</span>
+                            </span>
+                          </Label>
+                          <Slider
+                            id="work-study-percentage"
+                            value={[workStudyPercentage]} 
+                            min={0}
+                            max={Math.max(0, 100 - efcPercentage)}
+                            step={5}
+                            onValueChange={(values: number[]) => {
+                              // Ensure we don't exceed the maximum allowed work-study percentage
+                              const maxAllowed = Math.max(0, 100 - efcPercentage);
+                              const newValue = Math.min(values[0], maxAllowed);
+                              setWorkStudyPercentage(newValue);
+                            }}
+                            className="mt-2"
+                          />
+                          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                            <span>No Work-Study (0%)</span>
+                            <span>Max ({Math.max(0, 100 - efcPercentage)}%)</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Working part-time on campus to cover {workStudyPercentage}% of your total college costs
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            (EFC + Work-Study cannot exceed 100%)
+                          </p>
+                        </div>
+                        
+                        <div className="text-sm border-t border-gray-200 pt-3 mt-3">
+                          <p className="font-medium">Student Loans: ${calculateStudentLoan().toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">
+                            After EFC and work-study, the remaining costs are covered by student loans
+                          </p>
                         </div>
                       </div>
                       
