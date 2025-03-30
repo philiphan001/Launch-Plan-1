@@ -808,36 +808,45 @@ const NetPriceCalculator = () => {
                         {/* For public colleges, show both in-state and out-of-state tuition */}
                         {selectedCollege.type.includes("Public") ? (
                           <>
-                            {/* In-state tuition row */}
-                            <div className="flex justify-between text-sm">
-                              <span>In-State Tuition</span>
-                              <span className="font-mono">
-                                ${selectedCollege.tuition.toLocaleString()}
-                                {!isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
-                              </span>
-                            </div>
-                            
-                            {/* Out-of-state tuition row */}
-                            <div className="flex justify-between text-sm">
-                              <span>Out-of-State Tuition</span>
-                              <span className="font-mono">
-                                ${(selectedCollege.tuition * 3).toLocaleString()}
-                                {isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
-                              </span>
-                            </div>
-                            
-                            {/* Applied tuition based on status */}
-                            <div className="flex justify-between text-sm font-medium">
-                              <span>Applied Tuition</span>
-                              <span className="font-mono">
-                                ${isInState ? 
-                                  selectedCollege.tuition.toLocaleString() : 
-                                  (selectedCollege.tuition * 3).toLocaleString()}
-                                <span className={`text-xs ml-2 ${isInState ? "text-success" : "text-destructive"}`}>
-                                  ({isInState ? "in-state" : "out-of-state"})
-                                </span>
-                              </span>
-                            </div>
+                            {/* Calculate tuition values */}
+                            {(() => {
+                              const inStateTuition = selectedCollege.tuition;
+                              const outOfStateMultiplier = 3;
+                              const outOfStateTuition = inStateTuition * outOfStateMultiplier;
+                              
+                              return (
+                                <>
+                                  {/* In-state tuition row */}
+                                  <div className="flex justify-between text-sm">
+                                    <span>In-State Tuition</span>
+                                    <span className="font-mono">
+                                      ${inStateTuition.toLocaleString()}
+                                      {!isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Out-of-state tuition row */}
+                                  <div className="flex justify-between text-sm">
+                                    <span>Out-of-State Tuition</span>
+                                    <span className="font-mono">
+                                      ${outOfStateTuition.toLocaleString()}
+                                      {isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Applied tuition based on status */}
+                                  <div className="flex justify-between text-sm font-medium">
+                                    <span>Applied Tuition</span>
+                                    <span className="font-mono">
+                                      ${isInState ? inStateTuition.toLocaleString() : outOfStateTuition.toLocaleString()}
+                                      <span className={`text-xs ml-2 ${isInState ? "text-success" : "text-destructive"}`}>
+                                        ({isInState ? "in-state" : "out-of-state"})
+                                      </span>
+                                    </span>
+                                  </div>
+                                </>
+                              );
+                            })()}
                           </>
                         ) : (
                           // For private colleges, just show the tuition
@@ -855,9 +864,16 @@ const NetPriceCalculator = () => {
                         <div className="flex justify-between text-sm font-medium pt-2 border-t border-gray-300">
                           <span>Total Cost</span>
                           <span className="font-mono">
-                            ${selectedCollege.type.includes("Public") && !isInState ?
-                              ((selectedCollege.tuition * 3) + selectedCollege.roomAndBoard).toLocaleString() : 
-                              (selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}
+                            ${(() => {
+                              if (selectedCollege.type.includes("Public") && !isInState) {
+                                const inStateTuition = selectedCollege.tuition;
+                                const outOfStateMultiplier = 3;
+                                const outOfStateTuition = inStateTuition * outOfStateMultiplier;
+                                return (outOfStateTuition + selectedCollege.roomAndBoard).toLocaleString();
+                              } else {
+                                return (selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString();
+                              }
+                            })()}
                           </span>
                         </div>
                         
@@ -912,8 +928,9 @@ const NetPriceCalculator = () => {
                                 <div 
                                   className="w-24 bg-primary rounded-t-md mb-2 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
-                                    height: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
-                                    minHeight: '32px'
+                                    height: `${(calculateEFC() / netPrice) * 200}px`, 
+                                    minHeight: '32px',
+                                    maxHeight: '180px'
                                   }}
                                 >
                                   <span className="text-sm text-white font-medium py-1">
@@ -937,8 +954,9 @@ const NetPriceCalculator = () => {
                                 <div 
                                   className="w-24 bg-amber-400 rounded-t-md mb-2 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
-                                    height: `${Math.min(100, Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
-                                    minHeight: '32px'
+                                    height: `${(calculateWorkStudy() / netPrice) * 200}px`,
+                                    minHeight: '32px',
+                                    maxHeight: '180px'
                                   }}
                                 >
                                   <span className="text-sm text-white font-medium py-1">
@@ -962,8 +980,9 @@ const NetPriceCalculator = () => {
                                 <div 
                                   className="w-24 bg-blue-500 rounded-t-md mb-2 flex flex-col items-center justify-end shadow-md" 
                                   style={{ 
-                                    height: `${Math.min(100, Math.round((calculateStudentLoan() / netPrice) * 100))}%`,
-                                    minHeight: '32px'
+                                    height: `${(calculateStudentLoan() / netPrice) * 200}px`,
+                                    minHeight: '32px',
+                                    maxHeight: '180px'
                                   }}
                                 >
                                   <span className="text-sm text-white font-medium py-1">
@@ -1079,12 +1098,18 @@ const NetPriceCalculator = () => {
                     <PriceCharts 
                       collegeName={selectedCollege.name}
                       priceData={{
-                        stickerPrice: selectedCollege.tuition + selectedCollege.roomAndBoard,
+                        // Adjust sticker price for out-of-state tuition for public colleges
+                        stickerPrice: selectedCollege.type.includes("Public") && !isInState
+                          ? (selectedCollege.tuition * 3) + selectedCollege.roomAndBoard
+                          : selectedCollege.tuition + selectedCollege.roomAndBoard,
                         // Calculate average price from fees by income brackets
                         averagePrice: selectedCollege.feesByIncome ? 
                           calculateAverageFees(selectedCollege.feesByIncome) : null,
                         myPrice: netPrice,
-                        tuition: selectedCollege.tuition,
+                        // Show actual tuition being used based on in-state/out-of-state status
+                        tuition: selectedCollege.type.includes("Public") && !isInState
+                          ? selectedCollege.tuition * 3  // Out-of-state tuition
+                          : selectedCollege.tuition,     // In-state or private tuition
                         roomAndBoard: selectedCollege.roomAndBoard,
                         fees: 1200, // Example value for fees
                         books: 1000, // Example value for books and supplies
