@@ -851,126 +851,129 @@ const NetPriceCalculator = () => {
                         </div>
                       </div>
                       
-                      {/* Payment breakdown chart - VERTICAL VERSION */}
-                      <div className="mt-6 flex justify-between items-end h-60 border-b border-gray-300 relative">
-                        {/* Horizontal guide lines */}
-                        <div className="absolute inset-0">
-                          <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '75%' }}></div>
-                          <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '50%' }}></div>
-                          <div className="absolute w-full border-t border-dashed border-gray-300" style={{ bottom: '25%' }}></div>
-                        </div>
+                      <div className="mt-6 space-y-6 border-t border-gray-200 pt-6">
+                        <h5 className="font-medium text-gray-700 mb-4">Payment Breakdown</h5>
                         
-                        {/* Main bar chart */}
-                        <div className="relative z-10 flex items-end justify-around w-full h-full px-4">
-                          {/* EFC Column */}
-                          <div className="flex flex-col items-center w-1/3">
+                        {/* Stacked bar visualization */}
+                        <div className="bg-white border border-gray-200 p-4 rounded-md">
+                          <div className="text-center mb-4">
+                            <div className="text-2xl font-semibold">${netPrice.toLocaleString()}</div>
+                            <div className="text-sm text-gray-500">Total Net Cost</div>
+                          </div>
+                          
+                          {/* Horizontal stacked bar */}
+                          <div className="relative h-14 my-4 rounded-md overflow-hidden bg-gray-100">
+                            {/* EFC Portion */}
                             {calculateEFC() > 0 && (
-                              <>
-                                <div 
-                                  className="w-20 bg-primary rounded-t-md mb-2 flex flex-col items-center justify-end" 
-                                  style={{ 
-                                    height: `${Math.min(100, Math.round((calculateEFC() / netPrice) * 100))}%`,
-                                    minHeight: '20px'
-                                  }}
-                                >
-                                  <span className="text-xs text-white font-medium p-1">
-                                    ${calculateEFC().toLocaleString()}
+                              <div 
+                                className="absolute top-0 left-0 h-full bg-primary flex items-center justify-center"
+                                style={{ width: `${Math.max(5, Math.round((calculateEFC() / netPrice) * 100))}%` }}
+                              >
+                                {Math.round((calculateEFC() / netPrice) * 100) >= 15 && (
+                                  <span className="text-xs text-white font-medium">
+                                    {Math.round((calculateEFC() / netPrice) * 100)}%
                                   </span>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-xs font-medium">Expected Family</p>
-                                  <p className="text-xs font-medium">Contribution</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    ({Math.round((calculateEFC() / netPrice) * 100)}% of cost)
-                                  </p>
-                                </div>
-                              </>
+                                )}
+                              </div>
                             )}
-                          </div>
-                          
-                          {/* Work-Study Column */}
-                          <div className="flex flex-col items-center w-1/3">
+                            
+                            {/* Work-Study Portion */}
                             {calculateWorkStudy() > 0 && (
-                              <>
-                                <div 
-                                  className="w-20 bg-amber-400 rounded-t-md mb-2 flex flex-col items-center justify-end" 
-                                  style={{ 
-                                    height: `${Math.min(100, Math.round((calculateWorkStudy() / netPrice) * 100))}%`,
-                                    minHeight: '20px'
-                                  }}
-                                >
-                                  <span className="text-xs text-white font-medium p-1">
-                                    ${calculateWorkStudy().toLocaleString()}
+                              <div 
+                                className="absolute top-0 h-full bg-amber-400 flex items-center justify-center"
+                                style={{ 
+                                  left: `${Math.round((calculateEFC() / netPrice) * 100)}%`,
+                                  width: `${Math.max(5, Math.round((calculateWorkStudy() / netPrice) * 100))}%` 
+                                }}
+                              >
+                                {Math.round((calculateWorkStudy() / netPrice) * 100) >= 15 && (
+                                  <span className="text-xs text-white font-medium">
+                                    {Math.round((calculateWorkStudy() / netPrice) * 100)}%
                                   </span>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-xs font-medium">Work-Study</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    ({Math.round((calculateWorkStudy() / netPrice) * 100)}% of cost)
-                                  </p>
-                                </div>
-                              </>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Student Loans Portion */}
+                            {calculateStudentLoan() > 0 && (
+                              <div 
+                                className="absolute top-0 h-full bg-blue-500 flex items-center justify-center"
+                                style={{ 
+                                  left: `${Math.round((calculateEFC() / netPrice) * 100) + Math.round((calculateWorkStudy() / netPrice) * 100)}%`,
+                                  width: `${Math.max(5, Math.round((calculateStudentLoan() / netPrice) * 100))}%` 
+                                }}
+                              >
+                                {Math.round((calculateStudentLoan() / netPrice) * 100) >= 15 && (
+                                  <span className="text-xs text-white font-medium">
+                                    {Math.round((calculateStudentLoan() / netPrice) * 100)}%
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
                           
-                          {/* Student Loans Column */}
-                          <div className="flex flex-col items-center w-1/3">
-                            {calculateStudentLoan() > 0 && (
-                              <>
-                                <div 
-                                  className="w-20 bg-blue-500 rounded-t-md mb-2 flex flex-col items-center justify-end" 
-                                  style={{ 
-                                    height: `${Math.min(100, Math.round((calculateStudentLoan() / netPrice) * 100))}%`,
-                                    minHeight: '20px'
-                                  }}
-                                >
-                                  <span className="text-xs text-white font-medium p-1">
-                                    ${calculateStudentLoan().toLocaleString()}
-                                  </span>
-                                </div>
-                                <div className="text-center">
-                                  <p className="text-xs font-medium">Student Loans</p>
-                                  <p className="text-xs text-muted-foreground">
-                                    ({Math.round((calculateStudentLoan() / netPrice) * 100)}% of cost)
-                                  </p>
-                                </div>
-                              </>
-                            )}
+                          {/* Payment boxes */}
+                          <div className="grid grid-cols-3 gap-3 mb-4">
+                            <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-center">
+                              <div className="inline-block w-3 h-3 rounded-full bg-primary mb-1"></div>
+                              <div className="text-lg font-semibold">${calculateEFC().toLocaleString()}</div>
+                              <div className="text-xs font-medium text-gray-700">Family Contribution</div>
+                              <div className="text-xs text-muted-foreground">
+                                ({Math.round((calculateEFC() / netPrice) * 100)}% of cost)
+                              </div>
+                            </div>
+                            
+                            <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-center">
+                              <div className="inline-block w-3 h-3 rounded-full bg-amber-400 mb-1"></div>
+                              <div className="text-lg font-semibold">${calculateWorkStudy().toLocaleString()}</div>
+                              <div className="text-xs font-medium text-gray-700">Work-Study</div>
+                              <div className="text-xs text-muted-foreground">
+                                ({Math.round((calculateWorkStudy() / netPrice) * 100)}% of cost)
+                              </div>
+                            </div>
+                            
+                            <div className="bg-gray-50 border border-gray-200 rounded-md p-3 text-center">
+                              <div className="inline-block w-3 h-3 rounded-full bg-blue-500 mb-1"></div>
+                              <div className="text-lg font-semibold">${calculateStudentLoan().toLocaleString()}</div>
+                              <div className="text-xs font-medium text-gray-700">Student Loans</div>
+                              <div className="text-xs text-muted-foreground">
+                                ({Math.round((calculateStudentLoan() / netPrice) * 100)}% of cost)
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-xs text-gray-600">
+                            <p>* This is an estimate based on average financial aid packages. Actual amounts may vary.</p>
+                            <p>* Don't forget to explore additional scholarship opportunities!</p>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="mt-3 text-xs text-gray-600">
-                        <p>* This is an estimate based on average financial aid packages. Actual amounts may vary.</p>
-                        <p>* Don't forget to explore additional scholarship opportunities!</p>
+                      {/* Price charts visualization */}
+                      <div className="mt-8">
+                        <h4 className="text-lg font-medium mb-4">Cost Visualizations</h4>
+                        <PriceCharts 
+                          collegeName={selectedCollege.name}
+                          priceData={{
+                            stickerPrice: selectedCollege.tuition + selectedCollege.roomAndBoard,
+                            // Calculate average price from fees by income brackets
+                            averagePrice: selectedCollege.feesByIncome ? 
+                              calculateAverageFees(selectedCollege.feesByIncome) : null,
+                            myPrice: netPrice,
+                            tuition: selectedCollege.tuition,
+                            roomAndBoard: selectedCollege.roomAndBoard,
+                            fees: 1200, // Example value for fees
+                            books: 1000, // Example value for books and supplies
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="mt-6">
+                        <Button variant="outline" className="mr-2">Download Estimate</Button>
+                        <Button>Save to My Profile</Button>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Add price charts for visualization */}
-                  <div className="mt-8">
-                    <h4 className="text-lg font-medium mb-4">Cost Visualizations</h4>
-                    <PriceCharts 
-                      collegeName={selectedCollege.name}
-                      priceData={{
-                        stickerPrice: selectedCollege.tuition + selectedCollege.roomAndBoard,
-                        // Calculate average price from fees by income brackets
-                        averagePrice: selectedCollege.feesByIncome ? 
-                          calculateAverageFees(selectedCollege.feesByIncome) : null,
-                        myPrice: netPrice,
-                        tuition: selectedCollege.tuition,
-                        roomAndBoard: selectedCollege.roomAndBoard,
-                        fees: 1200, // Example value for fees
-                        books: 1000, // Example value for books and supplies
-                      }}
-                    />
-                  </div>
-                  
-                  <div className="mt-6">
-                    <Button variant="outline" className="mr-2">Download Estimate</Button>
-                    <Button>Save to My Profile</Button>
-                  </div>
-                </div>
               ) : (
                 <div className="text-center p-8">
                   <div className="flex justify-center mb-4">
