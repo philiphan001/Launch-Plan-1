@@ -264,21 +264,27 @@ const NetPriceCalculator = () => {
     
     // For public colleges, apply out-of-state tuition adjustment if needed
     if (selectedCollege.type.includes("Public") && !isInState) {
-      // Out-of-state tuition is typically 2-3x higher than in-state
-      // Apply a multiplier to the tuition component
-      const outOfStateMultiplier = 2.5; // This is an approximation
-      const tuitionDifference = (selectedCollege.tuition * outOfStateMultiplier) - selectedCollege.tuition;
+      // Public universities typically charge 2-3x for out-of-state students
+      // UCLA for example charges roughly 3x more for out-of-state tuition
       
-      // Add the additional out-of-state tuition to the net price
-      adjustedPrice += tuitionDifference;
+      // Get the base in-state tuition from the college data
+      const inStateTuition = selectedCollege.tuition;
       
-      console.log("Applied out-of-state tuition adjustment:", tuitionDifference);
+      // Set the out-of-state multiplier (typically 2.5-3x for public schools)
+      const outOfStateMultiplier = 3; 
+      
+      // Calculate the additional cost for out-of-state students
+      const outOfStateSurcharge = (inStateTuition * outOfStateMultiplier) - inStateTuition;
+      
+      // Add this surcharge to the net price
+      adjustedPrice += outOfStateSurcharge;
+      
+      console.log("Applied out-of-state tuition adjustment:", outOfStateSurcharge);
     }
     
     // Apply housing adjustment for off-campus housing
     if (!onCampusHousing) {
       // Off-campus housing might be 10% cheaper or more expensive depending on the area
-      // This is just an example adjustment
       adjustedPrice = adjustedPrice - (selectedCollege.roomAndBoard * 0.1);
     }
     
@@ -799,38 +805,68 @@ const NetPriceCalculator = () => {
                     <div className="bg-gray-100 p-4 rounded-lg">
                       <h5 className="font-medium text-gray-700 mb-3">Cost Breakdown</h5>
                       <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Published Tuition</span>
-                          <span className="font-mono">${selectedCollege.tuition.toLocaleString()}
-                            {selectedCollege.type.includes("Public") && !isInState && (
-                              <span className="text-xs text-destructive ml-2">(in-state rate)</span>
-                            )}
-                          </span>
-                        </div>
-                        {selectedCollege.type.includes("Public") && !isInState && (
+                        {/* For public colleges, show both in-state and out-of-state tuition */}
+                        {selectedCollege.type.includes("Public") ? (
+                          <>
+                            {/* In-state tuition row */}
+                            <div className="flex justify-between text-sm">
+                              <span>In-State Tuition</span>
+                              <span className="font-mono">
+                                ${selectedCollege.tuition.toLocaleString()}
+                                {!isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
+                              </span>
+                            </div>
+                            
+                            {/* Out-of-state tuition row */}
+                            <div className="flex justify-between text-sm">
+                              <span>Out-of-State Tuition</span>
+                              <span className="font-mono">
+                                ${(selectedCollege.tuition * 3).toLocaleString()}
+                                {isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
+                              </span>
+                            </div>
+                            
+                            {/* Applied tuition based on status */}
+                            <div className="flex justify-between text-sm font-medium">
+                              <span>Applied Tuition</span>
+                              <span className="font-mono">
+                                ${isInState ? 
+                                  selectedCollege.tuition.toLocaleString() : 
+                                  (selectedCollege.tuition * 3).toLocaleString()}
+                                <span className={`text-xs ml-2 ${isInState ? "text-success" : "text-destructive"}`}>
+                                  ({isInState ? "in-state" : "out-of-state"})
+                                </span>
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          // For private colleges, just show the tuition
                           <div className="flex justify-between text-sm">
-                            <span>Out-of-State Tuition Adjustment</span>
-                            <span className="font-mono text-destructive">+ ${((selectedCollege.tuition * 2.5) - selectedCollege.tuition).toLocaleString()}</span>
+                            <span>Tuition</span>
+                            <span className="font-mono">${selectedCollege.tuition.toLocaleString()}</span>
                           </div>
                         )}
+                        
                         <div className="flex justify-between text-sm">
                           <span>Room & Board</span>
                           <span className="font-mono">${selectedCollege.roomAndBoard.toLocaleString()}</span>
                         </div>
+                        
                         <div className="flex justify-between text-sm font-medium pt-2 border-t border-gray-300">
                           <span>Total Cost</span>
                           <span className="font-mono">
-                            ${isInState ? 
-                              (selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString() : 
-                              ((selectedCollege.tuition * 2.5) + selectedCollege.roomAndBoard).toLocaleString()}
+                            ${selectedCollege.type.includes("Public") && !isInState ?
+                              ((selectedCollege.tuition * 3) + selectedCollege.roomAndBoard).toLocaleString() : 
+                              (selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}
                           </span>
                         </div>
+                        
                         <div className="flex justify-between text-sm text-success">
                           <span>Estimated Financial Aid</span>
                           <span className="font-mono">
-                            - ${isInState ? 
-                              ((selectedCollege.tuition + selectedCollege.roomAndBoard) - netPrice).toLocaleString() : 
-                              (((selectedCollege.tuition * 2.5) + selectedCollege.roomAndBoard) - netPrice).toLocaleString()}
+                            - ${selectedCollege.type.includes("Public") && !isInState ? 
+                              ((selectedCollege.tuition * 3) + selectedCollege.roomAndBoard - netPrice).toLocaleString() : 
+                              (selectedCollege.tuition + selectedCollege.roomAndBoard - netPrice).toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between text-primary font-semibold pt-2 border-t border-gray-300">
