@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { College } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -59,6 +60,8 @@ const CollegeDiscovery = () => {
   const [currentPage, setCurrentPage] = useState(initialParams.page);
   const [sortBy, setSortBy] = useState<string>(initialParams.sortBy);
   const [sortOrder, setSortOrder] = useState<string>(initialParams.sortOrder);
+  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
+  const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
   const itemsPerPage = 10;
   
   // Update URL when filters change
@@ -313,6 +316,12 @@ const CollegeDiscovery = () => {
       setCurrentPage(newPage);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+  
+  // Function to open college details dialog
+  const openCollegeDetails = (college: College) => {
+    setSelectedCollege(college);
+    setIsDetailsOpen(true);
   };
 
   return (
@@ -696,7 +705,13 @@ const CollegeDiscovery = () => {
                           )}
                         </div>
                         <div className="mt-3 flex space-x-2">
-                          <Button size="sm" variant="outline">View Details</Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => openCollegeDetails(college)}
+                          >
+                            View Details
+                          </Button>
                           <Button 
                             size="sm"
                             variant={isCollegeFavorite(college.id) ? "default" : "outline"}
@@ -782,6 +797,170 @@ const CollegeDiscovery = () => {
           )}
         </div>
       </div>
+      
+      {/* College Details Dialog */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-3xl">
+          {selectedCollege && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-semibold">{selectedCollege.name}</DialogTitle>
+                <DialogDescription className="text-gray-600">
+                  {selectedCollege.location || 'Location not specified'} 
+                  {selectedCollege.type && ` • ${selectedCollege.type}`}
+                  {selectedCollege.size && ` • ${selectedCollege.size.charAt(0).toUpperCase() + selectedCollege.size.slice(1)} Size`}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Overview</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedCollege.tuition !== null && selectedCollege.tuition !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Tuition</div>
+                          <div className="font-medium">${selectedCollege.tuition.toLocaleString()}</div>
+                        </div>
+                      )}
+                      {selectedCollege.roomAndBoard !== null && selectedCollege.roomAndBoard !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Room & Board</div>
+                          <div className="font-medium">${selectedCollege.roomAndBoard.toLocaleString()}</div>
+                        </div>
+                      )}
+                      {selectedCollege.acceptanceRate !== null && selectedCollege.acceptanceRate !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Acceptance Rate</div>
+                          <div className="font-medium">{selectedCollege.acceptanceRate.toFixed(1)}%</div>
+                        </div>
+                      )}
+                      {selectedCollege.rating !== null && selectedCollege.rating !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Rating</div>
+                          <div className="font-medium flex items-center">
+                            {selectedCollege.rating.toFixed(1)}
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              className="h-4 w-4 text-yellow-500 ml-1" 
+                              viewBox="0 0 20 20" 
+                              fill="currentColor"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Rankings</h3>
+                    <div className="space-y-2">
+                      {selectedCollege.usNewsTop150 !== null && selectedCollege.usNewsTop150 !== undefined && selectedCollege.usNewsTop150 > 0 && (
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 mr-2">
+                            <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/>
+                          </svg>
+                          <span>
+                            US News Ranking: <strong>#{selectedCollege.usNewsTop150}</strong>
+                            {selectedCollege.usNewsTop150 <= 150 && <span className="text-emerald-600 ml-2 text-sm">Top 150</span>}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.bestLiberalArtsColleges !== null && selectedCollege.bestLiberalArtsColleges !== undefined && selectedCollege.bestLiberalArtsColleges > 0 && (
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 mr-2">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                          </svg>
+                          <span>
+                            Liberal Arts Ranking: <strong>#{selectedCollege.bestLiberalArtsColleges}</strong>
+                            {selectedCollege.bestLiberalArtsColleges <= 100 && <span className="text-indigo-600 ml-2 text-sm">Top 100</span>}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.rank !== null && selectedCollege.rank !== undefined && selectedCollege.rank > 0 && (
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600 mr-2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                          </svg>
+                          <span>
+                            Overall Rank: <strong>#{selectedCollege.rank}</strong>
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Financial Aid</h3>
+                    {selectedCollege.feesByIncome ? (
+                      <div className="bg-gray-50 p-3 rounded">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Net price by family income range:
+                        </p>
+                        <div className="space-y-2">
+                          {Object.entries(JSON.parse(selectedCollege.feesByIncome)).map(([income, cost]) => (
+                            <div key={income} className="flex justify-between items-center text-sm">
+                              <span>{income}</span>
+                              <span className="font-medium">${Number(cost).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 italic">No financial aid information available.</p>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4">
+                    <h3 className="text-lg font-medium mb-2">Additional Information</h3>
+                    <p className="text-gray-600 text-sm">
+                      This is a {selectedCollege.type || 'college/university'} located in {selectedCollege.location || 'the United States'}.
+                      {selectedCollege.size && ` It is considered a ${selectedCollege.size} size institution.`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <DialogFooter className="flex gap-2">
+                <Button 
+                  variant={isCollegeFavorite(selectedCollege.id) ? "default" : "outline"}
+                  className={isCollegeFavorite(selectedCollege.id) ? "bg-primary" : ""}
+                  onClick={() => toggleFavorite(selectedCollege)}
+                  disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
+                >
+                  {isCollegeFavorite(selectedCollege.id) ? (
+                    <>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-4 w-4 mr-1" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                      Favorited
+                    </>
+                  ) : (
+                    "Add to Favorites"
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Close</Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
