@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Loader2, Briefcase, GraduationCap, BadgeInfo, Clock, Brain, 
   TrendingUp, Lightbulb, AlertTriangle, DollarSign, BarChart3,
-  CalendarClock, PiggyBank, School, Award
+  CalendarClock, PiggyBank, School, Award, Calculator, CheckCircle2
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { queryClient } from '@/lib/queryClient';
 
 interface Career {
   id: number;
@@ -62,6 +66,13 @@ const CareerBuilder: React.FC = () => {
   const [loadingTimeline, setLoadingTimeline] = useState(false);
   const [insights, setInsights] = useState<CareerInsights | null>(null);
   const [timeline, setTimeline] = useState<CareerTimeline | null>(null);
+  const [projectedSalary, setProjectedSalary] = useState<number | ''>('');
+  const [startYear, setStartYear] = useState<number | ''>(new Date().getFullYear() + 4);
+  const [education, setEducation] = useState<string>('');
+  const [additionalNotes, setAdditionalNotes] = useState<string>('');
+  const [formProcessing, setFormProcessing] = useState(false);
+  const [calculationSuccess, setCalculationSuccess] = useState(false);
+  const { toast } = useToast();
 
   // Fetch favorite careers
   const { data: favoriteCareers, isLoading, error } = useQuery({
@@ -134,7 +145,76 @@ const CareerBuilder: React.FC = () => {
     setTimeline(null); // Reset timeline when selecting a new career
     fetchCareerInsights(career.id);
     fetchCareerTimeline(career.id);
+    
+    // Reset calculation form
+    setProjectedSalary(career.salary || 0);
+    setEducation(career.education || '');
+    setAdditionalNotes('');
+    setCalculationSuccess(false);
   };
+  
+  // Create career calculation mutation
+  const createCareerCalculation = useMutation({
+    mutationFn: async () => {
+      if (!selectedCareer) {
+        throw new Error('No career selected');
+      }
+      
+      if (!projectedSalary) {
+        throw new Error('Projected salary is required');
+      }
+      
+      // Get salary percentiles from career or estimate them
+      const entryLevelSalary = selectedCareer.salaryPct10 || Math.round((selectedCareer.salary || 0) * 0.6);
+      const midCareerSalary = selectedCareer.salaryMedian || selectedCareer.salary || 0;
+      const experiencedSalary = selectedCareer.salaryPct90 || Math.round((selectedCareer.salary || 0) * 1.4);
+      
+      const calculationData = {
+        userId,
+        careerId: selectedCareer.id,
+        projectedSalary: typeof projectedSalary === 'string' ? parseInt(projectedSalary) : projectedSalary,
+        startYear: typeof startYear === 'string' ? parseInt(startYear) : startYear,
+        education,
+        entryLevelSalary,
+        midCareerSalary,
+        experiencedSalary,
+        additionalNotes,
+        includedInProjection: true
+      };
+      
+      const response = await fetch('/api/career-calculations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(calculationData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save career calculation');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      setCalculationSuccess(true);
+      queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
+      toast({
+        title: "Success!",
+        description: `${selectedCareer?.title} has been saved and included in your financial projections.`,
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating career calculation:', error);
+      toast({
+        title: "Error",
+        description: `Failed to save career calculation: ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  });
 
   if (isLoading) {
     return (
@@ -487,6 +567,110 @@ const CareerBuilder: React.FC = () => {
                       >
                         Analyze Career
                       </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Career Financial Projections Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Calculator className="h-5 w-5 mr-2" />
+                    Include in Financial Projections
+                  </CardTitle>
+                  <CardDescription>
+                    Save this career to include in your financial projections and life planning
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {calculationSuccess ? (
+                    <div className="text-center py-6 space-y-4">
+                      <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                        <CheckCircle2 className="h-6 w-6 text-green-600" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">Career Saved!</h3>
+                      <p className="text-muted-foreground">
+                        {selectedCareer.title} has been added to your financial projections.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="mt-2"
+                        onClick={() => setCalculationSuccess(false)}
+                      >
+                        Make Changes
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="projected-salary">Projected Annual Salary</Label>
+                          <div className="relative">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
+                            <Input
+                              id="projected-salary"
+                              type="number"
+                              className="pl-8"
+                              value={projectedSalary}
+                              onChange={(e) => setProjectedSalary(e.target.value ? parseInt(e.target.value) : '')}
+                              placeholder="Annual salary"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="start-year">Career Start Year</Label>
+                          <Input
+                            id="start-year"
+                            type="number"
+                            value={startYear}
+                            onChange={(e) => setStartYear(e.target.value ? parseInt(e.target.value) : '')}
+                            placeholder={`${new Date().getFullYear() + 4}`}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="education">Education Level</Label>
+                        <Input
+                          id="education"
+                          value={education}
+                          onChange={(e) => setEducation(e.target.value)}
+                          placeholder="e.g., Bachelor's Degree, Master's Degree"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Additional Notes</Label>
+                        <Input
+                          id="notes"
+                          value={additionalNotes}
+                          onChange={(e) => setAdditionalNotes(e.target.value)}
+                          placeholder="Any additional information or notes about this career choice"
+                        />
+                      </div>
+                      
+                      <Button 
+                        className="w-full mt-4" 
+                        onClick={() => createCareerCalculation.mutate()}
+                        disabled={!selectedCareer || !projectedSalary || createCareerCalculation.isPending}
+                      >
+                        {createCareerCalculation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            Save to Financial Projections
+                          </>
+                        )}
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground text-center mt-2">
+                        This will replace any previously included career in your financial projections
+                      </p>
                     </div>
                   )}
                 </CardContent>

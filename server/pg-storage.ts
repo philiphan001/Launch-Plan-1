@@ -12,7 +12,8 @@ import {
   careerPaths, type CareerPath, type InsertCareerPath,
   locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
   zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
-  collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation
+  collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation,
+  careerCalculations, type CareerCalculation, type InsertCareerCalculation
 } from "@shared/schema";
 import { IStorage } from './storage';
 import { eq, and } from 'drizzle-orm';
@@ -334,6 +335,76 @@ export class PgStorage implements IStorage {
         .update(collegeCalculations)
         .set({ includedInProjection: true })
         .where(eq(collegeCalculations.id, id))
+        .returning();
+        
+      return result[0];
+    });
+  }
+  
+  // Career calculations methods
+  async getCareerCalculation(id: number): Promise<CareerCalculation | undefined> {
+    const result = await db.select().from(careerCalculations).where(eq(careerCalculations.id, id));
+    return result[0];
+  }
+
+  async getCareerCalculationsByUserId(userId: number): Promise<(CareerCalculation & { career: Career })[]> {
+    const calculations = await db.select({
+      calculation: careerCalculations,
+      career: careers
+    }).from(careerCalculations)
+      .leftJoin(careers, eq(careerCalculations.careerId, careers.id))
+      .where(eq(careerCalculations.userId, userId));
+      
+    return calculations.map(({ calculation, career }) => {
+      if (!career) {
+        throw new Error(`Career not found for calculation ID ${calculation.id}`);
+      }
+      return { ...calculation, career };
+    });
+  }
+
+  async getCareerCalculationsByUserAndCareer(userId: number, careerId: number): Promise<CareerCalculation[]> {
+    return await db.select().from(careerCalculations)
+      .where(and(
+        eq(careerCalculations.userId, userId),
+        eq(careerCalculations.careerId, careerId)
+      ));
+  }
+
+  async createCareerCalculation(calculation: InsertCareerCalculation): Promise<CareerCalculation> {
+    const result = await db.insert(careerCalculations).values(calculation).returning();
+    return result[0];
+  }
+
+  async updateCareerCalculation(id: number, data: Partial<InsertCareerCalculation>): Promise<CareerCalculation | undefined> {
+    const result = await db.update(careerCalculations).set(data).where(eq(careerCalculations.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCareerCalculation(id: number): Promise<void> {
+    await db.delete(careerCalculations).where(eq(careerCalculations.id, id));
+  }
+  
+  async toggleCareerProjectionInclusion(id: number, userId: number): Promise<CareerCalculation | undefined> {
+    // First find the calculation to make sure it exists and belongs to the user
+    const calculation = await this.getCareerCalculation(id);
+    if (!calculation || calculation.userId !== userId) {
+      return undefined;
+    }
+    
+    // Begin a transaction
+    return await db.transaction(async (tx) => {
+      // First, reset all other career calculations for this user
+      await tx
+        .update(careerCalculations)
+        .set({ includedInProjection: false })
+        .where(eq(careerCalculations.userId, userId));
+      
+      // Then set this specific calculation to true
+      const result = await tx
+        .update(careerCalculations)
+        .set({ includedInProjection: true })
+        .where(eq(careerCalculations.id, id))
         .returning();
         
       return result[0];

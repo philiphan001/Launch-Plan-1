@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { activeStorage } from "./index";
 import { validateRequest } from "../shared/middleware";
-import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema } from "../shared/schema";
+import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema, insertCareerCalculationSchema } from "../shared/schema";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -699,6 +699,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling projection inclusion:", error);
       res.status(500).json({ message: "Failed to toggle projection inclusion", error: String(error) });
+    }
+  });
+  
+  // Career calculations routes
+  app.post("/api/career-calculations", validateRequest({ body: insertCareerCalculationSchema }), async (req: Request, res: Response) => {
+    try {
+      const calculation = await activeStorage.createCareerCalculation(req.body);
+      res.status(201).json(calculation);
+    } catch (error) {
+      console.error("Error creating career calculation:", error);
+      res.status(500).json({ message: "Failed to create career calculation", error: String(error) });
+    }
+  });
+  
+  app.get("/api/career-calculations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid calculation ID format" });
+      }
+      
+      const calculation = await activeStorage.getCareerCalculation(id);
+      if (!calculation) {
+        return res.status(404).json({ message: "Career calculation not found" });
+      }
+      
+      res.json(calculation);
+    } catch (error) {
+      console.error("Error getting career calculation:", error);
+      res.status(500).json({ message: "Failed to get career calculation", error: String(error) });
+    }
+  });
+  
+  app.get("/api/career-calculations/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const calculations = await activeStorage.getCareerCalculationsByUserId(userId);
+      res.json(calculations);
+    } catch (error) {
+      console.error("Error getting career calculations by user:", error);
+      res.status(500).json({ message: "Failed to get career calculations", error: String(error) });
+    }
+  });
+  
+  app.get("/api/career-calculations/user/:userId/career/:careerId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const careerId = parseInt(req.params.careerId);
+      if (isNaN(userId) || isNaN(careerId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const calculations = await activeStorage.getCareerCalculationsByUserAndCareer(userId, careerId);
+      res.json(calculations);
+    } catch (error) {
+      console.error("Error getting career calculations by user and career:", error);
+      res.status(500).json({ message: "Failed to get career calculations", error: String(error) });
+    }
+  });
+  
+  app.put("/api/career-calculations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid calculation ID format" });
+      }
+      
+      const calculation = await activeStorage.getCareerCalculation(id);
+      if (!calculation) {
+        return res.status(404).json({ message: "Career calculation not found" });
+      }
+      
+      const updatedCalculation = await activeStorage.updateCareerCalculation(id, req.body);
+      res.json(updatedCalculation);
+    } catch (error) {
+      console.error("Error updating career calculation:", error);
+      res.status(500).json({ message: "Failed to update career calculation", error: String(error) });
+    }
+  });
+  
+  app.delete("/api/career-calculations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid calculation ID format" });
+      }
+      
+      const calculation = await activeStorage.getCareerCalculation(id);
+      if (!calculation) {
+        return res.status(404).json({ message: "Career calculation not found" });
+      }
+      
+      await activeStorage.deleteCareerCalculation(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting career calculation:", error);
+      res.status(500).json({ message: "Failed to delete career calculation", error: String(error) });
+    }
+  });
+  
+  app.post("/api/career-calculations/:id/toggle-projection", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = parseInt(req.body.userId);
+      
+      if (isNaN(id) || isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const calculation = await activeStorage.toggleCareerProjectionInclusion(id, userId);
+      if (!calculation) {
+        return res.status(404).json({ message: `Career calculation with ID ${id} not found or does not belong to the user` });
+      }
+      
+      res.json(calculation);
+    } catch (error) {
+      console.error("Error toggling career projection inclusion:", error);
+      res.status(500).json({ message: "Failed to toggle career projection inclusion", error: String(error) });
     }
   });
 

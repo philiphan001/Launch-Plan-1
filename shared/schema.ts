@@ -352,3 +352,39 @@ export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculat
 
 export type CollegeCalculation = typeof collegeCalculations.$inferSelect;
 export type InsertCollegeCalculation = z.infer<typeof insertCollegeCalculationSchema>;
+
+// Career calculations table for financial projections
+export const careerCalculations = pgTable("career_calculations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  careerId: integer("career_id").references(() => careers.id).notNull(),
+  projectedSalary: integer("projected_salary").notNull(),
+  startYear: integer("start_year"),
+  education: text("education"),
+  entryLevelSalary: integer("entry_level_salary"),
+  midCareerSalary: integer("mid_career_salary"),
+  experiencedSalary: integer("experienced_salary"),
+  additionalNotes: text("additional_notes"),
+  calculationDate: timestamp("calculation_date").defaultNow(),
+  includedInProjection: boolean("included_in_projection").default(false),
+  locationZip: text("location_zip"),
+  adjustedForLocation: boolean("adjusted_for_location").default(false),
+});
+
+export const insertCareerCalculationSchema = createInsertSchema(careerCalculations).pick({
+  userId: true,
+  careerId: true,
+  projectedSalary: true,
+  startYear: true,
+  education: true,
+  entryLevelSalary: true,
+  midCareerSalary: true,
+  experiencedSalary: true,
+  additionalNotes: true,
+  includedInProjection: true,
+  locationZip: true,
+  adjustedForLocation: true,
+});
+
+export type CareerCalculation = typeof careerCalculations.$inferSelect;
+export type InsertCareerCalculation = z.infer<typeof insertCareerCalculationSchema>;

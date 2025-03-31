@@ -11,7 +11,8 @@ import {
   careerPaths, type CareerPath, type InsertCareerPath,
   locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
   zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
-  collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation
+  collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation,
+  careerCalculations, type CareerCalculation, type InsertCareerCalculation
 } from "@shared/schema";
 
 // Storage interface with CRUD methods for all entities
@@ -95,6 +96,15 @@ export interface IStorage {
   updateCollegeCalculation(id: number, data: Partial<InsertCollegeCalculation>): Promise<CollegeCalculation | undefined>;
   deleteCollegeCalculation(id: number): Promise<void>;
   toggleProjectionInclusion(id: number, userId: number): Promise<CollegeCalculation | undefined>;
+  
+  // Career calculations methods
+  getCareerCalculation(id: number): Promise<CareerCalculation | undefined>;
+  getCareerCalculationsByUserId(userId: number): Promise<(CareerCalculation & { career: Career })[]>;
+  getCareerCalculationsByUserAndCareer(userId: number, careerId: number): Promise<CareerCalculation[]>;
+  createCareerCalculation(calculation: InsertCareerCalculation): Promise<CareerCalculation>;
+  updateCareerCalculation(id: number, data: Partial<InsertCareerCalculation>): Promise<CareerCalculation | undefined>;
+  deleteCareerCalculation(id: number): Promise<void>;
+  toggleCareerProjectionInclusion(id: number, userId: number): Promise<CareerCalculation | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -111,6 +121,7 @@ export class MemStorage implements IStorage {
   private locationCostOfLivings: Map<number, LocationCostOfLiving>;
   private zipCodeIncomes: Map<number, ZipCodeIncome>;
   private collegeCalculations: Map<number, CollegeCalculation>;
+  private careerCalculations: Map<number, CareerCalculation>;
   
   // Auto-increment IDs
   private userId: number;
@@ -126,6 +137,7 @@ export class MemStorage implements IStorage {
   private locationCostOfLivingId: number;
   private zipCodeIncomeId: number;
   private collegeCalculationId: number;
+  private careerCalculationId: number;
 
   constructor() {
     this.users = new Map();
@@ -141,6 +153,7 @@ export class MemStorage implements IStorage {
     this.locationCostOfLivings = new Map();
     this.zipCodeIncomes = new Map();
     this.collegeCalculations = new Map();
+    this.careerCalculations = new Map();
     
     this.userId = 1;
     this.financialProfileId = 1;
@@ -155,6 +168,7 @@ export class MemStorage implements IStorage {
     this.locationCostOfLivingId = 1;
     this.zipCodeIncomeId = 1;
     this.collegeCalculationId = 1;
+    this.careerCalculationId = 1;
     
     // Initialize with some sample data
     this.initializeSampleData();
@@ -665,6 +679,86 @@ export class MemStorage implements IStorage {
     
     // Then set this specific calculation to true
     return await this.updateCollegeCalculation(id, { includedInProjection: true });
+  }
+  
+  // Career Calculation methods
+  async getCareerCalculation(id: number): Promise<CareerCalculation | undefined> {
+    return this.careerCalculations?.get(id);
+  }
+
+  async getCareerCalculationsByUserId(userId: number): Promise<(CareerCalculation & { career: Career })[]> {
+    if (!this.careerCalculations) {
+      this.careerCalculations = new Map();
+      return [];
+    }
+    
+    const calculations = Array.from(this.careerCalculations.values()).filter(
+      (calculation) => calculation.userId === userId,
+    );
+    
+    return calculations.map(calculation => {
+      const career = this.careers.get(calculation.careerId);
+      if (!career) {
+        throw new Error(`Career not found for calculation ID ${calculation.id}`);
+      }
+      return { ...calculation, career };
+    });
+  }
+
+  async getCareerCalculationsByUserAndCareer(userId: number, careerId: number): Promise<CareerCalculation[]> {
+    if (!this.careerCalculations) {
+      this.careerCalculations = new Map();
+      return [];
+    }
+    
+    return Array.from(this.careerCalculations.values()).filter(
+      (calculation) => calculation.userId === userId && calculation.careerId === careerId,
+    );
+  }
+
+  async createCareerCalculation(insertCalculation: InsertCareerCalculation): Promise<CareerCalculation> {
+    if (!this.careerCalculations) {
+      this.careerCalculations = new Map();
+    }
+    
+    const id = this.careerCalculationId++;
+    const timestamp = new Date();
+    const calculation: CareerCalculation = { ...insertCalculation, id, calculationDate: timestamp };
+    this.careerCalculations.set(id, calculation);
+    return calculation;
+  }
+
+  async updateCareerCalculation(id: number, data: Partial<InsertCareerCalculation>): Promise<CareerCalculation | undefined> {
+    const calculation = await this.getCareerCalculation(id);
+    if (!calculation) return undefined;
+    
+    const updatedCalculation = { ...calculation, ...data };
+    this.careerCalculations.set(id, updatedCalculation);
+    return updatedCalculation;
+  }
+
+  async deleteCareerCalculation(id: number): Promise<void> {
+    if (this.careerCalculations) {
+      this.careerCalculations.delete(id);
+    }
+  }
+  
+  async toggleCareerProjectionInclusion(id: number, userId: number): Promise<CareerCalculation | undefined> {
+    const calculation = await this.getCareerCalculation(id);
+    if (!calculation || calculation.userId !== userId) {
+      return undefined;
+    }
+    
+    // First reset all career calculations for this user
+    const userCalculations = await this.getCareerCalculationsByUserId(userId);
+    for (const calc of userCalculations) {
+      if (calc.includedInProjection) {
+        await this.updateCareerCalculation(calc.id, { includedInProjection: false });
+      }
+    }
+    
+    // Then set this specific calculation to true
+    return await this.updateCareerCalculation(id, { includedInProjection: true });
   }
 }
 
