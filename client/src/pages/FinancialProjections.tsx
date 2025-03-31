@@ -539,8 +539,8 @@ const FinancialProjections = () => {
         </Card>
       </div>
       
-      {/* Card to display location-based cost of living */}
-      {locationCostData && (
+      {/* Card to display location-based cost of living or 'Add Location' card if no data */}
+      {locationCostData ? (
         <Card className="mb-6">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -703,6 +703,52 @@ const FinancialProjections = () => {
                   : ` your expenses will be lower, but salaries may also be lower than in more expensive areas.`
                 }
               </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Location Cost of Living</h3>
+              <div className="flex items-center">
+                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mr-2">
+                  {userData?.zipCode || "No location set"}
+                </div>
+                <UpdateLocationDialog userData={userData} />
+              </div>
+            </div>
+            
+            <div className="py-8 text-center">
+              <svg 
+                className="mx-auto h-12 w-12 text-gray-400" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" 
+                />
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={1.5} 
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
+                />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No location data available</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {userData?.zipCode 
+                  ? "We don't have cost of living data for your current zip code."
+                  : "Set your location to adjust financial projections based on cost of living."}
+              </p>
+              <div className="mt-6">
+                <UpdateLocationDialog userData={userData} />
+              </div>
             </div>
           </CardContent>
         </Card>
