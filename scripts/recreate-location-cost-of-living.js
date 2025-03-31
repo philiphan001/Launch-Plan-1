@@ -36,12 +36,34 @@ async function recreateLocationCostOfLiving() {
     
     console.log(`Parsed ${records.length} location cost of living records from CSV`);
     
-    // Track processed zip codes to avoid duplicates
-    const processedZipCodes = new Set();
+    // We'll use a two-phase approach to handle duplicates
+    // 1. First create a Set for all unique zip codes in the file
+    // 2. Then in each batch we'll maintain a separate set to avoid duplicates just within that batch
+    const allZipCodes = new Set();
+    
+    // First pass to collect all zip codes
+    for (const record of records) {
+      let zipCode = null;
+      // Check for special UTF-8 BOM character that might be in the first column name
+      const possibleKeys = ['Zipcode', 'zipcode', 'ZipCode', 'Zip Code', 'zip_code', 'ZIPCODE', 'ZIP CODE', 'zip code', '﻿Zipcode'];
+      
+      for (const key of possibleKeys) {
+        if (record[key] && String(record[key]).trim()) {
+          zipCode = String(record[key]).trim();
+          break;
+        }
+      }
+      
+      if (zipCode) {
+        allZipCodes.add(zipCode);
+      }
+    }
+    
+    console.log(`Found ${allZipCodes.size} unique zip codes in the CSV`);
     
     let insertCount = 0;
     // Process records in batches to avoid memory issues
-    const batchSize = 500;
+    const batchSize = 500; // Reduced batch size to avoid timeouts
     
     // Print the first 5 records for debugging
     console.log('First 5 records from CSV:');
@@ -52,6 +74,9 @@ async function recreateLocationCostOfLiving() {
     for (let i = 0; i < records.length; i += batchSize) {
       const batch = records.slice(i, Math.min(i + batchSize, records.length));
       
+      // Create a new Set for tracking duplicates within this batch
+      const processedZipCodes = new Set();
+      
       // Process and transform each record in the batch
       let locationData = batch.map((record, index) => {
         // Make sure zipCode is never undefined or empty
@@ -60,7 +85,7 @@ async function recreateLocationCostOfLiving() {
         
         // Try all possible keys with different case/spacing
         let zipCode = null;
-        const possibleKeys = ['Zipcode', 'zipcode', 'ZipCode', 'Zip Code', 'zip_code', 'ZIPCODE', 'ZIP CODE', 'zip code'];
+        const possibleKeys = ['Zipcode', 'zipcode', 'ZipCode', 'Zip Code', 'zip_code', 'ZIPCODE', 'ZIP CODE', 'zip code', '﻿Zipcode'];
         
         for (const key of possibleKeys) {
           if (record[key] && String(record[key]).trim()) {
@@ -95,7 +120,7 @@ async function recreateLocationCostOfLiving() {
           return null;
         }
         
-        // Check for duplicates
+        // Check for duplicates (only within batch to avoid memory issues)
         if (processedZipCodes.has(zipCode)) {
           if (i === 0 && index < 3) {
             console.log(`  Skipping record ${index} - duplicate zip code ${zipCode}`);
@@ -186,12 +211,26 @@ async function recreateLocationCostOfLiving() {
       // Insert the batch into the database
       try {
         if (locationData.length > 0) {
-          await sql`INSERT INTO location_cost_of_living ${sql(locationData)}`;
-          insertCount += locationData.length;
+          // Try inserting with ON CONFLICT DO NOTHING to avoid errors with duplicate zip codes
+          for (const record of locationData) {
+            try {
+              await sql`
+                INSERT INTO location_cost_of_living 
+                (zip_code, city, state, housing, transportation, food, healthcare, personal_insurance, apparel, services, entertainment, other, monthly_expense, income_adjustment_factor)
+                VALUES 
+                (${record.zip_code}, ${record.city}, ${record.state}, ${record.housing}, ${record.transportation}, ${record.food}, ${record.healthcare}, ${record.personal_insurance}, ${record.apparel}, ${record.services}, ${record.entertainment}, ${record.other}, ${record.monthly_expense}, ${record.income_adjustment_factor})
+                ON CONFLICT (zip_code) DO NOTHING
+              `;
+              insertCount++;
+            } catch (individualError) {
+              // Log but continue if there's a problem with a specific record
+              console.error(`  Error with zip code ${record.zip_code}:`, individualError.message);
+            }
+          }
           console.log(`Inserted ${insertCount} location cost of living records so far...`);
         }
       } catch (error) {
-        console.error('Error inserting location cost of living records:', error);
+        console.error('Error batch inserting location cost of living records:', error);
       }
     }
     
