@@ -81,7 +81,21 @@ const CareerBuilder: React.FC = () => {
       }
       
       const data = await response.json();
-      console.log('Career insights data:', data);
+      console.log('Career insights data for career ID:', careerId, data);
+      console.log('Timeline data:', data.timeline);
+      
+      // Create a default timeline if none exists in the response
+      if (!data.timeline || !Array.isArray(data.timeline) || data.timeline.length === 0) {
+        console.warn('No timeline data found, creating default timeline');
+        data.timeline = [
+          { year: 0, stage: 'education', description: 'Graduate high school and begin your education journey', earnings: 0 },
+          { year: 4, stage: 'education', description: 'Complete relevant degree or training', earnings: 0 },
+          { year: 5, stage: 'entry', description: 'First professional position', earnings: 45000 },
+          { year: 8, stage: 'mid', description: 'Mid-level position with more responsibilities', earnings: 65000 },
+          { year: 15, stage: 'senior', description: 'Senior position with leadership opportunities', earnings: 90000 }
+        ];
+      }
+      
       setInsights(data);
     } catch (error) {
       console.error('Error fetching career insights:', error);
