@@ -12,7 +12,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useQuery } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -536,8 +545,11 @@ const FinancialProjections = () => {
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">Location Cost of Living</h3>
-              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                {locationCostData.city || 'Your Location'}, {locationCostData.state} ({userData?.zipCode})
+              <div className="flex items-center">
+                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mr-2">
+                  {locationCostData.city || 'Your Location'}, {locationCostData.state} ({userData?.zipCode})
+                </div>
+                <UpdateLocationDialog userData={userData} />
               </div>
             </div>
             
@@ -840,6 +852,92 @@ const FinancialProjections = () => {
         </CardContent>
       </Card>
     </div>
+  );
+};
+
+// UpdateLocationDialog component for changing the zip code
+interface UpdateLocationDialogProps {
+  userData: User | undefined;
+}
+
+const UpdateLocationDialog = ({ userData }: UpdateLocationDialogProps) => {
+  const [open, setOpen] = useState(false);
+  const [newZipCode, setNewZipCode] = useState(userData?.zipCode || '');
+  const queryClient = useQueryClient(); // For cache invalidation
+
+  const updateZipCodeMutation = useMutation({
+    mutationFn: async (zipCode: string) => {
+      const response = await fetch(`/api/users/${userData?.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          zipCode
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update location');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate queries that depend on the user data or location data
+      queryClient.invalidateQueries({ queryKey: ['/api/users', userData?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/location-cost-of-living/zip', newZipCode] });
+      setOpen(false);
+    }
+  });
+
+  const handleUpdateLocation = () => {
+    if (newZipCode && newZipCode.length === 5 && /^\d+$/.test(newZipCode)) {
+      updateZipCodeMutation.mutate(newZipCode);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="h-7">
+          Change
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Update Location</DialogTitle>
+          <DialogDescription>
+            Change your location to recalculate financial projections based on the new cost of living.
+            This change will be applied across all parts of the application.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="zipCode">Zip Code</Label>
+            <Input
+              id="zipCode"
+              placeholder="Enter zip code"
+              value={newZipCode}
+              onChange={(e) => setNewZipCode(e.target.value)}
+              maxLength={5}
+              pattern="[0-9]{5}"
+            />
+            <p className="text-xs text-gray-500">
+              Enter a valid US 5-digit zip code
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button 
+            onClick={handleUpdateLocation}
+            disabled={updateZipCodeMutation.isPending || !newZipCode || newZipCode.length !== 5 || !/^\d+$/.test(newZipCode)}
+          >
+            {updateZipCodeMutation.isPending ? "Updating..." : "Update Location"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
