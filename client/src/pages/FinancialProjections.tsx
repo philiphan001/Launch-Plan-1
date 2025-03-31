@@ -200,16 +200,32 @@ const FinancialProjections = () => {
     // Calculate initial net worth (savings minus student loan debt)
     let netWorth = startingSavings - studentLoanDebt;
     
-    // Adjust income and expenses based on cost of living
+    // Properly adjust income based on cost of living - correctly apply the factor
     let currentIncome = income * costOfLivingFactor;
-    let currentExpenses = expenses * (locationCostData ? 
-      // Calculate a weighted expense factor based on the major expense categories
-      (locationCostData.housing * 0.35 + 
-       locationCostData.food * 0.15 + 
-       locationCostData.transportation * 0.15 + 
-       locationCostData.healthcare * 0.1 + 
-       locationCostData.personal_insurance * 0.1 + 
-       1.0 * 0.15) / 6 : 1.0);
+    
+    // Calculate a reasonable expense adjustment based on location
+    // All expense categories in the database are stored as whole numbers representing percentages
+    // For example, housing = 250 means 250% of national average
+    // We need to convert them to proper multipliers (e.g., 250 => 2.5)
+    let expenseAdjustmentFactor = 1.0;
+    if (locationCostData) {
+      // Calculate a weighted average of the location's expense categories
+      // Convert each percentage to a decimal factor first (divide by 100)
+      expenseAdjustmentFactor = (
+        (locationCostData.housing / 100) * 0.35 + 
+        (locationCostData.food / 100) * 0.15 + 
+        (locationCostData.transportation / 100) * 0.15 + 
+        (locationCostData.healthcare / 100) * 0.1 + 
+        (locationCostData.personal_insurance / 100) * 0.1 + 
+        1.0 * 0.15
+      );
+    }
+    
+    // Apply the adjusted expense factor
+    let currentExpenses = expenses * expenseAdjustmentFactor;
+    
+    // Ensure expenses are at least 50% of income and at most 90% as a sanity check
+    currentExpenses = Math.max(currentIncome * 0.5, Math.min(currentExpenses, currentIncome * 0.9));
     
     const netWorthData = [netWorth];
     const incomeData = [currentIncome];
@@ -378,14 +394,25 @@ const FinancialProjections = () => {
               className="w-full mt-6"
               onClick={async () => {
                 try {
+                  // Calculate properly adjusted income and expenses for saving - use same logic as generateProjectionData
                   const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
-                  const adjustedExpenses = expenses * (locationCostData ? 
-                    (locationCostData.housing * 0.35 + 
-                     locationCostData.food * 0.15 + 
-                     locationCostData.transportation * 0.15 + 
-                     locationCostData.healthcare * 0.1 + 
-                     locationCostData.personal_insurance * 0.1 + 
-                     1.0 * 0.15) / 6 : 1.0);
+                  
+                  // Calculate expense adjustment factor correctly
+                  let expenseAdjustmentFactor = 1.0;
+                  if (locationCostData) {
+                    expenseAdjustmentFactor = (
+                      (locationCostData.housing / 100) * 0.35 + 
+                      (locationCostData.food / 100) * 0.15 + 
+                      (locationCostData.transportation / 100) * 0.15 + 
+                      (locationCostData.healthcare / 100) * 0.1 + 
+                      (locationCostData.personal_insurance / 100) * 0.1 + 
+                      1.0 * 0.15
+                    );
+                  }
+                  
+                  // Apply expense adjustment with reasonable bounds
+                  let adjustedExpenses = expenses * expenseAdjustmentFactor;
+                  adjustedExpenses = Math.max(adjustedIncome * 0.5, Math.min(adjustedExpenses, adjustedIncome * 0.9));
                      
                   const response = await fetch('/api/financial-projections', {
                     method: 'POST',
@@ -410,12 +437,12 @@ const FinancialProjections = () => {
                       locationAdjusted: !!locationCostData,
                       locationZipCode: userData?.zipCode || null,
                       costOfLivingIndex: locationCostData ? 
-                        ((locationCostData.housing * 0.35 + 
-                          locationCostData.food * 0.15 + 
-                          locationCostData.transportation * 0.15 + 
-                          locationCostData.healthcare * 0.1 + 
-                          locationCostData.personal_insurance * 0.1 + 
-                          1.0 * 0.15) / 6) : null,
+                        ((locationCostData.housing / 100 * 0.35 + 
+                          locationCostData.food / 100 * 0.15 + 
+                          locationCostData.transportation / 100 * 0.15 + 
+                          locationCostData.healthcare / 100 * 0.1 + 
+                          locationCostData.personal_insurance / 100 * 0.1 + 
+                          1.0 * 0.15)) : null,
                       incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                     }),
                   });
@@ -544,12 +571,12 @@ const FinancialProjections = () => {
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <p className="text-sm text-gray-500 uppercase">Overall Cost Index</p>
                 <p className="text-2xl font-medium text-primary">
-                  {((locationCostData.housing * 0.35 + 
-                    locationCostData.food * 0.15 + 
-                    locationCostData.transportation * 0.15 + 
-                    locationCostData.healthcare * 0.1 + 
-                    locationCostData.personal_insurance * 0.1 + 
-                    1.0 * 0.15) * 100 / 6).toFixed(0)}%
+                  {((locationCostData.housing / 100 * 0.35 + 
+                    locationCostData.food / 100 * 0.15 + 
+                    locationCostData.transportation / 100 * 0.15 + 
+                    locationCostData.healthcare / 100 * 0.1 + 
+                    locationCostData.personal_insurance / 100 * 0.1 + 
+                    1.0 * 0.15) * 100).toFixed(0)}%
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Weighted average of all categories
@@ -566,7 +593,7 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.food * 100, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.food, 100)}%` }}
                       ></div>
                     </div>
                     <span className="text-xs ml-2">{(locationCostData.food * 100).toFixed(0)}%</span>
@@ -579,7 +606,7 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.transportation * 100, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.transportation, 100)}%` }}
                       ></div>
                     </div>
                     <span className="text-xs ml-2">{(locationCostData.transportation * 100).toFixed(0)}%</span>
@@ -592,7 +619,7 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.healthcare * 100, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.healthcare, 100)}%` }}
                       ></div>
                     </div>
                     <span className="text-xs ml-2">{(locationCostData.healthcare * 100).toFixed(0)}%</span>
@@ -605,7 +632,7 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.personal_insurance * 100, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.personal_insurance, 100)}%` }}
                       ></div>
                     </div>
                     <span className="text-xs ml-2">{(locationCostData.personal_insurance * 100).toFixed(0)}%</span>
@@ -618,7 +645,7 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.entertainment * 100, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.entertainment, 100)}%` }}
                       ></div>
                     </div>
                     <span className="text-xs ml-2">{(locationCostData.entertainment * 100).toFixed(0)}%</span>
@@ -631,7 +658,7 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.services * 100, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.services, 100)}%` }}
                       ></div>
                     </div>
                     <span className="text-xs ml-2">{(locationCostData.services * 100).toFixed(0)}%</span>
