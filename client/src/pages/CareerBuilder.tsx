@@ -4,7 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Briefcase, GraduationCap, BadgeInfo, Clock, Brain, TrendingUp, Lightbulb, AlertTriangle, DollarSign, BarChart3 } from 'lucide-react';
+import { 
+  Loader2, Briefcase, GraduationCap, BadgeInfo, Clock, Brain, 
+  TrendingUp, Lightbulb, AlertTriangle, DollarSign, BarChart3,
+  CalendarClock, PiggyBank, School, Award
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 
@@ -31,6 +35,13 @@ interface FavoriteCareer {
   career: Career;
 }
 
+interface CareerTimelineStep {
+  year: number;
+  stage: string;
+  description: string;
+  earnings?: number;
+}
+
 interface CareerInsights {
   education: string;
   pathways: string;
@@ -38,6 +49,7 @@ interface CareerInsights {
   skillsNeeded: string;
   futureOutlook: string;
   relatedCareers: string;
+  timeline: CareerTimelineStep[];
 }
 
 const CareerBuilder: React.FC = () => {
@@ -308,13 +320,14 @@ const CareerBuilder: React.FC = () => {
                     </div>
                   ) : insights ? (
                     <Tabs defaultValue="education">
-                      <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4">
+                      <TabsList className="grid grid-cols-3 md:grid-cols-7 mb-4">
                         <TabsTrigger value="education">Education</TabsTrigger>
                         <TabsTrigger value="pathways">Pathways</TabsTrigger>
                         <TabsTrigger value="dailyTasks">Daily Tasks</TabsTrigger>
                         <TabsTrigger value="skills">Skills</TabsTrigger>
                         <TabsTrigger value="outlook">Outlook</TabsTrigger>
                         <TabsTrigger value="related">Related</TabsTrigger>
+                        <TabsTrigger value="timeline">Timeline</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="education" className="space-y-4">
@@ -363,6 +376,53 @@ const CareerBuilder: React.FC = () => {
                           <h3 className="font-medium">Related Careers</h3>
                         </div>
                         <p className="text-muted-foreground whitespace-pre-line">{insights.relatedCareers}</p>
+                      </TabsContent>
+                      
+                      <TabsContent value="timeline" className="space-y-4">
+                        <div className="flex items-start mb-4">
+                          <CalendarClock className="h-5 w-5 mr-2 flex-shrink-0 text-primary" />
+                          <h3 className="font-medium">Career Timeline</h3>
+                        </div>
+                        
+                        {insights.timeline && insights.timeline.length > 0 ? (
+                          <div className="relative pl-8 space-y-8 before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-gray-200">
+                            {insights.timeline.map((step, index) => (
+                              <div key={index} className="relative">
+                                <div className="absolute -left-8 bg-primary rounded-full p-2 flex items-center justify-center">
+                                  {step.stage === 'education' ? (
+                                    <School className="h-4 w-4 text-white" />
+                                  ) : step.stage === 'entry' ? (
+                                    <Briefcase className="h-4 w-4 text-white" />
+                                  ) : step.stage === 'mid' ? (
+                                    <Award className="h-4 w-4 text-white" />
+                                  ) : (
+                                    <PiggyBank className="h-4 w-4 text-white" />
+                                  )}
+                                </div>
+                                <div className="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200">
+                                  <div className="mb-1 flex items-center">
+                                    <span className="text-lg font-semibold text-gray-800">Year {step.year}</span>
+                                    {step.earnings && (
+                                      <div className="ml-auto text-base font-medium text-emerald-600">
+                                        ${step.earnings.toLocaleString()}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <h4 className="text-base font-medium mb-2 text-gray-700">
+                                    {step.stage === 'education' ? 'Education & Training' : 
+                                     step.stage === 'entry' ? 'Entry Level' :
+                                     step.stage === 'mid' ? 'Mid-Career' : 'Senior Level'}
+                                  </h4>
+                                  <p className="text-sm text-gray-600">{step.description}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 text-muted-foreground">
+                            No timeline information available
+                          </div>
+                        )}
                       </TabsContent>
                     </Tabs>
                   ) : (

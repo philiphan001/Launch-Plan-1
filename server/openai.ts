@@ -16,6 +16,12 @@ export interface CareerInsightsResponse {
   skillsNeeded: string;
   futureOutlook: string;
   relatedCareers: string;
+  timeline: {
+    year: number;
+    stage: string;
+    description: string;
+    earnings?: number;
+  }[];
   salaryData: {
     entryLevel: number;
     midCareer: number;
@@ -66,6 +72,14 @@ export async function generateCareerInsights(
             "futureOutlook": "Write an optimistic but realistic paragraph about job prospects and emerging trends. Include interesting facts about growth rates and how technology might change this career. Make students feel excited about the future!",
             
             "relatedCareers": "Create a paragraph listing at least 5 related career options with brief explanations of how they connect. Present these as cool alternatives students might not have considered!",
+            
+            "timeline": [
+              {"year": 0, "stage": "education", "description": "Graduate high school and begin your education journey", "earnings": 0},
+              {"year": 4, "stage": "education", "description": "Complete bachelor's degree in relevant field", "earnings": 0},
+              {"year": 5, "stage": "entry", "description": "Land your first entry-level position and begin building experience", "earnings": 45000},
+              {"year": 8, "stage": "mid", "description": "Advance to a mid-level role with more responsibilities", "earnings": 65000},
+              {"year": 15, "stage": "senior", "description": "Reach senior-level position with leadership opportunities", "earnings": 95000}
+            ],
             
             "salaryData": {
               "entryLevel": [entry-level salary as a number],
@@ -121,6 +135,7 @@ export async function generateCareerInsights(
       skillsNeeded: "Unable to fetch skills information at this time.",
       futureOutlook: "Unable to fetch future outlook information at this time.",
       relatedCareers: "Unable to fetch related careers information at this time.",
+      timeline: [],
       salaryData: {
         entryLevel: 0,
         midCareer: 0,
