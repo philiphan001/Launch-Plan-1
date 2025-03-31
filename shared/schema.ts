@@ -94,6 +94,11 @@ export const careers = pgTable("careers", {
   alias3: text("alias3"),
   alias4: text("alias4"),
   alias5: text("alias5"),
+  salaryPct10: integer("salary_pct_10"),
+  salaryPct25: integer("salary_pct_25"),
+  salaryMedian: integer("salary_median"),
+  salaryPct75: integer("salary_pct_75"),
+  salaryPct90: integer("salary_pct_90"),
 });
 
 export const insertCareerSchema = createInsertSchema(careers).pick({
@@ -108,6 +113,11 @@ export const insertCareerSchema = createInsertSchema(careers).pick({
   alias3: true,
   alias4: true,
   alias5: true,
+  salaryPct10: true,
+  salaryPct25: true,
+  salaryMedian: true,
+  salaryPct75: true,
+  salaryPct90: true,
 });
 
 // Favorites tables

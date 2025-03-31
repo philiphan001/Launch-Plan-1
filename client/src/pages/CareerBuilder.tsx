@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Briefcase, GraduationCap, BadgeInfo, Clock, Brain, TrendingUp, Lightbulb, AlertTriangle } from 'lucide-react';
+import { Loader2, Briefcase, GraduationCap, BadgeInfo, Clock, Brain, TrendingUp, Lightbulb, AlertTriangle, DollarSign, BarChart3 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 
 interface Career {
   id: number;
@@ -15,6 +16,11 @@ interface Career {
   growthRate: string | null;
   education: string | null;
   category: string | null;
+  salaryPct10: number | null;
+  salaryPct25: number | null;
+  salaryMedian: number | null;
+  salaryPct75: number | null;
+  salaryPct90: number | null;
 }
 
 interface FavoriteCareer {
@@ -185,6 +191,78 @@ const CareerBuilder: React.FC = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Salary Percentiles Visualization */}
+                  {(selectedCareer.salaryPct10 || selectedCareer.salaryPct25 || 
+                    selectedCareer.salaryMedian || selectedCareer.salaryPct75 || 
+                    selectedCareer.salaryPct90) && (
+                    <div className="mt-6 mb-6">
+                      <div className="flex items-start mb-4">
+                        <div className="bg-primary/10 p-2 rounded-full mr-3">
+                          <DollarSign className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium">Salary Range by Percentile</h3>
+                          <p className="text-xs text-muted-foreground">How much you might earn at different experience/performance levels</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        {selectedCareer.salaryPct10 && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="font-medium">10th Percentile (Entry Level)</span>
+                              <span className="font-medium">${selectedCareer.salaryPct10.toLocaleString()}</span>
+                            </div>
+                            <Progress value={20} className="h-2" />
+                          </div>
+                        )}
+                        
+                        {selectedCareer.salaryPct25 && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="font-medium">25th Percentile</span>
+                              <span className="font-medium">${selectedCareer.salaryPct25.toLocaleString()}</span>
+                            </div>
+                            <Progress value={40} className="h-2" />
+                          </div>
+                        )}
+                        
+                        {selectedCareer.salaryMedian && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="font-medium">Median (50th Percentile)</span>
+                              <span className="font-medium">${selectedCareer.salaryMedian.toLocaleString()}</span>
+                            </div>
+                            <Progress value={60} className="h-2" />
+                          </div>
+                        )}
+                        
+                        {selectedCareer.salaryPct75 && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="font-medium">75th Percentile</span>
+                              <span className="font-medium">${selectedCareer.salaryPct75.toLocaleString()}</span>
+                            </div>
+                            <Progress value={80} className="h-2" />
+                          </div>
+                        )}
+                        
+                        {selectedCareer.salaryPct90 && (
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span className="font-medium">90th Percentile (Top Earners)</span>
+                              <span className="font-medium">${selectedCareer.salaryPct90.toLocaleString()}</span>
+                            </div>
+                            <Progress value={100} className="h-3" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <Separator className="my-6" />
+                  
                   {selectedCareer.education && (
                     <div className="flex items-start mt-4">
                       <div className="bg-primary/10 p-2 rounded-full mr-3">
