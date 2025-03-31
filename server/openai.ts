@@ -16,12 +16,6 @@ export interface CareerInsightsResponse {
   skillsNeeded: string;
   futureOutlook: string;
   relatedCareers: string;
-  timeline: {
-    year: number;
-    stage: string;
-    description: string;
-    earnings?: number;
-  }[];
   salaryData: {
     entryLevel: number;
     midCareer: number;
@@ -40,6 +34,103 @@ export interface CareerInsightsResponse {
     year: number;
     growthRate: number;
   }[];
+}
+
+export interface CareerTimelineResponse {
+  timeline: {
+    year: number;
+    stage: string;
+    description: string;
+    earnings?: number;
+  }[];
+}
+
+export async function generateCareerTimeline(
+  careerTitle: string,
+  description?: string
+): Promise<CareerTimelineResponse> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: "You are a career path specialist who creates accurate, realistic career progression timelines for high school students. Your timelines are personalized to specific careers, showing realistic progression from education through various career stages."
+        },
+        {
+          role: "user",
+          content: `Create a detailed career progression timeline for the ${careerTitle} profession.
+          ${description ? `Additional career information: ${description}` : ''}
+          
+          Format your response as JSON with the following structure:
+          {
+            "timeline": [
+              {
+                "year": 0,
+                "stage": "education",
+                "description": "Graduate high school and begin specific education path for this career",
+                "earnings": 0
+              },
+              {
+                "year": X,
+                "stage": "education",
+                "description": "Clear description of education milestone",
+                "earnings": amount
+              },
+              {
+                "year": Y,
+                "stage": "entry",
+                "description": "Clear description of entry-level position",
+                "earnings": realistic entry salary
+              },
+              {
+                "year": Z,
+                "stage": "mid",
+                "description": "Clear description of mid-career position",
+                "earnings": realistic mid-career salary
+              },
+              {
+                "year": W,
+                "stage": "senior",
+                "description": "Clear description of senior position",
+                "earnings": realistic senior salary
+              }
+            ]
+          }
+          
+          Include at least 5 timeline entries, with:
+          1. Education stages (specific to this career)
+          2. Entry-level position details
+          3. Mid-career advancement opportunities
+          4. Senior/expert level achievements
+          5. Each stage should have realistic year numbers (starting with 0 for high school graduation)
+          6. Realistic earnings figures that progress appropriately
+          7. Brief but specific descriptions that mention actual job titles and responsibilities
+          8. Include any certifications, specializations, or advanced degrees typical for career advancement`
+        }
+      ],
+      temperature: 0.7,
+      response_format: { type: "json_object" }
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content in the response");
+    }
+
+    return JSON.parse(content) as CareerTimelineResponse;
+  } catch (error) {
+    console.error("Error generating career timeline:", error);
+    return {
+      timeline: [
+        { year: 0, stage: "education", description: "Graduate high school and begin your education journey", earnings: 0 },
+        { year: 4, stage: "education", description: "Complete relevant degree or training", earnings: 0 },
+        { year: 5, stage: "entry", description: "First professional position", earnings: 45000 },
+        { year: 8, stage: "mid", description: "Mid-level position with more responsibilities", earnings: 65000 },
+        { year: 15, stage: "senior", description: "Senior position with leadership opportunities", earnings: 95000 }
+      ]
+    };
+  }
 }
 
 export async function generateCareerInsights(
@@ -135,7 +226,6 @@ export async function generateCareerInsights(
       skillsNeeded: "Unable to fetch skills information at this time.",
       futureOutlook: "Unable to fetch future outlook information at this time.",
       relatedCareers: "Unable to fetch related careers information at this time.",
-      timeline: [],
       salaryData: {
         entryLevel: 0,
         midCareer: 0,

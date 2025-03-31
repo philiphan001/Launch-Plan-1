@@ -49,6 +49,9 @@ interface CareerInsights {
   skillsNeeded: string;
   futureOutlook: string;
   relatedCareers: string;
+}
+
+interface CareerTimeline {
   timeline: CareerTimelineStep[];
 }
 
@@ -56,7 +59,9 @@ const CareerBuilder: React.FC = () => {
   const userId = 1; // Default user ID
   const [selectedCareer, setSelectedCareer] = useState<Career | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(false);
+  const [loadingTimeline, setLoadingTimeline] = useState(false);
   const [insights, setInsights] = useState<CareerInsights | null>(null);
+  const [timeline, setTimeline] = useState<CareerTimeline | null>(null);
 
   // Fetch favorite careers
   const { data: favoriteCareers, isLoading, error } = useQuery({
@@ -82,19 +87,6 @@ const CareerBuilder: React.FC = () => {
       
       const data = await response.json();
       console.log('Career insights data for career ID:', careerId, data);
-      console.log('Timeline data:', data.timeline);
-      
-      // Create a default timeline if none exists in the response
-      if (!data.timeline || !Array.isArray(data.timeline) || data.timeline.length === 0) {
-        console.warn('No timeline data found, creating default timeline');
-        data.timeline = [
-          { year: 0, stage: 'education', description: 'Graduate high school and begin your education journey', earnings: 0 },
-          { year: 4, stage: 'education', description: 'Complete relevant degree or training', earnings: 0 },
-          { year: 5, stage: 'entry', description: 'First professional position', earnings: 45000 },
-          { year: 8, stage: 'mid', description: 'Mid-level position with more responsibilities', earnings: 65000 },
-          { year: 15, stage: 'senior', description: 'Senior position with leadership opportunities', earnings: 90000 }
-        ];
-      }
       
       setInsights(data);
     } catch (error) {
@@ -103,12 +95,45 @@ const CareerBuilder: React.FC = () => {
       setLoadingInsights(false);
     }
   };
+  
+  // Function to fetch career timeline data
+  const fetchCareerTimeline = async (careerId: number) => {
+    try {
+      setLoadingTimeline(true);
+      const response = await fetch(`/api/career-timeline/${careerId}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch career timeline');
+      }
+      
+      const data = await response.json();
+      console.log('Career timeline data for career ID:', careerId, data);
+      
+      setTimeline(data);
+    } catch (error) {
+      console.error('Error fetching career timeline:', error);
+      // Set default timeline as a fallback
+      setTimeline({
+        timeline: [
+          { year: 0, stage: 'education', description: 'Graduate high school and begin your education journey', earnings: 0 },
+          { year: 4, stage: 'education', description: 'Complete relevant degree or training', earnings: 0 },
+          { year: 5, stage: 'entry', description: 'First professional position', earnings: 45000 },
+          { year: 8, stage: 'mid', description: 'Mid-level position with more responsibilities', earnings: 65000 },
+          { year: 15, stage: 'senior', description: 'Senior position with leadership opportunities', earnings: 90000 }
+        ]
+      });
+    } finally {
+      setLoadingTimeline(false);
+    }
+  };
 
   // Handle career selection
   const handleCareerSelect = (career: Career) => {
     setSelectedCareer(career);
     setInsights(null); // Reset insights when selecting a new career
+    setTimeline(null); // Reset timeline when selecting a new career
     fetchCareerInsights(career.id);
+    fetchCareerTimeline(career.id);
   };
 
   if (isLoading) {
@@ -399,10 +424,15 @@ const CareerBuilder: React.FC = () => {
                           <h3 className="font-medium">Career Timeline</h3>
                         </div>
                         
-                        {insights.timeline && insights.timeline.length > 0 ? (
+                        {loadingTimeline ? (
+                          <div className="flex flex-col items-center justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                            <p className="text-muted-foreground">Building career timeline...</p>
+                          </div>
+                        ) : timeline && timeline.timeline && timeline.timeline.length > 0 ? (
                           <div className="relative pl-8 space-y-8 before:absolute before:inset-y-0 before:left-4 before:w-0.5 before:bg-gray-200">
-                            {insights.timeline.map((step, index) => (
-                              <div key={index} className="relative">
+                            {timeline.timeline.map((step, index: number) => (
+                              <div key={`timeline-${selectedCareer?.id}-${index}`} className="relative">
                                 <div className="absolute -left-8 bg-primary rounded-full p-2 flex items-center justify-center">
                                   {step.stage === 'education' ? (
                                     <School className="h-4 w-4 text-white" />
@@ -448,7 +478,12 @@ const CareerBuilder: React.FC = () => {
                       </p>
                       <Button 
                         className="mt-4" 
-                        onClick={() => selectedCareer && fetchCareerInsights(selectedCareer.id)}
+                        onClick={() => {
+                          if (selectedCareer) {
+                            fetchCareerInsights(selectedCareer.id);
+                            fetchCareerTimeline(selectedCareer.id);
+                          }
+                        }}
                       >
                         Analyze Career
                       </Button>
