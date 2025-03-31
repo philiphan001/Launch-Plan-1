@@ -6,6 +6,7 @@ import CareerBuilder from "@/pages/CareerBuilder";
 import CollegeDiscovery from "@/pages/CollegeDiscovery";
 import NetPriceCalculator from "@/pages/NetPriceCalculator";
 import Pathways from "@/pages/Pathways";
+import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 import AppShell from "@/components/ui/layout/AppShell";
@@ -21,6 +22,7 @@ function App() {
         <Route path="/colleges" component={CollegeDiscovery} />
         <Route path="/calculator" component={NetPriceCalculator} />
         <Route path="/pathways" component={Pathways} />
+        <Route path="/profile" component={Profile} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
