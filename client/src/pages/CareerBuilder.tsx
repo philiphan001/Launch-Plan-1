@@ -81,6 +81,7 @@ const CareerBuilder: React.FC = () => {
       }
       
       const data = await response.json();
+      console.log('Career insights data:', data);
       setInsights(data);
     } catch (error) {
       console.error('Error fetching career insights:', error);
