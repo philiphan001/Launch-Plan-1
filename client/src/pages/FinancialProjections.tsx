@@ -1,29 +1,173 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
-import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Info, School, Briefcase, GraduationCap } from "lucide-react";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useQuery } from "@tanstack/react-query";
+import { formatCurrency } from "@/lib/utils";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities";
 
+// Interfaces for API responses
+interface User {
+  id: number;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  location: string | null;
+  zipCode: string | null;
+  birthYear: number | null;
+}
+
+interface CollegeCalculation {
+  id: number;
+  userId: number;
+  collegeId: number;
+  netPrice: number;
+  studentLoanAmount: number;
+  includedInProjection: boolean;
+  college?: {
+    name: string;
+  };
+}
+
+interface CareerCalculation {
+  id: number;
+  userId: number;
+  careerId: number;
+  projectedSalary: number;
+  entryLevelSalary: number | null;
+  startYear: number | null;
+  includedInProjection: boolean;
+  education: string | null;
+  career?: {
+    title: string;
+  };
+}
+
+interface FinancialProfile {
+  id: number;
+  userId: number;
+  householdIncome: number | null;
+  householdSize: number | null;
+  savingsAmount: number | null;
+  studentLoanAmount: number | null;
+  otherDebtAmount: number | null;
+}
+
 const FinancialProjections = () => {
+  // Temporary user ID for demo purposes
+  const userId = 1;
+
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
   const [timeframe, setTimeframe] = useState<string>("10 Years");
-  const [age, setAge] = useState<number>(20);
+  const [age, setAge] = useState<number>(25);
   const [startingSavings, setStartingSavings] = useState<number>(5000);
   const [income, setIncome] = useState<number>(40000);
   const [expenses, setExpenses] = useState<number>(35000);
   const [incomeGrowth, setIncomeGrowth] = useState<number>(3);
+  const [studentLoanDebt, setStudentLoanDebt] = useState<number>(0);
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
+
+  // Fetch user data to get birth year
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/users', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch user data');
+      return response.json() as Promise<User>;
+    }
+  });
+
+  // Fetch financial profile
+  const { data: financialProfile, isLoading: isLoadingFinancialProfile } = useQuery({
+    queryKey: ['/api/financial-profiles/user', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/financial-profiles/user/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch financial profile');
+      return response.json() as Promise<FinancialProfile>;
+    },
+    enabled: !!userData
+  });
+
+  // Fetch college calculations to get student loan debt
+  const { data: collegeCalculations, isLoading: isLoadingCollegeCalcs } = useQuery({
+    queryKey: ['/api/college-calculations/user', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/college-calculations/user/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch college calculations');
+      return response.json() as Promise<CollegeCalculation[]>;
+    }
+  });
+
+  // Fetch career calculations to get income projection
+  const { data: careerCalculations, isLoading: isLoadingCareerCalcs } = useQuery({
+    queryKey: ['/api/career-calculations/user', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/career-calculations/user/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch career calculations');
+      return response.json() as Promise<CareerCalculation[]>;
+    }
+  });
+  
+  // Update form values based on user profile and saved calculations
+  useEffect(() => {
+    // Calculate current age from birth year if available
+    if (userData?.birthYear) {
+      const currentAge = new Date().getFullYear() - userData.birthYear;
+      setAge(currentAge);
+    }
+    
+    // Set initial savings from financial profile
+    if (financialProfile?.savingsAmount) {
+      setStartingSavings(financialProfile.savingsAmount);
+    }
+    
+    // Set student loan debt from college calculations
+    if (collegeCalculations && collegeCalculations.length > 0) {
+      // Find the college calculation that's included in projections
+      const includedCollegeCalc = collegeCalculations.find(calc => calc.includedInProjection);
+      if (includedCollegeCalc) {
+        setStudentLoanDebt(includedCollegeCalc.studentLoanAmount || 0);
+      }
+    }
+    
+    // Set income from career calculations
+    if (careerCalculations && careerCalculations.length > 0) {
+      // Find the career calculation that's included in projections
+      const includedCareerCalc = careerCalculations.find(calc => calc.includedInProjection);
+      if (includedCareerCalc && includedCareerCalc.entryLevelSalary) {
+        setIncome(includedCareerCalc.entryLevelSalary);
+      } else if (includedCareerCalc) {
+        setIncome(includedCareerCalc.projectedSalary);
+      }
+    }
+  }, [userData, financialProfile, collegeCalculations, careerCalculations]);
+  
+  // Find the included college and career calculations
+  const includedCollegeCalc = collegeCalculations?.find(calc => calc.includedInProjection);
+  const includedCareerCalc = careerCalculations?.find(calc => calc.includedInProjection);
+  
+  // Check if data is being loaded
+  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs;
   
   // Generate projection data based on inputs
   const generateProjectionData = () => {
-    let netWorth = startingSavings;
+    // Calculate initial net worth (savings minus student loan debt)
+    let netWorth = startingSavings - studentLoanDebt;
     let currentIncome = income;
     let currentExpenses = expenses;
     const netWorthData = [netWorth];
@@ -36,7 +180,18 @@ const FinancialProjections = () => {
     for (let i = 1; i <= years; i++) {
       currentIncome = Math.round(currentIncome * (1 + incomeGrowth / 100));
       currentExpenses = Math.round(currentExpenses * 1.02); // Assume 2% expense growth
-      netWorth += (currentIncome - currentExpenses);
+      
+      // Calculate annual surplus or deficit
+      const annualSurplus = currentIncome - currentExpenses;
+      
+      // Update net worth
+      netWorth += annualSurplus;
+      
+      // Apply student loan payments (simplified - 10 year repayment)
+      if (studentLoanDebt > 0 && i <= 10) {
+        const annualLoanPayment = studentLoanDebt / 10;
+        netWorth -= annualLoanPayment;
+      }
       
       netWorthData.push(netWorth);
       incomeData.push(currentIncome);
@@ -228,6 +383,111 @@ const FinancialProjections = () => {
         </Card>
       </div>
       
+      {/* Card to display included college and career calculations */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-medium mb-4">Included Calculations</h3>
+          <p className="text-gray-600 mb-4">
+            These saved calculations are factored into your financial projections.
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 ml-1">
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs">
+                    Your age is derived from birth year, student debt comes from college calculations, 
+                    and starting income uses your career's entry-level salary.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </p>
+          
+          {isLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* College calculation section */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center mb-2">
+                  <School className="h-5 w-5 text-primary mr-2" />
+                  <h4 className="font-medium">College</h4>
+                </div>
+                
+                {includedCollegeCalc ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">College:</span>
+                      <span className="font-medium">{includedCollegeCalc.college?.name || "Unknown College"}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Student Loan Amount:</span>
+                      <span className="font-medium">{formatCurrency(includedCollegeCalc.studentLoanAmount || 0)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total Cost:</span>
+                      <span className="font-medium">{formatCurrency(includedCollegeCalc.netPrice)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-3">
+                    <span className="text-gray-400">No college calculation included</span>
+                    <div className="mt-2">
+                      <Button variant="outline" size="sm" onClick={() => window.location.href = "/net-price-calculator"}>
+                        Add College Cost
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Career calculation section */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center mb-2">
+                  <Briefcase className="h-5 w-5 text-primary mr-2" />
+                  <h4 className="font-medium">Career</h4>
+                </div>
+                
+                {includedCareerCalc ? (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Career:</span>
+                      <span className="font-medium">{includedCareerCalc.career?.title || "Unknown Career"}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Starting Salary:</span>
+                      <span className="font-medium">
+                        {formatCurrency(includedCareerCalc.entryLevelSalary || includedCareerCalc.projectedSalary)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Education:</span>
+                      <span className="font-medium">{includedCareerCalc.education || "Not specified"}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-3">
+                    <span className="text-gray-400">No career calculation included</span>
+                    <div className="mt-2">
+                      <Button variant="outline" size="sm" onClick={() => window.location.href = "/career-builder"}>
+                        Add Career
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      {/* Life Milestones Card */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <h3 className="text-lg font-medium mb-4">Life Milestones</h3>
@@ -235,22 +495,29 @@ const FinancialProjections = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
             <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <span className="material-icons text-primary text-2xl mb-2">school</span>
+              <GraduationCap className="h-6 w-6 text-primary mx-auto mb-2" />
               <h4 className="font-medium">College Graduation</h4>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <span className="material-icons text-primary text-2xl mb-2">work</span>
+              <Briefcase className="h-6 w-6 text-primary mx-auto mb-2" />
               <h4 className="font-medium">New Job</h4>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <span className="material-icons text-primary text-2xl mb-2">home</span>
+              <svg className="h-6 w-6 text-primary mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
               <h4 className="font-medium">Buy a Home</h4>
             </div>
             
             <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <span className="material-icons text-primary text-2xl mb-2">add_circle_outline</span>
+              <svg className="h-6 w-6 text-primary mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
               <h4 className="font-medium">Add Custom</h4>
             </div>
           </div>
