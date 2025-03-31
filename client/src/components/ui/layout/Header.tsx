@@ -15,10 +15,10 @@ const Header = () => {
             <span className="material-icons text-sm">help_outline</span>
             <span>Help</span>
           </button>
-          <Link href="/profile">
+          <Link href="/settings">
             <button className="flex items-center space-x-1 hover:bg-primary-dark px-3 py-1 rounded">
-              <span className="material-icons text-sm">person</span>
-              <span className="hidden md:inline">Profile</span>
+              <span className="material-icons text-sm">settings</span>
+              <span className="hidden md:inline">Settings</span>
             </button>
           </Link>
         </div>
