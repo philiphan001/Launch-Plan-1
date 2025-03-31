@@ -114,6 +114,19 @@ const FinancialProjections = () => {
     },
     enabled: !!userData
   });
+  
+  // Fetch location cost of living data based on user's zip code
+  const { data: locationCostData, isLoading: isLoadingLocationData } = useQuery({
+    queryKey: ['/api/location-cost-of-living/zip', userData?.zipCode],
+    queryFn: async () => {
+      if (!userData?.zipCode) return null;
+      const response = await fetch(`/api/location-cost-of-living/zip/${userData.zipCode}`);
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error('Failed to fetch location cost of living data');
+      return response.json();
+    },
+    enabled: !!userData?.zipCode
+  });
 
   // Fetch college calculations to get student loan debt
   const { data: collegeCalculations, isLoading: isLoadingCollegeCalcs } = useQuery({
@@ -174,17 +187,30 @@ const FinancialProjections = () => {
   const includedCareerCalc = careerCalculations?.find(calc => calc.includedInProjection);
   
   // Check if data is being loaded
-  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs;
+  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData;
   
   // Determine years based on timeframe
   const years = timeframe === "5 Years" ? 5 : timeframe === "20 Years" ? 20 : 10;
+  
+  // Get cost of living adjustment factor if available
+  const costOfLivingFactor = locationCostData?.income_adjustment_factor || 1.0;
   
   // Generate projection data based on inputs
   const generateProjectionData = () => {
     // Calculate initial net worth (savings minus student loan debt)
     let netWorth = startingSavings - studentLoanDebt;
-    let currentIncome = income;
-    let currentExpenses = expenses;
+    
+    // Adjust income and expenses based on cost of living
+    let currentIncome = income * costOfLivingFactor;
+    let currentExpenses = expenses * (locationCostData ? 
+      // Calculate a weighted expense factor based on the major expense categories
+      (locationCostData.housing * 0.35 + 
+       locationCostData.food * 0.15 + 
+       locationCostData.transportation * 0.15 + 
+       locationCostData.healthcare * 0.1 + 
+       locationCostData.personal_insurance * 0.1 + 
+       1.0 * 0.15) / 6 : 1.0);
+    
     const netWorthData = [netWorth];
     const incomeData = [currentIncome];
     const expensesData = [currentExpenses];
@@ -352,6 +378,15 @@ const FinancialProjections = () => {
               className="w-full mt-6"
               onClick={async () => {
                 try {
+                  const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
+                  const adjustedExpenses = expenses * (locationCostData ? 
+                    (locationCostData.housing * 0.35 + 
+                     locationCostData.food * 0.15 + 
+                     locationCostData.transportation * 0.15 + 
+                     locationCostData.healthcare * 0.1 + 
+                     locationCostData.personal_insurance * 0.1 + 
+                     1.0 * 0.15) / 6 : 1.0);
+                     
                   const response = await fetch('/api/financial-projections', {
                     method: 'POST',
                     headers: {
@@ -363,8 +398,8 @@ const FinancialProjections = () => {
                       timeframe: years,
                       startingAge: age,
                       startingSavings,
-                      income,
-                      expenses,
+                      income: Math.round(adjustedIncome),
+                      expenses: Math.round(adjustedExpenses),
                       incomeGrowth,
                       studentLoanDebt,
                       projectionData: JSON.stringify(projectionData),
@@ -372,6 +407,16 @@ const FinancialProjections = () => {
                       includesCareerCalculation: !!includedCareerCalc,
                       collegeCalculationId: includedCollegeCalc?.id || null,
                       careerCalculationId: includedCareerCalc?.id || null,
+                      locationAdjusted: !!locationCostData,
+                      locationZipCode: userData?.zipCode || null,
+                      costOfLivingIndex: locationCostData ? 
+                        ((locationCostData.housing * 0.35 + 
+                          locationCostData.food * 0.15 + 
+                          locationCostData.transportation * 0.15 + 
+                          locationCostData.healthcare * 0.1 + 
+                          locationCostData.personal_insurance * 0.1 + 
+                          1.0 * 0.15) / 6) : null,
+                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                     }),
                   });
                   
@@ -448,13 +493,62 @@ const FinancialProjections = () => {
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-500 uppercase">Annual Savings Rate</p>
                 <p className="text-2xl font-mono font-medium text-gray-800">
-                  {Math.round((income - expenses) / income * 100)}%
+                  {Math.round((projectionData.income[0] - projectionData.expenses[0]) / projectionData.income[0] * 100)}%
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+      
+      {/* Card to display location-based cost of living */}
+      {locationCostData && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <h3 className="text-lg font-medium mb-4">Location Adjustment Factors</h3>
+            <p className="text-gray-600 mb-4">
+              Your financial projections are adjusted based on the cost of living in {locationCostData.city || 'your location'} ({userData?.zipCode}).
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-blue-50 p-4 rounded-lg text-center">
+                <p className="text-sm text-gray-500 uppercase">Income Adjustment</p>
+                <p className="text-2xl font-medium text-primary">
+                  {(locationCostData.income_adjustment_factor * 100).toFixed(0)}%
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {locationCostData.income_adjustment_factor > 1 ? 'Higher' : 'Lower'} than average
+                </p>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-lg text-center">
+                <p className="text-sm text-gray-500 uppercase">Housing Cost</p>
+                <p className="text-2xl font-medium text-primary">
+                  {(locationCostData.housing * 100).toFixed(0)}%
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Relative to national average
+                </p>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-lg text-center">
+                <p className="text-sm text-gray-500 uppercase">Overall Cost Index</p>
+                <p className="text-2xl font-medium text-primary">
+                  {((locationCostData.housing * 0.35 + 
+                    locationCostData.food * 0.15 + 
+                    locationCostData.transportation * 0.15 + 
+                    locationCostData.healthcare * 0.1 + 
+                    locationCostData.personal_insurance * 0.1 + 
+                    1.0 * 0.15) * 100 / 6).toFixed(0)}%
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Weighted average of all categories
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       {/* Card to display included college and career calculations */}
       <Card className="mb-6">
@@ -473,6 +567,7 @@ const FinancialProjections = () => {
                   <p className="max-w-xs">
                     Your age is derived from birth year, student debt comes from college calculations, 
                     and starting income uses your career's entry-level salary.
+                    {locationCostData && " Income and expenses are adjusted based on your location's cost of living."}
                   </p>
                 </TooltipContent>
               </Tooltip>
