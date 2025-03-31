@@ -55,7 +55,7 @@ export async function generateCareerTimeline(
       messages: [
         {
           role: "system",
-          content: "You are a career path specialist who creates accurate, realistic career progression timelines for high school students. Your timelines are personalized to specific careers, showing realistic progression from education through various career stages."
+          content: "You are a career path specialist who creates accurate, realistic career progression timelines for high school students. Your timelines are personalized to specific careers, showing realistic progression from education through various career stages. You must respond with valid JSON."
         },
         {
           role: "user",
@@ -106,10 +106,12 @@ export async function generateCareerTimeline(
           5. Each stage should have realistic year numbers (starting with 0 for high school graduation)
           6. Realistic earnings figures that progress appropriately
           7. Brief but specific descriptions that mention actual job titles and responsibilities
-          8. Include any certifications, specializations, or advanced degrees typical for career advancement`
+          8. Include any certifications, specializations, or advanced degrees typical for career advancement
+          
+          IMPORTANT: Your response must be valid JSON. Double-check that there are no unescaped quotes or control characters in your response.`
         }
       ],
-      temperature: 0.7,
+      temperature: 0.5, // Reduced for more predictable outputs
       response_format: { type: "json_object" }
     });
 
@@ -118,7 +120,26 @@ export async function generateCareerTimeline(
       throw new Error("No content in the response");
     }
 
-    return JSON.parse(content) as CareerTimelineResponse;
+    try {
+      return JSON.parse(content) as CareerTimelineResponse;
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      console.log("Response content causing error:", content);
+      
+      // Try to sanitize the content for common JSON errors
+      let sanitizedContent = content;
+      
+      // Handle common JSON issues (unescaped quotes, trailing commas, etc.)
+      // This is a basic attempt and won't catch all issues
+      sanitizedContent = sanitizedContent.replace(/\n/g, ' ');
+      
+      try {
+        return JSON.parse(sanitizedContent) as CareerTimelineResponse;
+      } catch {
+        // If still fails, return fallback data
+        throw new Error("Failed to parse JSON response after sanitization");
+      }
+    }
   } catch (error) {
     console.error("Error generating career timeline:", error);
     return {
@@ -143,7 +164,7 @@ export async function generateCareerInsights(
       messages: [
         {
           role: "system",
-          content: "You are an enthusiastic career coach for high school students who makes career information exciting, relatable, and easy to understand. Use casual, engaging language with short sentences, interesting facts, and real-world examples that resonate with teenagers. Avoid dry, academic language."
+          content: "You are an enthusiastic career coach for high school students who makes career information exciting, relatable, and easy to understand. Use casual, engaging language with short sentences, interesting facts, and real-world examples that resonate with teenagers. Avoid dry, academic language. You must respond with valid JSON."
         },
         {
           role: "user",
@@ -163,14 +184,6 @@ export async function generateCareerInsights(
             "futureOutlook": "Write an optimistic but realistic paragraph about job prospects and emerging trends. Include interesting facts about growth rates and how technology might change this career. Make students feel excited about the future!",
             
             "relatedCareers": "Create a paragraph listing at least 5 related career options with brief explanations of how they connect. Present these as cool alternatives students might not have considered!",
-            
-            "timeline": [
-              {"year": 0, "stage": "education", "description": "Graduate high school and begin your education journey", "earnings": 0},
-              {"year": 4, "stage": "education", "description": "Complete bachelor's degree in relevant field", "earnings": 0},
-              {"year": 5, "stage": "entry", "description": "Land your first entry-level position and begin building experience", "earnings": 45000},
-              {"year": 8, "stage": "mid", "description": "Advance to a mid-level role with more responsibilities", "earnings": 65000},
-              {"year": 15, "stage": "senior", "description": "Reach senior-level position with leadership opportunities", "earnings": 95000}
-            ],
             
             "salaryData": {
               "entryLevel": [entry-level salary as a number],
@@ -204,10 +217,12 @@ export async function generateCareerInsights(
             ]
           }
           
-          Make each text section around 3-5 sentences - punchy, interesting, and using active language that speaks directly to teens. Include actual data in the data sections for visualization. Don't use placeholder values.`
+          Make each text section around 3-5 sentences - punchy, interesting, and using active language that speaks directly to teens. Include actual data in the data sections for visualization. Don't use placeholder values.
+          
+          IMPORTANT: Your response must be valid JSON. Double-check that there are no unescaped quotes or control characters in your response.`
         }
       ],
-      temperature: 0.7,
+      temperature: 0.5, // Reduced for more predictable outputs
       response_format: { type: "json_object" }
     });
 
@@ -216,7 +231,26 @@ export async function generateCareerInsights(
       throw new Error("No content in the response");
     }
 
-    return JSON.parse(content) as CareerInsightsResponse;
+    try {
+      return JSON.parse(content) as CareerInsightsResponse;
+    } catch (parseError) {
+      console.error("JSON parsing error:", parseError);
+      console.log("Response content causing error:", content);
+      
+      // Try to sanitize the content for common JSON errors
+      let sanitizedContent = content;
+      
+      // Handle common JSON issues (unescaped quotes, trailing commas, etc.)
+      // This is a basic attempt and won't catch all issues
+      sanitizedContent = sanitizedContent.replace(/\n/g, ' ');
+      
+      try {
+        return JSON.parse(sanitizedContent) as CareerInsightsResponse;
+      } catch {
+        // If still fails, return fallback data
+        throw new Error("Failed to parse JSON response after sanitization");
+      }
+    }
   } catch (error) {
     console.error("Error generating career insights:", error);
     return {
