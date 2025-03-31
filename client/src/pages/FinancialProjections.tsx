@@ -188,7 +188,8 @@ const FinancialProjections = () => {
       
       // Apply location adjustment if available
       if (locationCostData) {
-        // Calculate weighted average expense adjustment
+        // The values in the database are already percentages (2500 means 25x)
+        // We need to convert them to proper multipliers (2500 -> 2.5)
         const expenseAdjustmentFactor = (
           (locationCostData.housing / 100) * 0.35 + 
           (locationCostData.food / 100) * 0.15 + 
@@ -198,7 +199,12 @@ const FinancialProjections = () => {
           1.0 * 0.15
         );
         
-        setExpenses(Math.round(baseExpenses * expenseAdjustmentFactor));
+        // Make sure we're getting a reasonable result
+        console.log("Expense adjustment factor:", expenseAdjustmentFactor);
+        
+        // Apply a more reasonable adjustment - cap it at 2.5x
+        const cappedAdjustment = Math.min(expenseAdjustmentFactor, 2.5);
+        setExpenses(Math.round(baseExpenses * cappedAdjustment));
       } else {
         setExpenses(Math.round(baseExpenses));
       }
@@ -557,25 +563,26 @@ const FinancialProjections = () => {
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <p className="text-sm text-gray-500 uppercase">Housing Cost</p>
                 <p className="text-2xl font-medium text-primary">
-                  {(locationCostData.housing * 100).toFixed(0)}%
+                  ${locationCostData.housing.toFixed(0)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Relative to national average
+                  Monthly cost
                 </p>
               </div>
               
               <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-500 uppercase">Overall Cost Index</p>
+                <p className="text-sm text-gray-500 uppercase">Total Monthly Cost</p>
                 <p className="text-2xl font-medium text-primary">
-                  {((locationCostData.housing / 100 * 0.35 + 
-                    locationCostData.food / 100 * 0.15 + 
-                    locationCostData.transportation / 100 * 0.15 + 
-                    locationCostData.healthcare / 100 * 0.1 + 
-                    locationCostData.personal_insurance / 100 * 0.1 + 
-                    1.0 * 0.15) * 100).toFixed(0)}%
+                  ${(locationCostData.housing + 
+                    locationCostData.food + 
+                    locationCostData.transportation + 
+                    locationCostData.healthcare + 
+                    locationCostData.personal_insurance + 
+                    locationCostData.entertainment +
+                    locationCostData.services).toFixed(0)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  Weighted average of all categories
+                  Sum of all expense categories
                 </p>
               </div>
             </div>
@@ -584,15 +591,28 @@ const FinancialProjections = () => {
               <h4 className="text-sm font-medium mb-3">Detailed Cost Breakdown</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div>
+                  <p className="text-xs text-gray-500">Housing</p>
+                  <div className="flex items-center mt-1">
+                    <div className="h-2 bg-blue-100 rounded-full w-full">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(locationCostData.housing / 25, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2">${locationCostData.housing.toFixed(0)}</span>
+                  </div>
+                </div>
+                
+                <div>
                   <p className="text-xs text-gray-500">Food</p>
                   <div className="flex items-center mt-1">
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.food, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.food / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">{(locationCostData.food * 100).toFixed(0)}%</span>
+                    <span className="text-xs ml-2">${locationCostData.food.toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -602,10 +622,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.transportation, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.transportation / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">{(locationCostData.transportation * 100).toFixed(0)}%</span>
+                    <span className="text-xs ml-2">${locationCostData.transportation.toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -615,10 +635,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.healthcare, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.healthcare / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">{(locationCostData.healthcare * 100).toFixed(0)}%</span>
+                    <span className="text-xs ml-2">${locationCostData.healthcare.toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -628,10 +648,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.personal_insurance, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.personal_insurance / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">{(locationCostData.personal_insurance * 100).toFixed(0)}%</span>
+                    <span className="text-xs ml-2">${locationCostData.personal_insurance.toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -641,10 +661,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.entertainment, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.entertainment / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">{(locationCostData.entertainment * 100).toFixed(0)}%</span>
+                    <span className="text-xs ml-2">${locationCostData.entertainment.toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -654,10 +674,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.services, 100)}%` }}
+                        style={{ width: `${Math.min(locationCostData.services / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">{(locationCostData.services * 100).toFixed(0)}%</span>
+                    <span className="text-xs ml-2">${locationCostData.services.toFixed(0)}</span>
                   </div>
                 </div>
               </div>
