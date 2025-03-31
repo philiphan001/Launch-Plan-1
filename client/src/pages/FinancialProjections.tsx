@@ -93,10 +93,22 @@ const FinancialProjections = () => {
   });
 
   // Fetch financial profile
-  const { data: financialProfile, isLoading: isLoadingFinancialProfile } = useQuery({
+  const { data: financialProfile, isLoading: isLoadingFinancialProfile, error: financialProfileError } = useQuery({
     queryKey: ['/api/financial-profiles/user', userId],
     queryFn: async () => {
       const response = await fetch(`/api/financial-profiles/user/${userId}`);
+      if (response.status === 404) {
+        // Return a default financial profile if none exists
+        return {
+          id: 0,
+          userId: userId,
+          householdIncome: null,
+          householdSize: null,
+          savingsAmount: 5000, // Default starting savings
+          studentLoanAmount: null,
+          otherDebtAmount: null
+        } as FinancialProfile;
+      }
       if (!response.ok) throw new Error('Failed to fetch financial profile');
       return response.json() as Promise<FinancialProfile>;
     },
@@ -164,6 +176,9 @@ const FinancialProjections = () => {
   // Check if data is being loaded
   const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs;
   
+  // Determine years based on timeframe
+  const years = timeframe === "5 Years" ? 5 : timeframe === "20 Years" ? 20 : 10;
+  
   // Generate projection data based on inputs
   const generateProjectionData = () => {
     // Calculate initial net worth (savings minus student loan debt)
@@ -174,8 +189,6 @@ const FinancialProjections = () => {
     const incomeData = [currentIncome];
     const expensesData = [currentExpenses];
     const ages = [age];
-    
-    const years = timeframe === "5 Years" ? 5 : timeframe === "20 Years" ? 20 : 10;
     
     for (let i = 1; i <= years; i++) {
       currentIncome = Math.round(currentIncome * (1 + incomeGrowth / 100));
@@ -280,6 +293,22 @@ const FinancialProjections = () => {
               </div>
               
               <div>
+                <Label htmlFor="studentLoanDebt">Student Loan Debt ($)</Label>
+                <Input 
+                  id="studentLoanDebt" 
+                  type="number" 
+                  value={studentLoanDebt} 
+                  onChange={(e) => setStudentLoanDebt(Number(e.target.value))} 
+                  className="mt-1"
+                />
+                {includedCollegeCalc && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Using student loan amount from {includedCollegeCalc.college?.name}
+                  </p>
+                )}
+              </div>
+              
+              <div>
                 <Label htmlFor="income">Annual Income ($)</Label>
                 <Input 
                   id="income" 
@@ -288,6 +317,11 @@ const FinancialProjections = () => {
                   onChange={(e) => setIncome(Number(e.target.value))} 
                   className="mt-1"
                 />
+                {includedCareerCalc && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Using salary from {includedCareerCalc.career?.title} career
+                  </p>
+                )}
               </div>
               
               <div>
@@ -314,7 +348,46 @@ const FinancialProjections = () => {
               </div>
             </div>
             
-            <Button className="w-full mt-6">Save Projection</Button>
+            <Button 
+              className="w-full mt-6"
+              onClick={async () => {
+                try {
+                  const response = await fetch('/api/financial-projections', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      userId,
+                      projectionName: `Projection - ${new Date().toLocaleDateString()}`,
+                      timeframe: years,
+                      startingAge: age,
+                      startingSavings,
+                      income,
+                      expenses,
+                      incomeGrowth,
+                      studentLoanDebt,
+                      projectionData: JSON.stringify(projectionData),
+                      includesCollegeCalculation: !!includedCollegeCalc,
+                      includesCareerCalculation: !!includedCareerCalc,
+                      collegeCalculationId: includedCollegeCalc?.id || null,
+                      careerCalculationId: includedCareerCalc?.id || null,
+                    }),
+                  });
+                  
+                  if (response.ok) {
+                    alert('Projection saved successfully!');
+                  } else {
+                    throw new Error('Failed to save projection');
+                  }
+                } catch (error) {
+                  console.error('Error saving projection:', error);
+                  alert('Failed to save projection. Please try again.');
+                }
+              }}
+            >
+              Save Projection
+            </Button>
           </CardContent>
         </Card>
         
