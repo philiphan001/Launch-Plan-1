@@ -180,7 +180,30 @@ const FinancialProjections = () => {
         setIncome(includedCareerCalc.projectedSalary);
       }
     }
-  }, [userData, financialProfile, collegeCalculations, careerCalculations]);
+
+    // Set appropriate defaults for expenses based on income and location
+    if (income > 0) {
+      // Base expenses on income (typically 70-80% of income)
+      const baseExpenses = income * 0.75;
+      
+      // Apply location adjustment if available
+      if (locationCostData) {
+        // Calculate weighted average expense adjustment
+        const expenseAdjustmentFactor = (
+          (locationCostData.housing / 100) * 0.35 + 
+          (locationCostData.food / 100) * 0.15 + 
+          (locationCostData.transportation / 100) * 0.15 + 
+          (locationCostData.healthcare / 100) * 0.1 + 
+          (locationCostData.personal_insurance / 100) * 0.1 + 
+          1.0 * 0.15
+        );
+        
+        setExpenses(Math.round(baseExpenses * expenseAdjustmentFactor));
+      } else {
+        setExpenses(Math.round(baseExpenses));
+      }
+    }
+  }, [userData, financialProfile, collegeCalculations, careerCalculations, locationCostData, income]);
   
   // Find the included college and career calculations
   const includedCollegeCalc = collegeCalculations?.find(calc => calc.includedInProjection);
@@ -203,26 +226,9 @@ const FinancialProjections = () => {
     // Properly adjust income based on cost of living - correctly apply the factor
     let currentIncome = income * costOfLivingFactor;
     
-    // Calculate a reasonable expense adjustment based on location
-    // All expense categories in the database are stored as whole numbers representing percentages
-    // For example, housing = 250 means 250% of national average
-    // We need to convert them to proper multipliers (e.g., 250 => 2.5)
-    let expenseAdjustmentFactor = 1.0;
-    if (locationCostData) {
-      // Calculate a weighted average of the location's expense categories
-      // Convert each percentage to a decimal factor first (divide by 100)
-      expenseAdjustmentFactor = (
-        (locationCostData.housing / 100) * 0.35 + 
-        (locationCostData.food / 100) * 0.15 + 
-        (locationCostData.transportation / 100) * 0.15 + 
-        (locationCostData.healthcare / 100) * 0.1 + 
-        (locationCostData.personal_insurance / 100) * 0.1 + 
-        1.0 * 0.15
-      );
-    }
-    
-    // Apply the adjusted expense factor
-    let currentExpenses = expenses * expenseAdjustmentFactor;
+    // Use the expenses input as-is because we already adjusted it in the useEffect
+    // We don't need to apply location adjustment again since it's already built into the input value
+    let currentExpenses = expenses;
     
     // Ensure expenses are at least 50% of income and at most 90% as a sanity check
     currentExpenses = Math.max(currentIncome * 0.5, Math.min(currentExpenses, currentIncome * 0.9));
@@ -375,6 +381,11 @@ const FinancialProjections = () => {
                   onChange={(e) => setExpenses(Number(e.target.value))} 
                   className="mt-1"
                 />
+                {locationCostData && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Adjusted for cost of living in {locationCostData.city || locationCostData.zip_code}
+                  </p>
+                )}
               </div>
               
               <div>
@@ -394,25 +405,10 @@ const FinancialProjections = () => {
               className="w-full mt-6"
               onClick={async () => {
                 try {
-                  // Calculate properly adjusted income and expenses for saving - use same logic as generateProjectionData
+                  // Adjust income based on location, but we don't need to adjust expenses again
+                  // since they're already adjusted in the UI as part of the expenses state
                   const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
-                  
-                  // Calculate expense adjustment factor correctly
-                  let expenseAdjustmentFactor = 1.0;
-                  if (locationCostData) {
-                    expenseAdjustmentFactor = (
-                      (locationCostData.housing / 100) * 0.35 + 
-                      (locationCostData.food / 100) * 0.15 + 
-                      (locationCostData.transportation / 100) * 0.15 + 
-                      (locationCostData.healthcare / 100) * 0.1 + 
-                      (locationCostData.personal_insurance / 100) * 0.1 + 
-                      1.0 * 0.15
-                    );
-                  }
-                  
-                  // Apply expense adjustment with reasonable bounds
-                  let adjustedExpenses = expenses * expenseAdjustmentFactor;
-                  adjustedExpenses = Math.max(adjustedIncome * 0.5, Math.min(adjustedExpenses, adjustedIncome * 0.9));
+                  const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
                      
                   const response = await fetch('/api/financial-projections', {
                     method: 'POST',
