@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Calculator, School, Trash2 } from "lucide-react";
+import { Loader2, Calculator, School, Trash2, Briefcase, Book, GraduationCap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CollegeCalculation {
   id: number;
@@ -39,20 +40,52 @@ interface College {
   type: string;
 }
 
-// This is a profile component to display saved college cost calculations
+interface CareerCalculation {
+  id: number;
+  userId: number;
+  careerId: number;
+  career?: {
+    id: number;
+    title: string;
+    salary: number | null;
+    education: string | null;
+  };
+  projectedSalary: number;
+  startYear: number | null;
+  education: string | null;
+  entryLevelSalary: number | null;
+  midCareerSalary: number | null;
+  experiencedSalary: number | null;
+  additionalNotes: string | null;
+  calculationDate: string;
+  includedInProjection: boolean;
+  locationZip: string | null;
+  adjustedForLocation: boolean;
+}
+
+interface Career {
+  id: number;
+  title: string;
+  salary: number | null;
+  education: string | null;
+  description: string | null;
+  growthRate: string | null;
+}
+
+// This is a profile component to display saved college and career calculations
 const SavedCalculationsSection = () => {
   const { toast } = useToast();
   // Default user ID (would come from auth context in a real app)
   const userId = 1;
   const queryClient = useQueryClient();
   
-  // Fetch saved calculations
-  const { data: calculations, isLoading, error } = useQuery({
+  // Fetch saved college calculations
+  const { data: collegeCalculations, isLoading: isLoadingCollegeCalcs, error: collegeError } = useQuery({
     queryKey: ['/api/college-calculations/user', userId],
     queryFn: async () => {
       const response = await fetch(`/api/college-calculations/user/${userId}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch saved calculations');
+        throw new Error('Failed to fetch saved college calculations');
       }
       return response.json() as Promise<CollegeCalculation[]>;
     }
@@ -70,15 +103,42 @@ const SavedCalculationsSection = () => {
     }
   });
   
-  // Mutation to remove a calculation
-  const deleteMutation = useMutation({
+  // Fetch saved career calculations
+  const { data: careerCalculations, isLoading: isLoadingCareerCalcs, error: careerError } = useQuery({
+    queryKey: ['/api/career-calculations/user', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/career-calculations/user/${userId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch saved career calculations');
+      }
+      return response.json() as Promise<CareerCalculation[]>;
+    }
+  });
+  
+  // Fetch careers to get their titles
+  const { data: careers, isLoading: isLoadingCareers } = useQuery({
+    queryKey: ['/api/careers'],
+    queryFn: async () => {
+      const response = await fetch('/api/careers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch careers');
+      }
+      return response.json() as Promise<Career[]>;
+    }
+  });
+  
+  // State for active tab
+  const [activeTab, setActiveTab] = useState<'college' | 'career'>('college');
+  
+  // College mutations
+  const deleteCollegeMutation = useMutation({
     mutationFn: async (calculationId: number) => {
       const response = await fetch(`/api/college-calculations/${calculationId}`, {
         method: 'DELETE',
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete calculation');
+        throw new Error('Failed to delete college calculation');
       }
     },
     onSuccess: () => {
@@ -89,7 +149,7 @@ const SavedCalculationsSection = () => {
       });
     },
     onError: (error) => {
-      console.error("Error removing calculation:", error);
+      console.error("Error removing college calculation:", error);
       toast({
         title: "Error removing calculation",
         description: "There was a problem removing this calculation. Please try again.",
@@ -98,8 +158,7 @@ const SavedCalculationsSection = () => {
     }
   });
   
-  // Mutation to toggle projection inclusion
-  const toggleProjectionMutation = useMutation({
+  const toggleCollegeProjectionMutation = useMutation({
     mutationFn: async (calculationId: number) => {
       const response = await fetch(`/api/college-calculations/${calculationId}/toggle-projection`, {
         method: 'POST',
@@ -110,7 +169,7 @@ const SavedCalculationsSection = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to toggle projection inclusion');
+        throw new Error('Failed to toggle college projection inclusion');
       }
       
       return response.json();
@@ -123,7 +182,7 @@ const SavedCalculationsSection = () => {
       });
     },
     onError: (error) => {
-      console.error("Error toggling projection inclusion:", error);
+      console.error("Error toggling college projection inclusion:", error);
       toast({
         title: "Error updating projection",
         description: "There was a problem including this calculation in your projections. Please try again.",
@@ -132,14 +191,82 @@ const SavedCalculationsSection = () => {
     }
   });
   
-  // Function to remove a calculation
-  const removeCalculation = (id: number) => {
-    deleteMutation.mutate(id);
+  // Career mutations
+  const deleteCareerMutation = useMutation({
+    mutationFn: async (calculationId: number) => {
+      const response = await fetch(`/api/career-calculations/${calculationId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete career calculation');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
+      toast({
+        title: "Calculation removed",
+        description: "The career calculation has been removed from your profile.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error removing career calculation:", error);
+      toast({
+        title: "Error removing calculation",
+        description: "There was a problem removing this calculation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const toggleCareerProjectionMutation = useMutation({
+    mutationFn: async (calculationId: number) => {
+      const response = await fetch(`/api/career-calculations/${calculationId}/toggle-projection`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle career projection inclusion');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
+      toast({
+        title: "Financial Projection Updated",
+        description: "This career scenario will now be included in your financial projections.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error toggling career projection inclusion:", error);
+      toast({
+        title: "Error updating projection",
+        description: "There was a problem including this calculation in your projections. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Helper functions to remove calculations and toggle projection inclusion
+  const removeCollegeCalculation = (id: number) => {
+    deleteCollegeMutation.mutate(id);
   };
   
-  // Function to toggle projection inclusion
-  const toggleProjectionInclusion = (id: number) => {
-    toggleProjectionMutation.mutate(id);
+  const toggleCollegeProjectionInclusion = (id: number) => {
+    toggleCollegeProjectionMutation.mutate(id);
+  };
+  
+  const removeCareerCalculation = (id: number) => {
+    deleteCareerMutation.mutate(id);
+  };
+  
+  const toggleCareerProjectionInclusion = (id: number) => {
+    toggleCareerProjectionMutation.mutate(id);
   };
   
   // Function to get college name by ID
@@ -149,15 +276,24 @@ const SavedCalculationsSection = () => {
     return college ? college.name : 'Unknown College';
   };
   
-  if (isLoading || isLoadingColleges) {
+  // Function to get career title by ID
+  const getCareerTitle = (careerId: number): string => {
+    if (!careers) return 'Unknown Career';
+    const career = careers.find(c => c.id === careerId);
+    return career ? career.title : 'Unknown Career';
+  };
+  
+  const isLoading = isLoadingCollegeCalcs || isLoadingColleges || isLoadingCareerCalcs || isLoadingCareers;
+  
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <Calculator className="h-5 w-5 mr-2" />
-            Your Saved Cost Calculations
+            Your Saved Calculations
           </CardTitle>
-          <CardDescription>Loading your saved college cost calculations...</CardDescription>
+          <CardDescription>Loading your saved calculations...</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center py-6">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -166,13 +302,13 @@ const SavedCalculationsSection = () => {
     );
   }
   
-  if (error) {
+  if (collegeError && careerError) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <Calculator className="h-5 w-5 mr-2" />
-            Your Saved Cost Calculations
+            Your Saved Calculations
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -191,96 +327,214 @@ const SavedCalculationsSection = () => {
       <CardHeader>
         <CardTitle className="flex items-center">
           <Calculator className="h-5 w-5 mr-2" />
-          Your Saved College Calculations
+          Your Saved Financial Calculations
         </CardTitle>
-        <CardDescription>View and compare your saved college cost calculations</CardDescription>
+        <CardDescription>View and compare your saved college and career calculations</CardDescription>
       </CardHeader>
       <CardContent>
-        {calculations && calculations.length > 0 ? (
-          <div className="space-y-4">
-            {calculations.map((calc) => (
-              <div key={calc.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      <School className="h-4 w-4 text-primary mr-1.5" />
-                      <h3 className="font-medium text-sm">{getCollegeName(calc.collegeId)}</h3>
-                      <Badge variant={calc.inState ? "outline" : "secondary"} className="ml-2 text-xs">
-                        {calc.inState ? "In-State" : "Out-of-State"}
-                      </Badge>
+        <Tabs 
+          defaultValue="college" 
+          value={activeTab} 
+          onValueChange={(value) => setActiveTab(value as 'college' | 'career')}
+          className="mt-2"
+        >
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="college" className="flex items-center">
+              <School className="mr-2 h-4 w-4" />
+              College Costs
+            </TabsTrigger>
+            <TabsTrigger value="career" className="flex items-center">
+              <Briefcase className="mr-2 h-4 w-4" />
+              Career Earnings
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* College Calculations Tab */}
+          <TabsContent value="college">
+            {collegeCalculations && collegeCalculations.length > 0 ? (
+              <div className="space-y-4">
+                {collegeCalculations.map((calc) => (
+                  <div key={calc.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <School className="h-4 w-4 text-primary mr-1.5" />
+                          <h3 className="font-medium text-sm">{getCollegeName(calc.collegeId)}</h3>
+                          <Badge variant={calc.inState ? "outline" : "secondary"} className="ml-2 text-xs">
+                            {calc.inState ? "In-State" : "Out-of-State"}
+                          </Badge>
+                        </div>
+                        {calc.notes && (
+                          <p className="text-xs text-muted-foreground">{calc.notes}</p>
+                        )}
+                      </div>
                     </div>
-                    {calc.notes && (
-                      <p className="text-xs text-muted-foreground">{calc.notes}</p>
-                    )}
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-muted-foreground">Net Price:</span>
+                          <span className="font-medium text-sm">{formatCurrency(calc.netPrice)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-muted-foreground">Total Cost:</span>
+                          <span className="font-medium text-sm">{formatCurrency(calc.totalCost)}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-muted-foreground">Family:</span>
+                          <span className="font-medium text-sm">{formatCurrency(calc.familyContribution)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-muted-foreground">Loans:</span>
+                          <span className="font-medium text-sm">{formatCurrency(calc.studentLoanAmount)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground mt-1">
+                      <p>{formatDate(new Date(calc.calculationDate))}</p>
+                    </div>
+                    
+                    <div className="mt-2 pt-2 border-t flex justify-end gap-2">
+                      <Button 
+                        variant={calc.includedInProjection ? "default" : "outline"} 
+                        size="sm"
+                        className={`h-7 text-xs ${calc.includedInProjection ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                        onClick={() => toggleCollegeProjectionInclusion(calc.id)}
+                        disabled={toggleCollegeProjectionMutation.isPending}
+                      >
+                        <Calculator className="h-3 w-3 mr-1" />
+                        {calc.includedInProjection ? "✓ Included in Projection" : "Include in Projection"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                        onClick={() => removeCollegeCalculation(calc.id)}
+                        disabled={deleteCollegeMutation.isPending}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-muted-foreground">Net Price:</span>
-                      <span className="font-medium text-sm">{formatCurrency(calc.netPrice)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-muted-foreground">Total Cost:</span>
-                      <span className="font-medium text-sm">{formatCurrency(calc.totalCost)}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-muted-foreground">Family:</span>
-                      <span className="font-medium text-sm">{formatCurrency(calc.familyContribution)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-muted-foreground">Loans:</span>
-                      <span className="font-medium text-sm">{formatCurrency(calc.studentLoanAmount)}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-2xs text-muted-foreground mt-1">
-                  <p>{formatDate(new Date(calc.calculationDate))}</p>
-                </div>
-                
-                <div className="mt-2 pt-2 border-t flex justify-end gap-2">
-                  <Button 
-                    variant={calc.includedInProjection ? "default" : "outline"} 
-                    size="sm"
-                    className={`h-7 text-xs ${calc.includedInProjection ? "bg-primary text-primary-foreground" : "bg-background"}`}
-                    onClick={() => toggleProjectionInclusion(calc.id)}
-                    disabled={toggleProjectionMutation.isPending}
-                  >
-                    <Calculator className="h-3 w-3 mr-1" />
-                    {calc.includedInProjection ? "✓ Included in Projection" : "Include in Projection"}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-7 text-xs text-destructive hover:bg-destructive/10"
-                    onClick={() => removeCalculation(calc.id)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Remove
-                  </Button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-10">
-            <Calculator className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-700 mb-2">No saved calculations</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              You haven't saved any college cost calculations yet.
-            </p>
-            <Link href="/net-price-calculator">
-              <Button>
-                Calculate College Costs
-              </Button>
-            </Link>
-          </div>
-        )}
+            ) : (
+              <div className="text-center py-10">
+                <School className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-700 mb-2">No saved college calculations</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  You haven't saved any college cost calculations yet.
+                </p>
+                <Link href="/net-price-calculator">
+                  <Button>
+                    Calculate College Costs
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </TabsContent>
+          
+          {/* Career Calculations Tab */}
+          <TabsContent value="career">
+            {careerCalculations && careerCalculations.length > 0 ? (
+              <div className="space-y-4">
+                {careerCalculations.map((calc) => (
+                  <div key={calc.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <Briefcase className="h-4 w-4 text-primary mr-1.5" />
+                          <h3 className="font-medium text-sm">{calc.career?.title || getCareerTitle(calc.careerId)}</h3>
+                          {calc.adjustedForLocation && calc.locationZip && (
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              Location Adjusted
+                            </Badge>
+                          )}
+                        </div>
+                        {calc.additionalNotes && (
+                          <p className="text-xs text-muted-foreground">{calc.additionalNotes}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-muted-foreground">Projected Salary:</span>
+                          <span className="font-medium text-sm">{formatCurrency(calc.projectedSalary)}</span>
+                        </div>
+                        {calc.startYear && (
+                          <div className="flex justify-between">
+                            <span className="text-xs text-muted-foreground">Start Year:</span>
+                            <span className="font-medium text-sm">{calc.startYear}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        {calc.education && (
+                          <div className="flex justify-between">
+                            <span className="text-xs text-muted-foreground">Education:</span>
+                            <span className="font-medium text-sm">{calc.education}</span>
+                          </div>
+                        )}
+                        {calc.entryLevelSalary && (
+                          <div className="flex justify-between">
+                            <span className="text-xs text-muted-foreground">Entry Level:</span>
+                            <span className="font-medium text-sm">{formatCurrency(calc.entryLevelSalary)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground mt-1">
+                      <p>{formatDate(new Date(calc.calculationDate))}</p>
+                    </div>
+                    
+                    <div className="mt-2 pt-2 border-t flex justify-end gap-2">
+                      <Button 
+                        variant={calc.includedInProjection ? "default" : "outline"} 
+                        size="sm"
+                        className={`h-7 text-xs ${calc.includedInProjection ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                        onClick={() => toggleCareerProjectionInclusion(calc.id)}
+                        disabled={toggleCareerProjectionMutation.isPending}
+                      >
+                        <Calculator className="h-3 w-3 mr-1" />
+                        {calc.includedInProjection ? "✓ Included in Projection" : "Include in Projection"}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                        onClick={() => removeCareerCalculation(calc.id)}
+                        disabled={deleteCareerMutation.isPending}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <Briefcase className="h-12 w-12 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-700 mb-2">No saved career calculations</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  You haven't saved any career earnings calculations yet.
+                </p>
+                <Link href="/career-builder">
+                  <Button>
+                    Explore Career Builder
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
