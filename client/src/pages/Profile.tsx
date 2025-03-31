@@ -47,6 +47,7 @@ const Profile = () => {
   const [email, setEmail] = useState("philip.han@example.com");
   const [currentLocation, setCurrentLocation] = useState("Seattle, WA");
   const [zipCode, setZipCode] = useState("98101");
+  const [birthYear, setBirthYear] = useState(1998);
   
   // Financial profile state
   const [householdIncome, setHouseholdIncome] = useState("75000");
@@ -80,18 +81,112 @@ const Profile = () => {
     }
   });
   
+  // Update user profile mutation
+  const updateProfileMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/users/${temporaryUserId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          location: currentLocation,
+          zipCode,
+          birthYear,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been saved.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error updating profile:", error);
+      toast({
+        title: "Error updating profile",
+        description: "There was a problem updating your profile information.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSaveProfile = () => {
-    toast({
-      title: "Profile updated",
-      description: "Your profile information has been saved.",
-    });
+    updateProfileMutation.mutate();
   };
   
+  // Update financial profile mutation
+  const updateFinancialMutation = useMutation({
+    mutationFn: async () => {
+      // First check if financial profile exists for this user
+      const checkResponse = await fetch(`/api/financial-profiles/user/${temporaryUserId}`);
+      const existingProfile = checkResponse.ok ? await checkResponse.json() : null;
+      
+      const financialData = {
+        userId: temporaryUserId,
+        householdIncome: parseInt(householdIncome) || 0,
+        householdSize: parseInt(householdSize) || 1,
+        savingsAmount: parseInt(savingsAmount) || 0,
+        studentLoanAmount: parseInt(studentLoanAmount) || 0,
+        otherDebtAmount: parseInt(otherDebtAmount) || 0,
+      };
+      
+      let response;
+      
+      if (existingProfile) {
+        // Update existing profile
+        response = await fetch(`/api/financial-profiles/${existingProfile.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(financialData),
+        });
+      } else {
+        // Create new profile
+        response = await fetch('/api/financial-profiles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(financialData),
+        });
+      }
+      
+      if (!response.ok) {
+        throw new Error('Failed to update financial profile');
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Financial data updated",
+        description: "Your financial information has been saved.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error updating financial profile:", error);
+      toast({
+        title: "Error updating financial data",
+        description: "There was a problem updating your financial information.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSaveFinancial = () => {
-    toast({
-      title: "Financial data updated",
-      description: "Your financial information has been saved.",
-    });
+    updateFinancialMutation.mutate();
   };
   
   // Query client for cache invalidation
@@ -232,6 +327,19 @@ const Profile = () => {
                       className="mt-1"
                     />
                   </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="birthYear">Birth Year</Label>
+                  <Input 
+                    id="birthYear" 
+                    type="number" 
+                    value={birthYear} 
+                    onChange={(e) => setBirthYear(parseInt(e.target.value))} 
+                    className="mt-1"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
                 </div>
               </div>
               

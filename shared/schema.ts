@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   email: text("email"),
   location: text("location"),
   zipCode: text("zip_code"),
+  birthYear: integer("birth_year"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -23,6 +24,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   location: true,
   zipCode: true,
+  birthYear: true,
 });
 
 // Financial profiles table

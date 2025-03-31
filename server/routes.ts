@@ -36,6 +36,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:id", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const updatedUser = await activeStorage.updateUser(userId, req.body);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Failed to update user" });
+      }
+      
+      // Don't return password
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
   // Financial profile routes
   app.post("/api/financial-profiles", validateRequest({ body: insertFinancialProfileSchema }), async (req: Request, res: Response) => {
     try {
@@ -46,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/financial-profiles/:userId", async (req: Request, res: Response) => {
+  app.get("/api/financial-profiles/user/:userId", async (req: Request, res: Response) => {
     try {
       const profile = await activeStorage.getFinancialProfileByUserId(parseInt(req.params.userId));
       if (!profile) {
@@ -55,6 +76,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(profile);
     } catch (error) {
       res.status(500).json({ message: "Failed to get financial profile" });
+    }
+  });
+  
+  app.get("/api/financial-profiles/:id", async (req: Request, res: Response) => {
+    try {
+      const profile = await activeStorage.getFinancialProfile(parseInt(req.params.id));
+      if (!profile) {
+        return res.status(404).json({ message: "Financial profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get financial profile" });
+    }
+  });
+  
+  app.patch("/api/financial-profiles/:id", async (req: Request, res: Response) => {
+    try {
+      const profileId = parseInt(req.params.id);
+      const profile = await activeStorage.getFinancialProfile(profileId);
+      if (!profile) {
+        return res.status(404).json({ message: "Financial profile not found" });
+      }
+      
+      const updatedProfile = await activeStorage.updateFinancialProfile(profileId, req.body);
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "Failed to update financial profile" });
+      }
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update financial profile" });
     }
   });
 
