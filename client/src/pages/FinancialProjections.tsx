@@ -505,9 +505,19 @@ const FinancialProjections = () => {
       {locationCostData && (
         <Card className="mb-6">
           <CardContent className="p-6">
-            <h3 className="text-lg font-medium mb-4">Location Adjustment Factors</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Location Cost of Living</h3>
+              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                {locationCostData.city || 'Your Location'}, {locationCostData.state} ({userData?.zipCode})
+              </div>
+            </div>
+            
             <p className="text-gray-600 mb-4">
-              Your financial projections are adjusted based on the cost of living in {locationCostData.city || 'your location'} ({userData?.zipCode}).
+              Your financial projections are adjusted based on the cost of living in your location. 
+              {locationCostData.income_adjustment_factor > 1 
+                ? ` This area has a ${((locationCostData.income_adjustment_factor - 1) * 100).toFixed(0)}% higher cost of living than the national average.`
+                : ` This area has a ${((1 - locationCostData.income_adjustment_factor) * 100).toFixed(0)}% lower cost of living than the national average.`
+              }
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -545,6 +555,99 @@ const FinancialProjections = () => {
                   Weighted average of all categories
                 </p>
               </div>
+            </div>
+            
+            <div className="mt-6">
+              <h4 className="text-sm font-medium mb-3">Detailed Cost Breakdown</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500">Food</p>
+                  <div className="flex items-center mt-1">
+                    <div className="h-2 bg-blue-100 rounded-full w-full">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(locationCostData.food * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2">{(locationCostData.food * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500">Transportation</p>
+                  <div className="flex items-center mt-1">
+                    <div className="h-2 bg-blue-100 rounded-full w-full">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(locationCostData.transportation * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2">{(locationCostData.transportation * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500">Healthcare</p>
+                  <div className="flex items-center mt-1">
+                    <div className="h-2 bg-blue-100 rounded-full w-full">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(locationCostData.healthcare * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2">{(locationCostData.healthcare * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500">Insurance</p>
+                  <div className="flex items-center mt-1">
+                    <div className="h-2 bg-blue-100 rounded-full w-full">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(locationCostData.personal_insurance * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2">{(locationCostData.personal_insurance * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500">Entertainment</p>
+                  <div className="flex items-center mt-1">
+                    <div className="h-2 bg-blue-100 rounded-full w-full">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(locationCostData.entertainment * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2">{(locationCostData.entertainment * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500">Services</p>
+                  <div className="flex items-center mt-1">
+                    <div className="h-2 bg-blue-100 rounded-full w-full">
+                      <div 
+                        className="h-2 bg-blue-500 rounded-full" 
+                        style={{ width: `${Math.min(locationCostData.services * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2">{(locationCostData.services * 100).toFixed(0)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Impact on your finances:</span> In {locationCostData.city || 'your location'}, 
+                {locationCostData.income_adjustment_factor >= 1 
+                  ? ` salaries tend to be higher to compensate for the increased cost of living.`
+                  : ` your expenses will be lower, but salaries may also be lower than in more expensive areas.`
+                }
+              </p>
             </div>
           </CardContent>
         </Card>
