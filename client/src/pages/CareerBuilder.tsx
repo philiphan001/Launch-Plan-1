@@ -153,6 +153,54 @@ const CareerBuilder: React.FC = () => {
     setCalculationSuccess(false);
   };
   
+  // Use timeline data to populate form values
+  const useTimelineData = () => {
+    if (!timeline || !timeline.timeline || timeline.timeline.length === 0) {
+      toast({
+        title: "No Timeline Data",
+        description: "There is no timeline data available for this career yet. Try analyzing the career first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Find the entry level position from timeline
+    const entryPosition = timeline.timeline.find(step => step.stage === 'entry' && step.earnings);
+    // Find the last career position (typically senior level)
+    const latestPosition = [...timeline.timeline]
+      .filter(step => step.earnings)
+      .sort((a, b) => b.year - a.year)[0];
+    
+    // Get education info
+    const educationSteps = timeline.timeline.filter(step => step.stage === 'education');
+    const educationStep = educationSteps.length > 0 ? educationSteps[educationSteps.length - 1] : null;
+    
+    // Calculate start year based on education completion
+    const completionYear = educationStep ? educationStep.year : 4;
+    const startYear = new Date().getFullYear() + completionYear;
+    
+    // Set the form values
+    if (latestPosition && latestPosition.earnings) {
+      setProjectedSalary(latestPosition.earnings);
+    }
+    setStartYear(startYear);
+    
+    // Create notes with timeline data
+    const notes = [
+      educationStep ? `Education: ${educationStep.description}` : '',
+      entryPosition ? `Entry Level (Year ${entryPosition.year}): ${entryPosition.description}` : '',
+      latestPosition ? `Career Peak (Year ${latestPosition.year}): ${latestPosition.description}` : ''
+    ].filter(Boolean).join('\n\n');
+    
+    setAdditionalNotes(notes);
+    
+    toast({
+      title: "Timeline Data Applied",
+      description: "Career timeline information has been applied to your financial projections.",
+      variant: "default",
+    });
+  };
+  
   // Create career calculation mutation
   const createCareerCalculation = useMutation({
     mutationFn: async () => {
@@ -603,6 +651,19 @@ const CareerBuilder: React.FC = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      <div className="flex justify-end mb-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-sm flex items-center text-primary"
+                          onClick={useTimelineData}
+                          disabled={!timeline || loadingTimeline}
+                        >
+                          <CalendarClock className="h-4 w-4 mr-1" />
+                          Use Timeline Data
+                        </Button>
+                      </div>
+                      
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="projected-salary">Projected Annual Salary</Label>
@@ -643,11 +704,13 @@ const CareerBuilder: React.FC = () => {
                       
                       <div className="space-y-2">
                         <Label htmlFor="notes">Additional Notes</Label>
-                        <Input
+                        <textarea
                           id="notes"
                           value={additionalNotes}
                           onChange={(e) => setAdditionalNotes(e.target.value)}
                           placeholder="Any additional information or notes about this career choice"
+                          rows={5}
+                          className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         />
                       </div>
                       
