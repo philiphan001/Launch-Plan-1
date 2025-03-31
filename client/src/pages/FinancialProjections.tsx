@@ -200,11 +200,11 @@ const FinancialProjections = () => {
         // The values in the database are already percentages (2500 means 25x)
         // We need to convert them to proper multipliers (2500 -> 2.5)
         const expenseAdjustmentFactor = (
-          (locationCostData.housing / 100) * 0.35 + 
-          (locationCostData.food / 100) * 0.15 + 
-          (locationCostData.transportation / 100) * 0.15 + 
-          (locationCostData.healthcare / 100) * 0.1 + 
-          (locationCostData.personal_insurance / 100) * 0.1 + 
+          ((locationCostData.housing || 0) / 100) * 0.35 + 
+          ((locationCostData.food || 0) / 100) * 0.15 + 
+          ((locationCostData.transportation || 0) / 100) * 0.15 + 
+          ((locationCostData.healthcare || 0) / 100) * 0.1 + 
+          ((locationCostData.personal_insurance || 0) / 100) * 0.1 + 
           1.0 * 0.15
         );
         
@@ -448,11 +448,11 @@ const FinancialProjections = () => {
                       locationAdjusted: !!locationCostData,
                       locationZipCode: userData?.zipCode || null,
                       costOfLivingIndex: locationCostData ? 
-                        ((locationCostData.housing / 100 * 0.35 + 
-                          locationCostData.food / 100 * 0.15 + 
-                          locationCostData.transportation / 100 * 0.15 + 
-                          locationCostData.healthcare / 100 * 0.1 + 
-                          locationCostData.personal_insurance / 100 * 0.1 + 
+                        (((locationCostData.housing || 0) / 100 * 0.35 + 
+                          (locationCostData.food || 0) / 100 * 0.15 + 
+                          (locationCostData.transportation || 0) / 100 * 0.15 + 
+                          (locationCostData.healthcare || 0) / 100 * 0.1 + 
+                          (locationCostData.personal_insurance || 0) / 100 * 0.1 + 
                           1.0 * 0.15)) : null,
                       incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                     }),
@@ -575,7 +575,7 @@ const FinancialProjections = () => {
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <p className="text-sm text-gray-500 uppercase">Housing Cost</p>
                 <p className="text-2xl font-medium text-primary">
-                  ${locationCostData.housing.toFixed(0)}
+                  ${(locationCostData.housing || 0).toFixed(0)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Monthly cost
@@ -585,13 +585,13 @@ const FinancialProjections = () => {
               <div className="bg-blue-50 p-4 rounded-lg text-center">
                 <p className="text-sm text-gray-500 uppercase">Total Monthly Cost</p>
                 <p className="text-2xl font-medium text-primary">
-                  ${(locationCostData.housing + 
-                    locationCostData.food + 
-                    locationCostData.transportation + 
-                    locationCostData.healthcare + 
-                    locationCostData.personal_insurance + 
-                    locationCostData.entertainment +
-                    locationCostData.services).toFixed(0)}
+                  ${((locationCostData.housing || 0) + 
+                    (locationCostData.food || 0) + 
+                    (locationCostData.transportation || 0) + 
+                    (locationCostData.healthcare || 0) + 
+                    (locationCostData.personal_insurance || 0) + 
+                    (locationCostData.entertainment || 0) +
+                    (locationCostData.services || 0)).toFixed(0)}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
                   Sum of all expense categories
@@ -608,10 +608,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.housing / 25, 100)}%` }}
+                        style={{ width: `${Math.min((locationCostData.housing || 0) / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">${locationCostData.housing.toFixed(0)}</span>
+                    <span className="text-xs ml-2">${(locationCostData.housing || 0).toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -621,10 +621,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.food / 25, 100)}%` }}
+                        style={{ width: `${Math.min((locationCostData.food || 0) / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">${locationCostData.food.toFixed(0)}</span>
+                    <span className="text-xs ml-2">${(locationCostData.food || 0).toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -634,10 +634,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.transportation / 25, 100)}%` }}
+                        style={{ width: `${Math.min((locationCostData.transportation || 0) / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">${locationCostData.transportation.toFixed(0)}</span>
+                    <span className="text-xs ml-2">${(locationCostData.transportation || 0).toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -647,10 +647,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.healthcare / 25, 100)}%` }}
+                        style={{ width: `${Math.min((locationCostData.healthcare || 0) / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">${locationCostData.healthcare.toFixed(0)}</span>
+                    <span className="text-xs ml-2">${(locationCostData.healthcare || 0).toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -660,10 +660,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.personal_insurance / 25, 100)}%` }}
+                        style={{ width: `${Math.min((locationCostData.personal_insurance || 0) / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">${locationCostData.personal_insurance.toFixed(0)}</span>
+                    <span className="text-xs ml-2">${(locationCostData.personal_insurance || 0).toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -673,10 +673,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.entertainment / 25, 100)}%` }}
+                        style={{ width: `${Math.min((locationCostData.entertainment || 0) / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">${locationCostData.entertainment.toFixed(0)}</span>
+                    <span className="text-xs ml-2">${(locationCostData.entertainment || 0).toFixed(0)}</span>
                   </div>
                 </div>
                 
@@ -686,10 +686,10 @@ const FinancialProjections = () => {
                     <div className="h-2 bg-blue-100 rounded-full w-full">
                       <div 
                         className="h-2 bg-blue-500 rounded-full" 
-                        style={{ width: `${Math.min(locationCostData.services / 25, 100)}%` }}
+                        style={{ width: `${Math.min((locationCostData.services || 0) / 25, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-xs ml-2">${locationCostData.services.toFixed(0)}</span>
+                    <span className="text-xs ml-2">${(locationCostData.services || 0).toFixed(0)}</span>
                   </div>
                 </div>
               </div>
@@ -698,7 +698,7 @@ const FinancialProjections = () => {
             <div className="mt-6 pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-600">
                 <span className="font-medium">Impact on your finances:</span> In {locationCostData.city || 'your location'}, 
-                {locationCostData.income_adjustment_factor >= 1 
+                {(locationCostData.income_adjustment_factor || 0) >= 1 
                   ? ` salaries tend to be higher to compensate for the increased cost of living.`
                   : ` your expenses will be lower, but salaries may also be lower than in more expensive areas.`
                 }
