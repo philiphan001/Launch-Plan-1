@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
 import RecommendationEngine from "@/components/pathways/RecommendationEngine";
 import IdentityWheel from "@/components/pathways/IdentityWheel";
+import AdvancedWheel from "@/components/pathways/AdvancedWheel";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 type EducationType = "4year" | "2year" | "vocational" | null;
@@ -46,7 +47,7 @@ const Pathways = () => {
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
-  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | null>(null);
+  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | 'advancedWheel' | null>(null);
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
@@ -139,7 +140,7 @@ const Pathways = () => {
                 title="Choose Your Exploration Method" 
                 subtitle="Select a fun activity to help discover your interests and values"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <Card 
                     className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
                     onClick={() => setExplorationMethod('swipe')}
@@ -162,8 +163,22 @@ const Pathways = () => {
                       <div className="rounded-full bg-secondary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                         <span className="material-icons text-2xl">casino</span>
                       </div>
-                      <h3 className="text-lg font-medium mb-2">Spin the Wheel</h3>
+                      <h3 className="text-lg font-medium mb-2">Identity Wheel</h3>
                       <p className="text-sm text-gray-600 mb-4">Spin a wheel to discover prompts about your values, talents, fears and wishes</p>
+                      <Button variant="outline" size="sm">Select This Method</Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
+                    onClick={() => setExplorationMethod('advancedWheel')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-purple-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">psychology</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Advanced Identity Wheel</h3>
+                      <p className="text-sm text-gray-600 mb-4">Explore deeper aspects of your identity with fun prompts and mini-games</p>
                       <Button variant="outline" size="sm">Select This Method</Button>
                     </CardContent>
                   </Card>
@@ -188,7 +203,7 @@ const Pathways = () => {
                 </Card>
               </Step>
             );
-          } else {
+          } else if (explorationMethod === 'wheel') {
             return (
               <Step 
                 title="Spin the Wheel of Identity" 
@@ -197,6 +212,24 @@ const Pathways = () => {
                 <Card>
                   <CardContent className="p-6">
                     <IdentityWheel 
+                      onComplete={(results) => {
+                        setWheelResults(results);
+                        handleNext();
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else if (explorationMethod === 'advancedWheel') {
+            return (
+              <Step 
+                title="Spin the Advanced Identity Wheel" 
+                subtitle="Explore deeper aspects of your identity with fun prompts and mini-games"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <AdvancedWheel 
                       onComplete={(results) => {
                         setWheelResults(results);
                         handleNext();
@@ -310,7 +343,7 @@ const Pathways = () => {
             // This maps the wheel choices to equivalent card preferences
             const wheelPreferences: Record<string, boolean> = {};
             
-            if (explorationMethod === 'wheel' && Object.keys(wheelResults).length > 0) {
+            if ((explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') && wheelResults && Object.keys(wheelResults).length > 0) {
               // Map values responses to preferences
               if (wheelResults['success_meaning'] === 'freedom') {
                 wheelPreferences['innovation'] = true;
@@ -385,13 +418,15 @@ const Pathways = () => {
           };
           
           // Use wheel results if that was the chosen method, otherwise use swipe results
-          const preferences = explorationMethod === 'wheel' 
+          const preferences = (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel')
             ? convertWheelResultsToPreferences()
             : swipeResults;
           
           const activityName = explorationMethod === 'wheel' 
             ? 'Identity Wheel' 
-            : 'Card Preferences';
+            : explorationMethod === 'advancedWheel'
+              ? 'Advanced Identity Wheel'
+              : 'Card Preferences';
             
           return (
             <Step 
