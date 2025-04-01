@@ -1,15 +1,15 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Progress } from '@/components/ui/progress';
+import { useState, useRef } from 'react';
+import { motion, PanInfo, useAnimation } from 'framer-motion';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
-interface ScenarioOption {
+interface Scenario {
   id: string;
-  text: string;
-  emoji: string;
-  category: 'interests' | 'values' | 'environment' | 'lifestyle';
+  title: string;
   description: string;
+  category: string;
+  image?: string;
 }
 
 interface SwipeableScenariosProps {
@@ -18,248 +18,231 @@ interface SwipeableScenariosProps {
 
 export default function SwipeableScenarios({ onComplete }: SwipeableScenariosProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [responses, setResponses] = useState<Record<string, boolean>>({});
-  const [isComplete, setIsComplete] = useState(false);
-  const [showResults, setShowResults] = useState(false);
-  const [showHelp, setShowHelp] = useState(true);
-  const [currentSwipe, setCurrentSwipe] = useState<'left' | 'right' | null>(null);
+  const [results, setResults] = useState<Record<string, boolean>>({});
+  const cardControls = useAnimation();
+  const dragControls = useRef({ startX: 0 });
   
-  // Define all scenario cards
-  const scenarios: ScenarioOption[] = useMemo(() => [
-    // Interests
-    { id: 'work_hands', text: 'Work with your hands', emoji: '💪', category: 'interests', description: 'Building, creating, or fixing physical objects' },
-    { id: 'solve_problems', text: 'Solve big social problems', emoji: '🌍', category: 'interests', description: 'Addressing challenges facing society or communities' },
-    { id: 'help_others', text: 'Help others directly', emoji: '🤝', category: 'interests', description: 'Working one-on-one with people who need assistance' },
-    { id: 'analyze_data', text: 'Analyze data and patterns', emoji: '📊', category: 'interests', description: 'Finding insights in numbers and statistics' },
-    { id: 'create_art', text: 'Create art or media', emoji: '🎨', category: 'interests', description: 'Expressing ideas through visual, musical, or digital creation' },
-    
-    // Environments
-    { id: 'big_city', text: 'Live in a big city', emoji: '🏙️', category: 'environment', description: 'Urban living with diverse cultures and amenities' },
-    { id: 'quiet_nature', text: 'Own a quiet cabin in the woods', emoji: '🛖', category: 'environment', description: 'Peaceful nature setting away from urban areas' },
-    { id: 'travel_world', text: 'Travel the world for work', emoji: '✈️', category: 'environment', description: 'Job involving frequent international travel' },
-    { id: 'outdoor_work', text: 'Work outdoors most days', emoji: '🌲', category: 'environment', description: 'Career primarily outside rather than in an office' },
-    { id: 'own_business', text: 'Run your own business', emoji: '🏪', category: 'environment', description: 'Being an entrepreneur rather than an employee' },
-    
-    // Values
-    { id: 'get_rich', text: 'Get rich', emoji: '💰', category: 'values', description: 'High income potential is a top priority' },
-    { id: 'make_impact', text: 'Make a positive impact', emoji: '✨', category: 'values', description: 'Contributing to meaningful change in the world' },
-    { id: 'be_creative', text: 'Express your creativity', emoji: '🎭', category: 'values', description: 'Work that allows artistic or innovative expression' },
-    { id: 'gain_knowledge', text: 'Always keep learning new things', emoji: '📚', category: 'values', description: 'Continuous intellectual growth and challenge' },
-    { id: 'work_life_balance', text: 'Have work-life balance', emoji: '⚖️', category: 'values', description: 'Time for both career and personal life' },
-    
-    // Lifestyle 
-    { id: 'flexible_hours', text: 'Set your own schedule', emoji: '🕐', category: 'lifestyle', description: 'Flexibility to choose when you work' },
-    { id: 'stable_career', text: 'Have job security', emoji: '🛡️', category: 'lifestyle', description: 'Stable employment with low risk of job loss' },
-    { id: 'lead_others', text: 'Lead a team of people', emoji: '👑', category: 'lifestyle', description: 'Management or leadership position' },
-    { id: 'physical_active', text: 'Be physically active at work', emoji: '🏃', category: 'lifestyle', description: 'Job involves movement rather than sitting all day' },
-    { id: 'high_prestige', text: 'Have a prestigious title', emoji: '🏆', category: 'lifestyle', description: 'Position that carries social recognition and respect' },
-  ], []);
-
-  const handleSwipe = (direction: 'left' | 'right') => {
-    const scenario = scenarios[currentIndex];
-    const isLiked = direction === 'right';
-    
-    // Set current swipe for animation
-    setCurrentSwipe(direction);
-    
-    // Update responses
-    setResponses(prev => ({ ...prev, [scenario.id]: isLiked }));
-    
-    // Move to next card after animation
-    setTimeout(() => {
-      setCurrentSwipe(null);
-      
-      if (currentIndex < scenarios.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        setIsComplete(true);
-      }
-    }, 300);
-  };
-
-  useEffect(() => {
-    if (isComplete) {
-      // Small delay before showing results
-      const timer = setTimeout(() => {
-        setShowResults(true);
-      }, 500);
-      return () => clearTimeout(timer);
+  const scenarios: Scenario[] = [
+    {
+      id: 'innovation',
+      title: 'Innovation & New Ideas',
+      description: 'Creating new solutions and thinking outside the box',
+      category: 'Creativity',
+    },
+    {
+      id: 'problem_solving',
+      title: 'Problem Solving',
+      description: 'Finding solutions to complex problems',
+      category: 'Analysis',
+    },
+    {
+      id: 'working_with_people',
+      title: 'Working With People',
+      description: 'Collaborating and helping others achieve their goals',
+      category: 'Social',
+    },
+    {
+      id: 'numbers_data',
+      title: 'Numbers & Data',
+      description: 'Working with statistics, calculations, and data analysis',
+      category: 'Analysis',
+    },
+    {
+      id: 'building_creating',
+      title: 'Building & Creating',
+      description: 'Working with your hands to construct or create things',
+      category: 'Practical',
+    },
+    {
+      id: 'helping_others',
+      title: 'Helping Others',
+      description: 'Supporting people through challenges and providing assistance',
+      category: 'Social',
+    },
+    {
+      id: 'strategic_thinking',
+      title: 'Strategic Thinking',
+      description: 'Planning ahead and making long-term decisions',
+      category: 'Analysis',
+    },
+    {
+      id: 'outdoor_work',
+      title: 'Working Outdoors',
+      description: 'Spending time in nature and natural environments',
+      category: 'Practical',
+    },
+    {
+      id: 'team_collaboration',
+      title: 'Team Collaboration',
+      description: 'Working together with others toward common goals',
+      category: 'Social',
+    },
+    {
+      id: 'technical_skills',
+      title: 'Technical Skills',
+      description: 'Using specialized knowledge and technical abilities',
+      category: 'Practical',
     }
-  }, [isComplete]);
-
-  const handleFinish = () => {
-    onComplete(responses);
+  ];
+  
+  const handleDragStart = () => {
+    dragControls.current.startX = 0;
   };
-
-  // Group responses by category
-  const resultsByCategory = useMemo(() => {
-    if (!showResults) return {};
+  
+  const handleDrag = (_: any, info: PanInfo) => {
+    dragControls.current.startX = info.offset.x;
+  };
+  
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    const threshold = 100;
+    const xOffset = info.offset.x;
     
-    const result: Record<string, {liked: ScenarioOption[], disliked: ScenarioOption[]}> = {
-      interests: {liked: [], disliked: []},
-      values: {liked: [], disliked: []},
-      environment: {liked: [], disliked: []},
-      lifestyle: {liked: [], disliked: []},
-    };
-    
-    scenarios.forEach(scenario => {
-      const isLiked = responses[scenario.id];
-      if (isLiked === true) {
-        result[scenario.category].liked.push(scenario);
-      } else if (isLiked === false) {
-        result[scenario.category].disliked.push(scenario);
-      }
-    });
-    
-    return result;
-  }, [showResults, scenarios, responses]);
-
-  // Progress percentage
-  const progress = useMemo(() => {
-    return Math.round(Object.keys(responses).length / scenarios.length * 100);
-  }, [responses, scenarios.length]);
-
-  if (showResults) {
+    if (xOffset > threshold) {
+      // Swiped right (like)
+      handleSwipe(true);
+    } else if (xOffset < -threshold) {
+      // Swiped left (dislike)
+      handleSwipe(false);
+    } else {
+      // Return to center
+      cardControls.start({ x: 0, transition: { type: 'spring', stiffness: 300, damping: 20 }});
+    }
+  };
+  
+  const handleSwipe = (liked: boolean) => {
+    if (currentIndex < scenarios.length) {
+      const scenario = scenarios[currentIndex];
+      
+      // Animate card off-screen
+      cardControls.start({ 
+        x: liked ? 500 : -500, 
+        rotate: liked ? 30 : -30,
+        opacity: 0,
+        transition: { duration: 0.5 } 
+      }).then(() => {
+        // Track result
+        setResults(prev => ({
+          ...prev,
+          [scenario.id]: liked
+        }));
+        
+        // Update index to move to next card
+        if (currentIndex < scenarios.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+          // Reset animation for next card
+          cardControls.set({ x: 0, rotate: 0, opacity: 1 });
+        } else {
+          // All scenarios done
+          onComplete(results);
+        }
+      });
+    }
+  };
+  
+  const handleSkip = () => {
+    // Complete the activity early
+    onComplete(results);
+  };
+  
+  const getEmoji = (category: string) => {
+    switch(category) {
+      case 'Creativity': return '💡';
+      case 'Analysis': return '🧩';
+      case 'Social': return '👥';
+      case 'Practical': return '🔧';
+      default: return '✨';
+    }
+  };
+  
+  if (currentIndex >= scenarios.length) {
+    // All cards have been swiped
     return (
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold mb-2">Your Preferences</h2>
-          <p className="text-gray-600">Based on your choices, here's what you're interested in</p>
-        </div>
-        
-        <div className="space-y-6">
-          {Object.entries(resultsByCategory).map(([category, { liked }]) => {
-            if (liked.length === 0) return null;
-            
-            return (
-              <Card key={category} className="overflow-hidden">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-medium capitalize mb-4">
-                    {category === 'interests' ? 'What You Like to Do' : 
-                     category === 'values' ? 'What You Value' :
-                     category === 'environment' ? 'Where You Want to Be' :
-                     'How You Want to Work'}
-                  </h3>
-                  
-                  <div className="flex flex-wrap gap-3">
-                    {liked.map(scenario => (
-                      <div 
-                        key={scenario.id}
-                        className="flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-2"
-                      >
-                        <span>{scenario.emoji}</span>
-                        <span>{scenario.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-        
-        <div className="flex justify-end mt-8">
-          <Button onClick={handleFinish}>
-            Continue to Recommendations
-          </Button>
+      <div className="text-center space-y-4">
+        <h3 className="text-xl font-medium">Thanks for your input!</h3>
+        <p className="text-gray-600">We're analyzing your preferences...</p>
+        <div className="flex justify-center mt-4">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
       </div>
     );
   }
-
+  
   const currentScenario = scenarios[currentIndex];
-
+  const progressPercent = (currentIndex / scenarios.length) * 100;
+  
   return (
-    <div className="relative h-[500px] max-w-md mx-auto">
-      {/* Help overlay */}
-      <AnimatePresence>
-        {showHelp && (
-          <motion.div 
-            className="absolute inset-0 z-20 bg-black/70 text-white rounded-lg flex flex-col items-center justify-center p-6"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h3 className="text-xl font-medium mb-4">Find Your Path</h3>
-            <p className="text-center mb-6">Choose what appeals to you and what doesn't.</p>
-            
-            <div className="flex w-full justify-between mb-8">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-red-500/30 flex items-center justify-center mb-2">
-                  <span className="text-2xl">👎</span>
-                </div>
-                <span className="text-sm">Not for me</span>
-              </div>
-              
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-green-500/30 flex items-center justify-center mb-2">
-                  <span className="text-2xl">👍</span>
-                </div>
-                <span className="text-sm">I like this</span>
-              </div>
-            </div>
-            
-            <Button onClick={() => setShowHelp(false)}>Got it</Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      {/* Progress bar */}
-      <div className="mb-6">
+    <div className="flex flex-col items-center">
+      <div className="w-full mb-6">
         <div className="flex justify-between text-sm text-gray-500 mb-1">
-          <span>Choose your preferences</span>
-          <span>{currentIndex + 1} of {scenarios.length}</span>
+          <span>Card {currentIndex + 1} of {scenarios.length}</span>
+          <span>{Math.round(progressPercent)}% complete</span>
         </div>
-        <Progress value={progress} />
+        <Progress value={progressPercent} />
       </div>
       
-      {/* Card */}
-      <motion.div 
-        className="h-[350px]"
-        animate={
-          currentSwipe === 'left' 
-            ? { x: -500, opacity: 0, rotate: -10 }
-            : currentSwipe === 'right'
-              ? { x: 500, opacity: 0, rotate: 10 }
-              : { x: 0, opacity: 1, rotate: 0 }
-        }
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="h-[350px] w-full overflow-hidden shadow-lg relative">
-          <CardContent className="flex flex-col items-center justify-center h-full p-6 text-center">
-            <div className="text-5xl mb-4">{currentScenario.emoji}</div>
-            <h3 className="text-xl font-medium mb-2">{currentScenario.text}</h3>
-            <p className="text-gray-600">{currentScenario.description}</p>
-            
-            <div className="mt-auto pt-4">
-              <span className="inline-block px-3 py-1 rounded-full text-xs text-gray-600 bg-gray-100">
-                {currentScenario.category === 'interests' ? 'Interest' : 
-                 currentScenario.category === 'values' ? 'Value' :
-                 currentScenario.category === 'environment' ? 'Environment' :
-                 'Lifestyle'}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+      <div className="relative w-full max-w-md h-56 mb-8">
+        <motion.div
+          className="absolute w-full"
+          animate={cardControls}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.7}
+          onDragStart={handleDragStart}
+          onDrag={handleDrag}
+          onDragEnd={handleDragEnd}
+          style={{ x: 0, y: 0 }}
+        >
+          <Card className="bg-white shadow-lg h-56 overflow-hidden">
+            <CardContent className="p-0 h-full flex flex-col">
+              <div className="bg-primary/10 p-4">
+                <div className="flex items-center mb-2">
+                  <span className="text-2xl mr-2">{getEmoji(currentScenario.category)}</span>
+                  <span className="text-lg font-medium">{currentScenario.title}</span>
+                </div>
+                <p className="text-gray-600 text-sm">{currentScenario.description}</p>
+              </div>
+              
+              <div className="flex-grow flex items-center justify-center p-6 text-center">
+                <p className="text-gray-700">
+                  Does this interest or appeal to you? Swipe right if yes, left if no.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
       
-      {/* Button controls */}
-      <div className="flex justify-center gap-10 mt-6">
+      <div className="flex justify-center gap-4 mb-4">
         <Button 
           variant="outline" 
-          className="rounded-full h-14 w-14 p-0"
-          onClick={() => handleSwipe('left')}
+          size="lg" 
+          className="bg-red-50 hover:bg-red-100 border-red-100 text-red-600"
+          onClick={() => handleSwipe(false)}
         >
-          <span className="text-red-500 text-xl">✕</span>
+          <span className="material-icons mr-2">thumb_down</span>
+          Not for me
         </Button>
         
         <Button 
           variant="outline" 
-          className="rounded-full h-14 w-14 p-0" 
-          onClick={() => handleSwipe('right')}
+          size="lg" 
+          className="bg-green-50 hover:bg-green-100 border-green-100 text-green-600"
+          onClick={() => handleSwipe(true)}
         >
-          <span className="text-green-500 text-xl">❤</span>
+          <span className="material-icons mr-2">thumb_up</span>
+          I like this
         </Button>
+      </div>
+      
+      <div className="w-full text-center">
+        <Button variant="ghost" size="sm" onClick={handleSkip}>Skip the rest and see results</Button>
+      </div>
+      
+      <div className="bg-blue-50 border border-blue-100 rounded-md p-3 text-sm text-blue-700 mt-6 w-full">
+        <p className="flex items-start">
+          <span className="material-icons text-blue-500 mr-2 text-lg">info</span>
+          <span>Tip: You can also drag the card left or right to swipe!</span>
+        </p>
       </div>
     </div>
   );

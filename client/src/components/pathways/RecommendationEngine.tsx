@@ -1,311 +1,354 @@
-import React, { useMemo } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-
-interface Recommendation {
-  id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  icon: string;
-  score: number;
-  pathType: 'education' | 'career' | 'lifestyle';
-}
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface RecommendationEngineProps {
   preferences: Record<string, boolean>;
   onSelectPath: (pathType: 'education' | 'career' | 'lifestyle', id: string) => void;
 }
 
-export default function RecommendationEngine({ preferences, onSelectPath }: RecommendationEngineProps) {
-  // All potential recommendations
-  const allRecommendations: Recommendation[] = useMemo(() => [
-    // Education Paths
-    {
+// This determines recommendation based on liked cards
+const analyzePreferences = (preferences: Record<string, boolean>) => {
+  // Count the frequency of different categories
+  const counts: Record<string, number> = {
+    'creativity': 0,
+    'analysis': 0,
+    'social': 0,
+    'practical': 0,
+    'technology': 0,
+    'business': 0,
+    'helping': 0,
+    'outdoors': 0,
+  };
+  
+  // Map card IDs to categories
+  const categoryMap: Record<string, string[]> = {
+    'innovation': ['creativity', 'technology'],
+    'problem_solving': ['analysis', 'practical'],
+    'working_with_people': ['social', 'helping'],
+    'numbers_data': ['analysis', 'technology'],
+    'building_creating': ['creativity', 'practical'],
+    'helping_others': ['social', 'helping'],
+    'strategic_thinking': ['analysis', 'business'],
+    'outdoor_work': ['outdoors', 'practical'],
+    'team_collaboration': ['social', 'business'],
+    'technical_skills': ['technology', 'practical'],
+    'artistic_expression': ['creativity'],
+    'entrepreneurship': ['business', 'creativity'],
+    'research': ['analysis'],
+    'mentoring': ['helping', 'social'],
+    'nature_environment': ['outdoors'],
+    'digital_work': ['technology'],
+  };
+  
+  // Count preferences 
+  Object.entries(preferences).forEach(([key, liked]) => {
+    if (liked && categoryMap[key]) {
+      categoryMap[key].forEach(category => {
+        counts[category] = (counts[category] || 0) + 1;
+      });
+    }
+  });
+  
+  // Sort categories by count
+  const sortedCategories = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(entry => entry[0]);
+  
+  // Generate recommendations based on top categories
+  return {
+    education: generateEducationPaths(sortedCategories),
+    career: generateCareerPaths(sortedCategories),
+    lifestyle: generateLifestylePaths(sortedCategories)
+  };
+};
+
+// Generate education recommendations based on preference categories
+const generateEducationPaths = (categories: string[]) => {
+  const recommendations = [];
+  
+  const topCategory = categories[0];
+  const secondCategory = categories[1];
+  
+  // Education path recommendations
+  if (['creativity', 'social', 'helping'].includes(topCategory)) {
+    recommendations.push({
       id: 'liberal_arts',
-      title: 'Liberal Arts Degree',
-      description: 'Explore diverse subjects with focus on critical thinking, communication, and creativity. Great for those who value learning across disciplines.',
-      tags: ['4-year program', 'Well-rounded', 'Humanities'],
-      icon: 'school',
-      score: 0,
-      pathType: 'education'
-    },
-    {
+      title: 'Liberal Arts College',
+      description: 'Smaller schools with focus on critical thinking and well-rounded education.',
+      match: 'High match: Your preference for creativity and people-oriented activities align well with liberal arts.'
+    });
+  }
+  
+  if (['analysis', 'technology', 'practical'].includes(topCategory)) {
+    recommendations.push({
       id: 'stem_college',
-      title: 'STEM Degree',
-      description: 'Dive deep into science, technology, engineering or mathematics with hands-on learning and analytical problem-solving.',
-      tags: ['4-year program', 'Technical', 'High-demand'],
-      icon: 'science',
-      score: 0,
-      pathType: 'education'
-    },
-    {
+      title: 'STEM-focused University',
+      description: 'Schools with strong science, technology, engineering, and math programs.',
+      match: 'High match: Your analytical and technical interests are perfect for STEM fields.'
+    });
+  }
+  
+  if (['business', 'social', 'analysis'].includes(topCategory)) {
+    recommendations.push({
       id: 'business_school',
-      title: 'Business Degree',
-      description: 'Learn entrepreneurship, finance, marketing and management skills for the corporate world or to start your own venture.',
-      tags: ['4-year program', 'Practical', 'Versatile'],
-      icon: 'business_center',
-      score: 0,
-      pathType: 'education'
-    },
-    {
-      id: 'community_college',
-      title: 'Community College',
-      description: 'Get an associate degree or professional certificate with lower costs and flexible schedules.',
-      tags: ['2-year program', 'Affordable', 'Flexible'],
-      icon: 'menu_book',
-      score: 0,
-      pathType: 'education'
-    },
-    {
+      title: 'Business School',
+      description: 'Programs that focus on management, marketing, finance, and entrepreneurship.',
+      match: 'High match: Your interests in business and strategic thinking indicate this would be a good fit.'
+    });
+  }
+  
+  if (['practical', 'outdoors'].includes(topCategory)) {
+    recommendations.push({
       id: 'trade_school',
-      title: 'Trade School',
-      description: 'Learn hands-on technical skills for in-demand trades with direct path to employment.',
-      tags: ['Specialized', 'Hands-on', 'Career-focused'],
-      icon: 'construction',
-      score: 0,
-      pathType: 'education'
-    },
-    
-    // Career Paths
-    {
-      id: 'healthcare',
-      title: 'Healthcare Career',
-      description: 'Join the growing healthcare field with opportunities from direct patient care to health technology and administration.',
-      tags: ['Stable', 'Meaningful', 'Growing field'],
-      icon: 'medical_services',
-      score: 0,
-      pathType: 'career'
-    },
-    {
-      id: 'technology',
+      title: 'Trade or Technical School',
+      description: 'Specialized training for specific careers in skilled trades or technical fields.',
+      match: 'High match: Your practical and hands-on preferences align with vocational training.'
+    });
+  }
+  
+  // Always include as a flexible option
+  recommendations.push({
+    id: 'community_college',
+    title: 'Community College',
+    description: 'Flexible, affordable option to explore different subjects before committing.',
+    match: 'Good option for anyone starting their higher education journey.'
+  });
+
+  return recommendations;
+};
+
+// Generate career paths based on top categories
+const generateCareerPaths = (categories: string[]) => {
+  const recommendations = [];
+  const topCategory = categories[0];
+  const secondCategory = categories[1];
+  
+  if (['creativity', 'social'].includes(topCategory)) {
+    recommendations.push({
+      id: 'creative_fields',
+      title: 'Creative Industries',
+      description: 'Careers in design, media, entertainment, or advertising.',
+      match: 'High match: Your creative interests and people skills would thrive in these fields.'
+    });
+  }
+
+  if (['technology', 'analysis'].includes(topCategory)) {
+    recommendations.push({
+      id: 'tech_sector',
       title: 'Technology Sector',
-      description: 'Work in the dynamic tech industry with roles ranging from software development to IT support, data analysis, and more.',
-      tags: ['Innovative', 'Fast-paced', 'High-paying'],
-      icon: 'computer',
-      score: 0,
-      pathType: 'career'
-    },
-    {
+      description: 'Careers in software development, data analysis, or IT.',
+      match: 'High match: Your analytical mind and tech interests are perfect for this growing field.'
+    });
+  }
+
+  if (['helping', 'social'].includes(topCategory)) {
+    recommendations.push({
+      id: 'healthcare',
+      title: 'Healthcare & Wellness',
+      description: 'Careers in healthcare, counseling, or social services.',
+      match: 'High match: Your desire to help others and work with people aligns with these caring professions.'
+    });
+  }
+
+  if (['outdoors', 'practical'].includes(topCategory)) {
+    recommendations.push({
       id: 'trades',
       title: 'Skilled Trades',
-      description: 'Pursue electrician, plumbing, construction, or other skilled trades with apprenticeships and on-the-job training.',
-      tags: ['Hands-on', 'Apprenticeship', 'Self-employed options'],
-      icon: 'handyman',
-      score: 0,
-      pathType: 'career'
-    },
-    {
-      id: 'creative_fields',
-      title: 'Creative Professions',
-      description: 'Use your artistic talents in fields like graphic design, content creation, marketing, or entertainment.',
-      tags: ['Expressive', 'Portfolio-based', 'Varied work'],
-      icon: 'palette',
-      score: 0,
-      pathType: 'career'
-    },
-    {
-      id: 'public_service',
-      title: 'Public Service',
-      description: 'Make a difference working in government, non-profits, education or community service organizations.',
-      tags: ['Impactful', 'Stable', 'Mission-driven'],
-      icon: 'public',
-      score: 0,
-      pathType: 'career'
-    },
-    
-    // Lifestyle Paths
-    {
-      id: 'entrepreneurship',
-      title: 'Entrepreneurship',
-      description: 'Be your own boss by starting a business, freelancing, or building a startup around your passions.',
-      tags: ['Independent', 'Risk-taking', 'Flexible'],
-      icon: 'storefront',
-      score: 0,
-      pathType: 'lifestyle'
-    },
-    {
+      description: 'Careers in construction, manufacturing, or other hands-on fields.',
+      match: 'High match: Your practical skills and outdoor preferences are well-suited for these hands-on jobs.'
+    });
+  }
+
+  if (['business', 'social'].includes(topCategory)) {
+    recommendations.push({
+      id: 'business',
+      title: 'Business & Management',
+      description: 'Careers in management, marketing, sales, or entrepreneurship.',
+      match: 'High match: Your business acumen and people skills would excel in these roles.'
+    });
+  }
+
+  return recommendations;
+};
+
+// Generate lifestyle recommendations
+const generateLifestylePaths = (categories: string[]) => {
+  const recommendations = [];
+  const topCategory = categories[0];
+  
+  if (['creativity', 'technology'].includes(topCategory)) {
+    recommendations.push({
       id: 'digital_nomad',
       title: 'Digital Nomad',
-      description: 'Work remotely while traveling, combining career with exploration of different places and cultures.',
-      tags: ['Location-independent', 'Travel', 'Tech-enabled'],
-      icon: 'travel_explore',
-      score: 0,
-      pathType: 'lifestyle'
-    },
-    {
-      id: 'work_life_balance',
-      title: 'Work-Life Balance Focus',
-      description: 'Prioritize balance with a stable job that offers good benefits, reasonable hours, and time for personal life.',
-      tags: ['Stability', 'Benefits', 'Predictable'],
-      icon: 'balance',
-      score: 0,
-      pathType: 'lifestyle'
-    },
-  ], []);
-  
-  // Calculate scores based on user preferences
-  const recommendations = useMemo(() => {
-    const scoredRecommendations = allRecommendations.map(rec => {
-      let score = 0;
-      
-      // Scoring logic based on preferences
-      if (rec.id === 'liberal_arts') {
-        if (preferences['gain_knowledge'] === true) score += 2;
-        if (preferences['be_creative'] === true) score += 1;
-        if (preferences['analyze_data'] === true) score -= 1;
-        if (preferences['work_hands'] === true) score -= 2;
-      }
-      
-      else if (rec.id === 'stem_college') {
-        if (preferences['analyze_data'] === true) score += 3;
-        if (preferences['solve_problems'] === true) score += 2;
-        if (preferences['be_creative'] === false) score += 1;
-        if (preferences['work_hands'] === true) score += 1;
-      }
-      
-      else if (rec.id === 'business_school') {
-        if (preferences['get_rich'] === true) score += 2;
-        if (preferences['lead_others'] === true) score += 2;
-        if (preferences['own_business'] === true) score += 3;
-        if (preferences['solve_problems'] === true) score += 1;
-      }
-      
-      else if (rec.id === 'community_college') {
-        if (preferences['work_life_balance'] === true) score += 2;
-        if (preferences['get_rich'] === false) score += 1;
-        if (preferences['flexible_hours'] === true) score += 1;
-        if (preferences['high_prestige'] === true) score -= 2;
-      }
-      
-      else if (rec.id === 'trade_school') {
-        if (preferences['work_hands'] === true) score += 3;
-        if (preferences['stable_career'] === true) score += 2;
-        if (preferences['physical_active'] === true) score += 2;
-        if (preferences['gain_knowledge'] === true) score -= 1;
-      }
-      
-      else if (rec.id === 'healthcare') {
-        if (preferences['help_others'] === true) score += 3;
-        if (preferences['stable_career'] === true) score += 2;
-        if (preferences['make_impact'] === true) score += 2;
-        if (preferences['quiet_nature'] === true) score -= 1;
-      }
-      
-      else if (rec.id === 'technology') {
-        if (preferences['analyze_data'] === true) score += 3;
-        if (preferences['get_rich'] === true) score += 2;
-        if (preferences['solve_problems'] === true) score += 2;
-        if (preferences['physical_active'] === true) score -= 2;
-      }
-      
-      else if (rec.id === 'trades') {
-        if (preferences['work_hands'] === true) score += 3;
-        if (preferences['outdoor_work'] === true) score += 2;
-        if (preferences['physical_active'] === true) score += 2;
-        if (preferences['analyze_data'] === true) score -= 2;
-      }
-      
-      else if (rec.id === 'creative_fields') {
-        if (preferences['be_creative'] === true) score += 3;
-        if (preferences['create_art'] === true) score += 3;
-        if (preferences['make_impact'] === true) score += 1;
-        if (preferences['stable_career'] === true) score -= 1;
-      }
-      
-      else if (rec.id === 'public_service') {
-        if (preferences['make_impact'] === true) score += 3;
-        if (preferences['help_others'] === true) score += 3;
-        if (preferences['solve_problems'] === true) score += 1;
-        if (preferences['get_rich'] === true) score -= 2;
-      }
-      
-      else if (rec.id === 'entrepreneurship') {
-        if (preferences['own_business'] === true) score += 3;
-        if (preferences['flexible_hours'] === true) score += 2;
-        if (preferences['lead_others'] === true) score += 2;
-        if (preferences['get_rich'] === true) score += 1;
-        if (preferences['stable_career'] === true) score -= 3;
-      }
-      
-      else if (rec.id === 'digital_nomad') {
-        if (preferences['travel_world'] === true) score += 3;
-        if (preferences['flexible_hours'] === true) score += 3;
-        if (preferences['big_city'] === true) score += 1;
-        if (preferences['stable_career'] === true) score -= 2;
-      }
-      
-      else if (rec.id === 'work_life_balance') {
-        if (preferences['work_life_balance'] === true) score += 3;
-        if (preferences['stable_career'] === true) score += 2;
-        if (preferences['quiet_nature'] === true) score += 1;
-        if (preferences['get_rich'] === true) score -= 1;
-        if (preferences['travel_world'] === true) score -= 1;
-      }
-      
-      return { ...rec, score };
+      description: 'Work remotely while traveling to different locations.',
+      match: 'High match: Your creative or tech skills could enable location independence.'
     });
-    
-    return scoredRecommendations
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
-      
-  }, [allRecommendations, preferences]);
+  }
 
-  // If no preferences yet, show loading or guidance
-  if (Object.keys(preferences).length === 0) {
+  if (['business', 'social'].includes(topCategory)) {
+    recommendations.push({
+      id: 'entrepreneurship',
+      title: 'Entrepreneurship',
+      description: 'Start your own business or freelance in your field of interest.',
+      match: 'High match: Your business sense and initiative could lead to successful ventures.'
+    });
+  }
+
+  if (['helping', 'outdoors'].includes(topCategory)) {
+    recommendations.push({
+      id: 'service_year',
+      title: 'Service Year',
+      description: 'Spend a year in programs like AmeriCorps, Peace Corps, or conservation work.',
+      match: 'High match: Your passion for helping others and hands-on work fits with service programs.'
+    });
+  }
+
+  return recommendations;
+};
+
+export default function RecommendationEngine({ preferences, onSelectPath }: RecommendationEngineProps) {
+  const [recommendations, setRecommendations] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState('education');
+  
+  useEffect(() => {
+    // Simulate loading time to analyze preferences
+    setLoading(true);
+    setTimeout(() => {
+      const results = analyzePreferences(preferences);
+      setRecommendations(results);
+      setLoading(false);
+    }, 1500);
+  }, [preferences]);
+  
+  if (loading) {
     return (
-      <div className="text-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-gray-500">Analyzing your preferences...</p>
+      <div className="space-y-6">
+        <div className="flex justify-center mb-4">
+          <Skeleton className="h-10 w-64 rounded-full" />
+        </div>
+        
+        {[1, 2, 3].map(i => (
+          <Card key={i} className="mb-4">
+            <CardHeader>
+              <Skeleton className="h-6 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-full mb-2" />
+              <Skeleton className="h-4 w-2/3" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
-
+  
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="space-y-6">
-        {recommendations.map((recommendation, index) => (
-          <motion.div 
-            key={recommendation.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card className="hover:border-primary cursor-pointer transition-colors">
-              <CardContent className="p-6">
-                <div className="flex items-start">
-                  <div className="rounded-full bg-primary h-10 w-10 flex items-center justify-center text-white mr-4 flex-shrink-0">
-                    <span className="material-icons">{recommendation.icon}</span>
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-xl font-semibold mb-3">Your Personalized Recommendations</h3>
+        <p className="text-gray-600 text-sm max-w-md mx-auto">
+          Based on your preferences, we've identified paths that might be a good fit for your interests and strengths.
+        </p>
+      </div>
+      
+      <Tabs defaultValue="education" onValueChange={setSelectedTab}>
+        <TabsList className="grid grid-cols-3 mb-6">
+          <TabsTrigger value="education">Education</TabsTrigger>
+          <TabsTrigger value="career">Career</TabsTrigger>
+          <TabsTrigger value="lifestyle">Lifestyle</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="education" className="space-y-4">
+          {recommendations?.education.map((rec: any) => (
+            <Card key={rec.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <CardTitle className="text-lg">{rec.title}</CardTitle>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      {rec.match.startsWith('High') ? '90%+ Match' : '75% Match'}
+                    </Badge>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-lg mb-1">{recommendation.title}</h4>
-                    <p className="text-sm text-gray-600 mb-3">{recommendation.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {recommendation.tags.map(tag => (
-                        <span 
-                          key={tag} 
-                          className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onSelectPath(recommendation.pathType, recommendation.id)}
-                    >
-                      Explore This Path
-                    </Button>
-                  </div>
+                  <CardDescription className="text-gray-600 mb-3">
+                    {rec.description}
+                  </CardDescription>
+                  <p className="text-sm text-gray-500 italic mb-3">{rec.match}</p>
+                  
+                  <Button 
+                    onClick={() => onSelectPath('education', rec.id)}
+                    className="w-full"
+                  >
+                    Explore This Path
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        ))}
-      </div>
+          ))}
+        </TabsContent>
+        
+        <TabsContent value="career" className="space-y-4">
+          {recommendations?.career.map((rec: any) => (
+            <Card key={rec.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <CardTitle className="text-lg">{rec.title}</CardTitle>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      {rec.match.startsWith('High') ? '90%+ Match' : '75% Match'}
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-gray-600 mb-3">
+                    {rec.description}
+                  </CardDescription>
+                  <p className="text-sm text-gray-500 italic mb-3">{rec.match}</p>
+                  
+                  <Button 
+                    onClick={() => onSelectPath('career', rec.id)}
+                    className="w-full"
+                  >
+                    Explore This Path
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+        
+        <TabsContent value="lifestyle" className="space-y-4">
+          {recommendations?.lifestyle.map((rec: any) => (
+            <Card key={rec.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <CardTitle className="text-lg">{rec.title}</CardTitle>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      {rec.match.startsWith('High') ? '90%+ Match' : '75% Match'}
+                    </Badge>
+                  </div>
+                  <CardDescription className="text-gray-600 mb-3">
+                    {rec.description}
+                  </CardDescription>
+                  <p className="text-sm text-gray-500 italic mb-3">{rec.match}</p>
+                  
+                  <Button 
+                    onClick={() => onSelectPath('lifestyle', rec.id)}
+                    className="w-full"
+                  >
+                    Explore This Path
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

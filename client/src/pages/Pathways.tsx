@@ -305,15 +305,103 @@ const Pathways = () => {
             }
           };
           
+          // Convert wheel results to a format compatible with RecommendationEngine
+          const convertWheelResultsToPreferences = () => {
+            // This maps the wheel choices to equivalent card preferences
+            const wheelPreferences: Record<string, boolean> = {};
+            
+            if (explorationMethod === 'wheel' && Object.keys(wheelResults).length > 0) {
+              // Map values responses to preferences
+              if (wheelResults['success_meaning'] === 'freedom') {
+                wheelPreferences['innovation'] = true;
+                wheelPreferences['entrepreneurship'] = true;
+              } else if (wheelResults['success_meaning'] === 'respect') {
+                wheelPreferences['team_collaboration'] = true;
+                wheelPreferences['strategic_thinking'] = true;
+              } else if (wheelResults['success_meaning'] === 'wealth') {
+                wheelPreferences['strategic_thinking'] = true;
+                wheelPreferences['numbers_data'] = true;
+              } else if (wheelResults['success_meaning'] === 'impact') {
+                wheelPreferences['helping_others'] = true;
+                wheelPreferences['working_with_people'] = true;
+              }
+              
+              // Map work environment preferences
+              if (wheelResults['dream_environment'] === 'office') {
+                wheelPreferences['strategic_thinking'] = true;
+                wheelPreferences['numbers_data'] = true;
+              } else if (wheelResults['dream_environment'] === 'remote') {
+                wheelPreferences['digital_work'] = true;
+                wheelPreferences['technical_skills'] = true;
+              } else if (wheelResults['dream_environment'] === 'outdoors') {
+                wheelPreferences['outdoor_work'] = true;
+                wheelPreferences['nature_environment'] = true;
+              } else if (wheelResults['dream_environment'] === 'creative') {
+                wheelPreferences['artistic_expression'] = true;
+                wheelPreferences['building_creating'] = true;
+              }
+              
+              // Map talents
+              if (wheelResults['talent_recognition'] === 'solve') {
+                wheelPreferences['problem_solving'] = true;
+                wheelPreferences['strategic_thinking'] = true;
+              } else if (wheelResults['talent_recognition'] === 'create') {
+                wheelPreferences['artistic_expression'] = true;
+                wheelPreferences['building_creating'] = true;
+              } else if (wheelResults['talent_recognition'] === 'communicate') {
+                wheelPreferences['working_with_people'] = true;
+                wheelPreferences['team_collaboration'] = true;
+              } else if (wheelResults['talent_recognition'] === 'organize') {
+                wheelPreferences['strategic_thinking'] = true;
+                wheelPreferences['numbers_data'] = true;
+              }
+              
+              // Map fears (reverse mapping - things they want to avoid)
+              if (wheelResults['biggest_fear'] === 'financial') {
+                wheelPreferences['strategic_thinking'] = true;
+                wheelPreferences['numbers_data'] = true;
+              } else if (wheelResults['biggest_fear'] === 'unfulfilled') {
+                wheelPreferences['innovation'] = true;
+                wheelPreferences['helping_others'] = true;
+              }
+              
+              // Map goals
+              if (wheelResults['ten_years'] === 'expert') {
+                wheelPreferences['technical_skills'] = true;
+                wheelPreferences['problem_solving'] = true;
+              } else if (wheelResults['ten_years'] === 'leader') {
+                wheelPreferences['strategic_thinking'] = true;
+                wheelPreferences['team_collaboration'] = true;
+              } else if (wheelResults['ten_years'] === 'balance') {
+                wheelPreferences['working_with_people'] = true;
+                wheelPreferences['outdoor_work'] = true;
+              } else if (wheelResults['ten_years'] === 'entrepreneur') {
+                wheelPreferences['innovation'] = true;
+                wheelPreferences['entrepreneurship'] = true;
+              }
+            }
+            
+            return wheelPreferences;
+          };
+          
+          // Use wheel results if that was the chosen method, otherwise use swipe results
+          const preferences = explorationMethod === 'wheel' 
+            ? convertWheelResultsToPreferences()
+            : swipeResults;
+          
+          const activityName = explorationMethod === 'wheel' 
+            ? 'Identity Wheel' 
+            : 'Card Preferences';
+            
           return (
             <Step 
               title="Your Personalized Recommendations" 
-              subtitle="Based on your preferences, here are paths that might be the best fit for you"
+              subtitle={`Based on your ${activityName} results, here are paths that might be the best fit for you`}
             >
               <Card>
                 <CardContent className="p-6">
                   <RecommendationEngine 
-                    preferences={swipeResults} 
+                    preferences={preferences} 
                     onSelectPath={handleSelectPath} 
                   />
                   
