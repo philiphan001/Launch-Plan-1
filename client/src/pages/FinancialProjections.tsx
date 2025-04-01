@@ -26,6 +26,8 @@ import { formatCurrency } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import MilestonesSection from "@/components/milestones/MilestonesSection";
+import { AdvicePanel } from "@/components/financial-advice/AdvicePanel";
+import { generateFinancialAdvice, FinancialAdvice, FinancialState } from "@/lib/financialAdvice";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities";
 
@@ -115,6 +117,7 @@ const FinancialProjections = () => {
   const [expenses, setExpenses] = useState<number>(35000);
   const [incomeGrowth, setIncomeGrowth] = useState<number>(3);
   const [studentLoanDebt, setStudentLoanDebt] = useState<number>(0);
+  const [financialAdvice, setFinancialAdvice] = useState<FinancialAdvice[]>([]);
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
@@ -552,6 +555,38 @@ const FinancialProjections = () => {
   };
   
   const projectionData = generateProjectionData();
+  
+  // Generate financial advice based on current financial state
+  useEffect(() => {
+    // Create a financial state object based on current values
+    const financialState: FinancialState = {
+      income: income,
+      expenses: expenses,
+      savings: startingSavings,
+      studentLoanDebt: studentLoanDebt,
+      otherDebt: financialProfile?.otherDebtAmount || 0,
+    };
+    
+    // Add home-related values if milestones include a home purchase
+    const homeMilestone = milestones?.find(m => m.type === 'home');
+    if (homeMilestone) {
+      financialState.homeValue = homeMilestone.homeValue;
+      financialState.homeDownPayment = homeMilestone.homeDownPayment;
+      financialState.homeMonthlyPayment = homeMilestone.homeMonthlyPayment;
+    }
+    
+    // Add car-related values if milestones include a car purchase
+    const carMilestone = milestones?.find(m => m.type === 'car');
+    if (carMilestone) {
+      financialState.carValue = carMilestone.carValue;
+      financialState.carDownPayment = carMilestone.carDownPayment;
+      financialState.carMonthlyPayment = carMilestone.carMonthlyPayment;
+    }
+    
+    // Generate financial advice
+    const advice = generateFinancialAdvice(financialState);
+    setFinancialAdvice(advice);
+  }, [income, expenses, startingSavings, studentLoanDebt, financialProfile, milestones]);
 
   useEffect(() => {
     if (chartRef.current) {
@@ -1120,6 +1155,19 @@ const FinancialProjections = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Financial Advice Section */}
+      {financialAdvice.length > 0 && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <AdvicePanel 
+              advice={financialAdvice} 
+              title="Financial Recommendations" 
+              showCount={true} 
+            />
+          </CardContent>
+        </Card>
+      )}
       
       {/* Life Milestones Section */}
       <MilestonesSection 
