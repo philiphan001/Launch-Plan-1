@@ -326,6 +326,9 @@ const Profile = () => {
                       onChange={(e) => setZipCode(e.target.value)} 
                       className="mt-1"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.
+                    </p>
                   </div>
                 </div>
                 

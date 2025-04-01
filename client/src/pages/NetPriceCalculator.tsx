@@ -544,7 +544,7 @@ const NetPriceCalculator = () => {
                   <div className="flex mt-1">
                     <Input 
                       id="zipCode" 
-                      placeholder="e.g. 98101"
+                      placeholder="Try 90210, 02142, 30328..."
                       value={zipCode}
                       onChange={(e) => setZipCode(e.target.value)}
                       className="flex-1"
@@ -560,6 +560,9 @@ const NetPriceCalculator = () => {
                   </div>
                   {zipCode.length > 0 && zipCode.length < 5 && (
                     <p className="text-xs text-destructive mt-1">Please enter a valid 5-digit zip code</p>
+                  )}
+                  {zipCode.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.</p>
                   )}
                   {isLoadingUser && (
                     <p className="text-xs text-muted-foreground mt-1 flex items-center">

@@ -746,7 +746,7 @@ const FinancialProjections = () => {
               <p className="mt-1 text-sm text-gray-500">
                 {userData?.zipCode 
                   ? `We don't have cost of living data for your current zip code (${userData.zipCode}).
-                    Try changing to 94103 (San Francisco) to see data.`
+                    Try changing to 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) to see data.`
                   : "Set your location to adjust financial projections based on cost of living."}
               </p>
               <div className="mt-6">
@@ -973,7 +973,7 @@ const UpdateLocationDialog = ({ userData }: UpdateLocationDialogProps) => {
               pattern="[0-9]{5}"
             />
             <p className="text-xs text-gray-500">
-              Enter a valid US 5-digit zip code. Try 94103 (San Francisco) for example data.
+              Enter a valid US 5-digit zip code. Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.
             </p>
           </div>
         </div>
