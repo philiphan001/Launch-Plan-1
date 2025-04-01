@@ -267,7 +267,8 @@ async function recreateLocationCostOfLiving() {
       { zip: '98101', city: 'SEATTLE', state: 'WA', housing: 2200, transportation: 1000, food: 1100, healthcare: 950, monthly: 7100, factor: 1.30 },
       { zip: '80202', city: 'DENVER', state: 'CO', housing: 2000, transportation: 900, food: 1000, healthcare: 900, monthly: 6700, factor: 1.24 },
       { zip: '33101', city: 'MIAMI', state: 'FL', housing: 2200, transportation: 950, food: 1050, healthcare: 900, monthly: 6900, factor: 1.25 },
-      { zip: '30308', city: 'ATLANTA', state: 'GA', housing: 1900, transportation: 900, food: 950, healthcare: 850, monthly: 6100, factor: 1.15 }
+      { zip: '30308', city: 'ATLANTA', state: 'GA', housing: 1900, transportation: 900, food: 950, healthcare: 850, monthly: 6100, factor: 1.15 },
+      { zip: '30328', city: 'ATLANTA', state: 'GA', housing: 1850, transportation: 880, food: 940, healthcare: 830, monthly: 6000, factor: 1.12 }
     ];
     
     // Update each city

@@ -16,6 +16,7 @@ const MAJOR_CITIES = [
   { zip: '80202', city: 'DENVER', state: 'CO', housing: 2000, transportation: 900, food: 1000, healthcare: 900, monthly: 6700, factor: 1.24 },
   { zip: '33101', city: 'MIAMI', state: 'FL', housing: 2200, transportation: 950, food: 1050, healthcare: 900, monthly: 6900, factor: 1.25 },
   { zip: '30308', city: 'ATLANTA', state: 'GA', housing: 1900, transportation: 900, food: 950, healthcare: 850, monthly: 6100, factor: 1.15 },
+  { zip: '30328', city: 'ATLANTA', state: 'GA', housing: 1850, transportation: 880, food: 940, healthcare: 830, monthly: 6000, factor: 1.12 },
   { zip: '43201', city: 'COLUMBUS', state: 'OH', housing: 1700, transportation: 850, food: 900, healthcare: 800, monthly: 5800, factor: 1.05 },
   { zip: '85001', city: 'PHOENIX', state: 'AZ', housing: 1750, transportation: 900, food: 900, healthcare: 800, monthly: 5850, factor: 1.08 },
   { zip: '19101', city: 'PHILADELPHIA', state: 'PA', housing: 1800, transportation: 900, food: 950, healthcare: 850, monthly: 5900, factor: 1.10 },
