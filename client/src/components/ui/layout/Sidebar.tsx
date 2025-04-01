@@ -21,7 +21,7 @@ const Sidebar = () => {
   const [location] = useLocation();
 
   return (
-    <aside className="w-16 md:w-64 bg-white shadow-lg flex-shrink-0">
+    <aside className="w-16 md:w-64 bg-white shadow-lg flex-shrink-0 sticky top-14 h-[calc(100vh-56px)] overflow-y-auto z-5">
       <nav className="py-4">
         <ul>
           {navItems.map((item) => (

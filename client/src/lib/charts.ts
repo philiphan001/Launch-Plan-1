@@ -101,16 +101,15 @@ export function createCashFlowChart(ctx: CanvasRenderingContext2D, data: CashFlo
   });
 }
 
-// Function to create the main projection chart with different types of data
 // Function to create a stacked asset chart showing different asset categories
 function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
   // Calculate savings (total assets minus home value)
-  const savings = data.assets.map((assetValue, index) => {
+  const savings = data.assets?.map((assetValue, index) => {
     const homeValue = data.homeValue && data.homeValue[index] ? data.homeValue[index] : 0;
     return assetValue - homeValue;
-  });
+  }) || [];
 
   const datasets = [
     {
@@ -183,11 +182,11 @@ function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: Projec
   const labels = data.ages.map(age => age.toString());
   
   // Calculate other debts (total liabilities minus mortgage and student loans)
-  const otherDebts = data.liabilities.map((liabilityValue, index) => {
+  const otherDebts = data.liabilities?.map((liabilityValue, index) => {
     const mortgageValue = data.mortgage && data.mortgage[index] ? data.mortgage[index] : 0;
     const studentLoanValue = data.studentLoan && data.studentLoan[index] ? data.studentLoan[index] : 0;
     return liabilityValue - mortgageValue - studentLoanValue;
-  });
+  }) || [];
 
   const datasets = [
     {
