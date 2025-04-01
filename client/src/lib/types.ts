@@ -20,6 +20,8 @@ export interface ProjectionData {
   // Detailed property breakdown
   homeValue?: number[];
   mortgage?: number[];
+  carValue?: number[];
+  carLoan?: number[];
   studentLoan?: number[];
   ages: number[];
 }

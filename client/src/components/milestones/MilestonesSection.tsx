@@ -618,7 +618,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                   </div>
                   
                   <div>
-                    <Label htmlFor="car-monthly-payment">Monthly Payment</Label>
+                    <Label htmlFor="car-monthly-payment">Monthly Payment (Estimated)</Label>
                     <div className="flex items-center mt-1">
                       <span className="mr-2">$</span>
                       <Input
@@ -629,8 +629,35 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                       />
                     </div>
                     <div className="text-sm text-gray-500 mt-1">
-                      Includes loan payment, insurance, etc.
+                      Includes loan payment, insurance, maintenance, etc.
                     </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2" 
+                      onClick={() => {
+                        // Calculate estimated monthly payment (5-year car loan at 7% interest rate)
+                        const loanAmount = carValue - carDownPayment;
+                        const monthlyInterestRate = 0.07 / 12;
+                        const numberOfPayments = 5 * 12;
+                        
+                        // Calculate car loan payment using the loan formula
+                        const loanPayment = loanAmount * 
+                          (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / 
+                          (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
+                          
+                        // Add insurance (~$100/month) and maintenance (~$50/month)
+                        const insurance = 100;
+                        const maintenance = 50;
+                        
+                        // Total monthly payment
+                        const total = Math.round(loanPayment + insurance + maintenance);
+                        
+                        setCarMonthlyPayment(total);
+                      }}
+                    >
+                      Calculate Payment
+                    </Button>
                   </div>
                 </div>
               )}

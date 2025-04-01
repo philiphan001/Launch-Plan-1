@@ -105,10 +105,11 @@ export function createCashFlowChart(ctx: CanvasRenderingContext2D, data: CashFlo
 function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
-  // Calculate savings (total assets minus home value)
+  // Calculate savings (total assets minus home value and car value)
   const savings = data.assets?.map((assetValue, index) => {
     const homeValue = data.homeValue && data.homeValue[index] ? data.homeValue[index] : 0;
-    return assetValue - homeValue;
+    const carValue = data.carValue && data.carValue[index] ? data.carValue[index] : 0;
+    return assetValue - homeValue - carValue;
   }) || [];
 
   const datasets = [
@@ -127,6 +128,17 @@ function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Projection
       label: 'Home Value',
       data: data.homeValue,
       backgroundColor: 'rgba(0, 150, 136, 0.7)', // Teal color for home value
+      borderRadius: 4,
+      stack: 'assets'
+    });
+  }
+  
+  // Add car value dataset if it exists and has positive values
+  if (data.carValue && data.carValue.some(value => value > 0)) {
+    datasets.push({
+      label: 'Car Value',
+      data: data.carValue,
+      backgroundColor: 'rgba(103, 58, 183, 0.7)', // Purple color for car value
       borderRadius: 4,
       stack: 'assets'
     });
@@ -181,11 +193,12 @@ function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Projection
 function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
-  // Calculate other debts (total liabilities minus mortgage and student loans)
+  // Calculate other debts (total liabilities minus mortgage, car loan, and student loans)
   const otherDebts = data.liabilities?.map((liabilityValue, index) => {
     const mortgageValue = data.mortgage && data.mortgage[index] ? data.mortgage[index] : 0;
     const studentLoanValue = data.studentLoan && data.studentLoan[index] ? data.studentLoan[index] : 0;
-    return liabilityValue - mortgageValue - studentLoanValue;
+    const carLoanValue = data.carLoan && data.carLoan[index] ? data.carLoan[index] : 0;
+    return liabilityValue - mortgageValue - studentLoanValue - carLoanValue;
   }) || [];
 
   const datasets = [
@@ -204,6 +217,17 @@ function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: Projec
       label: 'Student Loans',
       data: data.studentLoan,
       backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for student loans
+      borderRadius: 4,
+      stack: 'liabilities'
+    });
+  }
+  
+  // Add car loan dataset if it exists and has positive values
+  if (data.carLoan && data.carLoan.some(value => value > 0)) {
+    datasets.push({
+      label: 'Car Loan',
+      data: data.carLoan,
+      backgroundColor: 'rgba(156, 39, 176, 0.7)', // Purple for car loan
       borderRadius: 4,
       stack: 'liabilities'
     });
@@ -283,8 +307,9 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
       break;
     case 'assets':
       // For assets, we'll use the detailed breakdown if available
-      if (data.homeValue && data.homeValue.some(value => value > 0)) {
-        // Use stacked chart for assets with home value breakdown
+      if ((data.homeValue && data.homeValue.some(value => value > 0)) || 
+          (data.carValue && data.carValue.some(value => value > 0))) {
+        // Use stacked chart for assets with home value and car value breakdown
         return createStackedAssetChart(ctx, data);
       } else {
         chartData = data.assets || [];
@@ -295,6 +320,7 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
     case 'liabilities':
       // For liabilities, we'll use the detailed breakdown if available
       if ((data.mortgage && data.mortgage.some(value => value > 0)) || 
+          (data.carLoan && data.carLoan.some(value => value > 0)) || 
           (data.studentLoan && data.studentLoan.some(value => value > 0))) {
         // Use stacked chart for liabilities with breakdown
         return createStackedLiabilityChart(ctx, data);

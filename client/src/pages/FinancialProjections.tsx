@@ -307,6 +307,10 @@ const FinancialProjections = () => {
     const homeValueData = [0]; // Track home value as an asset
     const mortgageData = [0];  // Track mortgage as a liability
     
+    // Track car value and loan
+    const carValueData = [0]; // Track car value as an asset
+    const carLoanData = [0];  // Track car loan as a liability
+    
     // Track student loan balance over time
     let remainingStudentLoanDebt = studentLoanDebt;
     const studentLoanData = [remainingStudentLoanDebt]; // Track student loans as a liability
@@ -339,6 +343,8 @@ const FinancialProjections = () => {
     
     // Track car payments (for car milestone)
     let hasCar = false;
+    let carValue = 0;
+    let carLoanPrincipal = 0;
     let carPayment = 0;
     
     // Track children expenses (for children milestone)
@@ -394,11 +400,16 @@ const FinancialProjections = () => {
               
             case 'car':
               hasCar = true;
-              // Down payment reduces net worth
-              netWorth -= (milestone.carDownPayment || 0);
+              // Set car value
+              carValue = milestone.carValue || 0;
+              // Calculate car loan principal (car value minus down payment)
+              const carDownPayment = milestone.carDownPayment || 0;
+              carLoanPrincipal = carValue - carDownPayment;
+              // Down payment reduces liquid assets but doesn't change net worth directly
+              // since it transfers from cash to car asset
               // Set monthly car payment (annual)
               carPayment = (milestone.carMonthlyPayment || 0) * 12;
-              console.log(`Car milestone: Down payment $${milestone.carDownPayment}, annual payment $${carPayment}`);
+              console.log(`Car milestone: Value $${carValue}, Down payment $${carDownPayment}, Loan $${carLoanPrincipal}, annual payment $${carPayment}`);
               break;
               
             case 'children':
@@ -472,10 +483,34 @@ const FinancialProjections = () => {
       if (hasHome) {
         homeValue = Math.round(homeValue * 1.03);
       }
+      
+      // Update car loan principal for this year (simple amortization - approximate)
+      if (hasCar) {
+        // Assume 5-year car loan, monthly payments
+        const carInterestRate = 0.05; // 5% annual interest rate
+        const carAnnualInterestPaid = carLoanPrincipal * carInterestRate;
+        const carPrincipalPayment = carPayment - carAnnualInterestPaid;
         
+        // Cannot pay more principal than what remains
+        if (carPrincipalPayment > carLoanPrincipal) {
+          carLoanPrincipal = 0;
+        } else {
+          carLoanPrincipal = Math.max(0, carLoanPrincipal - carPrincipalPayment);
+        }
+        
+        // Update car value with depreciation (15% per year)
+        carValue = Math.round(carValue * 0.85);
+      }
+      
       // Calculate total assets and liabilities
-      const totalAssets = Math.max(0, netWorth) + (hasHome ? homeValue : 0);
-      const totalLiabilities = Math.max(0, -netWorth) + mortgagePrincipal + remainingStudentLoanDebt + educationDebt;
+      const totalAssets = Math.max(0, netWorth) + 
+                          (hasHome ? homeValue : 0) + 
+                          (hasCar ? carValue : 0);
+      const totalLiabilities = Math.max(0, -netWorth) + 
+                              mortgagePrincipal + 
+                              carLoanPrincipal + 
+                              remainingStudentLoanDebt + 
+                              educationDebt;
       
       // Update data arrays for this year
       netWorthData.push(netWorth);
@@ -483,6 +518,8 @@ const FinancialProjections = () => {
       liabilitiesData.push(totalLiabilities);
       homeValueData.push(hasHome ? homeValue : 0);
       mortgageData.push(mortgagePrincipal);
+      carValueData.push(hasCar ? carValue : 0);
+      carLoanData.push(carLoanPrincipal);
       studentLoanData.push(remainingStudentLoanDebt);
       
       // Store income values for stacked chart
@@ -501,6 +538,8 @@ const FinancialProjections = () => {
       liabilities: liabilitiesData, // Use properly tracked liability data that includes mortgage
       homeValue: homeValueData, // Track home value separately
       mortgage: mortgageData, // Track mortgage separately
+      carValue: carValueData, // Track car value separately
+      carLoan: carLoanData, // Track car loan separately
       studentLoan: studentLoanData, // Track student loan separately
       ages: ages
     };
