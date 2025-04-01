@@ -66,6 +66,33 @@ interface CareerCalculation {
   };
 }
 
+interface Milestone {
+  id: number;
+  userId: number;
+  type: string;
+  title: string;
+  date: string;
+  yearsAway: number;
+  // Marriage specific fields
+  spouseOccupation?: string;
+  spouseIncome?: number;
+  spouseAssets?: number;
+  spouseLiabilities?: number;
+  // Home specific fields
+  homeValue?: number;
+  homeDownPayment?: number;
+  homeMonthlyPayment?: number;
+  // Car specific fields
+  carValue?: number;
+  carDownPayment?: number;
+  carMonthlyPayment?: number;
+  // Children specific fields
+  childrenCount?: number;
+  childrenExpensePerYear?: number;
+  // Education specific fields
+  educationCost?: number;
+}
+
 interface FinancialProfile {
   id: number;
   userId: number;
@@ -158,6 +185,16 @@ const FinancialProjections = () => {
     }
   });
   
+  // Fetch milestones for financial projections
+  const { data: milestones, isLoading: isLoadingMilestones } = useQuery({
+    queryKey: ['/api/milestones/user', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/milestones/user/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch milestones');
+      return response.json() as Promise<Milestone[]>;
+    }
+  });
+  
   // Update form values based on user profile and saved calculations
   useEffect(() => {
     // Calculate current age from birth year if available
@@ -233,7 +270,7 @@ const FinancialProjections = () => {
   const includedCareerCalc = careerCalculations?.find(calc => calc.includedInProjection);
   
   // Check if data is being loaded
-  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData;
+  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData || isLoadingMilestones;
   
   // Determine years based on timeframe
   const years = timeframe === "5 Years" ? 5 : timeframe === "20 Years" ? 20 : 10;
@@ -261,12 +298,118 @@ const FinancialProjections = () => {
     const expensesData = [currentExpenses];
     const ages = [age];
     
+    // Sort milestones by yearsAway to process them in chronological order
+    const sortedMilestones = milestones ? [...milestones].sort((a, b) => a.yearsAway - b.yearsAway) : [];
+    
+    console.log("Processing milestones for projection:", sortedMilestones);
+    
+    // Create a map of milestones by year
+    const milestonesByYear = new Map();
+    if (sortedMilestones.length > 0) {
+      sortedMilestones.forEach(milestone => {
+        if (milestone.yearsAway <= years) {
+          milestonesByYear.set(milestone.yearsAway, [...(milestonesByYear.get(milestone.yearsAway) || []), milestone]);
+        }
+      });
+    }
+    
+    // Track spouse income (for marriage milestone)
+    let hasSpouse = false;
+    let spouseIncome = 0;
+    let spouseIncomeGrowth = incomeGrowth; // Use same growth rate as primary income
+    
+    // Track homeowner status and mortgage (for home milestone)
+    let hasHome = false;
+    let mortgagePayment = 0;
+    
+    // Track car payments (for car milestone)
+    let hasCar = false;
+    let carPayment = 0;
+    
+    // Track children expenses (for children milestone)
+    let hasChildren = false;
+    let childrenExpenses = 0;
+    
+    // Track education debt (for education milestone)
+    let hasEducationDebt = false;
+    let educationDebt = 0;
+    
     for (let i = 1; i <= years; i++) {
+      // Apply income growth
       currentIncome = Math.round(currentIncome * (1 + incomeGrowth / 100));
-      currentExpenses = Math.round(currentExpenses * 1.02); // Assume 2% expense growth
+      
+      // If spouse income, apply growth to that as well
+      if (hasSpouse) {
+        spouseIncome = Math.round(spouseIncome * (1 + spouseIncomeGrowth / 100));
+      }
+      
+      // Base expense growth rate (inflation)
+      currentExpenses = Math.round(currentExpenses * 1.02);
+      
+      // Process milestones for this year
+      if (milestonesByYear.has(i)) {
+        const yearMilestones = milestonesByYear.get(i);
+        
+        yearMilestones.forEach(milestone => {
+          console.log(`Processing milestone for year ${i}:`, milestone);
+          
+          switch (milestone.type) {
+            case 'marriage':
+              hasSpouse = true;
+              spouseIncome = milestone.spouseIncome || 50000;
+              
+              // Add spouse assets and subtract liabilities
+              netWorth += (milestone.spouseAssets || 0) - (milestone.spouseLiabilities || 0);
+              console.log(`Marriage milestone: Adding spouse with income $${spouseIncome} and net worth ${(milestone.spouseAssets || 0) - (milestone.spouseLiabilities || 0)}`);
+              break;
+              
+            case 'home':
+              hasHome = true;
+              // Down payment reduces net worth
+              netWorth -= (milestone.homeDownPayment || 0);
+              // Set monthly mortgage payment (annual)
+              mortgagePayment = (milestone.homeMonthlyPayment || 0) * 12;
+              console.log(`Home milestone: Down payment $${milestone.homeDownPayment}, annual mortgage $${mortgagePayment}`);
+              break;
+              
+            case 'car':
+              hasCar = true;
+              // Down payment reduces net worth
+              netWorth -= (milestone.carDownPayment || 0);
+              // Set monthly car payment (annual)
+              carPayment = (milestone.carMonthlyPayment || 0) * 12;
+              console.log(`Car milestone: Down payment $${milestone.carDownPayment}, annual payment $${carPayment}`);
+              break;
+              
+            case 'children':
+              hasChildren = true;
+              // Set annual child expenses
+              childrenExpenses = (milestone.childrenExpensePerYear || 0) * (milestone.childrenCount || 1);
+              console.log(`Children milestone: ${milestone.childrenCount} children, annual expenses $${childrenExpenses}`);
+              break;
+              
+            case 'education':
+              hasEducationDebt = true;
+              // Add education cost as debt
+              educationDebt = milestone.educationCost || 0;
+              netWorth -= educationDebt / 5; // Assume 20% down payment or first year costs
+              console.log(`Education milestone: Total cost $${educationDebt}`);
+              break;
+          }
+        });
+      }
+      
+      // Add spouse income to total if married
+      const totalIncome = currentIncome + (hasSpouse ? spouseIncome : 0);
+      
+      // Add milestone-related expenses
+      const totalExpenses = currentExpenses + 
+        (hasHome ? mortgagePayment : 0) +
+        (hasCar ? carPayment : 0) +
+        (hasChildren ? childrenExpenses : 0);
       
       // Calculate annual surplus or deficit
-      const annualSurplus = currentIncome - currentExpenses;
+      const annualSurplus = totalIncome - totalExpenses;
       
       // Update net worth
       netWorth += annualSurplus;
@@ -277,9 +420,16 @@ const FinancialProjections = () => {
         netWorth -= annualLoanPayment;
       }
       
+      // Apply education debt payments (simplified - 5 year repayment) for graduate school
+      if (hasEducationDebt && i > 1 && i <= 5) { // Start payments after first year
+        const annualEducationPayment = educationDebt / 5;
+        netWorth -= annualEducationPayment;
+      }
+      
       netWorthData.push(netWorth);
-      incomeData.push(currentIncome);
-      expensesData.push(currentExpenses);
+      // Store the combined income for the chart
+      incomeData.push(totalIncome);
+      expensesData.push(totalExpenses);
       ages.push(age + i);
     }
     
