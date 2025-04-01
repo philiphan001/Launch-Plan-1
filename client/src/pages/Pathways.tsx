@@ -8,6 +8,7 @@ import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
 import RecommendationEngine from "@/components/pathways/RecommendationEngine";
 import IdentityWheel from "@/components/pathways/IdentityWheel";
 import AdvancedWheel from "@/components/pathways/AdvancedWheel";
+import AvatarCreator from "@/components/pathways/AvatarCreator";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 type EducationType = "4year" | "2year" | "vocational" | null;
@@ -47,7 +48,8 @@ const Pathways = () => {
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
-  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | 'advancedWheel' | null>(null);
+  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | 'advancedWheel' | 'avatar' | null>(null);
+  const [avatarResults, setAvatarResults] = useState<Record<string, string>>({});
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
@@ -89,6 +91,10 @@ const Pathways = () => {
     setGapYearActivity(null);
     setNeedsGuidance(null);
     setSelectedFieldOfStudy(null);
+    setExplorationMethod(null);
+    setSwipeResults({});
+    setWheelResults({});
+    setAvatarResults({});
   };
   
   const renderCurrentStep = () => {
@@ -140,7 +146,7 @@ const Pathways = () => {
                 title="Choose Your Exploration Method" 
                 subtitle="Select a fun activity to help discover your interests and values"
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                   <Card 
                     className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
                     onClick={() => setExplorationMethod('swipe')}
@@ -179,6 +185,20 @@ const Pathways = () => {
                       </div>
                       <h3 className="text-lg font-medium mb-2">Advanced Identity Wheel</h3>
                       <p className="text-sm text-gray-600 mb-4">Explore deeper aspects of your identity with fun prompts and mini-games</p>
+                      <Button variant="outline" size="sm">Select This Method</Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
+                    onClick={() => setExplorationMethod('avatar')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">face</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Future Self Avatar</h3>
+                      <p className="text-sm text-gray-600 mb-4">Create a personalized avatar that represents your future self</p>
                       <Button variant="outline" size="sm">Select This Method</Button>
                     </CardContent>
                   </Card>
@@ -232,6 +252,24 @@ const Pathways = () => {
                     <AdvancedWheel 
                       onComplete={(results) => {
                         setWheelResults(results);
+                        handleNext();
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else if (explorationMethod === 'avatar') {
+            return (
+              <Step 
+                title="Create Your Future Self" 
+                subtitle="Design an avatar that represents who you want to become"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <AvatarCreator 
+                      onComplete={(results) => {
+                        setAvatarResults(results);
                         handleNext();
                       }}
                     />
@@ -417,16 +455,111 @@ const Pathways = () => {
             return wheelPreferences;
           };
           
-          // Use wheel results if that was the chosen method, otherwise use swipe results
-          const preferences = (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel')
-            ? convertWheelResultsToPreferences()
-            : swipeResults;
+          // Convert avatar results to preferences
+          const convertAvatarResultsToPreferences = () => {
+            const avatarPreferences: Record<string, boolean> = {};
+            
+            // This maps the avatar attributes to equivalent card preferences
+            if (avatarResults && Object.keys(avatarResults).length > 0) {
+              // Map occupation field to interests
+              if (avatarResults.avatar_occupation === 'tech') {
+                avatarPreferences['technical_skills'] = true;
+                avatarPreferences['problem_solving'] = true;
+                avatarPreferences['digital_work'] = true;
+              } else if (avatarResults.avatar_occupation === 'creative') {
+                avatarPreferences['artistic_expression'] = true;
+                avatarPreferences['building_creating'] = true;
+              } else if (avatarResults.avatar_occupation === 'health') {
+                avatarPreferences['helping_others'] = true;
+                avatarPreferences['working_with_people'] = true;
+              } else if (avatarResults.avatar_occupation === 'business') {
+                avatarPreferences['strategic_thinking'] = true;
+                avatarPreferences['team_collaboration'] = true;
+                avatarPreferences['entrepreneurship'] = true;
+              } else if (avatarResults.avatar_occupation === 'education') {
+                avatarPreferences['helping_others'] = true;
+                avatarPreferences['working_with_people'] = true;
+              } else if (avatarResults.avatar_occupation === 'trades') {
+                avatarPreferences['building_creating'] = true;
+                avatarPreferences['outdoor_work'] = true;
+              }
+              
+              // Map location preferences
+              if (avatarResults.avatar_location === 'city') {
+                avatarPreferences['urban_environment'] = true;
+              } else if (avatarResults.avatar_location === 'rural' || avatarResults.avatar_location === 'mountains') {
+                avatarPreferences['nature_environment'] = true;
+                avatarPreferences['outdoor_work'] = true;
+              }
+              
+              // Map personality traits
+              if (avatarResults.avatar_personality === 'creative') {
+                avatarPreferences['artistic_expression'] = true;
+                avatarPreferences['innovation'] = true;
+              } else if (avatarResults.avatar_personality === 'analytical') {
+                avatarPreferences['problem_solving'] = true;
+                avatarPreferences['numbers_data'] = true;
+              } else if (avatarResults.avatar_personality === 'social') {
+                avatarPreferences['working_with_people'] = true;
+                avatarPreferences['team_collaboration'] = true;
+              } else if (avatarResults.avatar_personality === 'caring') {
+                avatarPreferences['helping_others'] = true;
+              } else if (avatarResults.avatar_personality === 'ambitious') {
+                avatarPreferences['entrepreneurship'] = true;
+                avatarPreferences['strategic_thinking'] = true;
+              }
+              
+              // Map values
+              if (avatarResults.avatar_values === 'achievement') {
+                avatarPreferences['strategic_thinking'] = true;
+              } else if (avatarResults.avatar_values === 'creativity') {
+                avatarPreferences['artistic_expression'] = true;
+                avatarPreferences['building_creating'] = true;
+              } else if (avatarResults.avatar_values === 'helping') {
+                avatarPreferences['helping_others'] = true;
+              } else if (avatarResults.avatar_values === 'freedom') {
+                avatarPreferences['entrepreneurship'] = true;
+              } else if (avatarResults.avatar_values === 'learning') {
+                avatarPreferences['technical_skills'] = true;
+              }
+              
+              // Map lifestyle preferences
+              if (avatarResults.avatar_lifestyle === 'adventurous') {
+                avatarPreferences['outdoor_work'] = true;
+              } else if (avatarResults.avatar_lifestyle === 'balanced') {
+                avatarPreferences['working_with_people'] = true;
+              } else if (avatarResults.avatar_lifestyle === 'social') {
+                avatarPreferences['team_collaboration'] = true;
+                avatarPreferences['working_with_people'] = true;
+              }
+            }
+            
+            return avatarPreferences;
+          };
           
-          const activityName = explorationMethod === 'wheel' 
-            ? 'Identity Wheel' 
-            : explorationMethod === 'advancedWheel'
-              ? 'Advanced Identity Wheel'
-              : 'Card Preferences';
+          // Determine which results to use based on the exploration method
+          let preferences: Record<string, boolean>;
+          
+          if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
+            preferences = convertWheelResultsToPreferences();
+          } else if (explorationMethod === 'avatar') {
+            preferences = convertAvatarResultsToPreferences();
+          } else {
+            preferences = swipeResults;
+          }
+          
+          // Determine the activity name for the subtitle
+          let activityName: string;
+          
+          if (explorationMethod === 'wheel') {
+            activityName = 'Identity Wheel';
+          } else if (explorationMethod === 'advancedWheel') {
+            activityName = 'Advanced Identity Wheel';
+          } else if (explorationMethod === 'avatar') {
+            activityName = 'Future Self Avatar';
+          } else {
+            activityName = 'Card Preferences';
+          }
             
           return (
             <Step 
