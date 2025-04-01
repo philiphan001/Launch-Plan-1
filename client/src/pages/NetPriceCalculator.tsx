@@ -769,11 +769,11 @@ const NetPriceCalculator = () => {
           
           <Card className="mt-4">
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Selected College</h3>
+              <h3 className="text-lg font-medium mb-4">My Favorite Schools</h3>
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="college">Choose a College</Label>
+                  <Label htmlFor="college">Choose from your favorite schools</Label>
                   {isLoadingFavorites ? (
                     <div className="flex items-center mt-2 text-sm text-muted-foreground">
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading favorite colleges...
