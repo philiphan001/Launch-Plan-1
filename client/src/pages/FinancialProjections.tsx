@@ -197,23 +197,30 @@ const FinancialProjections = () => {
       
       // Apply location adjustment if available
       if (locationCostData) {
-        // The values in the database are already percentages (2500 means 25x)
-        // We need to convert them to proper multipliers (2500 -> 2.5)
-        const expenseAdjustmentFactor = (
-          ((locationCostData.housing || 0) / 100) * 0.35 + 
-          ((locationCostData.food || 0) / 100) * 0.15 + 
-          ((locationCostData.transportation || 0) / 100) * 0.15 + 
-          ((locationCostData.healthcare || 0) / 100) * 0.1 + 
-          ((locationCostData.personal_insurance || 0) / 100) * 0.1 + 
-          1.0 * 0.15
+        // Calculate annual expenses directly from monthly cost of living data
+        // These values are actual dollar amounts from the CSV file
+        const monthlyExpenses = (
+          (locationCostData.housing || 0) +
+          (locationCostData.food || 0) +
+          (locationCostData.transportation || 0) +
+          (locationCostData.healthcare || 0) +
+          (locationCostData.personal_insurance || 0) + 
+          (locationCostData.entertainment || 0) +
+          (locationCostData.services || 0) +
+          (locationCostData.apparel || 0) +
+          (locationCostData.other || 0)
         );
         
-        // Make sure we're getting a reasonable result
-        console.log("Expense adjustment factor:", expenseAdjustmentFactor);
+        // Convert monthly to annual
+        const annualExpenses = monthlyExpenses * 12;
         
-        // Apply a more reasonable adjustment - cap it at 2.5x
-        const cappedAdjustment = Math.min(expenseAdjustmentFactor, 2.5);
-        setExpenses(Math.round(baseExpenses * cappedAdjustment));
+        // Make sure we're getting a reasonable result
+        console.log("Monthly expenses from location data:", monthlyExpenses);
+        console.log("Annual expenses from location data:", annualExpenses);
+        
+        // Use the calculated annual expenses, but ensure it's at least 50% of income
+        // as a sanity check (people generally don't spend less than half their income)
+        setExpenses(Math.max(Math.round(annualExpenses), Math.round(income * 0.5)));
       } else {
         setExpenses(Math.round(baseExpenses));
       }
@@ -448,12 +455,7 @@ const FinancialProjections = () => {
                       locationAdjusted: !!locationCostData,
                       locationZipCode: userData?.zipCode || null,
                       costOfLivingIndex: locationCostData ? 
-                        (((locationCostData.housing || 0) / 100 * 0.35 + 
-                          (locationCostData.food || 0) / 100 * 0.15 + 
-                          (locationCostData.transportation || 0) / 100 * 0.15 + 
-                          (locationCostData.healthcare || 0) / 100 * 0.1 + 
-                          (locationCostData.personal_insurance || 0) / 100 * 0.1 + 
-                          1.0 * 0.15)) : null,
+                        locationCostData.income_adjustment_factor || 1.0 : null,
                       incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                     }),
                   });
