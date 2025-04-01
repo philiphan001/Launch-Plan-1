@@ -598,18 +598,22 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                   </div>
                   
                   <div>
-                    <Label htmlFor="car-down-payment">Down Payment</Label>
-                    <div className="flex items-center mt-1">
-                      <span className="mr-2">$</span>
-                      <Input
-                        type="number"
+                    <Label htmlFor="car-down-payment">Down Payment Percentage</Label>
+                    <div className="flex items-center mt-2">
+                      <span className="mr-4 text-sm w-8">{Math.round((carDownPayment / carValue) * 100)}%</span>
+                      <Slider
                         id="car-down-payment"
-                        value={carDownPayment}
-                        onChange={(e) => setCarDownPayment(Number(e.target.value))}
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={[Math.round((carDownPayment / carValue) * 100)]}
+                        onValueChange={(value) => setCarDownPayment(Math.round(carValue * (value[0] / 100)))}
+                        className="flex-1"
                       />
+                      <span className="ml-4 text-sm w-8">${carDownPayment.toLocaleString()}</span>
                     </div>
                     <div className="text-sm text-gray-500 mt-1">
-                      Down payment: {Math.round((carDownPayment / carValue) * 100)}% of car value
+                      Higher down payment means lower monthly payments
                     </div>
                   </div>
                   
