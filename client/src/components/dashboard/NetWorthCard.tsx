@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createNetWorthChart } from "@/lib/charts";
+import { Link } from "wouter";
+import { ArrowRight } from "lucide-react";
 
 interface NetWorthCardProps {
   projectedNetWorth?: number;
@@ -52,7 +54,11 @@ const NetWorthCard = ({
     <Card className="overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 className="font-medium text-gray-700">Projected Net Worth</h3>
-        <span className="material-icons text-gray-400 cursor-pointer">more_horiz</span>
+        <Link to="/projections">
+          <span className="text-primary text-sm flex items-center">
+            Details <ArrowRight className="h-4 w-4 ml-1" />
+          </span>
+        </Link>
       </div>
       <CardContent className="p-4">
         <div className="text-center mb-2">
@@ -69,6 +75,11 @@ const NetWorthCard = ({
         </div>
         <div className="chart-container mt-4">
           <canvas ref={chartRef}></canvas>
+        </div>
+        <div className="mt-4 text-center">
+          <Link to="/projections" className="text-primary text-sm">
+            Customize Projections
+          </Link>
         </div>
       </CardContent>
     </Card>

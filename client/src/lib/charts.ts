@@ -7,16 +7,17 @@ export function createNetWorthChart(ctx: CanvasRenderingContext2D, data: NetWort
   const values = data.map(item => item.netWorth);
   
   return new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels,
       datasets: [{
         label: 'Net Worth',
         data: values,
-        borderColor: '#1976d2',
-        backgroundColor: 'rgba(25, 118, 210, 0.1)',
-        fill: true,
-        tension: 0.4
+        backgroundColor: (context) => {
+          const value = context.raw as number;
+          return value >= 0 ? 'rgba(25, 118, 210, 0.7)' : 'rgba(244, 67, 54, 0.7)';
+        },
+        borderRadius: 4
       }]
     },
     options: {
@@ -28,8 +29,8 @@ export function createNetWorthChart(ctx: CanvasRenderingContext2D, data: NetWort
         },
         tooltip: {
           callbacks: {
-            label: function(context) {
-              return `Net Worth: $${context.raw.toLocaleString()}`;
+            label: function(context: any) {
+              return `Net Worth: $${Number(context.raw).toLocaleString()}`;
             }
           }
         }
@@ -81,7 +82,7 @@ export function createCashFlowChart(ctx: CanvasRenderingContext2D, data: CashFlo
         },
         tooltip: {
           callbacks: {
-            label: function(context) {
+            label: function(context: any) {
               return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
             }
           }
@@ -134,7 +135,8 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
       chartColor = 'rgba(25, 118, 210, 0.7)';
   }
   
-  const chartType = type === 'income' || type === 'expenses' ? 'bar' : 'line';
+  // Use bar chart for netWorth and income/expenses, line chart for assets/liabilities
+  const chartType = type === 'netWorth' || type === 'income' || type === 'expenses' ? 'bar' : 'line';
   
   const chartConfig: any = {
     type: chartType,
@@ -143,7 +145,11 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
       datasets: [{
         label: chartLabel,
         data: chartData,
-        backgroundColor: chartColor,
+        backgroundColor: type === 'netWorth' ? 
+          (context: any) => {
+            const value = context.raw as number;
+            return value >= 0 ? 'rgba(25, 118, 210, 0.7)' : 'rgba(244, 67, 54, 0.7)';
+          } : chartColor,
         borderColor: chartType === 'line' ? chartColor : undefined,
         fill: chartType === 'line',
         tension: chartType === 'line' ? 0.4 : undefined,
