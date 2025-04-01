@@ -299,6 +299,18 @@ const FinancialProjections = () => {
     const expensesData = [currentExpenses];
     const ages = [age];
     
+    // Initialize separate arrays for assets and liabilities
+    const assetsData = [Math.max(0, netWorth)]; // Initial assets
+    const liabilitiesData = [Math.max(0, -netWorth)]; // Initial liabilities
+    
+    // Specific asset and liability tracking
+    const homeValueData = [0]; // Track home value as an asset
+    const mortgageData = [0];  // Track mortgage as a liability
+    
+    // Track student loan balance over time
+    let remainingStudentLoanDebt = studentLoanDebt;
+    const studentLoanData = [remainingStudentLoanDebt]; // Track student loans as a liability
+    
     // Sort milestones by yearsAway to process them in chronological order
     const sortedMilestones = milestones ? [...milestones].sort((a, b) => a.yearsAway - b.yearsAway) : [];
     
@@ -319,8 +331,10 @@ const FinancialProjections = () => {
     let spouseIncome = 0;
     let spouseIncomeGrowth = incomeGrowth; // Use same growth rate as primary income
     
-    // Track homeowner status and mortgage (for home milestone)
+    // Track homeowner status, value, and mortgage (for home milestone)
     let hasHome = false;
+    let homeValue = 0;
+    let mortgagePrincipal = 0;
     let mortgagePayment = 0;
     
     // Track car payments (for car milestone)
@@ -366,11 +380,16 @@ const FinancialProjections = () => {
               
             case 'home':
               hasHome = true;
-              // Down payment reduces net worth
-              netWorth -= (milestone.homeDownPayment || 0);
+              // Set home value
+              homeValue = milestone.homeValue || 0;
+              // Calculate mortgage principal (home value minus down payment)
+              const downPayment = milestone.homeDownPayment || 0;
+              mortgagePrincipal = homeValue - downPayment;
+              // Down payment reduces liquid assets but doesn't change net worth directly
+              // since it transfers from cash to home equity
               // Set monthly mortgage payment (annual)
               mortgagePayment = (milestone.homeMonthlyPayment || 0) * 12;
-              console.log(`Home milestone: Down payment $${milestone.homeDownPayment}, annual mortgage $${mortgagePayment}`);
+              console.log(`Home milestone: Value $${homeValue}, Down payment $${downPayment}, Mortgage $${mortgagePrincipal}, annual payment $${mortgagePayment}`);
               break;
               
             case 'car':
@@ -416,19 +435,57 @@ const FinancialProjections = () => {
       netWorth += annualSurplus;
       
       // Apply student loan payments (simplified - 10 year repayment)
-      if (studentLoanDebt > 0 && i <= 10) {
-        const annualLoanPayment = studentLoanDebt / 10;
+      if (remainingStudentLoanDebt > 0 && i <= 10) {
+        const annualLoanPayment = remainingStudentLoanDebt / 10;
         netWorth -= annualLoanPayment;
+        
+        // Update the student loan balance for this year
+        remainingStudentLoanDebt = Math.max(0, remainingStudentLoanDebt - annualLoanPayment);
       }
       
       // Apply education debt payments (simplified - 5 year repayment) for graduate school
       if (hasEducationDebt && i > 1 && i <= 5) { // Start payments after first year
         const annualEducationPayment = educationDebt / 5;
         netWorth -= annualEducationPayment;
+        
+        // Update education debt for this year
+        educationDebt = Math.max(0, educationDebt - annualEducationPayment);
       }
       
+      // Update mortgage principal for this year (simple amortization - approximate)
+      if (hasHome) {
+        // Assume 30-year mortgage, monthly payments
+        const interestRate = 0.06; // 6% annual interest rate
+        const annualInterestPaid = mortgagePrincipal * interestRate;
+        
+        // Principal reduction is mortgage payment minus interest
+        const principalReduction = Math.min(
+          mortgagePayment - annualInterestPaid,
+          mortgagePrincipal // Can't reduce more than remaining principal
+        );
+        
+        // Update mortgage principal
+        mortgagePrincipal = Math.max(0, mortgagePrincipal - principalReduction);
+      }
+      
+      // Update housing value with appreciation (3% per year)
+      if (hasHome) {
+        homeValue = Math.round(homeValue * 1.03);
+      }
+        
+      // Calculate total assets and liabilities
+      const totalAssets = Math.max(0, netWorth) + (hasHome ? homeValue : 0);
+      const totalLiabilities = Math.max(0, -netWorth) + mortgagePrincipal + remainingStudentLoanDebt + educationDebt;
+      
+      // Update data arrays for this year
       netWorthData.push(netWorth);
-      // Store separate income values for stacked chart
+      assetsData.push(totalAssets);  
+      liabilitiesData.push(totalLiabilities);
+      homeValueData.push(hasHome ? homeValue : 0);
+      mortgageData.push(mortgagePrincipal);
+      studentLoanData.push(remainingStudentLoanDebt);
+      
+      // Store income values for stacked chart
       incomeData.push(currentIncome);
       spouseIncomeData.push(hasSpouse ? spouseIncome : 0);
       expensesData.push(totalExpenses);
@@ -440,8 +497,11 @@ const FinancialProjections = () => {
       income: incomeData,
       spouseIncome: spouseIncomeData,
       expenses: expensesData,
-      assets: netWorthData.map(nw => nw > 0 ? nw : 0),
-      liabilities: netWorthData.map(nw => nw < 0 ? -nw : 0),
+      assets: assetsData, // Use properly tracked asset data that includes home value
+      liabilities: liabilitiesData, // Use properly tracked liability data that includes mortgage
+      homeValue: homeValueData, // Track home value separately
+      mortgage: mortgageData, // Track mortgage separately
+      studentLoan: studentLoanData, // Track student loan separately
       ages: ages
     };
   };

@@ -102,6 +102,170 @@ export function createCashFlowChart(ctx: CanvasRenderingContext2D, data: CashFlo
 }
 
 // Function to create the main projection chart with different types of data
+// Function to create a stacked asset chart showing different asset categories
+function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  const labels = data.ages.map(age => age.toString());
+  
+  // Calculate savings (total assets minus home value)
+  const savings = data.assets.map((assetValue, index) => {
+    const homeValue = data.homeValue && data.homeValue[index] ? data.homeValue[index] : 0;
+    return assetValue - homeValue;
+  });
+
+  const datasets = [
+    {
+      label: 'Savings & Investments',
+      data: savings,
+      backgroundColor: 'rgba(63, 81, 181, 0.7)',
+      borderRadius: 4,
+      stack: 'assets'
+    }
+  ];
+
+  // Add home value dataset if it exists and has positive values
+  if (data.homeValue && data.homeValue.some(value => value > 0)) {
+    datasets.push({
+      label: 'Home Value',
+      data: data.homeValue,
+      backgroundColor: 'rgba(0, 150, 136, 0.7)', // Teal color for home value
+      borderRadius: 4,
+      stack: 'assets'
+    });
+  }
+
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
+            },
+            footer: function(tooltipItems: any) {
+              let total = 0;
+              tooltipItems.forEach(function(tooltipItem: any) {
+                total += tooltipItem.parsed.y;
+              });
+              return `Total Assets: $${total.toLocaleString()}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + Number(value).toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Function to create a stacked liability chart showing different liability categories
+function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  const labels = data.ages.map(age => age.toString());
+  
+  // Calculate other debts (total liabilities minus mortgage and student loans)
+  const otherDebts = data.liabilities.map((liabilityValue, index) => {
+    const mortgageValue = data.mortgage && data.mortgage[index] ? data.mortgage[index] : 0;
+    const studentLoanValue = data.studentLoan && data.studentLoan[index] ? data.studentLoan[index] : 0;
+    return liabilityValue - mortgageValue - studentLoanValue;
+  });
+
+  const datasets = [
+    {
+      label: 'Other Debts',
+      data: otherDebts,
+      backgroundColor: 'rgba(244, 67, 54, 0.7)', // Red for general debts
+      borderRadius: 4,
+      stack: 'liabilities'
+    }
+  ];
+
+  // Add student loan dataset if it exists and has positive values
+  if (data.studentLoan && data.studentLoan.some(value => value > 0)) {
+    datasets.push({
+      label: 'Student Loans',
+      data: data.studentLoan,
+      backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for student loans
+      borderRadius: 4,
+      stack: 'liabilities'
+    });
+  }
+
+  // Add mortgage dataset if it exists and has positive values
+  if (data.mortgage && data.mortgage.some(value => value > 0)) {
+    datasets.push({
+      label: 'Mortgage',
+      data: data.mortgage,
+      backgroundColor: 'rgba(121, 85, 72, 0.7)', // Brown for mortgage
+      borderRadius: 4,
+      stack: 'liabilities'
+    });
+  }
+
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
+            },
+            footer: function(tooltipItems: any) {
+              let total = 0;
+              tooltipItems.forEach(function(tooltipItem: any) {
+                total += tooltipItem.parsed.y;
+              });
+              return `Total Liabilities: $${total.toLocaleString()}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + Number(value).toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: ProjectionData, type: string = 'netWorth'): Chart {
   const labels = data.ages.map(age => age.toString());
   let chartData;
@@ -119,14 +283,27 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
       chartColor = 'rgba(255, 152, 0, 0.7)';
       break;
     case 'assets':
-      chartData = data.assets || [];
-      chartLabel = 'Assets';
-      chartColor = 'rgba(63, 81, 181, 0.7)';
+      // For assets, we'll use the detailed breakdown if available
+      if (data.homeValue && data.homeValue.some(value => value > 0)) {
+        // Use stacked chart for assets with home value breakdown
+        return createStackedAssetChart(ctx, data);
+      } else {
+        chartData = data.assets || [];
+        chartLabel = 'Assets';
+        chartColor = 'rgba(63, 81, 181, 0.7)';
+      }
       break;
     case 'liabilities':
-      chartData = data.liabilities || [];
-      chartLabel = 'Liabilities';
-      chartColor = 'rgba(244, 67, 54, 0.7)';
+      // For liabilities, we'll use the detailed breakdown if available
+      if ((data.mortgage && data.mortgage.some(value => value > 0)) || 
+          (data.studentLoan && data.studentLoan.some(value => value > 0))) {
+        // Use stacked chart for liabilities with breakdown
+        return createStackedLiabilityChart(ctx, data);
+      } else {
+        chartData = data.liabilities || [];
+        chartLabel = 'Liabilities';
+        chartColor = 'rgba(244, 67, 54, 0.7)';
+      }
       break;
     default:
       chartData = data.netWorth;

@@ -17,6 +17,10 @@ export interface ProjectionData {
   expenses?: number[];
   assets?: number[];
   liabilities?: number[];
+  // Detailed property breakdown
+  homeValue?: number[];
+  mortgage?: number[];
+  studentLoan?: number[];
   ages: number[];
 }
 
