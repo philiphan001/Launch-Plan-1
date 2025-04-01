@@ -280,8 +280,8 @@ const FinancialProjections = () => {
   
   // Generate projection data based on inputs
   const generateProjectionData = () => {
-    // Calculate initial net worth (savings minus student loan debt)
-    let netWorth = startingSavings - studentLoanDebt;
+    // Calculate initial net worth (just savings, student loans tracked separately as liabilities)
+    let netWorth = startingSavings;
     
     // Properly adjust income based on cost of living - correctly apply the factor
     let currentIncome = income * costOfLivingFactor;
@@ -300,8 +300,8 @@ const FinancialProjections = () => {
     const ages = [age];
     
     // Initialize separate arrays for assets and liabilities
-    const assetsData = [Math.max(0, netWorth)]; // Initial assets
-    const liabilitiesData = [Math.max(0, -netWorth)]; // Initial liabilities
+    const assetsData = [startingSavings]; // Initial assets (savings only)
+    const liabilitiesData = [studentLoanDebt]; // Initial liabilities (student loan only)
     
     // Specific asset and liability tracking
     const homeValueData = [0]; // Track home value as an asset
@@ -447,7 +447,9 @@ const FinancialProjections = () => {
       
       // Apply student loan payments (simplified - 10 year repayment)
       if (remainingStudentLoanDebt > 0 && i <= 10) {
-        const annualLoanPayment = remainingStudentLoanDebt / 10;
+        const annualLoanPayment = studentLoanDebt / 10; // Use fixed annual payment based on original amount
+        
+        // Student loan payments reduce netWorth
         netWorth -= annualLoanPayment;
         
         // Update the student loan balance for this year
@@ -503,11 +505,15 @@ const FinancialProjections = () => {
       }
       
       // Calculate total assets and liabilities
+      // For assets, we count the positive components of netWorth (savings from income)
+      // plus home value and car value
       const totalAssets = Math.max(0, netWorth) + 
                           (hasHome ? homeValue : 0) + 
                           (hasCar ? carValue : 0);
-      const totalLiabilities = Math.max(0, -netWorth) + 
-                              mortgagePrincipal + 
+                          
+      // For liabilities, we track all debts separately
+      // Student loan debt is tracked separately as a dedicated liability
+      const totalLiabilities = mortgagePrincipal + 
                               carLoanPrincipal + 
                               remainingStudentLoanDebt + 
                               educationDebt;
