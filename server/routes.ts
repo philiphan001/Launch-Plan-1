@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { activeStorage } from "./index";
 import { validateRequest } from "../shared/middleware";
-import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema, insertCareerCalculationSchema } from "../shared/schema";
+import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema, insertCareerCalculationSchema, insertMilestoneSchema } from "../shared/schema";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -873,6 +873,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling career projection inclusion:", error);
       res.status(500).json({ message: "Failed to toggle career projection inclusion", error: String(error) });
+    }
+  });
+
+  // Milestones routes
+  app.post("/api/milestones", validateRequest({ body: insertMilestoneSchema }), async (req: Request, res: Response) => {
+    try {
+      console.log("Creating milestone:", req.body);
+      const milestone = await activeStorage.createMilestone(req.body);
+      res.status(201).json(milestone);
+    } catch (error) {
+      console.error("Error creating milestone:", error);
+      res.status(500).json({ message: "Failed to create milestone", error: String(error) });
+    }
+  });
+
+  app.get("/api/milestones/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid milestone ID format" });
+      }
+      
+      const milestone = await activeStorage.getMilestone(id);
+      if (!milestone) {
+        return res.status(404).json({ message: `Milestone with ID ${id} not found` });
+      }
+      
+      res.json(milestone);
+    } catch (error) {
+      console.error("Error getting milestone:", error);
+      res.status(500).json({ message: "Failed to get milestone", error: String(error) });
+    }
+  });
+
+  app.get("/api/milestones/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const milestones = await activeStorage.getMilestonesByUserId(userId);
+      res.json(milestones);
+    } catch (error) {
+      console.error("Error getting milestones for user:", error);
+      res.status(500).json({ message: "Failed to get milestones", error: String(error) });
+    }
+  });
+
+  app.patch("/api/milestones/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid milestone ID format" });
+      }
+      
+      const milestone = await activeStorage.getMilestone(id);
+      if (!milestone) {
+        return res.status(404).json({ message: `Milestone with ID ${id} not found` });
+      }
+      
+      const updatedMilestone = await activeStorage.updateMilestone(id, req.body);
+      if (!updatedMilestone) {
+        return res.status(404).json({ message: "Failed to update milestone" });
+      }
+      
+      res.json(updatedMilestone);
+    } catch (error) {
+      console.error("Error updating milestone:", error);
+      res.status(500).json({ message: "Failed to update milestone", error: String(error) });
+    }
+  });
+
+  app.delete("/api/milestones/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid milestone ID format" });
+      }
+      
+      const milestone = await activeStorage.getMilestone(id);
+      if (!milestone) {
+        return res.status(404).json({ message: `Milestone with ID ${id} not found` });
+      }
+      
+      await activeStorage.deleteMilestone(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting milestone:", error);
+      res.status(500).json({ message: "Failed to delete milestone", error: String(error) });
     }
   });
 

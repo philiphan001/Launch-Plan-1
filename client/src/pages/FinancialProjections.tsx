@@ -25,6 +25,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import MilestonesSection from "@/components/milestones/MilestonesSection";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities";
 
@@ -862,44 +863,21 @@ const FinancialProjections = () => {
         </CardContent>
       </Card>
       
-      {/* Life Milestones Card */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-medium mb-4">Life Milestones</h3>
-          <p className="text-gray-600 mb-4">Add major life events to see how they impact your financial projection.</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <GraduationCap className="h-6 w-6 text-primary mx-auto mb-2" />
-              <h4 className="font-medium">College Graduation</h4>
-            </div>
-            
-            <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <Briefcase className="h-6 w-6 text-primary mx-auto mb-2" />
-              <h4 className="font-medium">New Job</h4>
-            </div>
-            
-            <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <svg className="h-6 w-6 text-primary mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-              </svg>
-              <h4 className="font-medium">Buy a Home</h4>
-            </div>
-            
-            <div className="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer transition-colors text-center">
-              <svg className="h-6 w-6 text-primary mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-              </svg>
-              <h4 className="font-medium">Add Custom</h4>
-            </div>
-          </div>
-          
-          <Button variant="outline">Add Milestone</Button>
-        </CardContent>
-      </Card>
+      {/* Life Milestones Section */}
+      <MilestonesSection 
+        userId={userId} 
+        onMilestoneChange={() => {
+          // Recalculate the financial projections when milestones change
+          const newProjectionData = generateProjectionData();
+          if (chartRef.current && chartInstance.current) {
+            chartInstance.current.destroy();
+            const ctx = chartRef.current.getContext("2d");
+            if (ctx) {
+              chartInstance.current = createMainProjectionChart(ctx, newProjectionData, activeTab);
+            }
+          }
+        }} 
+      />
     </div>
   );
 };
