@@ -3,6 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
+import RecommendationEngine from "@/components/pathways/RecommendationEngine";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 type EducationType = "4year" | "2year" | "vocational" | null;
@@ -40,6 +42,7 @@ const Pathways = () => {
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
+  const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
@@ -128,59 +131,17 @@ const Pathways = () => {
         if (needsGuidance) {
           return (
             <Step 
-              title="Let's find the right path for you" 
-              subtitle="Based on your interests and goals, we'll recommend some potential paths"
+              title="Find Your Perfect Path" 
+              subtitle="Swipe through cards to tell us what you like and don't like"
             >
               <Card>
                 <CardContent className="p-6">
-                  <div className="space-y-4 mb-6">
-                    <div>
-                      <h4 className="font-medium mb-2">What are your main interests?</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                        {["Technology", "Healthcare", "Business", "Arts", "Science", "Trades", "Service"].map((interest) => (
-                          <div 
-                            key={interest}
-                            className="border border-gray-200 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:border-primary"
-                          >
-                            {interest}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium mb-2">What are your top priorities?</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {["Income potential", "Job security", "Work-life balance", "Making a difference", "Quick entry to workforce", "Advancement opportunities"].map((priority) => (
-                          <div 
-                            key={priority}
-                            className="border border-gray-200 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:border-primary"
-                          >
-                            {priority}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium mb-2">What level of education are you willing to pursue?</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                        {["High school diploma", "Certificate program", "Associate's degree", "Bachelor's degree", "Graduate degree"].map((education) => (
-                          <div 
-                            key={education}
-                            className="border border-gray-200 rounded-md px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:border-primary"
-                          >
-                            {education}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button onClick={handleNext}>See Recommendations</Button>
-                  </div>
+                  <SwipeableScenarios 
+                    onComplete={(results) => {
+                      setSwipeResults(results);
+                      handleNext();
+                    }} 
+                  />
                 </CardContent>
               </Card>
             </Step>
@@ -246,74 +207,61 @@ const Pathways = () => {
       
       case 3:
         if (needsGuidance) {
-          return (
-            <Step title="Recommended Paths" subtitle="Based on your answers, here are some paths that might be a good fit for you">
-              <div className="space-y-4">
-                <Card className="hover:border-primary cursor-pointer transition-colors">
-                  <CardContent className="p-6">
-                    <div className="flex items-start">
-                      <div className="rounded-full bg-primary h-10 w-10 flex items-center justify-center text-white mr-4 flex-shrink-0">
-                        <span className="material-icons">school</span>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-lg mb-1">Associate's Degree in Information Technology</h4>
-                        <p className="text-sm text-gray-600 mb-3">A 2-year program that prepares you for entry-level technology positions with strong job growth and good pay.</p>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Technology</span>
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">2-year program</span>
-                          <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">In-demand field</span>
-                        </div>
-                        <Button variant="outline" size="sm">View Details</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="hover:border-primary cursor-pointer transition-colors">
-                  <CardContent className="p-6">
-                    <div className="flex items-start">
-                      <div className="rounded-full bg-secondary h-10 w-10 flex items-center justify-center text-white mr-4 flex-shrink-0">
-                        <span className="material-icons">build</span>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-lg mb-1">Electrician Apprenticeship Program</h4>
-                        <p className="text-sm text-gray-600 mb-3">Learn while you earn in this skilled trade with high demand and solid income potential.</p>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Trades</span>
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">On-the-job training</span>
-                          <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Quick entry to workforce</span>
-                        </div>
-                        <Button variant="outline" size="sm">View Details</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="hover:border-primary cursor-pointer transition-colors">
-                  <CardContent className="p-6">
-                    <div className="flex items-start">
-                      <div className="rounded-full bg-accent-light h-10 w-10 flex items-center justify-center text-white mr-4 flex-shrink-0">
-                        <span className="material-icons">medical_services</span>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-lg mb-1">Healthcare Certificate Programs</h4>
-                        <p className="text-sm text-gray-600 mb-3">Short-term training for in-demand healthcare support roles like medical assistant or phlebotomist.</p>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Healthcare</span>
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Certificate program</span>
-                          <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">Making a difference</span>
-                        </div>
-                        <Button variant="outline" size="sm">View Details</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+          const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
+            // Here we could map the recommendations back to our app paths
+            if (pathType === 'education') {
+              setSelectedPath('education');
               
-              <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={handleBack}>Back</Button>
-                <Button onClick={handleStartOver}>Start Over</Button>
-              </div>
+              // Determine education type based on recommendation
+              if (['liberal_arts', 'stem_college', 'business_school'].includes(id)) {
+                setEducationType('4year');
+              } else if (id === 'community_college') {
+                setEducationType('2year');
+              } else if (id === 'trade_school') {
+                setEducationType('vocational');
+              }
+              
+              // Jump to the appropriate next step
+              setCurrentStep(4);
+            } else if (pathType === 'career') {
+              setSelectedPath('job');
+              
+              // Determine job type based on recommendation
+              if (id === 'trades') {
+                setJobType('apprenticeship');
+              } else {
+                setJobType('fulltime');
+              }
+              
+              // Jump to the appropriate next step
+              setCurrentStep(4);
+            } else {
+              // For lifestyle recommendations, we could set some other state
+              // or just show more information
+              setSelectedPath('gap');
+              setGapYearActivity(id === 'digital_nomad' ? 'travel' : 'work');
+              setCurrentStep(4);
+            }
+          };
+          
+          return (
+            <Step 
+              title="Your Personalized Recommendations" 
+              subtitle="Based on your preferences, here are paths that might be the best fit for you"
+            >
+              <Card>
+                <CardContent className="p-6">
+                  <RecommendationEngine 
+                    preferences={swipeResults} 
+                    onSelectPath={handleSelectPath} 
+                  />
+                  
+                  <div className="flex justify-between mt-6">
+                    <Button variant="outline" onClick={handleBack}>Back</Button>
+                    <Button variant="outline" onClick={handleStartOver}>Start Over</Button>
+                  </div>
+                </CardContent>
+              </Card>
             </Step>
           );
         } else if (selectedPath === 'education') {
