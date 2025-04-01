@@ -147,8 +147,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       setSpouseAssets(10000);
       setSpouseLiabilities(5000);
     } else if (type === "home") {
-      setHomeValue(300000);
-      setHomeDownPayment(60000);
+      const defaultHomeValue = 300000;
+      const defaultDownPaymentPercent = 20; // 20% downpayment
+      setHomeValue(defaultHomeValue);
+      setHomeDownPayment(defaultHomeValue * (defaultDownPaymentPercent / 100));
       setHomeMonthlyPayment(1500);
     } else if (type === "car") {
       setCarValue(25000);
@@ -502,29 +504,39 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         type="number"
                         id="home-value"
                         value={homeValue}
-                        onChange={(e) => setHomeValue(Number(e.target.value))}
+                        onChange={(e) => {
+                          const newValue = Number(e.target.value);
+                          setHomeValue(newValue);
+                          // Update downpayment to maintain the same percentage
+                          const currentPercent = homeDownPayment / homeValue;
+                          setHomeDownPayment(Math.round(newValue * currentPercent));
+                        }}
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <Label htmlFor="home-down-payment">Down Payment</Label>
-                    <div className="flex items-center mt-1">
-                      <span className="mr-2">$</span>
-                      <Input
-                        type="number"
+                    <Label htmlFor="home-down-payment">Down Payment Percentage</Label>
+                    <div className="flex items-center mt-2">
+                      <span className="mr-4 text-sm w-8">{Math.round((homeDownPayment / homeValue) * 100)}%</span>
+                      <Slider
                         id="home-down-payment"
-                        value={homeDownPayment}
-                        onChange={(e) => setHomeDownPayment(Number(e.target.value))}
+                        min={5}
+                        max={50}
+                        step={1}
+                        value={[Math.round((homeDownPayment / homeValue) * 100)]}
+                        onValueChange={(value) => setHomeDownPayment(Math.round(homeValue * (value[0] / 100)))}
+                        className="flex-1"
                       />
+                      <span className="ml-4 text-sm w-8">${homeDownPayment.toLocaleString()}</span>
                     </div>
                     <div className="text-sm text-gray-500 mt-1">
-                      Down payment: {Math.round((homeDownPayment / homeValue) * 100)}% of home value
+                      Recommended: at least 20% to avoid PMI
                     </div>
                   </div>
                   
                   <div>
-                    <Label htmlFor="home-monthly-payment">Monthly Payment</Label>
+                    <Label htmlFor="home-monthly-payment">Monthly Payment (Estimated)</Label>
                     <div className="flex items-center mt-1">
                       <span className="mr-2">$</span>
                       <Input
@@ -535,8 +547,36 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                       />
                     </div>
                     <div className="text-sm text-gray-500 mt-1">
-                      Includes mortgage, taxes, insurance, etc.
+                      Includes principal, interest, taxes, insurance, and maintenance
                     </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2" 
+                      onClick={() => {
+                        // Calculate estimated monthly payment (30-year loan at 6% interest rate)
+                        const loanAmount = homeValue - homeDownPayment;
+                        const monthlyInterestRate = 0.06 / 12;
+                        const numberOfPayments = 30 * 12;
+                        
+                        // Calculate mortgage payment using the loan formula
+                        const mortgagePayment = loanAmount * 
+                          (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / 
+                          (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
+                          
+                        // Add property tax (1.2% annually) and insurance (0.5% annually)
+                        const propertyTax = (homeValue * 0.012) / 12;
+                        const insurance = (homeValue * 0.005) / 12;
+                        const maintenance = (homeValue * 0.01) / 12;
+                        
+                        // Total monthly payment
+                        const total = Math.round(mortgagePayment + propertyTax + insurance + maintenance);
+                        
+                        setHomeMonthlyPayment(total);
+                      }}
+                    >
+                      Calculate Payment
+                    </Button>
                   </div>
                 </div>
               )}

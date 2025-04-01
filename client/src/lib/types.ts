@@ -13,6 +13,7 @@ export interface CashFlowData {
 export interface ProjectionData {
   netWorth: number[];
   income?: number[];
+  spouseIncome?: number[];
   expenses?: number[];
   assets?: number[];
   liabilities?: number[];

@@ -110,7 +110,6 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
   
   switch(type) {
     case 'income':
-      chartData = data.income || [];
       chartLabel = 'Income';
       chartColor = 'rgba(38, 166, 154, 0.7)';
       break;
@@ -138,34 +137,63 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
   // Use bar chart for netWorth and income/expenses, line chart for assets/liabilities
   const chartType = type === 'netWorth' || type === 'income' || type === 'expenses' ? 'bar' : 'line';
   
+  // Handle stacked income chart (personal + spouse income)
+  const datasets = [];
+  
+  if (type === 'income' && data.spouseIncome && data.spouseIncome.length > 0) {
+    // Create datasets for personal and spouse income
+    datasets.push({
+      label: 'Personal Income',
+      data: data.income || [],
+      backgroundColor: chartColor,
+      borderRadius: 4,
+      stack: 'income'
+    });
+    
+    datasets.push({
+      label: 'Spouse Income',
+      data: data.spouseIncome,
+      backgroundColor: 'rgba(156, 39, 176, 0.7)', // Purple color for spouse income
+      borderRadius: 4,
+      stack: 'income'
+    });
+  } else {
+    // For all other chart types
+    datasets.push({
+      label: chartLabel,
+      data: chartData,
+      backgroundColor: type === 'netWorth' ? 
+        (context: any) => {
+          const value = context.raw as number;
+          return value >= 0 ? 'rgba(25, 118, 210, 0.7)' : 'rgba(244, 67, 54, 0.7)';
+        } : chartColor,
+      borderColor: chartType === 'line' ? chartColor : undefined,
+      fill: chartType === 'line',
+      tension: chartType === 'line' ? 0.4 : undefined,
+      borderRadius: chartType === 'bar' ? 4 : undefined
+    });
+  }
+  
   const chartConfig: any = {
     type: chartType,
     data: {
       labels,
-      datasets: [{
-        label: chartLabel,
-        data: chartData,
-        backgroundColor: type === 'netWorth' ? 
-          (context: any) => {
-            const value = context.raw as number;
-            return value >= 0 ? 'rgba(25, 118, 210, 0.7)' : 'rgba(244, 67, 54, 0.7)';
-          } : chartColor,
-        borderColor: chartType === 'line' ? chartColor : undefined,
-        fill: chartType === 'line',
-        tension: chartType === 'line' ? 0.4 : undefined,
-        borderRadius: chartType === 'bar' ? 4 : undefined
-      }]
+      datasets
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false
+          display: type === 'income' && data.spouseIncome && data.spouseIncome.length > 0
         },
         tooltip: {
           callbacks: {
             label: function(context: any) {
+              // Show dataset label if it's a stacked chart
+              if (type === 'income' && data.spouseIncome && data.spouseIncome.length > 0) {
+                return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
+              }
               return `${chartLabel}: $${Number(context.raw).toLocaleString()}`;
             }
           }

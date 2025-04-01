@@ -295,6 +295,7 @@ const FinancialProjections = () => {
     
     const netWorthData = [netWorth];
     const incomeData = [currentIncome];
+    const spouseIncomeData = [0]; // Initialize spouse income data array
     const expensesData = [currentExpenses];
     const ages = [age];
     
@@ -350,7 +351,7 @@ const FinancialProjections = () => {
       if (milestonesByYear.has(i)) {
         const yearMilestones = milestonesByYear.get(i);
         
-        yearMilestones.forEach(milestone => {
+        yearMilestones.forEach((milestone: any) => {
           console.log(`Processing milestone for year ${i}:`, milestone);
           
           switch (milestone.type) {
@@ -399,7 +400,7 @@ const FinancialProjections = () => {
         });
       }
       
-      // Add spouse income to total if married
+      // Track personal and spouse income separately
       const totalIncome = currentIncome + (hasSpouse ? spouseIncome : 0);
       
       // Add milestone-related expenses
@@ -427,8 +428,9 @@ const FinancialProjections = () => {
       }
       
       netWorthData.push(netWorth);
-      // Store the combined income for the chart
-      incomeData.push(totalIncome);
+      // Store separate income values for stacked chart
+      incomeData.push(currentIncome);
+      spouseIncomeData.push(hasSpouse ? spouseIncome : 0);
       expensesData.push(totalExpenses);
       ages.push(age + i);
     }
@@ -436,6 +438,7 @@ const FinancialProjections = () => {
     return {
       netWorth: netWorthData,
       income: incomeData,
+      spouseIncome: spouseIncomeData,
       expenses: expensesData,
       assets: netWorthData.map(nw => nw > 0 ? nw : 0),
       liabilities: netWorthData.map(nw => nw < 0 ? -nw : 0),
