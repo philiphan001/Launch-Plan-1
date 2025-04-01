@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
 import RecommendationEngine from "@/components/pathways/RecommendationEngine";
+import IdentityWheel from "@/components/pathways/IdentityWheel";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 type EducationType = "4year" | "2year" | "vocational" | null;
@@ -43,6 +45,8 @@ const Pathways = () => {
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
+  const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
+  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | null>(null);
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
@@ -129,23 +133,80 @@ const Pathways = () => {
       
       case 2:
         if (needsGuidance) {
-          return (
-            <Step 
-              title="Find Your Perfect Path" 
-              subtitle="Swipe through cards to tell us what you like and don't like"
-            >
-              <Card>
-                <CardContent className="p-6">
-                  <SwipeableScenarios 
-                    onComplete={(results) => {
-                      setSwipeResults(results);
-                      handleNext();
-                    }} 
-                  />
-                </CardContent>
-              </Card>
-            </Step>
-          );
+          if (explorationMethod === null) {
+            return (
+              <Step 
+                title="Choose Your Exploration Method" 
+                subtitle="Select a fun activity to help discover your interests and values"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <Card 
+                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
+                    onClick={() => setExplorationMethod('swipe')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-primary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">swipe</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Swipe Cards</h3>
+                      <p className="text-sm text-gray-600 mb-4">Swipe left or right on different interests, values and lifestyle options</p>
+                      <Button variant="outline" size="sm">Select This Method</Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
+                    onClick={() => setExplorationMethod('wheel')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-secondary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">casino</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Spin the Wheel</h3>
+                      <p className="text-sm text-gray-600 mb-4">Spin a wheel to discover prompts about your values, talents, fears and wishes</p>
+                      <Button variant="outline" size="sm">Select This Method</Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </Step>
+            );
+          } else if (explorationMethod === 'swipe') {
+            return (
+              <Step 
+                title="Find Your Perfect Path" 
+                subtitle="Swipe through cards to tell us what you like and don't like"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <SwipeableScenarios 
+                      onComplete={(results) => {
+                        setSwipeResults(results);
+                        handleNext();
+                      }} 
+                    />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else {
+            return (
+              <Step 
+                title="Spin the Wheel of Identity" 
+                subtitle="Discover what matters most to you through fun prompts and questions"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <IdentityWheel 
+                      onComplete={(results) => {
+                        setWheelResults(results);
+                        handleNext();
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
         } else {
           return (
             <Step title="What would you like to do after high school?">
