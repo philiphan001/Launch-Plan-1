@@ -7,7 +7,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 interface CashFlowTableProps {
   ages: number[];
   income: number[];
-  spouseIncome: number[];
+  spouseIncome?: number[] | null;
   expenses: number[];
   housingExpenses: number[];
   transportationExpenses: number[];
@@ -87,11 +87,11 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       <TableCell>{i}</TableCell>
                       <TableCell>{age}</TableCell>
                       <TableCell>${income[i]?.toLocaleString() || 0}</TableCell>
-                      <TableCell>${spouseIncome[i]?.toLocaleString() || 0}</TableCell>
-                      <TableCell>${((income[i] || 0) + (spouseIncome[i] || 0)).toLocaleString()}</TableCell>
+                      <TableCell>${spouseIncome && spouseIncome[i] ? spouseIncome[i].toLocaleString() : 0}</TableCell>
+                      <TableCell>${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0)).toLocaleString()}</TableCell>
                       <TableCell>${expenses[i]?.toLocaleString() || 0}</TableCell>
                       <TableCell>
-                        ${((income[i] || 0) + (spouseIncome[i] || 0) - (expenses[i] || 0)).toLocaleString()}
+                        ${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0) - (expenses[i] || 0)).toLocaleString()}
                       </TableCell>
                       <TableCell>${netWorth[i]?.toLocaleString() || 0}</TableCell>
                       <TableCell>${assets[i]?.toLocaleString() || 0}</TableCell>
