@@ -101,6 +101,132 @@ export function createCashFlowChart(ctx: CanvasRenderingContext2D, data: CashFlo
   });
 }
 
+// Function to create a detailed expense breakdown pie chart
+export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data: {
+  housing: number;
+  transportation: number;
+  food: number;
+  healthcare: number;
+  education: number;
+  debt: number;
+  childcare: number;
+  discretionary: number;
+}): Chart {
+  const { housing, transportation, food, healthcare, education, debt, childcare, discretionary } = data;
+  const total = housing + transportation + food + healthcare + education + debt + childcare + discretionary;
+  
+  // Skip empty data
+  if (total === 0) {
+    return new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['No expense data'],
+        datasets: [{
+          data: [1],
+          backgroundColor: ['#e0e0e0'],
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: {
+                size: 11
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function() {
+                return 'No expense data available';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Calculate percentages
+  const calculatePercentage = (value: number) => ((value / total) * 100).toFixed(1);
+  
+  const labels = [
+    `Housing (${calculatePercentage(housing)}%)`,
+    `Transportation (${calculatePercentage(transportation)}%)`,
+    `Food (${calculatePercentage(food)}%)`,
+    `Healthcare (${calculatePercentage(healthcare)}%)`,
+    `Education (${calculatePercentage(education)}%)`,
+    `Debt (${calculatePercentage(debt)}%)`,
+    `Childcare (${calculatePercentage(childcare)}%)`,
+    `Discretionary (${calculatePercentage(discretionary)}%)`,
+  ];
+  
+  const colors = [
+    'rgba(33, 150, 243, 0.8)',  // Blue for housing
+    'rgba(156, 39, 176, 0.8)',  // Purple for transportation
+    'rgba(255, 193, 7, 0.8)',   // Amber for food
+    'rgba(233, 30, 99, 0.8)',   // Pink for healthcare
+    'rgba(0, 150, 136, 0.8)',   // Teal for education
+    'rgba(244, 67, 54, 0.8)',   // Red for debt
+    'rgba(76, 175, 80, 0.8)',   // Green for childcare
+    'rgba(255, 152, 0, 0.8)',   // Orange for discretionary
+  ];
+  
+  const chartData = [housing, transportation, food, healthcare, education, debt, childcare, discretionary];
+  
+  // Filter out zero values to avoid cluttering the chart
+  const filteredLabels = [];
+  const filteredData = [];
+  const filteredColors = [];
+  
+  for (let i = 0; i < chartData.length; i++) {
+    if (chartData[i] > 0) {
+      filteredLabels.push(labels[i]);
+      filteredData.push(chartData[i]);
+      filteredColors.push(colors[i]);
+    }
+  }
+  
+  return new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: filteredLabels,
+      datasets: [{
+        data: filteredData,
+        backgroundColor: filteredColors,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: {
+              size: 11
+            }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              const value = context.raw;
+              const category = context.label.split(' (')[0];
+              return `${category}: $${value.toLocaleString()} (${((value / total) * 100).toFixed(1)}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 // Function to create a stacked asset chart showing different asset categories
 function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());

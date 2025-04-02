@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
-import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -807,18 +806,6 @@ const FinancialProjections = () => {
       ages.push(age + i);
     }
     
-    // Calculate current expense data for expense breakdown chart
-    const currentExpenses = {
-      housing: housingExpensesData[housingExpensesData.length - 1],
-      transportation: transportationExpensesData[transportationExpensesData.length - 1],
-      food: foodExpensesData[foodExpensesData.length - 1],
-      healthcare: healthcareExpensesData[healthcareExpensesData.length - 1],
-      education: educationExpensesData[educationExpensesData.length - 1],
-      debt: debtExpensesData[debtExpensesData.length - 1],
-      childcare: childcareExpensesData[childcareExpensesData.length - 1],
-      discretionary: discretionaryExpensesData[discretionaryExpensesData.length - 1]
-    };
-
     return {
       netWorth: netWorthData,
       income: incomeData,
@@ -831,18 +818,7 @@ const FinancialProjections = () => {
       carValue: carValueData, // Track car value separately
       carLoan: carLoanData, // Track car loan separately
       studentLoan: studentLoanData, // Track student loan separately
-      ages: ages,
-      // Add expense categories
-      housingExpenses: housingExpensesData,
-      transportationExpenses: transportationExpensesData,
-      foodExpenses: foodExpensesData,
-      healthcareExpenses: healthcareExpensesData,
-      educationExpenses: educationExpensesData,
-      debtExpenses: debtExpensesData,
-      childcareExpenses: childcareExpensesData,
-      discretionaryExpenses: discretionaryExpensesData,
-      // Current expense breakdown for the pie chart
-      currentExpenses: currentExpenses
+      ages: ages
     };
   };
   
