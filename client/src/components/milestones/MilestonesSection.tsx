@@ -54,6 +54,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [dialogOpen, setDialogOpen] = useState(false);
   const [currentMilestone, setCurrentMilestone] = useState<MilestoneType | null>(null);
   const [yearsAway, setYearsAway] = useState(3);
+  const [income, setIncome] = useState(60000); // Current user's income
   
   // Marriage milestone specific state
   const [spouseOccupation, setSpouseOccupation] = useState("");
@@ -410,92 +411,226 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                 </div>
               </div>
               
-              {/* Marriage specific fields */}
+              {/* Marriage specific fields - Fun Version for High School Students */}
               {currentMilestone === "marriage" && (
-                <Tabs defaultValue="general" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="general">General</TabsTrigger>
-                    <TabsTrigger value="finances">Finances</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="general">
-                    <div className="space-y-4 mt-4">
-                      <div>
-                        <Label htmlFor="spouse-occupation">Spouse Occupation</Label>
-                        <Select value={spouseOccupation} onValueChange={setSpouseOccupation}>
-                          <SelectTrigger id="spouse-occupation" className="mt-1">
-                            <SelectValue placeholder="Select an occupation" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {careers?.sort((a, b) => a.title.localeCompare(b.title)).map((career) => (
-                              <SelectItem key={career.id} value={career.title}>
-                                {career.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {spouseOccupation && (
+                <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg p-4 border border-pink-200">
+                  <div className="flex justify-center mb-4">
+                    <div className="flex items-center space-x-2 bg-white py-2 px-4 rounded-full shadow-sm border border-pink-200">
+                      <Heart className="h-5 w-5 text-pink-500 animate-pulse" />
+                      <h3 className="text-lg font-medium bg-gradient-to-r from-pink-500 to-purple-500 text-transparent bg-clip-text">Your Future Power Couple Goals</h3>
+                      <Heart className="h-5 w-5 text-pink-500 animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  <Tabs defaultValue="dream" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 bg-pink-100">
+                      <TabsTrigger value="dream" className="data-[state=active]:bg-pink-200">The Dream</TabsTrigger>
+                      <TabsTrigger value="reality" className="data-[state=active]:bg-pink-200">The Reality</TabsTrigger>
+                      <TabsTrigger value="finances" className="data-[state=active]:bg-pink-200">The Money</TabsTrigger>
+                    </TabsList>
+                    
+                    {/* The Dream Tab - Fun career selection */}
+                    <TabsContent value="dream" className="bg-white rounded-md p-4 mt-4 border border-pink-100 shadow-sm">
+                      <div className="space-y-4">
+                        <div className="text-center mb-4">
+                          <p className="text-sm text-gray-600">Who will you marry? Choose their dream job!</p>
+                        </div>
+                        
                         <div>
-                          <Label>Estimated Income</Label>
-                          <div className="mt-1 font-medium text-lg">
-                            ${careers?.find(c => c.title === spouseOccupation)?.salaryMedian?.toLocaleString() || "Unknown"}
+                          <Label htmlFor="spouse-occupation" className="text-purple-700 font-medium">Future Spouse's Career</Label>
+                          <Select value={spouseOccupation} onValueChange={setSpouseOccupation}>
+                            <SelectTrigger id="spouse-occupation" className="mt-1 border-pink-200 focus:ring-pink-500">
+                              <SelectValue placeholder="Pick a cool career!" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
+                              <div className="p-2 sticky top-0 bg-white border-b">
+                                <p className="text-xs text-center font-medium text-pink-600">💼 Choose wisely — this affects your financial future!</p>
+                              </div>
+                              {careers?.sort((a, b) => a.title.localeCompare(b.title)).map((career) => (
+                                <SelectItem key={career.id} value={career.title}>
+                                  {career.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {spouseOccupation && (
+                          <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-3 rounded-lg border border-pink-100 mt-4">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <Label className="text-purple-700">Their Yearly Salary 💰</Label>
+                                <div className="mt-1 font-medium text-lg text-green-600">
+                                  ${careers?.find(c => c.title === spouseOccupation)?.salaryMedian?.toLocaleString() || "???,???"}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Average salary for this job
+                                </div>
+                              </div>
+                              <div className="text-5xl">
+                                {
+                                  (careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0) > 100000 ? "🤑" :
+                                  (careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0) > 70000 ? "😎" :
+                                  (careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0) > 40000 ? "🙂" : "😅"
+                                }
+                              </div>
+                            </div>
+                            
+                            <div className="mt-3 text-xs text-gray-600 bg-white p-2 rounded border border-pink-100">
+                              <span className="font-medium">Pro tip:</span> Two incomes can help you reach financial goals faster, like buying a home or traveling!
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-500">
-                            Median salary for this occupation
+                        )}
+                      </div>
+                    </TabsContent>
+                    
+                    {/* The Reality Tab - Fun facts about marriage */}
+                    <TabsContent value="reality" className="bg-white rounded-md p-4 mt-4 border border-pink-100 shadow-sm">
+                      <div className="space-y-4">
+                        <div className="text-center mb-3">
+                          <p className="text-sm text-gray-600">Marriage isn't just about love... it's teamwork! 👫</p>
+                        </div>
+                        
+                        <div className="flex space-x-4">
+                          <div className="w-1/2 bg-pink-50 rounded-lg p-3 border border-pink-100">
+                            <h4 className="font-medium text-pink-700 flex items-center">
+                              <span className="mr-2">💗</span> Benefits
+                            </h4>
+                            <ul className="mt-2 text-sm space-y-2">
+                              <li className="flex items-start">
+                                <span className="text-green-500 mr-1">✓</span> Combined income potential
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-green-500 mr-1">✓</span> Split housing & living costs
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-green-500 mr-1">✓</span> Tax benefits for married couples
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-green-500 mr-1">✓</span> Shared financial goals
+                              </li>
+                            </ul>
+                          </div>
+                          
+                          <div className="w-1/2 bg-purple-50 rounded-lg p-3 border border-purple-100">
+                            <h4 className="font-medium text-purple-700 flex items-center">
+                              <span className="mr-2">🤔</span> Challenges
+                            </h4>
+                            <ul className="mt-2 text-sm space-y-2">
+                              <li className="flex items-start">
+                                <span className="text-yellow-500 mr-1">!</span> Managing money together
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-yellow-500 mr-1">!</span> Different spending habits
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-yellow-500 mr-1">!</span> Potential debt from partner
+                              </li>
+                              <li className="flex items-start">
+                                <span className="text-yellow-500 mr-1">!</span> Setting financial boundaries
+                              </li>
+                            </ul>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="finances">
-                    <div className="space-y-4 mt-4">
-                      <div>
-                        <Label htmlFor="spouse-income">
-                          Spouse Income (Override)
-                        </Label>
-                        <div className="flex items-center mt-1">
-                          <span className="mr-2">$</span>
-                          <Input
-                            type="number"
-                            id="spouse-income"
-                            value={spouseIncome}
-                            onChange={(e) => setSpouseIncome(Number(e.target.value))}
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          Only used if no occupation is selected
+                        
+                        <div className="mt-3 text-sm bg-blue-50 p-3 rounded-lg border border-blue-100">
+                          <p className="font-medium text-blue-700">Did you know? 💡</p>
+                          <p className="mt-1 text-gray-700">
+                            The average age for marriage in the US is 30 for men and 28 for women. 
+                            Most financial experts recommend being financially stable before marriage!
+                          </p>
                         </div>
                       </div>
-                      
-                      <div>
-                        <Label htmlFor="spouse-assets">Spouse Assets</Label>
-                        <div className="flex items-center mt-1">
-                          <span className="mr-2">$</span>
-                          <Input
-                            type="number"
-                            id="spouse-assets"
-                            value={spouseAssets}
-                            onChange={(e) => setSpouseAssets(Number(e.target.value))}
-                          />
+                    </TabsContent>
+                    
+                    {/* The Money Tab - Financial impact */}
+                    <TabsContent value="finances" className="bg-white rounded-md p-4 mt-4 border border-pink-100 shadow-sm">
+                      <div className="space-y-4">
+                        <div className="text-center mb-3">
+                          <p className="text-sm text-gray-600">Marriage affects your money in ways you might not expect! 💵</p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="spouse-income" className="text-purple-700 font-medium flex items-center">
+                            <span className="mr-2">💰</span> Their Annual Income
+                            {spouseOccupation && <span className="ml-2 text-xs text-gray-500">(Based on career)</span>}
+                          </Label>
+                          <div className="flex items-center mt-1">
+                            <span className="mr-2 font-bold text-green-600">$</span>
+                            <Input
+                              type="number"
+                              id="spouse-income"
+                              value={spouseIncome}
+                              onChange={(e) => setSpouseIncome(Number(e.target.value))}
+                              className="border-green-200 focus:ring-green-500"
+                            />
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1 italic">
+                            {spouseOccupation ? "Salary from their career (you can adjust it)" : "How much will they make? Take a guess!"}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mt-6">
+                          <div>
+                            <Label htmlFor="spouse-assets" className="text-purple-700 font-medium flex items-center">
+                              <span className="mr-2">💎</span> Their Savings
+                            </Label>
+                            <div className="flex items-center mt-1">
+                              <span className="mr-2 font-bold text-green-600">$</span>
+                              <Input
+                                type="number"
+                                id="spouse-assets"
+                                value={spouseAssets}
+                                onChange={(e) => setSpouseAssets(Number(e.target.value))}
+                                className="border-green-200 focus:ring-green-500"
+                              />
+                            </div>
+                            <div className="text-xs mt-1 flex justify-between">
+                              <span className="text-green-600">Their money becomes yours too! 🎉</span>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="spouse-liabilities" className="text-purple-700 font-medium flex items-center">
+                              <span className="mr-2">📝</span> Their Debt
+                            </Label>
+                            <div className="flex items-center mt-1">
+                              <span className="mr-2 font-bold text-red-500">$</span>
+                              <Input
+                                type="number"
+                                id="spouse-liabilities"
+                                value={spouseLiabilities}
+                                onChange={(e) => setSpouseLiabilities(Number(e.target.value))}
+                                className="border-red-200 focus:ring-red-500"
+                              />
+                            </div>
+                            <div className="text-xs mt-1 flex justify-between">
+                              <span className="text-red-500">Their debt becomes yours too! 😬</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 mt-4">
+                          <div className="flex items-center font-medium text-yellow-700 mb-2">
+                            <span className="mr-2">🧮</span> Financial Impact Calculator
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="bg-white rounded p-2 border border-yellow-100">
+                              <div className="text-gray-600">Combined Income</div>
+                              <div className="font-bold text-green-600">${(income + spouseIncome).toLocaleString()}/year</div>
+                            </div>
+                            <div className="bg-white rounded p-2 border border-yellow-100">
+                              <div className="text-gray-600">Net Worth Change</div>
+                              <div className={`font-bold ${spouseAssets - spouseLiabilities > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                                ${(spouseAssets - spouseLiabilities).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div>
-                        <Label htmlFor="spouse-liabilities">Spouse Liabilities</Label>
-                        <div className="flex items-center mt-1">
-                          <span className="mr-2">$</span>
-                          <Input
-                            type="number"
-                            id="spouse-liabilities"
-                            value={spouseLiabilities}
-                            onChange={(e) => setSpouseLiabilities(Number(e.target.value))}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                    </TabsContent>
+                  </Tabs>
+                </div>
               )}
               
               {/* Home specific fields */}
