@@ -1175,12 +1175,30 @@ const FinancialProjections = () => {
         onMilestoneChange={() => {
           // Recalculate the financial projections when milestones change
           const newProjectionData = generateProjectionData();
+          
+          // Update the chart with new data
           if (chartRef.current && chartInstance.current) {
             chartInstance.current.destroy();
             const ctx = chartRef.current.getContext("2d");
             if (ctx) {
               chartInstance.current = createMainProjectionChart(ctx, newProjectionData, activeTab);
             }
+          }
+          
+          // Update financial advice based on new state
+          if (financialProfile) {
+            // Create a financial state object based on current values
+            const financialState: FinancialState = {
+              income: income,
+              expenses: expenses,
+              savings: startingSavings,
+              studentLoanDebt: studentLoanDebt,
+              otherDebt: financialProfile.otherDebtAmount || 0,
+            };
+            
+            // Generate updated financial advice
+            const updatedAdvice = generateFinancialAdvice(financialState);
+            setFinancialAdvice(updatedAdvice);
           }
         }} 
       />

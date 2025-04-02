@@ -127,10 +127,15 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       });
     },
     onSuccess: () => {
+      // Invalidate milestone queries
       queryClient.invalidateQueries({ queryKey: ['/api/milestones', userId] });
-      if (onMilestoneChange) {
-        onMilestoneChange();
-      }
+      
+      // Wait for a brief moment to ensure the query invalidation is processed
+      setTimeout(() => {
+        if (onMilestoneChange) {
+          onMilestoneChange();
+        }
+      }, 100);
     },
   });
 
