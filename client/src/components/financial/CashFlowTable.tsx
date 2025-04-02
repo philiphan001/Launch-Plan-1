@@ -17,14 +17,14 @@ interface CashFlowTableProps {
   childcareExpenses: number[];
   debtExpenses: number[];
   discretionaryExpenses: number[];
-  assets: number[];
-  liabilities: number[];
-  netWorth: number[];
-  homeValue: number[];
-  mortgage: number[];
-  carValue: number[];
-  carLoan: number[];
-  studentLoan: number[];
+  assets?: number[] | null;
+  liabilities?: number[] | null;
+  netWorth?: number[] | null;
+  homeValue?: number[] | null;
+  mortgage?: number[] | null;
+  carValue?: number[] | null;
+  carLoan?: number[] | null;
+  studentLoan?: number[] | null;
 }
 
 const CashFlowTable: React.FC<CashFlowTableProps> = ({
@@ -93,9 +93,9 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       <TableCell>
                         ${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0) - (expenses[i] || 0)).toLocaleString()}
                       </TableCell>
-                      <TableCell>${netWorth[i]?.toLocaleString() || 0}</TableCell>
-                      <TableCell>${assets[i]?.toLocaleString() || 0}</TableCell>
-                      <TableCell>${liabilities[i]?.toLocaleString() || 0}</TableCell>
+                      <TableCell>${netWorth && netWorth[i] ? netWorth[i].toLocaleString() : 0}</TableCell>
+                      <TableCell>${assets && assets[i] ? assets[i].toLocaleString() : 0}</TableCell>
+                      <TableCell>${liabilities && liabilities[i] ? liabilities[i].toLocaleString() : 0}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -160,13 +160,13 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                   <TableBody>
                     {ages.map((age, i) => {
                       // Calculate other assets and liabilities (those not specifically tracked)
-                      const homeVal = homeValue[i] || 0;
-                      const carVal = carValue[i] || 0;
-                      const totalAssets = assets[i] || 0;
-                      const mortgageVal = mortgage[i] || 0;
-                      const carLoanVal = carLoan[i] || 0;
-                      const studentLoanVal = studentLoan[i] || 0;
-                      const totalLiabilities = liabilities[i] || 0;
+                      const homeVal = homeValue && homeValue[i] ? homeValue[i] : 0;
+                      const carVal = carValue && carValue[i] ? carValue[i] : 0;
+                      const totalAssets = assets && assets[i] ? assets[i] : 0;
+                      const mortgageVal = mortgage && mortgage[i] ? mortgage[i] : 0;
+                      const carLoanVal = carLoan && carLoan[i] ? carLoan[i] : 0;
+                      const studentLoanVal = studentLoan && studentLoan[i] ? studentLoan[i] : 0;
+                      const totalLiabilities = liabilities && liabilities[i] ? liabilities[i] : 0;
                       
                       const otherAssets = totalAssets - (homeVal + carVal);
                       const otherLiabilities = totalLiabilities - (mortgageVal + carLoanVal + studentLoanVal);
@@ -175,11 +175,11 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                         <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                           <TableCell>{i}</TableCell>
                           <TableCell>{age}</TableCell>
-                          <TableCell>${homeValue[i]?.toLocaleString() || 0}</TableCell>
-                          <TableCell>${mortgage[i]?.toLocaleString() || 0}</TableCell>
-                          <TableCell>${carValue[i]?.toLocaleString() || 0}</TableCell>
-                          <TableCell>${carLoan[i]?.toLocaleString() || 0}</TableCell>
-                          <TableCell>${studentLoan[i]?.toLocaleString() || 0}</TableCell>
+                          <TableCell>${homeValue && homeValue[i] ? homeValue[i].toLocaleString() : 0}</TableCell>
+                          <TableCell>${mortgage && mortgage[i] ? mortgage[i].toLocaleString() : 0}</TableCell>
+                          <TableCell>${carValue && carValue[i] ? carValue[i].toLocaleString() : 0}</TableCell>
+                          <TableCell>${carLoan && carLoan[i] ? carLoan[i].toLocaleString() : 0}</TableCell>
+                          <TableCell>${studentLoan && studentLoan[i] ? studentLoan[i].toLocaleString() : 0}</TableCell>
                           <TableCell>${otherAssets.toLocaleString()}</TableCell>
                           <TableCell>${otherLiabilities.toLocaleString()}</TableCell>
                         </TableRow>
