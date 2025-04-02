@@ -826,23 +826,25 @@ const FinancialProjections = () => {
             
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
               <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="text-sm text-gray-500 uppercase">Net Worth at {projectionData.ages[projectionData.ages.length - 1]}</p>
+                <p className="text-sm text-gray-500 uppercase">Net Worth at {projectionData?.ages?.length > 0 ? projectionData.ages[projectionData.ages.length - 1] : age}</p>
                 <p className="text-2xl font-mono font-medium text-gray-800">
-                  ${projectionData.netWorth[projectionData.netWorth.length - 1].toLocaleString()}
+                  ${projectionData?.netWorth?.length > 0 ? projectionData.netWorth[projectionData.netWorth.length - 1].toLocaleString() : startingSavings.toLocaleString()}
                 </p>
               </div>
               
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-500 uppercase">Total Savings</p>
                 <p className="text-2xl font-mono font-medium text-gray-800">
-                  ${(projectionData.netWorth[projectionData.netWorth.length - 1] - startingSavings).toLocaleString()}
+                  ${projectionData?.netWorth?.length > 0 ? (projectionData.netWorth[projectionData.netWorth.length - 1] - startingSavings).toLocaleString() : '0'}
                 </p>
               </div>
               
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-500 uppercase">Annual Savings Rate</p>
                 <p className="text-2xl font-mono font-medium text-gray-800">
-                  {Math.round((projectionData.income[0] - projectionData.expenses[0]) / projectionData.income[0] * 100)}%
+                  {projectionData?.income?.length > 0 && projectionData?.expenses?.length > 0 ? 
+                    Math.round((projectionData.income[0] - projectionData.expenses[0]) / projectionData.income[0] * 100) : 
+                    Math.round((income - expenses) / income * 100)}%
                 </p>
               </div>
             </div>
