@@ -135,6 +135,24 @@ const FinancialProjections = () => {
     }
   });
 
+  // Fetch assumptions for financial calculations
+  const { data: assumptions, isLoading: isLoadingAssumptions } = useQuery({
+    queryKey: ['/api/assumptions/user', userId],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/assumptions/user/${userId}`);
+        if (!response.ok) {
+          console.error("Failed to fetch assumptions:", response.statusText);
+          return []; // Return empty array if fetch fails
+        }
+        return response.json();
+      } catch (err) {
+        console.error("Error fetching assumptions:", err);
+        return []; // Return empty array on error
+      }
+    }
+  });
+  
   // Fetch financial profile
   const { data: financialProfile, isLoading: isLoadingFinancialProfile, error: financialProfileError } = useQuery({
     queryKey: ['/api/financial-profiles/user', userId],
@@ -275,8 +293,58 @@ const FinancialProjections = () => {
   const includedCollegeCalc = collegeCalculations?.find(calc => calc.includedInProjection);
   const includedCareerCalc = careerCalculations?.find(calc => calc.includedInProjection);
   
+  // Define variables to hold spouse-related assumption values with defaults
+  const [spouseLoanTerm, setSpouseLoanTerm] = useState<number>(10); // Default: 10 years
+  const [spouseLoanRate, setSpouseLoanRate] = useState<number>(5.0); // Default: 5.0% annual interest
+  const [spouseAssetGrowth, setSpouseAssetGrowth] = useState<number>(3.0); // Default: 3.0% annual growth
+  
+  // Process assumptions for financial calculations
+  useEffect(() => {
+    if (assumptions && assumptions.length > 0) {
+      console.log("Processing assumptions for financial calculations:", assumptions);
+      
+      // Find spouse loan term assumption
+      const spouseLoanTermAssumption = assumptions.find(
+        (a: { category: string; key: string; isEnabled: boolean }) => 
+          a.category === "marriage" && a.key === "spouse-loan-term" && a.isEnabled
+      );
+      
+      // Find spouse loan interest rate assumption
+      const spouseLoanRateAssumption = assumptions.find(
+        (a: { category: string; key: string; isEnabled: boolean }) => 
+          a.category === "marriage" && a.key === "spouse-loan-rate" && a.isEnabled
+      );
+      
+      // Find spouse asset growth rate assumption
+      const spouseAssetGrowthAssumption = assumptions.find(
+        (a: { category: string; key: string; isEnabled: boolean }) => 
+          a.category === "marriage" && a.key === "spouse-asset-growth" && a.isEnabled
+      );
+      
+      console.log("Spouse loan term assumption:", spouseLoanTermAssumption);
+      console.log("Spouse loan rate assumption:", spouseLoanRateAssumption);
+      console.log("Spouse asset growth assumption:", spouseAssetGrowthAssumption);
+      
+      // Set state variables with assumption values or use defaults
+      if (spouseLoanTermAssumption) {
+        console.log("Setting spouse loan term to:", spouseLoanTermAssumption.value);
+        setSpouseLoanTerm(spouseLoanTermAssumption.value);
+      }
+      
+      if (spouseLoanRateAssumption) {
+        console.log("Setting spouse loan rate to:", spouseLoanRateAssumption.value);
+        setSpouseLoanRate(spouseLoanRateAssumption.value);
+      }
+      
+      if (spouseAssetGrowthAssumption) {
+        console.log("Setting spouse asset growth to:", spouseAssetGrowthAssumption.value);
+        setSpouseAssetGrowth(spouseAssetGrowthAssumption.value);
+      }
+    }
+  }, [assumptions]);
+  
   // Check if data is being loaded
-  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData || isLoadingMilestones;
+  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData || isLoadingMilestones || isLoadingAssumptions;
   
   // Determine years based on timeframe
   const years = timeframe === "5 Years" ? 5 : timeframe === "20 Years" ? 20 : 10;
@@ -518,6 +586,65 @@ const FinancialProjections = () => {
         carValue = Math.round(carValue * 0.85);
       }
       
+      // Process spouse liabilities according to assumptions (amortized reduction)
+      if (hasSpouse && spouseLiabilities > 0) {
+        // Use the spouse loan term and interest rate from assumptions
+        const spouseLoanInterestRate = spouseLoanRate / 100; // Convert from percentage to decimal
+        
+        // Calculate years into marriage
+        const marriageMilestone = sortedMilestones.find((m: { type: string }) => m.type === 'marriage');
+        const marriageYear = marriageMilestone?.yearsAway || 0;
+        const yearsIntoMarriage = i - marriageYear;
+        
+        if (yearsIntoMarriage >= 0 && yearsIntoMarriage < spouseLoanTerm) {
+          // Calculate interest for this year
+          const annualInterestPaid = spouseLiabilities * spouseLoanInterestRate;
+          
+          // Calculate annual payment using formula for remaining balance
+          // Simple amortization: annual payment = original loan / loan term
+          // This is a simplification - using the initial loan amount divided by term
+          const initialSpouseLiabilities = marriageMilestone?.spouseLiabilities || 0;
+          const annualPayment = initialSpouseLiabilities / spouseLoanTerm;
+          
+          // Principal reduction is annual payment minus interest (or just the remaining balance if smaller)
+          const principalReduction = Math.min(
+            annualPayment - annualInterestPaid,
+            spouseLiabilities // Can't reduce more than remaining principal
+          );
+          
+          // Subtract payment from net worth
+          netWorth -= annualPayment;
+          console.log(`Spouse loan payment for year ${i}: $${annualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
+          
+          // Update spouse liabilities
+          spouseLiabilities = Math.max(0, spouseLiabilities - principalReduction);
+        }
+      }
+      
+      // Apply spouse asset growth according to assumptions
+      if (hasSpouse && spouseAssets > 0) {
+        // Use the spouse asset growth rate from assumptions
+        const spouseAssetGrowthRate = spouseAssetGrowth / 100; // Convert from percentage to decimal
+        
+        // Only apply growth after the marriage occurs
+        const marriageMilestone = sortedMilestones.find((m: { type: string }) => m.type === 'marriage');
+        const marriageYear = marriageMilestone?.yearsAway || 0;
+        const yearsIntoMarriage = i - marriageYear;
+        
+        if (yearsIntoMarriage > 0) { // Only apply growth after the first year of marriage
+          // Calculate asset growth for this year
+          const assetGrowthAmount = spouseAssets * spouseAssetGrowthRate;
+          
+          // Add growth to spouse assets
+          spouseAssets += assetGrowthAmount;
+          
+          // Add growth to net worth
+          netWorth += assetGrowthAmount;
+          
+          console.log(`Spouse asset growth for year ${i}: $${assetGrowthAmount.toFixed(2)} (${spouseAssetGrowth}% of $${spouseAssets.toFixed(2)})`);
+        }
+      }
+      
       // Calculate total assets and liabilities
       // For assets, we count the positive components of netWorth (savings from income)
       // plus home value, car value, and spouse assets if applicable
@@ -579,7 +706,8 @@ const FinancialProjections = () => {
   useEffect(() => {
     console.log("Inputs changed, recalculating projection data with milestones:", milestones);
     setProjectionData(generateProjectionData(milestones));
-  }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age]);
+  }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
+      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth]); // Include assumptions in dependency array
   
   // Generate financial advice based on current financial state
   useEffect(() => {
