@@ -8,15 +8,15 @@ interface CashFlowTableProps {
   ages: number[];
   income: number[];
   spouseIncome?: number[] | null;
-  expenses: number[];
-  housingExpenses: number[];
-  transportationExpenses: number[];
-  foodExpenses: number[];
-  healthcareExpenses: number[];
-  educationExpenses: number[];
-  childcareExpenses: number[];
-  debtExpenses: number[];
-  discretionaryExpenses: number[];
+  expenses?: number[] | null;
+  housingExpenses?: number[] | null;
+  transportationExpenses?: number[] | null;
+  foodExpenses?: number[] | null;
+  healthcareExpenses?: number[] | null;
+  educationExpenses?: number[] | null;
+  childcareExpenses?: number[] | null;
+  debtExpenses?: number[] | null;
+  discretionaryExpenses?: number[] | null;
   assets?: number[] | null;
   liabilities?: number[] | null;
   netWorth?: number[] | null;
@@ -89,9 +89,9 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       <TableCell>${income[i]?.toLocaleString() || 0}</TableCell>
                       <TableCell>${spouseIncome && spouseIncome[i] ? spouseIncome[i].toLocaleString() : 0}</TableCell>
                       <TableCell>${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0)).toLocaleString()}</TableCell>
-                      <TableCell>${expenses[i]?.toLocaleString() || 0}</TableCell>
+                      <TableCell>${expenses && expenses[i] ? expenses[i].toLocaleString() : 0}</TableCell>
                       <TableCell>
-                        ${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0) - (expenses[i] || 0)).toLocaleString()}
+                        ${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0) - (expenses && expenses[i] ? expenses[i] : 0)).toLocaleString()}
                       </TableCell>
                       <TableCell>${netWorth && netWorth[i] ? netWorth[i].toLocaleString() : 0}</TableCell>
                       <TableCell>${assets && assets[i] ? assets[i].toLocaleString() : 0}</TableCell>
@@ -125,14 +125,14 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                         <TableCell>{i}</TableCell>
                         <TableCell>{age}</TableCell>
-                        <TableCell>${housingExpenses[i]?.toLocaleString() || 0}</TableCell>
-                        <TableCell>${transportationExpenses[i]?.toLocaleString() || 0}</TableCell>
-                        <TableCell>${foodExpenses[i]?.toLocaleString() || 0}</TableCell>
-                        <TableCell>${healthcareExpenses[i]?.toLocaleString() || 0}</TableCell>
-                        <TableCell>${educationExpenses[i]?.toLocaleString() || 0}</TableCell>
-                        <TableCell>${childcareExpenses[i]?.toLocaleString() || 0}</TableCell>
-                        <TableCell>${debtExpenses[i]?.toLocaleString() || 0}</TableCell>
-                        <TableCell>${discretionaryExpenses[i]?.toLocaleString() || 0}</TableCell>
+                        <TableCell>${housingExpenses && housingExpenses[i] ? housingExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>${transportationExpenses && transportationExpenses[i] ? transportationExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>${foodExpenses && foodExpenses[i] ? foodExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>${healthcareExpenses && healthcareExpenses[i] ? healthcareExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>${educationExpenses && educationExpenses[i] ? educationExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>${childcareExpenses && childcareExpenses[i] ? childcareExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>${debtExpenses && debtExpenses[i] ? debtExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>${discretionaryExpenses && discretionaryExpenses[i] ? discretionaryExpenses[i].toLocaleString() : 0}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
