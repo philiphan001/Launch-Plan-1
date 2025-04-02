@@ -121,6 +121,9 @@ const FinancialProjections = () => {
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
+  
+  // Get the query client for invalidating queries
+  const queryClient = useQueryClient();
 
   // Fetch user data to get birth year
   const { data: userData, isLoading: isLoadingUser } = useQuery({
@@ -282,7 +285,9 @@ const FinancialProjections = () => {
   const costOfLivingFactor = locationCostData?.income_adjustment_factor || 1.0;
   
   // Generate projection data based on inputs
-  const generateProjectionData = () => {
+  // This is now a function to be called both during rendering and via onMilestoneChange
+  // We directly use the state values and the milestones parameter 
+  const generateProjectionData = (milestonesList = milestones) => {
     // Calculate initial net worth (just savings, student loans tracked separately as liabilities)
     let netWorth = startingSavings;
     
@@ -554,7 +559,17 @@ const FinancialProjections = () => {
     };
   };
   
-  const projectionData = generateProjectionData();
+  // Create a state for the projection data so we can update it when milestones change
+  const [projectionData, setProjectionData] = useState<any>({ 
+    netWorth: [startingSavings],
+    ages: [age]
+  });
+  
+  // Update the projection data whenever inputs change
+  useEffect(() => {
+    const newProjectionData = generateProjectionData();
+    setProjectionData(newProjectionData);
+  }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth]);
   
   // Generate financial advice based on current financial state
   useEffect(() => {
@@ -1173,33 +1188,17 @@ const FinancialProjections = () => {
       <MilestonesSection 
         userId={userId} 
         onMilestoneChange={() => {
-          // Recalculate the financial projections when milestones change
-          const newProjectionData = generateProjectionData();
+          // Fetch the latest milestone data
+          // The useEffect will automatically recalculate projectionData when milestones change
+          console.log("Milestone changed, refreshing calculation...");
           
-          // Update the chart with new data
-          if (chartRef.current && chartInstance.current) {
-            chartInstance.current.destroy();
-            const ctx = chartRef.current.getContext("2d");
-            if (ctx) {
-              chartInstance.current = createMainProjectionChart(ctx, newProjectionData, activeTab);
-            }
-          }
+          // Force a re-fetch of milestone data by invalidating the query
+          queryClient.invalidateQueries({ queryKey: ['/api/milestones/user', userId] });
           
-          // Update financial advice based on new state
-          if (financialProfile) {
-            // Create a financial state object based on current values
-            const financialState: FinancialState = {
-              income: income,
-              expenses: expenses,
-              savings: startingSavings,
-              studentLoanDebt: studentLoanDebt,
-              otherDebt: financialProfile.otherDebtAmount || 0,
-            };
-            
-            // Generate updated financial advice
-            const updatedAdvice = generateFinancialAdvice(financialState);
-            setFinancialAdvice(updatedAdvice);
-          }
+          // After the re-fetch, force an update to projectionData
+          setTimeout(() => {
+            setProjectionData(generateProjectionData());
+          }, 300);
         }} 
       />
     </div>
