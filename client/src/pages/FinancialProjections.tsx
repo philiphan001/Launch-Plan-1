@@ -374,13 +374,11 @@ const FinancialProjections = () => {
     const incomeData = [currentIncome];
     const spouseIncomeData = [0]; // Initialize spouse income data array
     const expensesData = [currentExpenses];
-    const ages = [age];
     
     // Initialize separate arrays for assets and liabilities
     const assetsData = [startingSavings]; // Initial assets (savings only)
     const liabilitiesData = [studentLoanDebt]; // Initial liabilities (student loan only)
     
-    // Track different types of expenses with separate arrays for detailed breakdown
     // Track expense categories for detailed breakdown with initial values as percentages of base expenses
     const housingExpensesData = [currentExpenses * 0.3]; // Mortgage/rent expenses - estimate 30%
     const transportationExpensesData = [currentExpenses * 0.15]; // Transportation expenses - estimate 15%
@@ -390,7 +388,6 @@ const FinancialProjections = () => {
     const debtExpensesData = [0]; // Other debt payments
     const discretionaryExpensesData = [currentExpenses * 0.3]; // Discretionary spending - remaining 30%
     const childcareExpensesData = [0]; // Child-related expenses
-    const livingExpensesData = [currentExpenses]; // Total base living expenses
     
     // Specific asset and liability tracking
     const homeValueData = [0]; // Track home value as an asset
@@ -403,6 +400,8 @@ const FinancialProjections = () => {
     // Track student loan balance over time
     let remainingStudentLoanDebt = studentLoanDebt;
     const studentLoanData = [remainingStudentLoanDebt]; // Track student loans as a liability
+    
+    const ages = [age];
     
     // Sort milestones by yearsAway to process them in chronological order
     const sortedMilestones = milestones ? [...milestones].sort((a, b) => a.yearsAway - b.yearsAway) : [];
@@ -804,11 +803,47 @@ const FinancialProjections = () => {
       incomeData.push(currentIncome);
       spouseIncomeData.push(hasSpouse ? spouseIncome : 0);
       expensesData.push(totalExpenses);
+      
+      // Track expense categories for detailed breakdown
+      // Housing: 30% of base expenses + mortgage payment if any
+      let housingExpense = currentExpenses * 0.3 + (hasHome ? mortgagePayment : 0);
+      housingExpensesData.push(housingExpense);
+      
+      // Transportation: 15% of base expenses + car payment if any
+      let transportationExpense = currentExpenses * 0.15 + (hasCar ? carPayment : 0);
+      transportationExpensesData.push(transportationExpense);
+      
+      // Food: 15% of base expenses
+      let foodExpense = currentExpenses * 0.15;
+      foodExpensesData.push(foodExpense);
+      
+      // Healthcare: 10% of base expenses
+      let healthcareExpense = currentExpenses * 0.1;
+      healthcareExpensesData.push(healthcareExpense);
+      
+      // Education: student loan + education loan payments
+      // Note: Education expenses are updated during loan payment calculations
+      if (!educationExpensesData[i]) {
+        educationExpensesData.push(educationExpensesData[i-1] || 0);
+      }
+      
+      // Debt: other debt payments
+      // Note: Most debt is tracked in other categories, this is for miscellaneous debt
+      debtExpensesData.push(0);
+      
+      // Childcare: child-related expenses
+      let childcareExpense = hasChildren ? childrenExpenses : 0;
+      childcareExpensesData.push(childcareExpense);
+      
+      // Discretionary: 30% of base expenses (or remainder)
+      let discretionaryExpense = currentExpenses * 0.3;
+      discretionaryExpensesData.push(discretionaryExpense);
+      
       ages.push(age + i);
     }
     
     // Calculate current expense data for expense breakdown chart
-    const currentExpenses = {
+    const currentExpenseCategories = {
       housing: housingExpensesData[housingExpensesData.length - 1],
       transportation: transportationExpensesData[transportationExpensesData.length - 1],
       food: foodExpensesData[foodExpensesData.length - 1],
@@ -842,7 +877,7 @@ const FinancialProjections = () => {
       childcareExpenses: childcareExpensesData,
       discretionaryExpenses: discretionaryExpensesData,
       // Current expense breakdown for the pie chart
-      currentExpenses: currentExpenses
+      currentExpenses: currentExpenseCategories
     };
   };
   
@@ -1353,6 +1388,25 @@ const FinancialProjections = () => {
               <div className="mt-6">
                 <UpdateLocationDialog userData={userData} />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Expense Breakdown Chart */}
+      {projectionData?.currentExpenses && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Expense Breakdown</h3>
+            </div>
+            <ExpenseBreakdownChart currentExpenses={projectionData.currentExpenses} />
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Understanding your expenses:</span> This breakdown shows where your 
+                money is going. Housing (30%), transportation (15%), food (15%), healthcare (10%), and discretionary spending (30%)
+                form your basic expenses, with additional categories for education, debt, and childcare when applicable.
+              </p>
             </div>
           </CardContent>
         </Card>
