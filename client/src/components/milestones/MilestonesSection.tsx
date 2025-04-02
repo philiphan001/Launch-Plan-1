@@ -35,13 +35,26 @@ import {
 import { 
   Slider 
 } from "@/components/ui/slider";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { 
   Career,
   Milestone,
   InsertMilestone 
 } from "@shared/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness } from "lucide-react";
+import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search } from "lucide-react";
 
 type MilestoneType = "marriage" | "children" | "home" | "car" | "education";
 
@@ -437,22 +450,55 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         </div>
                         
                         <div>
-                          <Label htmlFor="spouse-occupation" className="text-purple-700 font-medium">Future Spouse's Career</Label>
-                          <Select value={spouseOccupation} onValueChange={setSpouseOccupation}>
-                            <SelectTrigger id="spouse-occupation" className="mt-1 border-pink-200 focus:ring-pink-500">
-                              <SelectValue placeholder="Pick a cool career!" />
-                            </SelectTrigger>
-                            <SelectContent className="max-h-[300px]">
-                              <div className="p-2 sticky top-0 bg-white border-b">
-                                <p className="text-xs text-center font-medium text-pink-600">💼 Choose wisely — this affects your financial future!</p>
-                              </div>
-                              {careers?.sort((a, b) => a.title.localeCompare(b.title)).map((career) => (
-                                <SelectItem key={career.id} value={career.title}>
-                                  {career.title}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <Label htmlFor="spouse-occupation" className="text-purple-700 font-medium flex items-center">
+                            <span className="mr-2">💼</span> Future Spouse's Career
+                          </Label>
+                          <div className="mt-2 relative">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between bg-white border-pink-200 hover:bg-pink-50 hover:text-pink-700 focus:ring-pink-500"
+                                >
+                                  {spouseOccupation 
+                                    ? spouseOccupation 
+                                    : "Search for a dream career..."}
+                                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-full p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                                <Command>
+                                  <div className="px-3 py-2 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-purple-50">
+                                    <p className="text-xs text-center font-medium text-pink-600">💼 Choose wisely — this affects your financial future!</p>
+                                  </div>
+                                  <CommandInput placeholder="Type to search careers..." className="h-9 border-pink-100" />
+                                  <CommandList className="max-h-[300px] overflow-auto">
+                                    <CommandEmpty>No matching careers found</CommandEmpty>
+                                    <CommandGroup>
+                                      {careers?.sort((a, b) => a.title.localeCompare(b.title)).map((career) => (
+                                        <CommandItem
+                                          key={career.id}
+                                          value={career.title}
+                                          onSelect={() => {
+                                            setSpouseOccupation(career.title);
+                                          }}
+                                          className="flex items-center"
+                                        >
+                                          <span>{career.title}</span>
+                                          {career.salaryMedian && 
+                                            <span className="ml-auto text-xs text-green-600 font-semibold">
+                                              ${career.salaryMedian.toLocaleString()}
+                                            </span>
+                                          }
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
                         </div>
                         
                         {spouseOccupation && (
