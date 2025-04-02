@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
 import { Button } from "@/components/ui/button";
@@ -559,17 +559,19 @@ const FinancialProjections = () => {
     };
   };
   
-  // Create a state for the projection data so we can update it when milestones change
-  const [projectionData, setProjectionData] = useState<any>({ 
+  // Create a state for projection data
+  const [projectionData, setProjectionData] = useState<any>({
     netWorth: [startingSavings],
-    ages: [age]
+    ages: [age],
+    income: [income],
+    expenses: [expenses]
   });
   
-  // Update the projection data whenever inputs change
+  // Update projection data when inputs change
   useEffect(() => {
-    const newProjectionData = generateProjectionData();
-    setProjectionData(newProjectionData);
-  }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth]);
+    console.log("Inputs changed, recalculating projection data with milestones:", milestones);
+    setProjectionData(generateProjectionData(milestones));
+  }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age]);
   
   // Generate financial advice based on current financial state
   useEffect(() => {
@@ -1190,43 +1192,18 @@ const FinancialProjections = () => {
       <MilestonesSection 
         userId={userId} 
         onMilestoneChange={() => {
-          console.log("Milestone changed, refreshing calculation...");
+          console.log("Milestone changed, forcing a refresh...");
           
-          // Directly update the chart with new data
-          const updateChartWithNewData = async () => {
-            try {
-              // Fetch the latest milestone data
-              const response = await fetch(`/api/milestones/user/${userId}`);
-              if (!response.ok) throw new Error('Failed to fetch updated milestones');
-              
-              const updatedMilestones = await response.json();
-              console.log("Fetched updated milestones:", updatedMilestones);
-              
-              // Generate new data with updated milestones
-              const newData = generateProjectionData(updatedMilestones);
-              
-              // Update state
-              setProjectionData(newData);
-              
-              // Force immediate chart update
-              if (chartRef.current && chartInstance.current) {
-                // Destroy old chart
-                chartInstance.current.destroy();
-                
-                // Create new chart
-                const ctx = chartRef.current.getContext("2d");
-                if (ctx) {
-                  chartInstance.current = createMainProjectionChart(ctx, newData, activeTab);
-                  console.log("Chart updated with new data");
-                }
-              }
-            } catch (error) {
-              console.error("Error updating chart:", error);
-            }
-          };
+          // Force a re-fetch of milestone data
+          queryClient.invalidateQueries({ queryKey: ['/api/milestones/user', userId] });
           
-          // Execute the update
-          updateChartWithNewData();
+          // Force a re-render by updating a random input value slightly and then back
+          // This is a workaround to ensure React notices the dependency changes
+          const originalIncome = income;
+          setIncome(originalIncome + 1);
+          setTimeout(() => {
+            setIncome(originalIncome);
+          }, 10);
         }} 
       />
     </div>
