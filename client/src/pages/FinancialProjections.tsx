@@ -597,24 +597,29 @@ const FinancialProjections = () => {
         const yearsIntoMarriage = i - marriageYear;
         
         if (yearsIntoMarriage >= 0 && yearsIntoMarriage < spouseLoanTerm) {
+          // Get the initial spouse liability amount when marriage started
+          const initialSpouseLiabilities = marriageMilestone?.spouseLiabilities || 0;
+          
+          // Proper amortization calculation for level payment loan
+          // Formula: Payment = (P * r * (1+r)^n) / ((1+r)^n - 1)
+          // Where: P = principal, r = interest rate per period, n = number of periods
+          const r = spouseLoanInterestRate;
+          const n = spouseLoanTerm;
+          const amortizedAnnualPayment = (initialSpouseLiabilities * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+          
           // Calculate interest for this year
           const annualInterestPaid = spouseLiabilities * spouseLoanInterestRate;
           
-          // Calculate annual payment using formula for remaining balance
-          // Simple amortization: annual payment = original loan / loan term
-          // This is a simplification - using the initial loan amount divided by term
-          const initialSpouseLiabilities = marriageMilestone?.spouseLiabilities || 0;
-          const annualPayment = initialSpouseLiabilities / spouseLoanTerm;
-          
-          // Principal reduction is annual payment minus interest (or just the remaining balance if smaller)
+          // Principal reduction is annual payment minus interest
           const principalReduction = Math.min(
-            annualPayment - annualInterestPaid,
+            amortizedAnnualPayment - annualInterestPaid,
             spouseLiabilities // Can't reduce more than remaining principal
           );
           
           // Subtract payment from net worth
-          netWorth -= annualPayment;
-          console.log(`Spouse loan payment for year ${i}: $${annualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
+          netWorth -= amortizedAnnualPayment;
+          console.log(`Spouse loan payment for year ${i}: $${amortizedAnnualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
+          console.log(`Spouse loan balance: $${spouseLiabilities.toFixed(2)} → $${(spouseLiabilities - principalReduction).toFixed(2)}`);
           
           // Update spouse liabilities
           spouseLiabilities = Math.max(0, spouseLiabilities - principalReduction);
