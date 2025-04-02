@@ -338,10 +338,12 @@ const FinancialProjections = () => {
       });
     }
     
-    // Track spouse income (for marriage milestone)
+    // Track spouse income and assets/liabilities (for marriage milestone)
     let hasSpouse = false;
     let spouseIncome = 0;
     let spouseIncomeGrowth = incomeGrowth; // Use same growth rate as primary income
+    let spouseAssets = 0; // Track spouse assets separately
+    let spouseLiabilities = 0; // Track spouse liabilities separately
     
     // Track homeowner status, value, and mortgage (for home milestone)
     let hasHome = false;
@@ -387,9 +389,13 @@ const FinancialProjections = () => {
               hasSpouse = true;
               spouseIncome = milestone.spouseIncome || 50000;
               
-              // Add spouse assets and subtract liabilities
-              netWorth += (milestone.spouseAssets || 0) - (milestone.spouseLiabilities || 0);
-              console.log(`Marriage milestone: Adding spouse with income $${spouseIncome} and net worth ${(milestone.spouseAssets || 0) - (milestone.spouseLiabilities || 0)}`);
+              // Set spouse assets and liabilities
+              spouseAssets = milestone.spouseAssets || 0;
+              spouseLiabilities = milestone.spouseLiabilities || 0;
+              
+              // Add spouse assets and subtract liabilities from net worth
+              netWorth += spouseAssets - spouseLiabilities;
+              console.log(`Marriage milestone: Adding spouse with income $${spouseIncome}, assets $${spouseAssets}, and liabilities $${spouseLiabilities}`);
               break;
               
             case 'home':
@@ -514,17 +520,19 @@ const FinancialProjections = () => {
       
       // Calculate total assets and liabilities
       // For assets, we count the positive components of netWorth (savings from income)
-      // plus home value and car value
+      // plus home value, car value, and spouse assets if applicable
       const totalAssets = Math.max(0, netWorth) + 
                           (hasHome ? homeValue : 0) + 
-                          (hasCar ? carValue : 0);
+                          (hasCar ? carValue : 0) + 
+                          (hasSpouse ? spouseAssets : 0);
                           
       // For liabilities, we track all debts separately
       // Student loan debt is tracked separately as a dedicated liability
       const totalLiabilities = mortgagePrincipal + 
                               carLoanPrincipal + 
                               remainingStudentLoanDebt + 
-                              educationDebt;
+                              educationDebt + 
+                              (hasSpouse ? spouseLiabilities : 0);
       
       // Update data arrays for this year
       netWorthData.push(netWorth);
