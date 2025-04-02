@@ -54,7 +54,7 @@ import {
   InsertMilestone 
 } from "@shared/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search } from "lucide-react";
+import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search, Pencil, Trash2 } from "lucide-react";
 
 type MilestoneType = "marriage" | "children" | "home" | "car" | "education";
 
@@ -68,6 +68,8 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [currentMilestone, setCurrentMilestone] = useState<MilestoneType | null>(null);
   const [yearsAway, setYearsAway] = useState(3);
   const [income, setIncome] = useState(60000); // Current user's income
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingMilestoneId, setEditingMilestoneId] = useState<number | null>(null);
   
   // Marriage milestone specific state
   const [spouseOccupation, setSpouseOccupation] = useState("");
@@ -133,6 +135,32 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
     },
   });
 
+  // Update a milestone
+  const updateMilestone = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: Partial<InsertMilestone> }) => {
+      return await fetch(`/api/milestones/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      // Invalidate milestone queries
+      queryClient.invalidateQueries({ queryKey: ['/api/milestones', userId] });
+      
+      // Reset editing state
+      setIsEditing(false);
+      setEditingMilestoneId(null);
+      
+      // Trigger parent component update
+      if (onMilestoneChange) {
+        onMilestoneChange();
+      }
+    },
+  });
+
   // Delete a milestone
   const deleteMilestone = useMutation({
     mutationFn: async (id: number) => {
@@ -153,33 +181,67 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
     },
   });
 
-  const openMilestoneDialog = (type: MilestoneType) => {
+  const openMilestoneDialog = (type: MilestoneType, milestoneToEdit?: Milestone) => {
     setCurrentMilestone(type);
     setDialogOpen(true);
     
-    // Reset all state values to defaults
-    setYearsAway(3);
-    
-    if (type === "marriage") {
-      setSpouseOccupation("");
-      setSpouseIncome(50000);
-      setSpouseAssets(10000);
-      setSpouseLiabilities(5000);
-    } else if (type === "home") {
-      const defaultHomeValue = 300000;
-      const defaultDownPaymentPercent = 20; // 20% downpayment
-      setHomeValue(defaultHomeValue);
-      setHomeDownPayment(defaultHomeValue * (defaultDownPaymentPercent / 100));
-      setHomeMonthlyPayment(1500);
-    } else if (type === "car") {
-      setCarValue(25000);
-      setCarDownPayment(5000);
-      setCarMonthlyPayment(350);
-    } else if (type === "children") {
-      setChildrenCount(2);
-      setChildrenExpensePerYear(12000);
-    } else if (type === "education") {
-      setEducationCost(30000);
+    if (milestoneToEdit) {
+      // This is an edit operation
+      setIsEditing(true);
+      setEditingMilestoneId(milestoneToEdit.id);
+      
+      // Set common fields
+      setYearsAway(milestoneToEdit.yearsAway || 3);
+      
+      // Set type-specific fields
+      if (type === "marriage") {
+        setSpouseOccupation(milestoneToEdit.spouseOccupation || "");
+        setSpouseIncome(milestoneToEdit.spouseIncome || 50000);
+        setSpouseAssets(milestoneToEdit.spouseAssets || 10000);
+        setSpouseLiabilities(milestoneToEdit.spouseLiabilities || 5000);
+      } else if (type === "home") {
+        setHomeValue(milestoneToEdit.homeValue || 300000);
+        setHomeDownPayment(milestoneToEdit.homeDownPayment || 60000);
+        setHomeMonthlyPayment(milestoneToEdit.homeMonthlyPayment || 1500);
+      } else if (type === "car") {
+        setCarValue(milestoneToEdit.carValue || 25000);
+        setCarDownPayment(milestoneToEdit.carDownPayment || 5000);
+        setCarMonthlyPayment(milestoneToEdit.carMonthlyPayment || 350);
+      } else if (type === "children") {
+        setChildrenCount(milestoneToEdit.childrenCount || 2);
+        setChildrenExpensePerYear(milestoneToEdit.childrenExpensePerYear || 12000);
+      } else if (type === "education") {
+        setEducationCost(milestoneToEdit.educationCost || 30000);
+      }
+    } else {
+      // This is a new milestone
+      setIsEditing(false);
+      setEditingMilestoneId(null);
+      
+      // Reset all state values to defaults
+      setYearsAway(3);
+      
+      if (type === "marriage") {
+        setSpouseOccupation("");
+        setSpouseIncome(50000);
+        setSpouseAssets(10000);
+        setSpouseLiabilities(5000);
+      } else if (type === "home") {
+        const defaultHomeValue = 300000;
+        const defaultDownPaymentPercent = 20; // 20% downpayment
+        setHomeValue(defaultHomeValue);
+        setHomeDownPayment(defaultHomeValue * (defaultDownPaymentPercent / 100));
+        setHomeMonthlyPayment(1500);
+      } else if (type === "car") {
+        setCarValue(25000);
+        setCarDownPayment(5000);
+        setCarMonthlyPayment(350);
+      } else if (type === "children") {
+        setChildrenCount(2);
+        setChildrenExpensePerYear(12000);
+      } else if (type === "education") {
+        setEducationCost(30000);
+      }
     }
   };
 
@@ -199,7 +261,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       const selectedCareer = careers?.find(c => c.title === spouseOccupation);
       const spouseIncomeValue = selectedCareer ? selectedCareer.salaryMedian || 50000 : spouseIncome;
       
-      createMilestone.mutate({
+      const milestoneData = {
         userId,
         type,
         title,
@@ -209,12 +271,23 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         spouseIncome: spouseIncomeValue,
         spouseAssets,
         spouseLiabilities,
-      });
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        // Update existing milestone
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        // Create new milestone
+        createMilestone.mutate(milestoneData);
+      }
     } else if (currentMilestone === "home") {
       title = "Buy a Home";
       type = "home";
       
-      createMilestone.mutate({
+      const milestoneData = {
         userId,
         type,
         title,
@@ -223,12 +296,23 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         homeValue,
         homeDownPayment,
         homeMonthlyPayment,
-      });
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        // Update existing milestone
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        // Create new milestone
+        createMilestone.mutate(milestoneData);
+      }
     } else if (currentMilestone === "car") {
       title = "Buy a Car";
       type = "car";
       
-      createMilestone.mutate({
+      const milestoneData = {
         userId,
         type,
         title,
@@ -237,12 +321,23 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         carValue,
         carDownPayment,
         carMonthlyPayment,
-      });
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        // Update existing milestone
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        // Create new milestone
+        createMilestone.mutate(milestoneData);
+      }
     } else if (currentMilestone === "children") {
       title = "Have Children";
       type = "children";
       
-      createMilestone.mutate({
+      const milestoneData = {
         userId,
         type,
         title,
@@ -250,19 +345,41 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         yearsAway,
         childrenCount,
         childrenExpensePerYear,
-      });
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        // Update existing milestone
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        // Create new milestone
+        createMilestone.mutate(milestoneData);
+      }
     } else if (currentMilestone === "education") {
       title = "Graduate School";
       type = "education";
       
-      createMilestone.mutate({
+      const milestoneData = {
         userId,
         type,
         title,
         date,
         yearsAway,
         educationCost,
-      });
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        // Update existing milestone
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        // Create new milestone
+        createMilestone.mutate(milestoneData);
+      }
     }
     
     setDialogOpen(false);
@@ -375,14 +492,24 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         </div>
                       </div>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-gray-500 hover:text-red-500"
-                      onClick={() => deleteMilestone.mutate(milestone.id)}
-                    >
-                      Remove
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-gray-500 hover:text-blue-500"
+                        onClick={() => openMilestoneDialog(milestone.type as MilestoneType, milestone)}
+                      >
+                        <span className="text-sm">Edit</span>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-gray-500 hover:text-red-500"
+                        onClick={() => deleteMilestone.mutate(milestone.id)}
+                      >
+                        <span className="text-sm">Remove</span>
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -911,7 +1038,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
               Cancel
             </Button>
             <Button onClick={handleSaveMilestone}>
-              Save Milestone
+              {isEditing ? "Update Milestone" : "Save Milestone"}
             </Button>
           </DialogFooter>
         </DialogContent>
