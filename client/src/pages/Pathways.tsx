@@ -128,6 +128,32 @@ const Pathways = () => {
     });
   };
   
+  // This function restarts just the current exploration method
+  const handleRestartExploration = () => {
+    // Keep the same exploration method but reset the results
+    if (explorationMethod === 'swipe') {
+      setSwipeResults({});
+    } else if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
+      setWheelResults({});
+    } else if (explorationMethod === 'avatar') {
+      setAvatarResults({});
+    } else if (explorationMethod === 'quickSpin') {
+      setQuickSpinResults({
+        superpower: '',
+        ideal_day: '',
+        values: '',
+        activities: '',
+        feelings: '',
+        location: '',
+        team_role: '',
+        wildcard: ''
+      });
+    }
+    
+    // Go back to step 3 (the exploration activity)
+    setCurrentStep(3);
+  };
+  
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -774,7 +800,7 @@ const Pathways = () => {
                   
                   <div className="flex justify-between mt-6">
                     <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button variant="outline" onClick={handleStartOver}>Start Over</Button>
+                    <Button variant="outline" onClick={handleRestartExploration}>Start Over</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1141,7 +1167,7 @@ const Pathways = () => {
                       
                       <div className="flex justify-between mt-6">
                         <Button variant="outline" onClick={handleBack}>Back</Button>
-                        <Button onClick={handleStartOver}>Explore Another Path</Button>
+                        <Button onClick={handleRestartExploration}>Explore Another Path</Button>
                       </div>
                     </>
                   )}
@@ -1240,7 +1266,7 @@ const Pathways = () => {
                   
                   <div className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button onClick={handleStartOver}>Explore Another Path</Button>
+                    <Button onClick={handleRestartExploration}>Explore Another Path</Button>
                   </div>
                 </CardContent>
               </Card>
