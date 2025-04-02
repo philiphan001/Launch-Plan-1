@@ -357,8 +357,12 @@ const FinancialProjections = () => {
   // This is now a function to be called both during rendering and via onMilestoneChange
   // We directly use the state values and the milestones parameter 
   const generateProjectionData = (milestonesList = milestones) => {
-    // Calculate initial net worth (just savings, student loans tracked separately as liabilities)
-    let netWorth = startingSavings;
+    // Set up initial values for assets and liabilities
+    let initialSavings = startingSavings;
+    let initialStudentLoanDebt = studentLoanDebt;
+    
+    // Calculate initial net worth properly (total assets minus total liabilities)
+    let netWorth = initialSavings - initialStudentLoanDebt;
     
     // Properly adjust income based on cost of living - correctly apply the factor
     let currentIncome = income * costOfLivingFactor;
@@ -789,8 +793,11 @@ const FinancialProjections = () => {
                               educationDebt + 
                               (hasSpouse ? spouseLiabilities : 0);
       
+      // Calculate proper net worth as total assets minus total liabilities
+      const properNetWorth = totalAssets - totalLiabilities;
+      
       // Update data arrays for this year
-      netWorthData.push(netWorth);
+      netWorthData.push(properNetWorth); // Use proper net worth calculation that includes all assets and liabilities
       assetsData.push(totalAssets);  
       liabilitiesData.push(totalLiabilities);
       homeValueData.push(hasHome ? homeValue : 0);
