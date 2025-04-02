@@ -9,6 +9,7 @@ import RecommendationEngine from "@/components/pathways/RecommendationEngine";
 import IdentityWheel from "@/components/pathways/IdentityWheel";
 import AdvancedWheel from "@/components/pathways/AdvancedWheel";
 import AvatarCreator from "@/components/pathways/AvatarCreator";
+import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 type EducationType = "4year" | "2year" | "vocational" | null;
@@ -48,8 +49,18 @@ const Pathways = () => {
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
-  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | 'advancedWheel' | 'avatar' | null>(null);
+  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | 'advancedWheel' | 'avatar' | 'quickSpin' | null>(null);
   const [avatarResults, setAvatarResults] = useState<Record<string, string>>({});
+  const [quickSpinResults, setQuickSpinResults] = useState<Record<string, string>>({
+    superpower: '',
+    ideal_day: '',
+    values: '',
+    activities: '',
+    feelings: '',
+    location: '',
+    team_role: '',
+    wildcard: ''
+  });
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
@@ -95,6 +106,16 @@ const Pathways = () => {
     setSwipeResults({});
     setWheelResults({});
     setAvatarResults({});
+    setQuickSpinResults({
+      superpower: '',
+      ideal_day: '',
+      values: '',
+      activities: '',
+      feelings: '',
+      location: '',
+      team_role: '',
+      wildcard: ''
+    });
   };
   
   const renderCurrentStep = () => {
@@ -146,7 +167,7 @@ const Pathways = () => {
                 title="Choose Your Exploration Method" 
                 subtitle="Select a fun activity to help discover your interests and values"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
                   <Card 
                     className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
                     onClick={() => setExplorationMethod('swipe')}
@@ -199,6 +220,20 @@ const Pathways = () => {
                       </div>
                       <h3 className="text-lg font-medium mb-2">Future Self Avatar</h3>
                       <p className="text-sm text-gray-600 mb-4">Create a personalized avatar that represents your future self</p>
+                      <Button variant="outline" size="sm">Select This Method</Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
+                    onClick={() => setExplorationMethod('quickSpin')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-yellow-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">toys</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Quick Spin Game</h3>
+                      <p className="text-sm text-gray-600 mb-4">Play a quick spinning wheel game to explore your future identity</p>
                       <Button variant="outline" size="sm">Select This Method</Button>
                     </CardContent>
                   </Card>
@@ -270,6 +305,24 @@ const Pathways = () => {
                     <AvatarCreator 
                       onComplete={(results) => {
                         setAvatarResults(results);
+                        handleNext();
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else if (explorationMethod === 'quickSpin') {
+            return (
+              <Step 
+                title="Spin the Identity Wheel" 
+                subtitle="Discover what makes you unique through this fun wheel game"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <QuickSpinWheel 
+                      onComplete={(results) => {
+                        setQuickSpinResults(results);
                         handleNext();
                       }}
                     />
@@ -456,6 +509,121 @@ const Pathways = () => {
           };
           
           // Convert avatar results to preferences
+          // Convert quickSpin results to preferences
+          const convertQuickSpinResultsToPreferences = () => {
+            const quickSpinPreferences: Record<string, boolean> = {};
+            
+            if (quickSpinResults && Object.keys(quickSpinResults).length > 0) {
+              // Map superpower responses
+              if (quickSpinResults.superpower) {
+                // Creative abilities
+                if (quickSpinResults.superpower.toLowerCase().includes('creat') || 
+                    quickSpinResults.superpower.toLowerCase().includes('art')) {
+                  quickSpinPreferences['artistic_expression'] = true;
+                  quickSpinPreferences['building_creating'] = true;
+                }
+                
+                // Technical abilities
+                if (quickSpinResults.superpower.toLowerCase().includes('tech') || 
+                    quickSpinResults.superpower.toLowerCase().includes('program') ||
+                    quickSpinResults.superpower.toLowerCase().includes('code')) {
+                  quickSpinPreferences['technical_skills'] = true;
+                  quickSpinPreferences['digital_work'] = true;
+                }
+                
+                // People skills
+                if (quickSpinResults.superpower.toLowerCase().includes('people') || 
+                    quickSpinResults.superpower.toLowerCase().includes('communicat') ||
+                    quickSpinResults.superpower.toLowerCase().includes('speak')) {
+                  quickSpinPreferences['working_with_people'] = true;
+                  quickSpinPreferences['team_collaboration'] = true;
+                }
+                
+                // Problem solving
+                if (quickSpinResults.superpower.toLowerCase().includes('solv') || 
+                    quickSpinResults.superpower.toLowerCase().includes('analyz') ||
+                    quickSpinResults.superpower.toLowerCase().includes('logic')) {
+                  quickSpinPreferences['problem_solving'] = true;
+                  quickSpinPreferences['strategic_thinking'] = true;
+                }
+              }
+              
+              // Map ideal day responses
+              if (quickSpinResults.ideal_day) {
+                // Outdoor preferences
+                if (quickSpinResults.ideal_day.toLowerCase().includes('outdoor') || 
+                    quickSpinResults.ideal_day.toLowerCase().includes('nature')) {
+                  quickSpinPreferences['outdoor_work'] = true;
+                  quickSpinPreferences['nature_environment'] = true;
+                }
+                
+                // Office environment
+                if (quickSpinResults.ideal_day.toLowerCase().includes('office') || 
+                    quickSpinResults.ideal_day.toLowerCase().includes('professional')) {
+                  quickSpinPreferences['strategic_thinking'] = true;
+                }
+                
+                // Remote work
+                if (quickSpinResults.ideal_day.toLowerCase().includes('remote') || 
+                    quickSpinResults.ideal_day.toLowerCase().includes('home')) {
+                  quickSpinPreferences['digital_work'] = true;
+                }
+              }
+              
+              // Map values
+              if (quickSpinResults.values) {
+                if (quickSpinResults.values.toLowerCase().includes('help') || 
+                    quickSpinResults.values.toLowerCase().includes('others')) {
+                  quickSpinPreferences['helping_others'] = true;
+                }
+                
+                if (quickSpinResults.values.toLowerCase().includes('creat')) {
+                  quickSpinPreferences['artistic_expression'] = true;
+                }
+                
+                if (quickSpinResults.values.toLowerCase().includes('innovat') || 
+                    quickSpinResults.values.toLowerCase().includes('new')) {
+                  quickSpinPreferences['innovation'] = true;
+                }
+                
+                if (quickSpinResults.values.toLowerCase().includes('freedom')) {
+                  quickSpinPreferences['entrepreneurship'] = true;
+                }
+                
+                if (quickSpinResults.values.toLowerCase().includes('secur') || 
+                    quickSpinResults.values.toLowerCase().includes('stable')) {
+                  quickSpinPreferences['strategic_thinking'] = true;
+                }
+              }
+              
+              // Map activities
+              if (quickSpinResults.activities) {
+                if (quickSpinResults.activities.toLowerCase().includes('outdoor') || 
+                    quickSpinResults.activities.toLowerCase().includes('hike')) {
+                  quickSpinPreferences['outdoor_work'] = true;
+                }
+                
+                if (quickSpinResults.activities.toLowerCase().includes('art') || 
+                    quickSpinResults.activities.toLowerCase().includes('draw') || 
+                    quickSpinResults.activities.toLowerCase().includes('paint')) {
+                  quickSpinPreferences['artistic_expression'] = true;
+                }
+                
+                if (quickSpinResults.activities.toLowerCase().includes('code') || 
+                    quickSpinResults.activities.toLowerCase().includes('tech')) {
+                  quickSpinPreferences['technical_skills'] = true;
+                }
+                
+                if (quickSpinResults.activities.toLowerCase().includes('people') || 
+                    quickSpinResults.activities.toLowerCase().includes('team')) {
+                  quickSpinPreferences['working_with_people'] = true;
+                }
+              }
+            }
+            
+            return quickSpinPreferences;
+          };
+          
           const convertAvatarResultsToPreferences = () => {
             const avatarPreferences: Record<string, boolean> = {};
             
@@ -544,6 +712,8 @@ const Pathways = () => {
             preferences = convertWheelResultsToPreferences();
           } else if (explorationMethod === 'avatar') {
             preferences = convertAvatarResultsToPreferences();
+          } else if (explorationMethod === 'quickSpin') {
+            preferences = convertQuickSpinResultsToPreferences();
           } else {
             preferences = swipeResults;
           }
@@ -557,6 +727,8 @@ const Pathways = () => {
             activityName = 'Advanced Identity Wheel';
           } else if (explorationMethod === 'avatar') {
             activityName = 'Future Self Avatar';
+          } else if (explorationMethod === 'quickSpin') {
+            activityName = 'Quick Spin Game';
           } else {
             activityName = 'Card Preferences';
           }
