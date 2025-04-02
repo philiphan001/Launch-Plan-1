@@ -188,24 +188,33 @@ export default function AdvancedWheel({ onComplete }: AdvancedWheelProps) {
     ? prompts.find(p => p.category === category && !selectedOptions[p.id]) || prompts[currentPromptIndex]
     : prompts[currentPromptIndex];
   
+  const calculateRotation = () => {
+    // More dramatic spin rotation - minimum of 4 full rotations (1440 degrees) plus random extra
+    return isSpinning ? 1440 + Math.random() * 720 : rotation;
+  };
+  
   const spinWheel = () => {
     if (isSpinning) return;
     
     setIsSpinning(true);
     setShowPrompt(false);
     
-    // Generate a random rotation between 720 and 1080 degrees (2-3 full spins)
-    const spinDegrees = 720 + Math.floor(Math.random() * 360);
-    
     // Land on one of the segments
     const segmentSize = 360 / wheelCategories.length;
     const randomSegment = Math.floor(Math.random() * wheelCategories.length);
     const segmentRotation = randomSegment * segmentSize;
     
-    // Final rotation that lands on a specific segment
-    const finalRotation = Math.floor(spinDegrees / segmentSize) * segmentSize + segmentRotation;
+    // Calculate a final rotation that will land exactly on the chosen segment
+    // We add a large number of full rotations first for a more dramatic spin
+    const fullRotations = 4 + Math.floor(Math.random() * 2); // 4-5 full rotations
+    const newRotation = (fullRotations * 360) + segmentRotation;
     
-    setRotation(prevRotation => prevRotation + finalRotation);
+    // Set the final rotation value
+    setRotation(prevRotation => {
+      // Ensure the wheel actually spins by adding to previous rotation
+      // This is important for repeated spins
+      return (Math.floor(prevRotation / 360) * 360) + newRotation;
+    });
     
     // Reset after spin completes
     setTimeout(() => {
@@ -217,7 +226,7 @@ export default function AdvancedWheel({ onComplete }: AdvancedWheelProps) {
       const landedCategory = categoryValues[randomSegment];
       setCategory(landedCategory);
       setShowPrompt(true);
-    }, 3000); // Match this with the animation duration
+    }, 3500); // Slightly longer duration for the more dramatic spin
   };
   
   const handleOptionSelect = (value: string) => {
@@ -419,12 +428,13 @@ export default function AdvancedWheel({ onComplete }: AdvancedWheelProps) {
                 backgroundImage: 'conic-gradient(from 0deg, #f472b6, #60a5fa, #34d399, #a78bfa, #fbbf24, #f87171, #ec4899, #8b5cf6, #84cc16, #14b8a6)',
                 transform: `rotate(${rotation}deg)`,
               }}
-              animate={{ rotate: rotation }}
+              animate={{ rotate: calculateRotation() }}
               transition={{ 
-                duration: 3,
-                type: "spring",
-                damping: 15,
-                stiffness: 100
+                duration: isSpinning ? 3.5 : 1,
+                type: isSpinning ? "spring" : "tween",
+                damping: 10,
+                stiffness: 80,
+                ease: isSpinning ? "easeOut" : "easeInOut"
               }}
             >
               {/* Wheel segments - displaying only shortened labels due to space */}

@@ -74,7 +74,7 @@ const Pathways = () => {
     : [];
   
   // Fetch career paths for a specific field when selected
-  const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery({
+  const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery<CareerPath[]>({
     queryKey: ['/api/career-paths/field', selectedFieldOfStudy],
     enabled: !!selectedFieldOfStudy && currentStep === 4
   });
@@ -1089,7 +1089,7 @@ const Pathways = () => {
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                               <p className="mt-2 text-sm text-gray-600">Loading career paths...</p>
                             </div>
-                          ) : fieldCareerPaths && fieldCareerPaths.length > 0 ? (
+                          ) : fieldCareerPaths && Array.isArray(fieldCareerPaths) && fieldCareerPaths.length > 0 ? (
                             <div className="space-y-3">
                               {fieldCareerPaths.map((path: CareerPath) => (
                                 <Card key={path.id} className="border-gray-200 hover:border-primary transition-colors">
