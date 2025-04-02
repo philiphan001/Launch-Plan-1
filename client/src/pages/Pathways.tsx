@@ -81,6 +81,16 @@ const Pathways = () => {
 
   const handlePathSelect = (path: PathChoice) => {
     setSelectedPath(path);
+    // Automatically set default sub-types based on selection
+    if (path === 'education') {
+      setEducationType('4year'); // Default to 4-year college
+    } else if (path === 'job') {
+      setJobType('fulltime'); // Default to full-time job
+    } else if (path === 'military') {
+      setMilitaryBranch('army'); // Default to Army
+    } else if (path === 'gap') {
+      setGapYearActivity('travel'); // Default to travel
+    }
   };
   
   const handleNext = () => {
@@ -125,8 +135,11 @@ const Pathways = () => {
           <Step title="How would you like to plan your future?">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <Card 
-                className={`cursor-pointer transition-colors hover:border-primary ${needsGuidance === false ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
-                onClick={() => setNeedsGuidance(false)}
+                className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${needsGuidance === false ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                onClick={() => {
+                  setNeedsGuidance(false);
+                  handleNext(); // Automatically proceed to next step
+                }}
               >
                 <CardContent className="p-6 text-center">
                   <div className="rounded-full bg-primary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
@@ -138,8 +151,11 @@ const Pathways = () => {
               </Card>
               
               <Card 
-                className={`cursor-pointer transition-colors hover:border-primary ${needsGuidance === true ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
-                onClick={() => setNeedsGuidance(true)}
+                className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${needsGuidance === true ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                onClick={() => {
+                  setNeedsGuidance(true);
+                  handleNext(); // Automatically proceed to next step
+                }}
               >
                 <CardContent className="p-6 text-center">
                   <div className="rounded-full bg-secondary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
@@ -150,12 +166,6 @@ const Pathways = () => {
                 </CardContent>
               </Card>
             </div>
-            
-            {needsGuidance !== null && (
-              <div className="flex justify-end">
-                <Button onClick={handleNext}>Next Step</Button>
-              </div>
-            )}
           </Step>
         );
       
@@ -169,72 +179,82 @@ const Pathways = () => {
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
                   <Card 
-                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
-                    onClick={() => setExplorationMethod('swipe')}
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('swipe');
+                      handleNext(); // Automatically proceed to next step
+                    }}
                   >
                     <CardContent className="p-6 text-center">
                       <div className="rounded-full bg-primary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                         <span className="material-icons text-2xl">swipe</span>
                       </div>
                       <h3 className="text-lg font-medium mb-2">Swipe Cards</h3>
-                      <p className="text-sm text-gray-600 mb-4">Swipe left or right on different interests, values and lifestyle options</p>
-                      <Button variant="outline" size="sm">Select This Method</Button>
+                      <p className="text-sm text-gray-600">Swipe left or right on different interests, values and lifestyle options</p>
                     </CardContent>
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
-                    onClick={() => setExplorationMethod('wheel')}
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('wheel');
+                      handleNext(); // Automatically proceed to next step
+                    }}
                   >
                     <CardContent className="p-6 text-center">
                       <div className="rounded-full bg-secondary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                         <span className="material-icons text-2xl">casino</span>
                       </div>
                       <h3 className="text-lg font-medium mb-2">Identity Wheel</h3>
-                      <p className="text-sm text-gray-600 mb-4">Spin a wheel to discover prompts about your values, talents, fears and wishes</p>
-                      <Button variant="outline" size="sm">Select This Method</Button>
+                      <p className="text-sm text-gray-600">Spin a wheel to discover prompts about your values, talents, fears and wishes</p>
                     </CardContent>
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
-                    onClick={() => setExplorationMethod('advancedWheel')}
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('advancedWheel');
+                      handleNext(); // Automatically proceed to next step
+                    }}
                   >
                     <CardContent className="p-6 text-center">
                       <div className="rounded-full bg-purple-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                         <span className="material-icons text-2xl">psychology</span>
                       </div>
                       <h3 className="text-lg font-medium mb-2">Advanced Identity Wheel</h3>
-                      <p className="text-sm text-gray-600 mb-4">Explore deeper aspects of your identity with fun prompts and mini-games</p>
-                      <Button variant="outline" size="sm">Select This Method</Button>
+                      <p className="text-sm text-gray-600">Explore deeper aspects of your identity with fun prompts and mini-games</p>
                     </CardContent>
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
-                    onClick={() => setExplorationMethod('avatar')}
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('avatar');
+                      handleNext(); // Automatically proceed to next step
+                    }}
                   >
                     <CardContent className="p-6 text-center">
                       <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                         <span className="material-icons text-2xl">face</span>
                       </div>
                       <h3 className="text-lg font-medium mb-2">Future Self Avatar</h3>
-                      <p className="text-sm text-gray-600 mb-4">Create a personalized avatar that represents your future self</p>
-                      <Button variant="outline" size="sm">Select This Method</Button>
+                      <p className="text-sm text-gray-600">Create a personalized avatar that represents your future self</p>
                     </CardContent>
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-colors hover:border-primary hover:shadow-md"
-                    onClick={() => setExplorationMethod('quickSpin')}
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('quickSpin');
+                      handleNext(); // Automatically proceed to next step
+                    }}
                   >
                     <CardContent className="p-6 text-center">
                       <div className="rounded-full bg-yellow-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                         <span className="material-icons text-2xl">toys</span>
                       </div>
                       <h3 className="text-lg font-medium mb-2">Quick Spin Game</h3>
-                      <p className="text-sm text-gray-600 mb-4">Play a quick spinning wheel game to explore your future identity</p>
-                      <Button variant="outline" size="sm">Select This Method</Button>
+                      <p className="text-sm text-gray-600">Play a quick spinning wheel game to explore your future identity</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -336,8 +356,11 @@ const Pathways = () => {
             <Step title="What would you like to do after high school?">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div 
-                  className={`border ${selectedPath === 'education' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors text-center`}
-                  onClick={() => handlePathSelect('education')}
+                  className={`border ${selectedPath === 'education' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('education');
+                    handleNext(); // Auto-progress to next step
+                  }}
                 >
                   <div className={`rounded-full ${selectedPath === 'education' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'education' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
                     <span className="material-icons">school</span>
@@ -347,8 +370,11 @@ const Pathways = () => {
                 </div>
                 
                 <div 
-                  className={`border ${selectedPath === 'job' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors text-center`}
-                  onClick={() => handlePathSelect('job')}
+                  className={`border ${selectedPath === 'job' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('job');
+                    handleNext(); // Auto-progress to next step
+                  }}
                 >
                   <div className={`rounded-full ${selectedPath === 'job' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'job' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
                     <span className="material-icons">work</span>
@@ -358,8 +384,11 @@ const Pathways = () => {
                 </div>
                 
                 <div 
-                  className={`border ${selectedPath === 'military' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors text-center`}
-                  onClick={() => handlePathSelect('military')}
+                  className={`border ${selectedPath === 'military' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('military');
+                    handleNext(); // Auto-progress to next step
+                  }}
                 >
                   <div className={`rounded-full ${selectedPath === 'military' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'military' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
                     <span className="material-icons">military_tech</span>
@@ -369,8 +398,11 @@ const Pathways = () => {
                 </div>
                 
                 <div 
-                  className={`border ${selectedPath === 'gap' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors text-center`}
-                  onClick={() => handlePathSelect('gap')}
+                  className={`border ${selectedPath === 'gap' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('gap');
+                    handleNext(); // Auto-progress to next step
+                  }}
                 >
                   <div className={`rounded-full ${selectedPath === 'gap' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'gap' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
                     <span className="material-icons">explore</span>
@@ -380,12 +412,7 @@ const Pathways = () => {
                 </div>
               </div>
               
-              {selectedPath && (
-                <div className="flex justify-between mt-6">
-                  <Button variant="outline" onClick={handleBack}>Back</Button>
-                  <Button onClick={handleNext}>Next Step</Button>
-                </div>
-              )}
+              {/* Next button removed as cards now auto-progress */}
             </Step>
           );
         }
