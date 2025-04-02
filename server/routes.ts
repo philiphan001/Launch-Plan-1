@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { activeStorage } from "./index";
 import { validateRequest } from "../shared/middleware";
-import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema, insertCareerCalculationSchema, insertMilestoneSchema } from "../shared/schema";
+import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema, insertCareerCalculationSchema, insertMilestoneSchema, insertAssumptionSchema } from "../shared/schema";
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -963,6 +963,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting milestone:", error);
       res.status(500).json({ message: "Failed to delete milestone", error: String(error) });
+    }
+  });
+
+  // Assumption routes
+  app.get("/api/assumptions/:id", async (req: Request, res: Response) => {
+    try {
+      const assumption = await activeStorage.getAssumption(parseInt(req.params.id));
+      if (!assumption) {
+        return res.status(404).json({ message: "Assumption not found" });
+      }
+      res.json(assumption);
+    } catch (error) {
+      console.error("Error fetching assumption:", error);
+      res.status(500).json({ message: "Failed to get assumption", error: String(error) });
+    }
+  });
+
+  app.get("/api/assumptions/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const assumptions = await activeStorage.getAssumptionsByUserId(userId);
+      res.json(assumptions);
+    } catch (error) {
+      console.error("Error fetching user assumptions:", error);
+      res.status(500).json({ message: "Failed to get user assumptions", error: String(error) });
+    }
+  });
+
+  app.get("/api/assumptions/category/:userId/:category", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const category = req.params.category;
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const assumptions = await activeStorage.getAssumptionsByCategory(userId, category);
+      res.json(assumptions);
+    } catch (error) {
+      console.error(`Error fetching assumptions by category:`, error);
+      res.status(500).json({ message: "Failed to get assumptions by category", error: String(error) });
+    }
+  });
+
+  app.post("/api/assumptions", validateRequest({ body: insertAssumptionSchema }), async (req: Request, res: Response) => {
+    try {
+      const assumption = await activeStorage.createAssumption(req.body);
+      res.status(201).json(assumption);
+    } catch (error) {
+      console.error("Error creating assumption:", error);
+      res.status(500).json({ message: "Failed to create assumption", error: String(error) });
+    }
+  });
+
+  app.patch("/api/assumptions/:id", async (req: Request, res: Response) => {
+    try {
+      const assumptionId = parseInt(req.params.id);
+      const assumption = await activeStorage.getAssumption(assumptionId);
+      if (!assumption) {
+        return res.status(404).json({ message: "Assumption not found" });
+      }
+      
+      const updatedAssumption = await activeStorage.updateAssumption(assumptionId, req.body);
+      if (!updatedAssumption) {
+        return res.status(404).json({ message: "Failed to update assumption" });
+      }
+      
+      res.json(updatedAssumption);
+    } catch (error) {
+      console.error("Error updating assumption:", error);
+      res.status(500).json({ message: "Failed to update assumption", error: String(error) });
+    }
+  });
+
+  app.delete("/api/assumptions/:id", async (req: Request, res: Response) => {
+    try {
+      const assumptionId = parseInt(req.params.id);
+      const assumption = await activeStorage.getAssumption(assumptionId);
+      if (!assumption) {
+        return res.status(404).json({ message: "Assumption not found" });
+      }
+      
+      await activeStorage.deleteAssumption(assumptionId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting assumption:", error);
+      res.status(500).json({ message: "Failed to delete assumption", error: String(error) });
+    }
+  });
+
+  app.post("/api/assumptions/initialize/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // Check if user exists
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Initialize default assumptions for user
+      const assumptions = await activeStorage.initializeDefaultAssumptions(userId);
+      res.status(201).json(assumptions);
+    } catch (error) {
+      console.error("Error initializing default assumptions:", error);
+      res.status(500).json({ message: "Failed to initialize default assumptions", error: String(error) });
     }
   });
 

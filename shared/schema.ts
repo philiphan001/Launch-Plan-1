@@ -424,3 +424,149 @@ export const insertCareerCalculationSchema = createInsertSchema(careerCalculatio
 
 export type CareerCalculation = typeof careerCalculations.$inferSelect;
 export type InsertCareerCalculation = z.infer<typeof insertCareerCalculationSchema>;
+
+// Define categories for assumptions
+export const assumptionCategoryEnum = z.enum([
+  "marriage",
+  "housing",
+  "car",
+  "children",
+  "education",
+  "general",
+]);
+
+export type AssumptionCategory = z.infer<typeof assumptionCategoryEnum>;
+
+// Assumptions table
+export const assumptions = pgTable("assumptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  category: text("category").notNull(),
+  key: text("key").notNull(),
+  label: text("label").notNull(),
+  description: text("description"),
+  value: real("value").notNull(),
+  defaultValue: real("default_value").notNull(),
+  minValue: real("min_value").notNull(),
+  maxValue: real("max_value").notNull(),
+  stepValue: real("step_value").notNull().default(1),
+  unit: text("unit").default(""),
+  isEnabled: boolean("is_enabled").notNull().default(true),
+});
+
+// Zod schema for inserting assumption
+export const insertAssumptionSchema = createInsertSchema(assumptions).omit({
+  id: true,
+});
+
+// Types for TypeScript
+export type Assumption = typeof assumptions.$inferSelect;
+export type InsertAssumption = z.infer<typeof insertAssumptionSchema>;
+
+// Default assumptions to be used when first creating a user profile
+export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
+  {
+    category: "marriage",
+    key: "spouse-loan-term",
+    label: "Spouse Loan Repayment Term",
+    description: "Number of years to repay spouse's liabilities",
+    value: 10,
+    defaultValue: 10,
+    minValue: 5,
+    maxValue: 30,
+    stepValue: 1,
+    unit: "years",
+    isEnabled: true
+  },
+  {
+    category: "marriage",
+    key: "spouse-loan-rate",
+    label: "Spouse Loan Interest Rate",
+    description: "Annual interest rate for spouse's liabilities",
+    value: 5.0,
+    defaultValue: 5.0,
+    minValue: 0,
+    maxValue: 15,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  },
+  {
+    category: "marriage",
+    key: "spouse-asset-growth",
+    label: "Spouse Asset Growth Rate",
+    description: "Annual growth rate for spouse's assets",
+    value: 3.0,
+    defaultValue: 3.0,
+    minValue: 0,
+    maxValue: 10,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  },
+  {
+    category: "housing",
+    key: "home-appreciation",
+    label: "Home Appreciation Rate",
+    description: "Annual rate at which your home value increases",
+    value: 3.0,
+    defaultValue: 3.0,
+    minValue: 0,
+    maxValue: 10,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  },
+  {
+    category: "housing",
+    key: "mortgage-rate",
+    label: "Mortgage Interest Rate",
+    description: "Annual interest rate for home loans",
+    value: 6.0,
+    defaultValue: 6.0,
+    minValue: 2,
+    maxValue: 10,
+    stepValue: 0.125,
+    unit: "%",
+    isEnabled: true
+  },
+  {
+    category: "car",
+    key: "car-depreciation",
+    label: "Car Depreciation Rate",
+    description: "Annual rate at which your car loses value",
+    value: 15.0,
+    defaultValue: 15.0,
+    minValue: 5,
+    maxValue: 30,
+    stepValue: 1,
+    unit: "%",
+    isEnabled: true
+  },
+  {
+    category: "car",
+    key: "car-loan-rate",
+    label: "Car Loan Interest Rate",
+    description: "Annual interest rate for car loans",
+    value: 5.0,
+    defaultValue: 5.0,
+    minValue: 0,
+    maxValue: 15,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  },
+  {
+    category: "education",
+    key: "education-loan-rate",
+    label: "Education Loan Interest Rate",
+    description: "Annual interest rate for education loans",
+    value: 5.0,
+    defaultValue: 5.0,
+    minValue: 0,
+    maxValue: 12,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  }
+];

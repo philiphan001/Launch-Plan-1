@@ -13,7 +13,8 @@ import {
   locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
   zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
   collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation,
-  careerCalculations, type CareerCalculation, type InsertCareerCalculation
+  careerCalculations, type CareerCalculation, type InsertCareerCalculation,
+  assumptions, type Assumption, type InsertAssumption, defaultAssumptions
 } from "@shared/schema";
 import { IStorage } from './storage';
 import { eq, and } from 'drizzle-orm';
@@ -409,6 +410,50 @@ export class PgStorage implements IStorage {
         
       return result[0];
     });
+  }
+
+  // Assumption methods
+  async getAssumption(id: number): Promise<Assumption | undefined> {
+    const result = await db.select().from(assumptions).where(eq(assumptions.id, id));
+    return result[0];
+  }
+
+  async getAssumptionsByUserId(userId: number): Promise<Assumption[]> {
+    return await db.select().from(assumptions).where(eq(assumptions.userId, userId));
+  }
+
+  async getAssumptionsByCategory(userId: number, category: string): Promise<Assumption[]> {
+    return await db.select().from(assumptions)
+      .where(and(
+        eq(assumptions.userId, userId),
+        eq(assumptions.category, category)
+      ));
+  }
+  
+  async createAssumption(assumption: InsertAssumption): Promise<Assumption> {
+    const result = await db.insert(assumptions).values(assumption).returning();
+    return result[0];
+  }
+
+  async updateAssumption(id: number, data: Partial<InsertAssumption>): Promise<Assumption | undefined> {
+    const result = await db.update(assumptions).set(data).where(eq(assumptions.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteAssumption(id: number): Promise<void> {
+    await db.delete(assumptions).where(eq(assumptions.id, id));
+  }
+
+  async initializeDefaultAssumptions(userId: number): Promise<Assumption[]> {
+    // Transform defaults by adding userId
+    const userAssumptions = defaultAssumptions.map(assumption => ({
+      ...assumption,
+      userId
+    }));
+    
+    // Insert all defaults in one batch
+    const result = await db.insert(assumptions).values(userAssumptions).returning();
+    return result;
   }
 }
 

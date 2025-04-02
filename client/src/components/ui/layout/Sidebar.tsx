@@ -14,6 +14,7 @@ const navItems: NavItem[] = [
   { path: "/colleges", label: "College Discovery", icon: "school" },
   { path: "/calculator", label: "Net Price Calculator", icon: "calculate" },
   { path: "/pathways", label: "Pathways", icon: "alt_route" },
+  { path: "/assumptions", label: "Launch Plan Assumptions", icon: "settings" },
   { path: "/profile", label: "Profile", icon: "account_circle" },
 ];
 

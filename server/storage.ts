@@ -12,7 +12,8 @@ import {
   locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
   zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
   collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation,
-  careerCalculations, type CareerCalculation, type InsertCareerCalculation
+  careerCalculations, type CareerCalculation, type InsertCareerCalculation,
+  assumptions, type Assumption, type InsertAssumption, defaultAssumptions
 } from "@shared/schema";
 
 // Storage interface with CRUD methods for all entities
@@ -105,6 +106,15 @@ export interface IStorage {
   updateCareerCalculation(id: number, data: Partial<InsertCareerCalculation>): Promise<CareerCalculation | undefined>;
   deleteCareerCalculation(id: number): Promise<void>;
   toggleCareerProjectionInclusion(id: number, userId: number): Promise<CareerCalculation | undefined>;
+
+  // Assumption methods
+  getAssumption(id: number): Promise<Assumption | undefined>;
+  getAssumptionsByUserId(userId: number): Promise<Assumption[]>;
+  getAssumptionsByCategory(userId: number, category: string): Promise<Assumption[]>;
+  createAssumption(assumption: InsertAssumption): Promise<Assumption>;
+  updateAssumption(id: number, data: Partial<InsertAssumption>): Promise<Assumption | undefined>;
+  deleteAssumption(id: number): Promise<void>;
+  initializeDefaultAssumptions(userId: number): Promise<Assumption[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -122,6 +132,7 @@ export class MemStorage implements IStorage {
   private zipCodeIncomes: Map<number, ZipCodeIncome>;
   private collegeCalculations: Map<number, CollegeCalculation>;
   private careerCalculations: Map<number, CareerCalculation>;
+  private assumptions: Map<number, Assumption>;
   
   // Auto-increment IDs
   private userId: number;
@@ -138,6 +149,7 @@ export class MemStorage implements IStorage {
   private zipCodeIncomeId: number;
   private collegeCalculationId: number;
   private careerCalculationId: number;
+  private assumptionId: number;
 
   constructor() {
     this.users = new Map();
@@ -154,6 +166,7 @@ export class MemStorage implements IStorage {
     this.zipCodeIncomes = new Map();
     this.collegeCalculations = new Map();
     this.careerCalculations = new Map();
+    this.assumptions = new Map();
     
     this.userId = 1;
     this.financialProfileId = 1;
@@ -169,6 +182,7 @@ export class MemStorage implements IStorage {
     this.zipCodeIncomeId = 1;
     this.collegeCalculationId = 1;
     this.careerCalculationId = 1;
+    this.assumptionId = 1;
     
     // Initialize with some sample data
     this.initializeSampleData();
@@ -759,6 +773,58 @@ export class MemStorage implements IStorage {
     
     // Then set this specific calculation to true
     return await this.updateCareerCalculation(id, { includedInProjection: true });
+  }
+
+  // Assumption methods
+  async getAssumption(id: number): Promise<Assumption | undefined> {
+    return this.assumptions.get(id);
+  }
+
+  async getAssumptionsByUserId(userId: number): Promise<Assumption[]> {
+    return Array.from(this.assumptions.values()).filter(
+      assumption => assumption.userId === userId
+    );
+  }
+
+  async getAssumptionsByCategory(userId: number, category: string): Promise<Assumption[]> {
+    return Array.from(this.assumptions.values()).filter(
+      assumption => assumption.userId === userId && assumption.category === category
+    );
+  }
+
+  async createAssumption(insertAssumption: InsertAssumption): Promise<Assumption> {
+    const id = this.assumptionId++;
+    const assumption: Assumption = { ...insertAssumption, id };
+    this.assumptions.set(id, assumption);
+    return assumption;
+  }
+
+  async updateAssumption(id: number, data: Partial<InsertAssumption>): Promise<Assumption | undefined> {
+    const assumption = await this.getAssumption(id);
+    if (!assumption) return undefined;
+    
+    const updatedAssumption = { ...assumption, ...data };
+    this.assumptions.set(id, updatedAssumption);
+    return updatedAssumption;
+  }
+
+  async deleteAssumption(id: number): Promise<void> {
+    this.assumptions.delete(id);
+  }
+
+  async initializeDefaultAssumptions(userId: number): Promise<Assumption[]> {
+    const userAssumptions = defaultAssumptions.map(assumption => ({
+      ...assumption,
+      userId
+    }));
+    
+    const results: Assumption[] = [];
+    for (const assumptionData of userAssumptions) {
+      const assumption = await this.createAssumption(assumptionData);
+      results.push(assumption);
+    }
+    
+    return results;
   }
 }
 

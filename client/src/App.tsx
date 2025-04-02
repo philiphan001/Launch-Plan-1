@@ -6,6 +6,7 @@ import CareerBuilder from "@/pages/CareerBuilder";
 import CollegeDiscovery from "@/pages/CollegeDiscovery";
 import NetPriceCalculator from "@/pages/NetPriceCalculator";
 import Pathways from "@/pages/Pathways";
+import Assumptions from "@/pages/Assumptions";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
@@ -22,6 +23,7 @@ function App() {
         <Route path="/colleges" component={CollegeDiscovery} />
         <Route path="/calculator" component={NetPriceCalculator} />
         <Route path="/pathways" component={Pathways} />
+        <Route path="/assumptions" component={Assumptions} />
         <Route path="/profile" component={Profile} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
