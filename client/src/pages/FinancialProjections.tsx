@@ -1190,17 +1190,43 @@ const FinancialProjections = () => {
       <MilestonesSection 
         userId={userId} 
         onMilestoneChange={() => {
-          // Fetch the latest milestone data
-          // The useEffect will automatically recalculate projectionData when milestones change
           console.log("Milestone changed, refreshing calculation...");
           
-          // Force a re-fetch of milestone data by invalidating the query
-          queryClient.invalidateQueries({ queryKey: ['/api/milestones/user', userId] });
+          // Directly update the chart with new data
+          const updateChartWithNewData = async () => {
+            try {
+              // Fetch the latest milestone data
+              const response = await fetch(`/api/milestones/user/${userId}`);
+              if (!response.ok) throw new Error('Failed to fetch updated milestones');
+              
+              const updatedMilestones = await response.json();
+              console.log("Fetched updated milestones:", updatedMilestones);
+              
+              // Generate new data with updated milestones
+              const newData = generateProjectionData(updatedMilestones);
+              
+              // Update state
+              setProjectionData(newData);
+              
+              // Force immediate chart update
+              if (chartRef.current && chartInstance.current) {
+                // Destroy old chart
+                chartInstance.current.destroy();
+                
+                // Create new chart
+                const ctx = chartRef.current.getContext("2d");
+                if (ctx) {
+                  chartInstance.current = createMainProjectionChart(ctx, newData, activeTab);
+                  console.log("Chart updated with new data");
+                }
+              }
+            } catch (error) {
+              console.error("Error updating chart:", error);
+            }
+          };
           
-          // After the re-fetch, force an update to projectionData
-          setTimeout(() => {
-            setProjectionData(generateProjectionData());
-          }, 300);
+          // Execute the update
+          updateChartWithNewData();
         }} 
       />
     </div>
