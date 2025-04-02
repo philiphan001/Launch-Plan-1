@@ -529,35 +529,104 @@ const FinancialProjections = () => {
       
       // Apply student loan payments (simplified - 10 year repayment)
       if (remainingStudentLoanDebt > 0 && i <= 10) {
-        const annualLoanPayment = studentLoanDebt / 10; // Use fixed annual payment based on original amount
+        // Simple amortization for student loans - 10 year term with 5% interest rate
+        const studentLoanInterestRate = 0.05; // 5% annual interest rate
+        const studentLoanTerm = 10; // 10 year term
         
-        // Student loan payments reduce netWorth
-        netWorth -= annualLoanPayment;
+        // Calculate interest for this year
+        const annualInterestPaid = remainingStudentLoanDebt * studentLoanInterestRate;
+        
+        // Calculate total annual payment (level payment amortization)
+        const r = studentLoanInterestRate;
+        const n = studentLoanTerm;
+        const amortizedAnnualPayment = (studentLoanDebt * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        
+        // Principal reduction is annual payment minus interest
+        const principalReduction = Math.min(
+          amortizedAnnualPayment - annualInterestPaid,
+          remainingStudentLoanDebt // Can't reduce more than remaining principal
+        );
+        
+        // Add student loan payment to expenses (affects cash flow)
+        currentExpenses += amortizedAnnualPayment;
+        
+        console.log(`Student loan payment for year ${i}: $${amortizedAnnualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
+        console.log(`Student loan balance: $${remainingStudentLoanDebt.toFixed(2)} → $${(remainingStudentLoanDebt - principalReduction).toFixed(2)}`);
         
         // Update the student loan balance for this year
-        remainingStudentLoanDebt = Math.max(0, remainingStudentLoanDebt - annualLoanPayment);
+        remainingStudentLoanDebt = Math.max(0, remainingStudentLoanDebt - principalReduction);
       }
       
-      // Apply education debt payments (simplified - 5 year repayment) for graduate school
-      if (hasEducationDebt && i > 1 && i <= 5) { // Start payments after first year
-        const annualEducationPayment = educationDebt / 5;
-        netWorth -= annualEducationPayment;
+      // Apply education debt payments (amortized - 5 year repayment) for graduate school
+      if (hasEducationDebt && i > 1 && i <= 6) { // Start payments after first year
+        // Simple amortization for education loans - 5 year term with 6% interest rate
+        const educationLoanInterestRate = 0.06; // 6% annual interest rate
+        const educationLoanTerm = 5; // 5 year term
+        
+        // Calculate interest for this year
+        const annualInterestPaid = educationDebt * educationLoanInterestRate;
+        
+        // Find the education milestone to get the initial education cost
+        const educationMilestone = sortedMilestones.find((m: { type: string }) => m.type === 'education');
+        const initialEducationCost = educationMilestone?.educationCost || 0;
+        
+        // Calculate total annual payment (level payment amortization)
+        const r = educationLoanInterestRate;
+        const n = educationLoanTerm;
+        const amortizedAnnualPayment = (initialEducationCost * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        
+        // Principal reduction is annual payment minus interest
+        const principalReduction = Math.min(
+          amortizedAnnualPayment - annualInterestPaid,
+          educationDebt // Can't reduce more than remaining principal
+        );
+        
+        // Add education loan payment to expenses (affects cash flow)
+        currentExpenses += amortizedAnnualPayment;
+        
+        console.log(`Education loan payment for year ${i}: $${amortizedAnnualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
+        console.log(`Education loan balance: $${educationDebt.toFixed(2)} → $${(educationDebt - principalReduction).toFixed(2)}`);
         
         // Update education debt for this year
-        educationDebt = Math.max(0, educationDebt - annualEducationPayment);
+        educationDebt = Math.max(0, educationDebt - principalReduction);
       }
       
-      // Update mortgage principal for this year (simple amortization - approximate)
+      // Update mortgage principal for this year (amortization calculation)
       if (hasHome) {
-        // Assume 30-year mortgage, monthly payments
-        const interestRate = 0.06; // 6% annual interest rate
-        const annualInterestPaid = mortgagePrincipal * interestRate;
+        // Assume 30-year mortgage with 6% annual interest rate
+        const mortgageInterestRate = 0.06; // 6% annual interest rate
+        const mortgageTerm = 30; // 30-year mortgage
+        
+        // Calculate interest for this year
+        const annualInterestPaid = mortgagePrincipal * mortgageInterestRate;
+        
+        // Find the home milestone to get the initial home value and down payment
+        const homeMilestone = sortedMilestones.find((m: { type: string }) => m.type === 'home');
+        const homeValue = homeMilestone?.homeValue || 0;
+        const downPayment = homeMilestone?.homeDownPayment || 0;
+        const initialMortgagePrincipal = homeValue - downPayment;
+        
+        // If the annual mortgage payment isn't specified in the milestone or is unreasonable,
+        // calculate a payment based on a proper 30-year loan amortization
+        let annualMortgagePayment = mortgagePayment;
+        if (mortgagePayment <= 0 || mortgagePayment < annualInterestPaid) {
+          // Calculate proper amortization payment
+          const r = mortgageInterestRate;
+          const n = mortgageTerm;
+          annualMortgagePayment = (initialMortgagePrincipal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        }
         
         // Principal reduction is mortgage payment minus interest
         const principalReduction = Math.min(
-          mortgagePayment - annualInterestPaid,
+          annualMortgagePayment - annualInterestPaid,
           mortgagePrincipal // Can't reduce more than remaining principal
         );
+        
+        // Add mortgage payment to expenses (affects cash flow)
+        currentExpenses += annualMortgagePayment;
+        
+        console.log(`Mortgage payment for year ${i}: $${annualMortgagePayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
+        console.log(`Mortgage balance: $${mortgagePrincipal.toFixed(2)} → $${(mortgagePrincipal - principalReduction).toFixed(2)}`);
         
         // Update mortgage principal
         mortgagePrincipal = Math.max(0, mortgagePrincipal - principalReduction);
@@ -568,19 +637,45 @@ const FinancialProjections = () => {
         homeValue = Math.round(homeValue * 1.03);
       }
       
-      // Update car loan principal for this year (simple amortization - approximate)
+      // Update car loan principal for this year (amortization calculation)
       if (hasCar) {
-        // Assume 5-year car loan, monthly payments
+        // Assume 5-year car loan with 5% annual interest rate
         const carInterestRate = 0.05; // 5% annual interest rate
-        const carAnnualInterestPaid = carLoanPrincipal * carInterestRate;
-        const carPrincipalPayment = carPayment - carAnnualInterestPaid;
+        const carLoanTerm = 5; // 5-year car loan
         
-        // Cannot pay more principal than what remains
-        if (carPrincipalPayment > carLoanPrincipal) {
-          carLoanPrincipal = 0;
-        } else {
-          carLoanPrincipal = Math.max(0, carLoanPrincipal - carPrincipalPayment);
+        // Calculate interest for this year
+        const annualInterestPaid = carLoanPrincipal * carInterestRate;
+        
+        // Find the car milestone to get the initial car value and down payment
+        const carMilestone = sortedMilestones.find((m: { type: string }) => m.type === 'car');
+        const carMilestoneValue = carMilestone?.carValue || 0;
+        const downPayment = carMilestone?.carDownPayment || 0;
+        const initialCarLoanPrincipal = carMilestoneValue - downPayment;
+        
+        // If the annual car payment isn't specified in the milestone or is unreasonable,
+        // calculate a payment based on a proper 5-year loan amortization
+        let annualCarPayment = carPayment;
+        if (carPayment <= 0 || carPayment < annualInterestPaid) {
+          // Calculate proper amortization payment
+          const r = carInterestRate;
+          const n = carLoanTerm;
+          annualCarPayment = (initialCarLoanPrincipal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
         }
+        
+        // Principal reduction is car payment minus interest
+        const principalReduction = Math.min(
+          annualCarPayment - annualInterestPaid,
+          carLoanPrincipal // Can't reduce more than remaining principal
+        );
+        
+        // Add car payment to expenses (affects cash flow)
+        currentExpenses += annualCarPayment;
+        
+        console.log(`Car loan payment for year ${i}: $${annualCarPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
+        console.log(`Car loan balance: $${carLoanPrincipal.toFixed(2)} → $${(carLoanPrincipal - principalReduction).toFixed(2)}`);
+        
+        // Update car loan principal
+        carLoanPrincipal = Math.max(0, carLoanPrincipal - principalReduction);
         
         // Update car value with depreciation (15% per year)
         carValue = Math.round(carValue * 0.85);
@@ -616,8 +711,14 @@ const FinancialProjections = () => {
             spouseLiabilities // Can't reduce more than remaining principal
           );
           
-          // Subtract payment from net worth
-          netWorth -= amortizedAnnualPayment;
+          // Subtract payment from net worth (via expenses - total expenses track this now)
+          // We don't need to directly impact netWorth here anymore because it's handled by the overall cash flow
+          // netWorth -= amortizedAnnualPayment;
+          
+          // Add spouse loan payment to the total expenses for this year
+          // This ensures it impacts cash flow calculations
+          currentExpenses += amortizedAnnualPayment;
+          
           console.log(`Spouse loan payment for year ${i}: $${amortizedAnnualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
           console.log(`Spouse loan balance: $${spouseLiabilities.toFixed(2)} → $${(spouseLiabilities - principalReduction).toFixed(2)}`);
           
