@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
+import CashFlowTable from "@/components/financial/CashFlowTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -1418,6 +1419,30 @@ const FinancialProjections = () => {
           </CardContent>
         </Card>
       )}
+      
+      {/* Detailed Cash Flow Table with collapsible container */}
+      <CashFlowTable 
+        ages={projectionData.ages}
+        income={projectionData.income}
+        spouseIncome={projectionData.spouseIncome}
+        expenses={projectionData.expenses}
+        housingExpenses={projectionData.housingExpenses}
+        transportationExpenses={projectionData.transportationExpenses}
+        foodExpenses={projectionData.foodExpenses}
+        healthcareExpenses={projectionData.healthcareExpenses}
+        educationExpenses={projectionData.educationExpenses}
+        childcareExpenses={projectionData.childcareExpenses}
+        debtExpenses={projectionData.debtExpenses}
+        discretionaryExpenses={projectionData.discretionaryExpenses}
+        assets={projectionData.assets}
+        liabilities={projectionData.liabilities}
+        netWorth={projectionData.netWorth}
+        homeValue={projectionData.homeValue}
+        mortgage={projectionData.mortgage}
+        carValue={projectionData.carValue}
+        carLoan={projectionData.carLoan}
+        studentLoan={projectionData.studentLoan}
+      />
       
       {/* Card to display included college and career calculations */}
       <Card className="mb-6">
