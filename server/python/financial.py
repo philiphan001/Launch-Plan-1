@@ -194,10 +194,25 @@ class FinancialCalculator:
                         income_yearly[i] += int(income_change)
                 
                 elif milestone.get('type') == 'marriage':
-                    # Marriage adds spouse income, assets, and liabilities
+                    # Marriage adds spouse income, assets, and liabilities, but also has wedding costs
                     spouse_income = milestone.get('spouseIncome', 0)
                     spouse_assets = milestone.get('spouseAssets', 0)
                     spouse_liabilities = milestone.get('spouseLiabilities', 0)
+                    wedding_cost = milestone.get('weddingCost', 20000)  # Default wedding cost if not specified
+                    
+                    # Apply wedding cost as a one-time expense
+                    expenses_yearly[milestone_year] += wedding_cost
+                    cash_flow_yearly[milestone_year] = income_yearly[milestone_year] - expenses_yearly[milestone_year]
+                    
+                    # Reduce savings/investments for the wedding cost
+                    investment_reduced = False
+                    for asset in self.assets:
+                        if isinstance(asset, Investment) and not investment_reduced:
+                            asset_value = asset.get_value(milestone_year)
+                            if asset_value >= wedding_cost:
+                                # Reduce the investment by the wedding cost
+                                asset.value_history[milestone_year] = asset_value - wedding_cost
+                                investment_reduced = True
                     
                     # Add spouse income to our income projection
                     for i in range(milestone_year, self.years_to_project + 1):
@@ -218,6 +233,20 @@ class FinancialCalculator:
                     house_value = int(milestone.get('value', milestone.get('homeValue', 0)))
                     down_payment = int(milestone.get('down_payment', milestone.get('homeDownPayment', 0)))
                     
+                    # Apply down payment as one-time expense that reduces cash flow in the purchase year
+                    expenses_yearly[milestone_year] += down_payment
+                    cash_flow_yearly[milestone_year] = income_yearly[milestone_year] - expenses_yearly[milestone_year]
+                    
+                    # Adjust savings/investments due to down payment (find investment assets and reduce them)
+                    investment_reduced = False
+                    for asset in self.assets:
+                        if isinstance(asset, Investment) and not investment_reduced:
+                            asset_value = asset.get_value(milestone_year)
+                            if asset_value >= down_payment:
+                                # Reduce the investment by the down payment amount
+                                asset.value_history[milestone_year] = asset_value - down_payment
+                                investment_reduced = True
+                    
                     for i in range(milestone_year, self.years_to_project + 1):
                         assets_yearly[i] += house_value
                         home_value_yearly[i] += house_value
@@ -234,6 +263,20 @@ class FinancialCalculator:
                     # Car purchase affects assets (with depreciation) and liabilities
                     car_value = int(milestone.get('carValue', 0))
                     down_payment = int(milestone.get('carDownPayment', 0))
+                    
+                    # Apply down payment as a one-time expense in the purchase year
+                    expenses_yearly[milestone_year] += down_payment
+                    cash_flow_yearly[milestone_year] = income_yearly[milestone_year] - expenses_yearly[milestone_year]
+                    
+                    # Reduce savings/investments for the down payment
+                    investment_reduced = False
+                    for asset in self.assets:
+                        if isinstance(asset, Investment) and not investment_reduced:
+                            asset_value = asset.get_value(milestone_year)
+                            if asset_value >= down_payment:
+                                # Reduce the investment by the down payment amount
+                                asset.value_history[milestone_year] = asset_value - down_payment
+                                investment_reduced = True
                     
                     for i in range(milestone_year, self.years_to_project + 1):
                         # Cars depreciate quickly (15% per year)
@@ -257,6 +300,21 @@ class FinancialCalculator:
                     # Children affect expenses
                     children_count = int(milestone.get('childrenCount', 1))
                     expense_per_child = int(milestone.get('childrenExpensePerYear', 10000))
+                    initial_expense = int(milestone.get('initialExpense', 7500) * children_count)  # Birth/adoption costs, baby supplies, etc.
+                    
+                    # Apply initial one-time expense for having a child (medical costs, supplies, etc.)
+                    expenses_yearly[milestone_year] += initial_expense
+                    cash_flow_yearly[milestone_year] = income_yearly[milestone_year] - expenses_yearly[milestone_year]
+                    
+                    # Reduce savings/investments for the initial child-related expenses
+                    investment_reduced = False
+                    for asset in self.assets:
+                        if isinstance(asset, Investment) and not investment_reduced:
+                            asset_value = asset.get_value(milestone_year)
+                            if asset_value >= initial_expense:
+                                # Reduce the investment by the initial expense amount
+                                asset.value_history[milestone_year] = asset_value - initial_expense
+                                investment_reduced = True
                     
                     for i in range(milestone_year, self.years_to_project + 1):
                         # Add child expenses to yearly expenses
@@ -272,10 +330,29 @@ class FinancialCalculator:
                     # Education affects expenses and possibly income
                     education_cost = int(milestone.get('educationCost', 30000))
                     
+                    # Determine how much is paid from savings vs loans
+                    payment_from_savings_percent = milestone.get('paymentFromSavings', 0.3)  # Default 30% from savings
+                    upfront_payment = int(education_cost * payment_from_savings_percent)
+                    
+                    # Apply upfront payment as a one-time expense (first semester/year tuition)
+                    expenses_yearly[milestone_year] += upfront_payment
+                    cash_flow_yearly[milestone_year] = income_yearly[milestone_year] - expenses_yearly[milestone_year]
+                    
+                    # Reduce savings/investments for the education cost
+                    investment_reduced = False
+                    for asset in self.assets:
+                        if isinstance(asset, Investment) and not investment_reduced:
+                            asset_value = asset.get_value(milestone_year)
+                            if asset_value >= upfront_payment:
+                                # Reduce the investment by the upfront payment amount
+                                asset.value_history[milestone_year] = asset_value - upfront_payment
+                                investment_reduced = True
+                    
                     # Education typically takes 2-4 years, we'll assume 4
+                    yearly_payment = int((education_cost - upfront_payment) / 4)  # Remaining cost spread over 4 years
                     for i in range(milestone_year, min(milestone_year + 4, self.years_to_project + 1)):
-                        # Add education expenses
-                        expenses_yearly[i] += int(education_cost / 4)  # Spread cost over 4 years
+                        # Add remaining education expenses
+                        expenses_yearly[i] += yearly_payment
                         
                         # Recalculate cash flow
                         cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
