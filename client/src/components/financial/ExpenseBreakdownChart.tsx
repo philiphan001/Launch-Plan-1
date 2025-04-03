@@ -32,8 +32,23 @@ const ExpenseBreakdownChart: React.FC<ExpenseBreakdownProps> = ({
           chartInstance.current.destroy();
         }
         
-        // Create new chart
-        chartInstance.current = createExpenseBreakdownChart(ctx, currentExpenses);
+        // Make sure all expense values are positive numbers
+        const sanitizedExpenses = {
+          housing: Math.max(0, Number(currentExpenses.housing) || 0),
+          transportation: Math.max(0, Number(currentExpenses.transportation) || 0),
+          food: Math.max(0, Number(currentExpenses.food) || 0),
+          healthcare: Math.max(0, Number(currentExpenses.healthcare) || 0),
+          education: Math.max(0, Number(currentExpenses.education) || 0),
+          debt: Math.max(0, Number(currentExpenses.debt) || 0),
+          childcare: Math.max(0, Number(currentExpenses.childcare) || 0),
+          discretionary: Math.max(0, Number(currentExpenses.discretionary) || 0)
+        };
+        
+        // Create new chart with sanitized data
+        chartInstance.current = createExpenseBreakdownChart(ctx, sanitizedExpenses);
+        
+        // Log the data being used to create the chart for debugging
+        console.log("Creating expense breakdown chart with data:", sanitizedExpenses);
       }
     }
     
@@ -45,8 +60,10 @@ const ExpenseBreakdownChart: React.FC<ExpenseBreakdownProps> = ({
     };
   }, [currentExpenses]);
 
-  // Calculate total expenses
-  const totalExpenses = Object.values(currentExpenses).reduce((sum, value) => sum + value, 0);
+  // Calculate total expenses with proper error handling
+  const totalExpenses = Object.values(currentExpenses)
+    .filter(value => !isNaN(Number(value)))
+    .reduce((sum, value) => sum + (Number(value) || 0), 0);
 
   return (
     <Card className="h-full">

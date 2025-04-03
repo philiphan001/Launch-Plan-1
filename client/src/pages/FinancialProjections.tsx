@@ -895,14 +895,14 @@ const FinancialProjections = () => {
     
     // Calculate current expense data for expense breakdown chart
     const currentExpenseCategories = {
-      housing: housingExpensesData[housingExpensesData.length - 1],
-      transportation: transportationExpensesData[transportationExpensesData.length - 1],
-      food: foodExpensesData[foodExpensesData.length - 1],
-      healthcare: healthcareExpensesData[healthcareExpensesData.length - 1],
-      education: educationExpensesData[educationExpensesData.length - 1],
-      debt: debtExpensesData[debtExpensesData.length - 1],
-      childcare: childcareExpensesData[childcareExpensesData.length - 1],
-      discretionary: discretionaryExpensesData[discretionaryExpensesData.length - 1]
+      housing: housingExpensesData.length > 0 ? housingExpensesData[0] : 0,
+      transportation: transportationExpensesData.length > 0 ? transportationExpensesData[0] : 0,
+      food: foodExpensesData.length > 0 ? foodExpensesData[0] : 0,
+      healthcare: healthcareExpensesData.length > 0 ? healthcareExpensesData[0] : 0,
+      education: educationExpensesData.length > 0 ? educationExpensesData[0] : 0,
+      debt: debtExpensesData.length > 0 ? debtExpensesData[0] : 0,
+      childcare: childcareExpensesData.length > 0 ? childcareExpensesData[0] : 0,
+      discretionary: discretionaryExpensesData.length > 0 ? discretionaryExpensesData[0] : 0
     };
 
     return {
