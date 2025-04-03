@@ -118,7 +118,8 @@ class Transportation(Expenditure):
     def __init__(self, name: str, annual_amount: float, 
                  inflation_rate: float = 0.03,
                  car_replacement_years: int = 7,
-                 car_replacement_cost: float = 20000):
+                 car_replacement_cost: float = 20000,
+                 auto_replace: bool = True):
         """
         Initialize transportation expenses.
         
@@ -128,10 +129,12 @@ class Transportation(Expenditure):
             inflation_rate: Annual inflation rate (e.g., 0.03 for 3%)
             car_replacement_years: Years between car replacements
             car_replacement_cost: Cost of replacing car
+            auto_replace: Whether to automatically replace the car on schedule
         """
         super().__init__(name, annual_amount, inflation_rate)
         self.car_replacement_years = car_replacement_years
         self.car_replacement_cost = car_replacement_cost
+        self.auto_replace = auto_replace
         self.car_purchases = {}  # Track car purchases over time
     
     def _calculate_expense(self, previous_expense: float, year: int) -> float:
@@ -148,8 +151,8 @@ class Transportation(Expenditure):
         # Apply standard inflation
         base_expense = previous_expense * (1 + self.inflation_rate)
         
-        # Check for car replacement
-        if (year > 0 and year % self.car_replacement_years == 0 and 
+        # Check for car replacement only if auto-replace is enabled
+        if (self.auto_replace and year > 0 and year % self.car_replacement_years == 0 and 
                 year not in self.car_purchases):
             self.car_purchases[year] = self.car_replacement_cost * (1 + self.inflation_rate) ** (year // self.car_replacement_years)
             return base_expense + self.car_purchases[year]

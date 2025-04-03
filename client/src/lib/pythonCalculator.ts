@@ -147,11 +147,23 @@ export const generatePythonCalculatorInput = (
     
     // Transportation expenses
     if (locationCostData.transportation) {
+      // Check if there are any car purchase milestones
+      const hasCarMilestones = milestones.some(m => 
+        m.type === 'automobile' || 
+        (m.type === 'purchase' && (
+          (m.title?.toLowerCase().includes('car') || m.title?.toLowerCase().includes('vehicle')) ||
+          // Check name if it exists as a fallback for legacy data structure
+          (typeof m.name === 'string' && (m.name.toLowerCase().includes('car') || m.name.toLowerCase().includes('vehicle')))
+        ))
+      );
+      
       expenditures.push({
         type: "transportation", 
         name: "Transportation",
         annualAmount: locationCostData.transportation * 12,
-        inflationRate: 0.02
+        inflationRate: 0.02,
+        // Disable auto-replacement if car milestones exist
+        auto_replace: !hasCarMilestones
       });
     }
     

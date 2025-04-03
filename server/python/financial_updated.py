@@ -583,7 +583,8 @@ class FinancialCalculator:
             elif expenditure_type == 'transportation':
                 car_replacement_years = expenditure_data.get('car_replacement_years', 7)
                 car_replacement_cost = expenditure_data.get('car_replacement_cost', 20000)
-                expenditure = Transportation(name, annual_amount, inflation_rate, car_replacement_years, car_replacement_cost)
+                auto_replace = expenditure_data.get('auto_replace', True)
+                expenditure = Transportation(name, annual_amount, inflation_rate, car_replacement_years, car_replacement_cost, auto_replace)
             elif expenditure_type == 'tax':
                 tax_rate = expenditure_data.get('tax_rate', 0.25)
                 income_sources = expenditure_data.get('income_sources', [])
