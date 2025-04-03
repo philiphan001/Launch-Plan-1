@@ -476,9 +476,6 @@ def main() -> None:
             'discretionary': 0.04
         }
         
-        # For debugging
-        print(f"Categories before processing: {list(result.keys())}")
-        
         # First, explicitly convert to camelCase for frontend compatibility
         if 'personal_insurance' in result:
             result['personalInsurance'] = result.pop('personal_insurance')
@@ -501,9 +498,6 @@ def main() -> None:
                     for year_expense in result['expenses']:
                         expense_value = float(year_expense) * default_percentage
                         result[frontend_key].append(expense_value)
-                        
-                    # For debugging
-                    print(f"Added {frontend_key} with values: {result[frontend_key]}")
         
         print(json.dumps(result))
     

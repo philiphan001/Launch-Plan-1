@@ -623,7 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         try {
-          console.log("Python returned data:", resultData.substring(0, 200) + "...");
+          // Skip logging full output to avoid console clutter
           const parsedData = JSON.parse(resultData);
           return res.json(parsedData);
         } catch (error) {

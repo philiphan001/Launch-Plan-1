@@ -227,12 +227,12 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       return expenses.map(exp => Math.round(exp * percentage));
     };
     
-    // For debugging
-    console.log("Python calculator returned these expense categories:", 
-                Object.keys(result).filter(key => 
-                  ['housing', 'transportation', 'food', 'healthcare', 'personalInsurance',
-                   'apparel', 'services', 'entertainment', 'other', 'education', 
-                   'childcare', 'debt', 'discretionary'].includes(key)));
+    // Uncomment for debugging if needed
+    // console.log("Python calculator returned expense categories:", 
+    //            Object.keys(result).filter(key => 
+    //              ['housing', 'transportation', 'food', 'healthcare', 'personalInsurance',
+    //               'apparel', 'services', 'entertainment', 'other', 'education', 
+    //               'childcare', 'debt', 'discretionary'].includes(key)));
 
     // Format the result into the expected format for our components
     const projectionData: FinancialProjectionData = {
