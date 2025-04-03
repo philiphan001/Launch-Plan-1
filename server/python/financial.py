@@ -11,6 +11,15 @@ from server.python.models.asset import Asset, DepreciableAsset, Investment
 from server.python.models.liability import Liability, Mortgage, StudentLoan, AutoLoan
 from server.python.models.income import Income, SalaryIncome, SpouseIncome
 from server.python.models.expenditure import Expenditure, Housing, Transportation, Living, Tax
+from server.python.launch_plan_assumptions import (
+    HOME_PURCHASE_RENT_REDUCTION,
+    CAR_PURCHASE_TRANSPORTATION_REDUCTION,
+    MARRIAGE_EXPENSE_INCREASE,
+    GRADUATE_SCHOOL_INCOME_INCREASE,
+    CHILD_EXPENSE_PER_YEAR,
+    CHILD_INITIAL_EXPENSE,
+    DEFAULT_EXPENSE_ALLOCATIONS
+)
 
 class FinancialCalculator:
     """
@@ -227,6 +236,22 @@ class FinancialCalculator:
                         reduced_liability = int(spouse_liabilities * max(0, 1 - (i - milestone_year) * 0.1))
                         liabilities_yearly[i] += reduced_liability  # Simple reduction of liabilities over time
                         net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                        
+                        # Increase general expenses due to marriage
+                        # Only apply to expenses after the wedding year (to avoid double counting wedding costs)
+                        if i > milestone_year:
+                            # Find non-housing, non-transportation expenses and increase them by specified percentage
+                            for expense in self.expenditures:
+                                if not isinstance(expense, Housing) and not isinstance(expense, Transportation):
+                                    # Increase general expenses according to marriage assumption
+                                    expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 + MARRIAGE_EXPENSE_INCREASE)
+                            
+                            # Recalculate total expenses for this year
+                            year_expenses = 0
+                            for expense in self.expenditures:
+                                year_expenses += int(expense.get_expense(i))
+                            expenses_yearly[i] = year_expenses
+                            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
                 elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
                     # Housing/Home purchase affects assets and liabilities
@@ -247,6 +272,13 @@ class FinancialCalculator:
                                 asset.value_history[milestone_year] = asset_value - down_payment
                                 investment_reduced = True
                     
+                    # Find and turn off rent expenses since the user now owns a home
+                    for expense in self.expenditures:
+                        if isinstance(expense, Housing) or expense.name.lower().find('rent') >= 0:
+                            # Set rent expense to zero for all years after home purchase
+                            for i in range(milestone_year, self.years_to_project + 1):
+                                expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 - HOME_PURCHASE_RENT_REDUCTION)
+                    
                     for i in range(milestone_year, self.years_to_project + 1):
                         assets_yearly[i] += house_value
                         home_value_yearly[i] += house_value
@@ -258,6 +290,13 @@ class FinancialCalculator:
                         
                         # Update net worth
                         net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                        
+                        # Recalculate total expenses for this year since we've modified housing expenses
+                        year_expenses = 0
+                        for expense in self.expenditures:
+                            year_expenses += int(expense.get_expense(i))
+                        expenses_yearly[i] = year_expenses
+                        cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
                 elif milestone.get('type') == 'car':
                     # Car purchase affects assets (with depreciation) and liabilities
@@ -278,6 +317,13 @@ class FinancialCalculator:
                                 asset.value_history[milestone_year] = asset_value - down_payment
                                 investment_reduced = True
                     
+                    # Reduce transportation expenses when buying a car
+                    for expense in self.expenditures:
+                        if isinstance(expense, Transportation) or expense.name.lower().find('transport') >= 0:
+                            # Reduce transportation expenses (like public transit, rideshares, etc.) when buying a car
+                            for i in range(milestone_year, self.years_to_project + 1):
+                                expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 - CAR_PURCHASE_TRANSPORTATION_REDUCTION)
+                    
                     for i in range(milestone_year, self.years_to_project + 1):
                         # Cars depreciate quickly (15% per year)
                         years_owned = i - milestone_year
@@ -295,12 +341,19 @@ class FinancialCalculator:
                         
                         # Update net worth
                         net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                        
+                        # Recalculate total expenses for this year since we've modified transportation expenses
+                        year_expenses = 0
+                        for expense in self.expenditures:
+                            year_expenses += int(expense.get_expense(i))
+                        expenses_yearly[i] = year_expenses
+                        cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
                 elif milestone.get('type') == 'children':
                     # Children affect expenses
                     children_count = int(milestone.get('childrenCount', 1))
-                    expense_per_child = int(milestone.get('childrenExpensePerYear', 10000))
-                    initial_expense = int(milestone.get('initialExpense', 7500) * children_count)  # Birth/adoption costs, baby supplies, etc.
+                    expense_per_child = int(milestone.get('childrenExpensePerYear', CHILD_EXPENSE_PER_YEAR))
+                    initial_expense = int(milestone.get('initialExpense', CHILD_INITIAL_EXPENSE) * children_count)  # Birth/adoption costs, baby supplies, etc.
                     
                     # Apply initial one-time expense for having a child (medical costs, supplies, etc.)
                     expenses_yearly[milestone_year] += initial_expense
@@ -360,7 +413,8 @@ class FinancialCalculator:
                     # After education, increase income potential (starting from graduation year)
                     graduation_year = milestone_year + 4
                     if graduation_year <= self.years_to_project:
-                        income_boost_factor = 1.3  # 30% income increase after education
+                        # Use the graduate school income increase constant
+                        income_boost_factor = 1 + GRADUATE_SCHOOL_INCOME_INCREASE  # e.g. 15% increase
                         for i in range(graduation_year, self.years_to_project + 1):
                             # Apply income boost after graduation
                             income_yearly[i] = int(income_yearly[i] * income_boost_factor)
@@ -501,7 +555,9 @@ class FinancialCalculator:
                 calculator.add_income(income)
         
         # Add expenditures
-        if 'expenditures' in input_data:
+        # Handle expenditures - either from input data or auto-generate based on income
+        if 'expenditures' in input_data and input_data['expenditures']:
+            # Use provided expenditures if available
             for expenditure_data in input_data['expenditures']:
                 expenditure_type = expenditure_data.get('type', '')
                 if expenditure_type == 'housing':
@@ -535,6 +591,61 @@ class FinancialCalculator:
                         inflation_rate=expenditure_data.get('inflationRate', 0.02)
                     )
                 calculator.add_expenditure(expenditure)
+        else:
+            # Auto-generate expenditures based on income and default allocations
+            # Calculate total income for year 0
+            total_income = 0
+            for income in calculator.incomes:
+                total_income += income.get_income(0)
+            
+            # If we have income, create default expense categories
+            if total_income > 0:
+                # Housing expense
+                housing_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['housing']
+                calculator.add_expenditure(Housing(
+                    name="Rent/Housing",
+                    annual_amount=housing_amount,
+                    inflation_rate=0.03
+                ))
+                
+                # Transportation expense
+                transport_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['transportation']
+                calculator.add_expenditure(Transportation(
+                    name="Transportation",
+                    annual_amount=transport_amount,
+                    inflation_rate=0.03
+                ))
+                
+                # Food expense
+                food_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['food']
+                calculator.add_expenditure(Living(
+                    name="Food",
+                    annual_amount=food_amount,
+                    inflation_rate=0.03
+                ))
+                
+                # Healthcare expense
+                healthcare_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['healthcare']
+                calculator.add_expenditure(Living(
+                    name="Healthcare",
+                    annual_amount=healthcare_amount,
+                    inflation_rate=0.04  # Healthcare costs rise faster than general inflation
+                ))
+                
+                # Discretionary expense
+                discretionary_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['discretionary']
+                calculator.add_expenditure(Expenditure(
+                    name="Discretionary",
+                    annual_amount=discretionary_amount,
+                    inflation_rate=0.02
+                ))
+                
+                # Default Tax (25% of income)
+                calculator.add_expenditure(Tax(
+                    name="Taxes",
+                    annual_amount=total_income * 0.25,
+                    tax_rate=0.25
+                ))
         
         # Add milestones
         if 'milestones' in input_data:
