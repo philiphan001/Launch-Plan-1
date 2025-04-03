@@ -23,7 +23,24 @@ export interface ProjectionData {
   carValue?: number[];
   carLoan?: number[];
   studentLoan?: number[];
+  // Expense categories
+  housing?: number[];
+  transportation?: number[];
+  food?: number[];
+  healthcare?: number[];
+  education?: number[];
+  debt?: number[];
+  childcare?: number[];
+  discretionary?: number[];
+  personalInsurance?: number[];
+  apparel?: number[];
+  services?: number[];
+  entertainment?: number[];
+  other?: number[];
   ages: number[];
+  
+  // Allow indexing with string keys
+  [key: string]: any;
 }
 
 // Milestone types

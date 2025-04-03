@@ -315,6 +315,93 @@ function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Projection
   });
 }
 
+// Function to create a stacked expense chart showing different expense categories
+function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  const labels = data.ages.map(age => age.toString());
+  
+  const datasets = [];
+  
+  // Define expense categories and their colors
+  const expenseCategories = [
+    { key: 'housing', label: 'Housing', color: 'rgba(33, 150, 243, 0.7)' },        // Blue
+    { key: 'transportation', label: 'Transportation', color: 'rgba(156, 39, 176, 0.7)' },  // Purple
+    { key: 'food', label: 'Food', color: 'rgba(255, 193, 7, 0.7)' },               // Amber
+    { key: 'healthcare', label: 'Healthcare', color: 'rgba(233, 30, 99, 0.7)' },   // Pink
+    { key: 'education', label: 'Education', color: 'rgba(0, 150, 136, 0.7)' },     // Teal
+    { key: 'debt', label: 'Debt', color: 'rgba(244, 67, 54, 0.7)' },               // Red
+    { key: 'childcare', label: 'Childcare', color: 'rgba(76, 175, 80, 0.7)' },     // Green
+    { key: 'discretionary', label: 'Discretionary', color: 'rgba(255, 152, 0, 0.7)' }, // Orange
+  ];
+  
+  // Add datasets for each expense category if data exists
+  expenseCategories.forEach(category => {
+    if (data[category.key] && data[category.key].some(value => value > 0)) {
+      datasets.push({
+        label: category.label,
+        data: data[category.key],
+        backgroundColor: category.color,
+        borderRadius: 4,
+        stack: 'expenses'
+      });
+    }
+  });
+  
+  // If no detailed expense data, just show total expenses
+  if (datasets.length === 0 && data.expenses) {
+    datasets.push({
+      label: 'Total Expenses',
+      data: data.expenses,
+      backgroundColor: 'rgba(255, 152, 0, 0.7)',
+      borderRadius: 4
+    });
+  }
+  
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
+            },
+            footer: function(tooltipItems: any) {
+              let total = 0;
+              tooltipItems.forEach(function(tooltipItem: any) {
+                total += tooltipItem.parsed.y;
+              });
+              return `Total Expenses: $${total.toLocaleString()}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + Number(value).toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 // Function to create a stacked liability chart showing different liability categories
 function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
@@ -427,9 +514,22 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
       chartColor = 'rgba(38, 166, 154, 0.7)';
       break;
     case 'expenses':
-      chartData = data.expenses || [];
-      chartLabel = 'Expenses';
-      chartColor = 'rgba(255, 152, 0, 0.7)';
+      // For expenses, we'll use the detailed breakdown if available
+      if (
+        (data.housing && data.housing.some(value => value > 0)) ||
+        (data.transportation && data.transportation.some(value => value > 0)) ||
+        (data.food && data.food.some(value => value > 0)) ||
+        (data.healthcare && data.healthcare.some(value => value > 0)) ||
+        (data.education && data.education.some(value => value > 0)) ||
+        (data.childcare && data.childcare.some(value => value > 0))
+      ) {
+        // Use stacked chart for expenses with breakdown
+        return createStackedExpenseChart(ctx, data);
+      } else {
+        chartData = data.expenses || [];
+        chartLabel = 'Expenses';
+        chartColor = 'rgba(255, 152, 0, 0.7)';
+      }
       break;
     case 'assets':
       // For assets, we'll use the detailed breakdown if available
