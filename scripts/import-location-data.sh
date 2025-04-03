@@ -11,10 +11,10 @@ MODE="${2:-truncate}"
 
 if [ "$MODE" == "truncate" ]; then
   echo "Starting FULL import process with truncate (will erase existing data)"
-  node scripts/import-full-location-dataset.js "$BATCH_SIZE" truncate
+  node scripts/import-full-location-dataset.js "$BATCH_SIZE" truncate debug
 elif [ "$MODE" == "resume" ]; then
   echo "Resuming import process from last position"
-  node scripts/import-full-location-dataset.js "$BATCH_SIZE" resume
+  node scripts/import-full-location-dataset.js "$BATCH_SIZE" resume debug
 else
   echo "Unknown mode: $MODE"
   echo "Usage: ./scripts/import-location-data.sh [batch_size] [truncate|resume]"

@@ -18,8 +18,8 @@ const PROGRESS_FILE = path.join(__dirname, '../.location_import_progress.json');
 const args = process.argv.slice(2);
 const BATCH_SIZE = args[0] ? parseInt(args[0], 10) : 2000;
 const TRUNCATE_TABLE = args[1] === 'truncate';
-const RESUME = args[2] === 'resume';
-const DEBUG = args[3] === 'debug';
+const RESUME = args[1] === 'resume';
+const DEBUG = args[2] === 'debug';
 
 /**
  * Load progress from file
