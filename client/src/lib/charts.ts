@@ -254,7 +254,7 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
 }
 
 // Function to create a stacked asset chart showing different asset categories
-function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
   // Calculate savings (total assets minus home value and car value)
@@ -341,8 +341,92 @@ function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Projection
   });
 }
 
+// Function to create a stacked income chart showing personal and spouse income
+export function createStackedIncomeChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  const labels = data.ages.map(age => age.toString());
+  
+  const datasets = [];
+  
+  // Add personal income
+  if (data.income && data.income.length > 0) {
+    datasets.push({
+      label: 'Personal Income',
+      data: data.income,
+      backgroundColor: 'rgba(38, 166, 154, 0.7)', // Green color for primary income
+      borderRadius: 4,
+      stack: 'income'
+    });
+  }
+  
+  // Add spouse income if available
+  if (data.spouseIncome && data.spouseIncome.some(value => value > 0)) {
+    datasets.push({
+      label: 'Spouse Income',
+      data: data.spouseIncome,
+      backgroundColor: 'rgba(156, 39, 176, 0.7)', // Purple color for spouse income
+      borderRadius: 4,
+      stack: 'income'
+    });
+  }
+  
+  // If no income data, show a placeholder
+  if (datasets.length === 0) {
+    datasets.push({
+      label: 'Income',
+      data: Array(labels.length).fill(0),
+      backgroundColor: 'rgba(38, 166, 154, 0.7)',
+      borderRadius: 4
+    });
+  }
+  
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: datasets.length > 1, // Only show legend if we have spouse income
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
+            },
+            footer: function(tooltipItems: any) {
+              let total = 0;
+              tooltipItems.forEach(function(tooltipItem: any) {
+                total += tooltipItem.parsed.y;
+              });
+              return `Total Income: $${total.toLocaleString()}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true,
+          ticks: {
+            callback: function(value: any) {
+              return '$' + Number(value).toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 // Function to create a stacked expense chart showing different expense categories
-function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
   const datasets = [];
@@ -458,7 +542,7 @@ function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: Projecti
 }
 
 // Function to create a stacked liability chart showing different liability categories
-function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
   // Calculate other debts (total liabilities minus mortgage, car loan, and student loans)
@@ -615,42 +699,28 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
   // Use bar chart for netWorth and income/expenses, line chart for assets/liabilities
   const chartType = type === 'netWorth' || type === 'income' || type === 'expenses' ? 'bar' : 'line';
   
-  // Handle stacked income chart (personal + spouse income)
+  // Use dedicated stacked income chart for income type
+  if (type === 'income') {
+    return createStackedIncomeChart(ctx, data);
+  }
+  
+  // For other types, use standard approach
   const datasets = [];
   
-  if (type === 'income' && data.spouseIncome && data.spouseIncome.length > 0) {
-    // Create datasets for personal and spouse income
-    datasets.push({
-      label: 'Personal Income',
-      data: data.income || [],
-      backgroundColor: chartColor,
-      borderRadius: 4,
-      stack: 'income'
-    });
-    
-    datasets.push({
-      label: 'Spouse Income',
-      data: data.spouseIncome,
-      backgroundColor: 'rgba(156, 39, 176, 0.7)', // Purple color for spouse income
-      borderRadius: 4,
-      stack: 'income'
-    });
-  } else {
-    // For all other chart types
-    datasets.push({
-      label: chartLabel,
-      data: chartData,
-      backgroundColor: type === 'netWorth' ? 
-        (context: any) => {
-          const value = context.raw as number;
-          return value >= 0 ? 'rgba(25, 118, 210, 0.7)' : 'rgba(244, 67, 54, 0.7)';
-        } : chartColor,
-      borderColor: chartType === 'line' ? chartColor : undefined,
-      fill: chartType === 'line',
-      tension: chartType === 'line' ? 0.4 : undefined,
-      borderRadius: chartType === 'bar' ? 4 : undefined
-    });
-  }
+  // For all other chart types
+  datasets.push({
+    label: chartLabel,
+    data: chartData,
+    backgroundColor: type === 'netWorth' ? 
+      (context: any) => {
+        const value = context.raw as number;
+        return value >= 0 ? 'rgba(25, 118, 210, 0.7)' : 'rgba(244, 67, 54, 0.7)';
+      } : chartColor,
+    borderColor: chartType === 'line' ? chartColor : undefined,
+    fill: chartType === 'line',
+    tension: chartType === 'line' ? 0.4 : undefined,
+    borderRadius: chartType === 'bar' ? 4 : undefined
+  });
   
   const chartConfig: any = {
     type: chartType,
