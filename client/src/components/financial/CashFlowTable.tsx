@@ -50,6 +50,18 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
   studentLoan
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  
+  // Helper function to safely format monetary values
+  const formatCurrency = (array: number[] | null | undefined, index: number): string => {
+    if (!array || !array[index]) return "$0";
+    return `$${array[index].toLocaleString()}`;
+  };
+  
+  // Helper function to safely get a value with a default
+  const getValue = (array: number[] | null | undefined, index: number): number => {
+    if (!array || !array[index]) return 0;
+    return array[index];
+  };
 
   return (
     <Card className="mb-6">
@@ -86,16 +98,16 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                     <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                       <TableCell>{i}</TableCell>
                       <TableCell>{age}</TableCell>
-                      <TableCell>${income[i]?.toLocaleString() || 0}</TableCell>
-                      <TableCell>${spouseIncome && spouseIncome[i] ? spouseIncome[i].toLocaleString() : 0}</TableCell>
-                      <TableCell>${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0)).toLocaleString()}</TableCell>
-                      <TableCell>${expenses && expenses[i] ? expenses[i].toLocaleString() : 0}</TableCell>
+                      <TableCell>{formatCurrency(income, i)}</TableCell>
+                      <TableCell>{formatCurrency(spouseIncome, i)}</TableCell>
+                      <TableCell>${(getValue(income, i) + getValue(spouseIncome, i)).toLocaleString()}</TableCell>
+                      <TableCell>{formatCurrency(expenses, i)}</TableCell>
                       <TableCell>
-                        ${((income[i] || 0) + (spouseIncome && spouseIncome[i] ? spouseIncome[i] : 0) - (expenses && expenses[i] ? expenses[i] : 0)).toLocaleString()}
+                        ${(getValue(income, i) + getValue(spouseIncome, i) - getValue(expenses, i)).toLocaleString()}
                       </TableCell>
-                      <TableCell>${netWorth && netWorth[i] ? netWorth[i].toLocaleString() : 0}</TableCell>
-                      <TableCell>${assets && assets[i] ? assets[i].toLocaleString() : 0}</TableCell>
-                      <TableCell>${liabilities && liabilities[i] ? liabilities[i].toLocaleString() : 0}</TableCell>
+                      <TableCell>{formatCurrency(netWorth, i)}</TableCell>
+                      <TableCell>{formatCurrency(assets, i)}</TableCell>
+                      <TableCell>{formatCurrency(liabilities, i)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -125,14 +137,14 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                         <TableCell>{i}</TableCell>
                         <TableCell>{age}</TableCell>
-                        <TableCell>${housingExpenses && housingExpenses[i] ? housingExpenses[i].toLocaleString() : 0}</TableCell>
-                        <TableCell>${transportationExpenses && transportationExpenses[i] ? transportationExpenses[i].toLocaleString() : 0}</TableCell>
-                        <TableCell>${foodExpenses && foodExpenses[i] ? foodExpenses[i].toLocaleString() : 0}</TableCell>
-                        <TableCell>${healthcareExpenses && healthcareExpenses[i] ? healthcareExpenses[i].toLocaleString() : 0}</TableCell>
-                        <TableCell>${educationExpenses && educationExpenses[i] ? educationExpenses[i].toLocaleString() : 0}</TableCell>
-                        <TableCell>${childcareExpenses && childcareExpenses[i] ? childcareExpenses[i].toLocaleString() : 0}</TableCell>
-                        <TableCell>${debtExpenses && debtExpenses[i] ? debtExpenses[i].toLocaleString() : 0}</TableCell>
-                        <TableCell>${discretionaryExpenses && discretionaryExpenses[i] ? discretionaryExpenses[i].toLocaleString() : 0}</TableCell>
+                        <TableCell>{formatCurrency(housingExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(transportationExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(foodExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(healthcareExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(educationExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(childcareExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(debtExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(discretionaryExpenses, i)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -160,13 +172,13 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                   <TableBody>
                     {ages.map((age, i) => {
                       // Calculate other assets and liabilities (those not specifically tracked)
-                      const homeVal = homeValue && homeValue[i] ? homeValue[i] : 0;
-                      const carVal = carValue && carValue[i] ? carValue[i] : 0;
-                      const totalAssets = assets && assets[i] ? assets[i] : 0;
-                      const mortgageVal = mortgage && mortgage[i] ? mortgage[i] : 0;
-                      const carLoanVal = carLoan && carLoan[i] ? carLoan[i] : 0;
-                      const studentLoanVal = studentLoan && studentLoan[i] ? studentLoan[i] : 0;
-                      const totalLiabilities = liabilities && liabilities[i] ? liabilities[i] : 0;
+                      const homeVal = getValue(homeValue, i);
+                      const carVal = getValue(carValue, i);
+                      const totalAssets = getValue(assets, i);
+                      const mortgageVal = getValue(mortgage, i);
+                      const carLoanVal = getValue(carLoan, i);
+                      const studentLoanVal = getValue(studentLoan, i);
+                      const totalLiabilities = getValue(liabilities, i);
                       
                       const otherAssets = totalAssets - (homeVal + carVal);
                       const otherLiabilities = totalLiabilities - (mortgageVal + carLoanVal + studentLoanVal);
@@ -175,13 +187,13 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                         <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                           <TableCell>{i}</TableCell>
                           <TableCell>{age}</TableCell>
-                          <TableCell>${homeValue && homeValue[i] ? homeValue[i].toLocaleString() : 0}</TableCell>
-                          <TableCell>${mortgage && mortgage[i] ? mortgage[i].toLocaleString() : 0}</TableCell>
-                          <TableCell>${carValue && carValue[i] ? carValue[i].toLocaleString() : 0}</TableCell>
-                          <TableCell>${carLoan && carLoan[i] ? carLoan[i].toLocaleString() : 0}</TableCell>
-                          <TableCell>${studentLoan && studentLoan[i] ? studentLoan[i].toLocaleString() : 0}</TableCell>
-                          <TableCell>${otherAssets.toLocaleString()}</TableCell>
-                          <TableCell>${otherLiabilities.toLocaleString()}</TableCell>
+                          <TableCell>{formatCurrency(homeValue, i)}</TableCell>
+                          <TableCell>{formatCurrency(mortgage, i)}</TableCell>
+                          <TableCell>{formatCurrency(carValue, i)}</TableCell>
+                          <TableCell>{formatCurrency(carLoan, i)}</TableCell>
+                          <TableCell>{formatCurrency(studentLoan, i)}</TableCell>
+                          <TableCell>${Math.max(0, otherAssets).toLocaleString()}</TableCell>
+                          <TableCell>${Math.max(0, otherLiabilities).toLocaleString()}</TableCell>
                         </TableRow>
                       );
                     })}
