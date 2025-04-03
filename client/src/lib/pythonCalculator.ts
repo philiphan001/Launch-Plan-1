@@ -53,30 +53,31 @@ export interface FinancialProjectionData {
   assets: number[];
   liabilities: number[];
   ages: number[];
+  cashFlow?: number[];
   
   // Base cost of living categories
-  housing?: number[];
-  transportation?: number[];
-  food?: number[];
-  healthcare?: number[];
-  personalInsurance?: number[];
-  apparel?: number[];
-  services?: number[];
-  entertainment?: number[];
-  other?: number[];
+  housing: number[];
+  transportation: number[];
+  food: number[];
+  healthcare: number[];
+  personalInsurance: number[];
+  apparel: number[];
+  services: number[];
+  entertainment: number[];
+  other: number[];
   
   // Milestone-driven categories
-  education?: number[];
-  childcare?: number[];
-  debt?: number[];
-  discretionary?: number[];
+  education: number[];
+  childcare: number[];
+  debt: number[];
+  discretionary: number[];
   
   // Asset breakdown
-  homeValue?: number[];
-  mortgage?: number[];
-  carValue?: number[];
-  carLoan?: number[];
-  studentLoan?: number[];
+  homeValue: number[];
+  mortgage: number[];
+  carValue: number[];
+  carLoan: number[];
+  studentLoan: number[];
   
   // Milestone data
   milestones?: any[];
@@ -313,12 +314,6 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       throw new Error(`Calculation error: ${result.error}`);
     }
     
-    // Helper function to calculate percentage of expenses
-    const calculatePercentage = (expenses: number[] | undefined, percentage: number): number[] => {
-      if (!expenses || expenses.length === 0) return [];
-      return expenses.map(exp => Math.round(exp * percentage));
-    };
-    
     // Uncomment for debugging if needed
     // console.log("Python calculator returned expense categories:", 
     //            Object.keys(result).filter(key => 
@@ -326,7 +321,7 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
     //               'apparel', 'services', 'entertainment', 'other', 'education', 
     //               'childcare', 'debt', 'discretionary'].includes(key)));
 
-    // Get the expenses array for calculations
+    // Get the expenses array for length calculation
     const expensesArray = result.expenses || [];
     const yearsToProject = expensesArray.length || 10;
     
@@ -339,18 +334,25 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       assets: result.assets || [],
       liabilities: result.liabilities || [],
       ages: result.ages || [],
+      cashFlow: result.cashFlow || [],
       
-      // Create expense category breakdown based on total expenses
-      // Since we're not getting detailed categories from Python, divide expenses by category proportions
-      housing: calculatePercentage(expensesArray, 0.30),          // 30% housing
-      transportation: calculatePercentage(expensesArray, 0.15),    // 15% transportation
-      food: calculatePercentage(expensesArray, 0.15),             // 15% food
-      healthcare: calculatePercentage(expensesArray, 0.10),       // 10% healthcare
-      personalInsurance: calculatePercentage(expensesArray, 0.05), // 5% insurance
-      education: calculatePercentage(expensesArray, 0.05),         // 5% education
-      debt: calculatePercentage(expensesArray, 0.05),             // 5% debt
-      childcare: calculatePercentage(expensesArray, 0.05),         // 5% childcare
-      discretionary: calculatePercentage(expensesArray, 0.10),     // 10% discretionary
+      // Use expense category breakdowns directly from Python backend
+      // These are calculated in the backend based on the real data
+      housing: result.housing || [],
+      transportation: result.transportation || [],
+      food: result.food || [],
+      healthcare: result.healthcare || [],
+      personalInsurance: result.personalInsurance || [],
+      entertainment: result.entertainment || [],
+      apparel: result.apparel || [],
+      services: result.services || [],
+      other: result.other || [],
+      
+      // Milestone-driven categories
+      education: result.education || [],
+      debt: result.debt || [],
+      childcare: result.childcare || [],
+      discretionary: result.discretionary || [],
       
       // Asset breakdown
       homeValue: result.homeValue || Array(result.assets?.length || 0).fill(0),
@@ -367,11 +369,11 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
   } catch (error) {
     console.error("Error calculating financial projection:", error);
     
-    // Generate some initial non-zero values for expense data for testing purposes
+    // Generate some initial non-zero values for expense data for fallback purposes
     // In a real application, these should be based on user input or removed
     const baseExpense = 50000;
     
-    // Use the same helper function for the fallback
+    // Helper function for the fallback case
     const calculatePercentage = (value: number, percentage: number): number => {
       return Math.round(value * percentage);
     };
@@ -385,6 +387,7 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       assets: [0],
       liabilities: [0],
       ages: [0],
+      cashFlow: [-baseExpense],
       
       // Base cost of living categories
       housing: [calculatePercentage(baseExpense, 0.25)],

@@ -945,27 +945,32 @@ const FinancialProjections = () => {
       console.log("Inputs changed, calculating projection data using Python calculator");
       try {
         // Generate input data for the Python calculator
-        // Format milestones to match expected format
+        // Format milestones to match expected format and required fields
         const formattedMilestones = milestones?.map(m => ({
           id: m.id,
           userId: m.userId,
           type: m.type,
           title: m.title,
-          date: m.date,
-          yearsAway: m.yearsAway,
-          spouseOccupation: m.spouseOccupation,
-          spouseIncome: m.spouseIncome,
-          spouseAssets: m.spouseAssets,
-          spouseLiabilities: m.spouseLiabilities,
-          homeValue: m.homeValue,
-          homeDownPayment: m.homeDownPayment,
-          homeMonthlyPayment: m.homeMonthlyPayment,
-          carValue: m.carValue,
-          carDownPayment: m.carDownPayment,
-          carMonthlyPayment: m.carMonthlyPayment,
-          childrenCount: m.childrenCount,
-          childrenExpensePerYear: m.childrenExpensePerYear,
-          educationCost: m.educationCost
+          date: m.date || null,
+          yearsAway: m.yearsAway || null,
+          financialImpact: m.financialImpact || null,
+          spouseOccupation: m.spouseOccupation || null,
+          spouseIncome: m.spouseIncome || null,
+          spouseAssets: m.spouseAssets || null,
+          spouseLiabilities: m.spouseLiabilities || null,
+          homeValue: m.homeValue || null,
+          homeDownPayment: m.homeDownPayment || null,
+          homeMonthlyPayment: m.homeMonthlyPayment || null,
+          carValue: m.carValue || null,
+          carDownPayment: m.carDownPayment || null,
+          carMonthlyPayment: m.carMonthlyPayment || null,
+          childrenCount: m.childrenCount || null,
+          childrenExpensePerYear: m.childrenExpensePerYear || null,
+          educationCost: m.educationCost || null,
+          active: m.active !== undefined ? m.active : true,
+          completed: m.completed !== undefined ? m.completed : false,
+          details: m.details || {},
+          createdAt: m.createdAt || null
         })) || [];
         
         // Pass location data directly to the Python calculator
