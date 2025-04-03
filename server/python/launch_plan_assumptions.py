@@ -25,5 +25,10 @@ DEFAULT_EXPENSE_ALLOCATIONS = {
     "transportation": 0.15,  # 15% for transportation
     "food": 0.15,  # 15% for food
     "healthcare": 0.10,  # 10% for healthcare
-    "discretionary": 0.30  # 30% for discretionary spending
+    "personal_insurance": 0.05,  # 5% for personal insurance
+    "apparel": 0.04,  # 4% for apparel
+    "services": 0.07,  # 7% for services
+    "entertainment": 0.05,  # 5% for entertainment
+    "other": 0.05,  # 5% for other expenses
+    "discretionary": 0.04  # 4% for remaining discretionary spending (total is 100%)
 }

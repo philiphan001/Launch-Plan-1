@@ -930,6 +930,46 @@ class FinancialCalculator:
                     inflation_rate=0.04  # Healthcare costs rise faster than general inflation
                 ))
                 
+                # Personal insurance expense
+                personal_insurance_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['personal_insurance']
+                calculator.add_expenditure(Living(
+                    name="Personal Insurance",
+                    annual_amount=personal_insurance_amount,
+                    inflation_rate=0.025
+                ))
+                
+                # Apparel expense
+                apparel_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['apparel']
+                calculator.add_expenditure(Living(
+                    name="Apparel",
+                    annual_amount=apparel_amount,
+                    inflation_rate=0.02
+                ))
+                
+                # Services expense
+                services_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['services']
+                calculator.add_expenditure(Living(
+                    name="Services",
+                    annual_amount=services_amount,
+                    inflation_rate=0.025
+                ))
+                
+                # Entertainment expense
+                entertainment_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['entertainment']
+                calculator.add_expenditure(Living(
+                    name="Entertainment",
+                    annual_amount=entertainment_amount,
+                    inflation_rate=0.02
+                ))
+                
+                # Other expense
+                other_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['other']
+                calculator.add_expenditure(Living(
+                    name="Other",
+                    annual_amount=other_amount,
+                    inflation_rate=0.02
+                ))
+                
                 # Discretionary expense
                 discretionary_amount = total_income * DEFAULT_EXPENSE_ALLOCATIONS['discretionary']
                 calculator.add_expenditure(Expenditure(
