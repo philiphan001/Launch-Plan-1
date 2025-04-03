@@ -71,10 +71,10 @@ class FinancialCalculator:
         
         # Set initial values
         for asset in self.assets:
-            assets_yearly[0] += asset.get_value(0)
+            assets_yearly[0] += int(asset.get_value(0))
             
         for liability in self.liabilities:
-            liabilities_yearly[0] += liability.get_balance(0)
+            liabilities_yearly[0] += int(liability.get_balance(0))
             
         net_worth[0] = assets_yearly[0] - liabilities_yearly[0]
         
@@ -83,13 +83,13 @@ class FinancialCalculator:
             # Income calculation
             year_income = 0
             for income_source in self.incomes:
-                year_income += income_source.get_income(year)
+                year_income += int(income_source.get_income(year))
             income_yearly[year] = year_income
             
             # Expense calculation
             year_expenses = 0
             for expense in self.expenditures:
-                year_expenses += expense.get_expense(year)
+                year_expenses += int(expense.get_expense(year))
             expenses_yearly[year] = year_expenses
             
             # Cash flow
@@ -101,16 +101,18 @@ class FinancialCalculator:
                 # Update asset values based on cash flow if applicable
                 if isinstance(asset, Investment) and cash_flow_yearly[year] > 0:
                     # Assume some of positive cash flow goes to investments
-                    asset.add_contribution(cash_flow_yearly[year] * 0.2, year)  # 20% of positive cash flow
-                year_assets += asset.get_value(year)
+                    contribution_amount = int(cash_flow_yearly[year] * 0.2)  # 20% of positive cash flow
+                    asset.add_contribution(contribution_amount, year)
+                year_assets += int(asset.get_value(year))
             assets_yearly[year] = year_assets
             
             year_liabilities = 0
             for liability in self.liabilities:
                 # Make payments from cash flow
                 if cash_flow_yearly[year] > 0:
-                    liability.make_payment(min(liability.get_payment(year), cash_flow_yearly[year]), year)
-                year_liabilities += liability.get_balance(year)
+                    payment = int(min(liability.get_payment(year), cash_flow_yearly[year]))
+                    liability.make_payment(payment, year)
+                year_liabilities += int(liability.get_balance(year))
             liabilities_yearly[year] = year_liabilities
             
             # Net worth
@@ -126,23 +128,103 @@ class FinancialCalculator:
                         # Adjust future income
                         income_boost_factor = 1.5  # Example: 50% income boost post-college
                         for i in range(milestone_year + 4, self.years_to_project + 1):  # +4 years of college
-                            income_yearly[i] *= income_boost_factor
+                            income_yearly[i] = int(income_yearly[i] * income_boost_factor)
                 
                 elif milestone.get('type') == 'job':
                     # New job affects income
                     income_change = milestone.get('income_change', 0)
                     for i in range(milestone_year, self.years_to_project + 1):
-                        income_yearly[i] += income_change
+                        income_yearly[i] += int(income_change)
                 
-                elif milestone.get('type') == 'housing':
-                    # Housing purchase affects assets and liabilities
-                    if milestone.get('subtype') == 'purchase':
-                        house_value = milestone.get('value', 0)
-                        down_payment = milestone.get('down_payment', 0)
-                        for i in range(milestone_year, self.years_to_project + 1):
-                            assets_yearly[i] += house_value
-                            liabilities_yearly[i] += (house_value - down_payment) * (1 - (i - milestone_year) * 0.03)  # Simple mortgage calculation
-                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                elif milestone.get('type') == 'marriage':
+                    # Marriage adds spouse income, assets, and liabilities
+                    spouse_income = milestone.get('spouseIncome', 0)
+                    spouse_assets = milestone.get('spouseAssets', 0)
+                    spouse_liabilities = milestone.get('spouseLiabilities', 0)
+                    
+                    # Add spouse income to our income projection
+                    for i in range(milestone_year, self.years_to_project + 1):
+                        # Apply annual growth to spouse income (using same rate as primary income)
+                        spouse_income_for_year = int(spouse_income * (1.03 ** (i - milestone_year)))  # Convert to int to fix type error
+                        income_yearly[i] += spouse_income_for_year
+                    
+                    # Add spouse assets and liabilities to net worth
+                    for i in range(milestone_year, self.years_to_project + 1):
+                        assets_yearly[i] += int(spouse_assets)
+                        # Calculate liability reduction and convert to int
+                        reduced_liability = int(spouse_liabilities * max(0, 1 - (i - milestone_year) * 0.1))
+                        liabilities_yearly[i] += reduced_liability  # Simple reduction of liabilities over time
+                        net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                
+                elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
+                    # Housing/Home purchase affects assets and liabilities
+                    house_value = int(milestone.get('value', milestone.get('homeValue', 0)))
+                    down_payment = int(milestone.get('down_payment', milestone.get('homeDownPayment', 0)))
+                    
+                    for i in range(milestone_year, self.years_to_project + 1):
+                        assets_yearly[i] += house_value
+                        # Calculate remaining mortgage and convert to int
+                        remaining_mortgage = int((house_value - down_payment) * max(0, 1 - (i - milestone_year) * 0.03))
+                        liabilities_yearly[i] += remaining_mortgage  # Simple mortgage calculation
+                        net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                
+                elif milestone.get('type') == 'car':
+                    # Car purchase affects assets (with depreciation) and liabilities
+                    car_value = int(milestone.get('carValue', 0))
+                    down_payment = int(milestone.get('carDownPayment', 0))
+                    
+                    for i in range(milestone_year, self.years_to_project + 1):
+                        # Cars depreciate quickly (15% per year)
+                        years_owned = i - milestone_year
+                        # Calculate car value with depreciation
+                        depreciated_value = int(car_value * max(0.1, 0.85 ** years_owned))  # Minimum 10% of value
+                        assets_yearly[i] += depreciated_value
+                        
+                        # Car loan typically 5 years
+                        if years_owned < 5:
+                            # Calculate remaining car loan with payments and convert to int
+                            car_loan = int((car_value - down_payment) * (1 - years_owned / 5))
+                            liabilities_yearly[i] += car_loan
+                        # Update net worth
+                        net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                
+                elif milestone.get('type') == 'children':
+                    # Children affect expenses
+                    children_count = int(milestone.get('childrenCount', 1))
+                    expense_per_child = int(milestone.get('childrenExpensePerYear', 10000))
+                    
+                    for i in range(milestone_year, self.years_to_project + 1):
+                        # Add child expenses to yearly expenses
+                        years_with_children = i - milestone_year
+                        # Children costs increase with age
+                        annual_child_expenses = int(children_count * expense_per_child * (1 + years_with_children * 0.03))
+                        expenses_yearly[i] += annual_child_expenses
+                        
+                        # Recalculate cash flow with new expenses
+                        cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+                
+                elif milestone.get('type') == 'education':
+                    # Education affects expenses and possibly income
+                    education_cost = int(milestone.get('educationCost', 30000))
+                    
+                    # Education typically takes 2-4 years, we'll assume 4
+                    for i in range(milestone_year, min(milestone_year + 4, self.years_to_project + 1)):
+                        # Add education expenses
+                        expenses_yearly[i] += int(education_cost / 4)  # Spread cost over 4 years
+                        
+                        # Recalculate cash flow
+                        cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+                    
+                    # After education, increase income potential (starting from graduation year)
+                    graduation_year = milestone_year + 4
+                    if graduation_year <= self.years_to_project:
+                        income_boost_factor = 1.3  # 30% income increase after education
+                        for i in range(graduation_year, self.years_to_project + 1):
+                            # Apply income boost after graduation
+                            income_yearly[i] = int(income_yearly[i] * income_boost_factor)
+                            
+                            # Recalculate cash flow with new income
+                            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
         
         # Compile results
         self.results = {
