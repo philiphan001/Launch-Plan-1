@@ -12,6 +12,11 @@ interface ExpenseBreakdownProps {
     debt: number;
     childcare: number;
     discretionary: number;
+    personalInsurance?: number;
+    entertainment?: number;
+    apparel?: number;
+    services?: number;
+    other?: number;
   };
   projectionYear?: number;
 }
@@ -41,7 +46,13 @@ const ExpenseBreakdownChart: React.FC<ExpenseBreakdownProps> = ({
           education: Math.max(0, Number(currentExpenses.education) || 0),
           debt: Math.max(0, Number(currentExpenses.debt) || 0),
           childcare: Math.max(0, Number(currentExpenses.childcare) || 0),
-          discretionary: Math.max(0, Number(currentExpenses.discretionary) || 0)
+          discretionary: Math.max(0, Number(currentExpenses.discretionary) || 0),
+          // Additional expense categories
+          personalInsurance: Math.max(0, Number(currentExpenses.personalInsurance) || 0),
+          entertainment: Math.max(0, Number(currentExpenses.entertainment) || 0),
+          apparel: Math.max(0, Number(currentExpenses.apparel) || 0),
+          services: Math.max(0, Number(currentExpenses.services) || 0),
+          other: Math.max(0, Number(currentExpenses.other) || 0)
         };
         
         // Create new chart with sanitized data

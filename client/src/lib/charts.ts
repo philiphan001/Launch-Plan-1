@@ -111,9 +111,21 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
   debt: number;
   childcare: number;
   discretionary: number;
+  personalInsurance?: number;
+  entertainment?: number;
+  apparel?: number;
+  services?: number;
+  other?: number;
 }): Chart {
-  const { housing, transportation, food, healthcare, education, debt, childcare, discretionary } = data;
-  const total = housing + transportation + food + healthcare + education + debt + childcare + discretionary;
+  const { 
+    housing, transportation, food, healthcare, 
+    education, debt, childcare, discretionary,
+    personalInsurance = 0, entertainment = 0, apparel = 0, services = 0, other = 0
+  } = data;
+  
+  const total = housing + transportation + food + healthcare + 
+                education + debt + childcare + discretionary + 
+                personalInsurance + entertainment + apparel + services + other;
   
   // Skip empty data
   if (total === 0) {
@@ -162,6 +174,11 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
     `Debt (${calculatePercentage(debt)}%)`,
     `Childcare (${calculatePercentage(childcare)}%)`,
     `Discretionary (${calculatePercentage(discretionary)}%)`,
+    `Insurance (${calculatePercentage(personalInsurance)}%)`,
+    `Entertainment (${calculatePercentage(entertainment)}%)`,
+    `Apparel (${calculatePercentage(apparel)}%)`,
+    `Services (${calculatePercentage(services)}%)`,
+    `Other (${calculatePercentage(other)}%)`,
   ];
   
   const colors = [
@@ -173,9 +190,18 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
     'rgba(244, 67, 54, 0.8)',   // Red for debt
     'rgba(76, 175, 80, 0.8)',   // Green for childcare
     'rgba(255, 152, 0, 0.8)',   // Orange for discretionary
+    'rgba(121, 85, 72, 0.8)',   // Brown for insurance
+    'rgba(63, 81, 181, 0.8)',   // Indigo for entertainment
+    'rgba(103, 58, 183, 0.8)',  // Deep purple for apparel
+    'rgba(3, 169, 244, 0.8)',   // Light blue for services
+    'rgba(158, 158, 158, 0.8)', // Grey for other
   ];
   
-  const chartData = [housing, transportation, food, healthcare, education, debt, childcare, discretionary];
+  const chartData = [
+    housing, transportation, food, healthcare, 
+    education, debt, childcare, discretionary,
+    personalInsurance, entertainment, apparel, services, other
+  ];
   
   // Filter out zero values to avoid cluttering the chart
   const filteredLabels = [];
@@ -321,6 +347,24 @@ function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: Projecti
   
   const datasets = [];
   
+  // Debug the input data to see what categories are available
+  console.log("Creating stacked expense chart with data keys:", Object.keys(data));
+  console.log("Expense data sample:", {
+    housing: data.housing?.[0],
+    transportation: data.transportation?.[0],
+    food: data.food?.[0],
+    healthcare: data.healthcare?.[0],
+    education: data.education?.[0],
+    debt: data.debt?.[0],
+    childcare: data.childcare?.[0],
+    discretionary: data.discretionary?.[0],
+    personalInsurance: data.personalInsurance?.[0],
+    entertainment: data.entertainment?.[0],
+    apparel: data.apparel?.[0],
+    services: data.services?.[0],
+    other: data.other?.[0]
+  });
+
   // Define expense categories and their colors
   const expenseCategories = [
     { key: 'housing', label: 'Housing', color: 'rgba(33, 150, 243, 0.7)' },        // Blue
@@ -331,14 +375,25 @@ function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: Projecti
     { key: 'debt', label: 'Debt', color: 'rgba(244, 67, 54, 0.7)' },               // Red
     { key: 'childcare', label: 'Childcare', color: 'rgba(76, 175, 80, 0.7)' },     // Green
     { key: 'discretionary', label: 'Discretionary', color: 'rgba(255, 152, 0, 0.7)' }, // Orange
+    { key: 'personalInsurance', label: 'Insurance', color: 'rgba(121, 85, 72, 0.7)' }, // Brown
+    { key: 'entertainment', label: 'Entertainment', color: 'rgba(63, 81, 181, 0.7)' }, // Indigo
+    { key: 'apparel', label: 'Apparel', color: 'rgba(103, 58, 183, 0.7)' },        // Deep purple
+    { key: 'services', label: 'Services', color: 'rgba(3, 169, 244, 0.7)' },       // Light blue
+    { key: 'other', label: 'Other', color: 'rgba(158, 158, 158, 0.7)' }            // Grey
   ];
   
   // Add datasets for each expense category if data exists
   expenseCategories.forEach(category => {
-    if (data[category.key] && data[category.key].some(value => value > 0)) {
+    // Check if this category exists in our data and has non-zero values
+    const categoryData = data[category.key];
+    const hasValues = categoryData && categoryData.some((value: number) => value > 0);
+    
+    console.log(`Category ${category.key}: exists=${!!categoryData}, hasValues=${hasValues}, sample=${categoryData?.[0]}`);
+    
+    if (hasValues) {
       datasets.push({
         label: category.label,
-        data: data[category.key],
+        data: categoryData,
         backgroundColor: category.color,
         borderRadius: 4,
         stack: 'expenses'
@@ -514,22 +569,17 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
       chartColor = 'rgba(38, 166, 154, 0.7)';
       break;
     case 'expenses':
-      // For expenses, we'll use the detailed breakdown if available
-      if (
-        (data.housing && data.housing.some(value => value > 0)) ||
-        (data.transportation && data.transportation.some(value => value > 0)) ||
-        (data.food && data.food.some(value => value > 0)) ||
-        (data.healthcare && data.healthcare.some(value => value > 0)) ||
-        (data.education && data.education.some(value => value > 0)) ||
-        (data.childcare && data.childcare.some(value => value > 0))
-      ) {
-        // Use stacked chart for expenses with breakdown
-        return createStackedExpenseChart(ctx, data);
-      } else {
-        chartData = data.expenses || [];
-        chartLabel = 'Expenses';
-        chartColor = 'rgba(255, 152, 0, 0.7)';
-      }
+      // Debug expense data presence
+      console.log('Expense data in main chart:', {
+        housing: data.housing?.[0],
+        transportation: data.transportation?.[0],
+        food: data.food?.[0],
+        healthcare: data.healthcare?.[0]
+      });
+      
+      // Always use the stacked expense chart for better visualization
+      // This will show the detailed breakdown if available, or fall back to a single bar
+      return createStackedExpenseChart(ctx, data);
       break;
     case 'assets':
       // For assets, we'll use the detailed breakdown if available

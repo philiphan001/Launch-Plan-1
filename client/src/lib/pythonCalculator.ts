@@ -292,6 +292,21 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
     const result = await response.json();
     console.log("Received result from Python calculator:", result);
     
+    // Debug: Check which expense categories are present in the Python response
+    const expenseCategories = [
+      'housing', 'transportation', 'food', 'healthcare', 'education', 'debt', 
+      'childcare', 'discretionary', 'personalInsurance', 'apparel', 'services', 
+      'entertainment', 'other'
+    ];
+    
+    console.log("Expense categories from Python model:", 
+      expenseCategories.map(cat => ({ 
+        category: cat, 
+        present: !!result[cat], 
+        firstValue: result[cat] ? result[cat][0] : 'N/A'
+      }))
+    );
+    
     // If there's an error in the calculation
     if (result.error) {
       console.error("Python calculation error:", result.error);
@@ -311,32 +326,31 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
     //               'apparel', 'services', 'entertainment', 'other', 'education', 
     //               'childcare', 'debt', 'discretionary'].includes(key)));
 
+    // Get the expenses array for calculations
+    const expensesArray = result.expenses || [];
+    const yearsToProject = expensesArray.length || 10;
+    
     // Format the result into the expected format for our components
     const projectionData: FinancialProjectionData = {
       netWorth: result.netWorth || [],
       income: result.income || [],
-      spouseIncome: result.spouseIncome || Array(result.income?.length || 0).fill(0), // Initialize with zeros
-      expenses: result.expenses || [],
+      spouseIncome: result.spouseIncome || Array(yearsToProject).fill(0), // Initialize with zeros
+      expenses: expensesArray,
       assets: result.assets || [],
       liabilities: result.liabilities || [],
       ages: result.ages || [],
       
-      // Base cost of living categories - use Python calculator results with fallbacks
-      housing: result.housing || calculatePercentage(result.expenses, 0.30),
-      transportation: result.transportation || calculatePercentage(result.expenses, 0.15),
-      food: result.food || calculatePercentage(result.expenses, 0.15),
-      healthcare: result.healthcare || calculatePercentage(result.expenses, 0.10),
-      personalInsurance: result.personalInsurance || calculatePercentage(result.expenses, 0.05),
-      apparel: result.apparel || calculatePercentage(result.expenses, 0.04),
-      services: result.services || calculatePercentage(result.expenses, 0.07),
-      entertainment: result.entertainment || calculatePercentage(result.expenses, 0.05),
-      other: result.other || calculatePercentage(result.expenses, 0.05),
-      
-      // Milestone-driven categories - use Python calculator results with fallbacks
-      education: result.education || Array(result.expenses?.length || 0).fill(0),
-      debt: result.debt || Array(result.expenses?.length || 0).fill(0),
-      childcare: result.childcare || Array(result.expenses?.length || 0).fill(0),
-      discretionary: result.discretionary || calculatePercentage(result.expenses, 0.04),
+      // Create expense category breakdown based on total expenses
+      // Since we're not getting detailed categories from Python, divide expenses by category proportions
+      housing: calculatePercentage(expensesArray, 0.30),          // 30% housing
+      transportation: calculatePercentage(expensesArray, 0.15),    // 15% transportation
+      food: calculatePercentage(expensesArray, 0.15),             // 15% food
+      healthcare: calculatePercentage(expensesArray, 0.10),       // 10% healthcare
+      personalInsurance: calculatePercentage(expensesArray, 0.05), // 5% insurance
+      education: calculatePercentage(expensesArray, 0.05),         // 5% education
+      debt: calculatePercentage(expensesArray, 0.05),             // 5% debt
+      childcare: calculatePercentage(expensesArray, 0.05),         // 5% childcare
+      discretionary: calculatePercentage(expensesArray, 0.10),     // 10% discretionary
       
       // Asset breakdown
       homeValue: result.homeValue || Array(result.assets?.length || 0).fill(0),
