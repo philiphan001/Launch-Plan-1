@@ -88,10 +88,18 @@ class FinancialCalculator:
         student_loan_yearly = [0] * (self.years_to_project + 1)
         
         # Initialize expense category breakdown arrays
+        # Base cost of living categories (from location_cost_of_living table)
         housing_expenses_yearly = [0] * (self.years_to_project + 1)
         transportation_expenses_yearly = [0] * (self.years_to_project + 1)
         food_expenses_yearly = [0] * (self.years_to_project + 1)
         healthcare_expenses_yearly = [0] * (self.years_to_project + 1)
+        personal_insurance_expenses_yearly = [0] * (self.years_to_project + 1)
+        apparel_expenses_yearly = [0] * (self.years_to_project + 1)
+        services_expenses_yearly = [0] * (self.years_to_project + 1)
+        entertainment_expenses_yearly = [0] * (self.years_to_project + 1)
+        other_expenses_yearly = [0] * (self.years_to_project + 1)
+        
+        # Milestone-driven categories
         education_expenses_yearly = [0] * (self.years_to_project + 1)
         child_expenses_yearly = [0] * (self.years_to_project + 1)
         debt_expenses_yearly = [0] * (self.years_to_project + 1)
@@ -132,10 +140,19 @@ class FinancialCalculator:
             
             # Expense calculation with categorization
             year_expenses = 0
+            
+            # Base cost of living categories
             year_housing = 0
             year_transportation = 0
             year_food = 0
             year_healthcare = 0
+            year_personal_insurance = 0
+            year_apparel = 0
+            year_services = 0
+            year_entertainment = 0
+            year_other = 0
+            
+            # Milestone-driven categories
             year_education = 0
             year_childcare = 0
             year_debt = 0
@@ -146,29 +163,53 @@ class FinancialCalculator:
                 year_expenses += expense_amount
                 
                 # Categorize expenses by type
-                if isinstance(expense, Housing) or expense.name.lower().find('housing') >= 0 or expense.name.lower().find('rent') >= 0 or expense.name.lower().find('mortgage') >= 0:
+                expense_name = expense.name.lower()
+                
+                # Base cost of living categories
+                if isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
                     year_housing += expense_amount
-                elif isinstance(expense, Transportation) or expense.name.lower().find('transport') >= 0 or expense.name.lower().find('car') >= 0:
+                elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0 or expense_name.find('car') >= 0:
                     year_transportation += expense_amount
-                elif expense.name.lower().find('food') >= 0:
+                elif expense_name.find('food') >= 0:
                     year_food += expense_amount
-                elif expense.name.lower().find('health') >= 0 or expense.name.lower().find('medical') >= 0:
+                elif expense_name.find('health') >= 0 or expense_name.find('medical') >= 0:
                     year_healthcare += expense_amount
-                elif expense.name.lower().find('education') >= 0 or expense.name.lower().find('college') >= 0 or expense.name.lower().find('school') >= 0:
+                elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
+                    year_personal_insurance += expense_amount
+                elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
+                    year_apparel += expense_amount
+                elif expense_name.find('service') >= 0 or expense_name.find('utilities') >= 0:
+                    year_services += expense_amount
+                elif expense_name.find('entertainment') >= 0 or expense_name.find('recreation') >= 0:
+                    year_entertainment += expense_amount
+                
+                # Milestone-driven categories
+                elif expense_name.find('education') >= 0 or expense_name.find('college') >= 0 or expense_name.find('school') >= 0:
                     year_education += expense_amount
-                elif expense.name.lower().find('child') >= 0 or expense.name.lower().find('daycare') >= 0:
+                elif expense_name.find('child') >= 0 or expense_name.find('daycare') >= 0:
                     year_childcare += expense_amount
-                elif expense.name.lower().find('debt') >= 0 or expense.name.lower().find('loan') >= 0:
+                elif expense_name.find('debt') >= 0 or expense_name.find('loan') >= 0:
                     year_debt += expense_amount
-                else:
-                    # Default to discretionary for any other expenses
+                elif expense_name.find('discretionary') >= 0 or expense_name.find('leisure') >= 0:
                     year_discretionary += expense_amount
+                else:
+                    # Default to other expenses
+                    year_other += expense_amount
                     
             expenses_yearly[year] = year_expenses
+            
+            # Base cost of living categories
             housing_expenses_yearly[year] = year_housing
             transportation_expenses_yearly[year] = year_transportation
             food_expenses_yearly[year] = year_food
             healthcare_expenses_yearly[year] = year_healthcare
+            personal_insurance_expenses_yearly[year] = year_personal_insurance
+            apparel_expenses_yearly[year] = year_apparel
+            services_expenses_yearly[year] = year_services
+            entertainment_expenses_yearly[year] = year_entertainment
+            other_expenses_yearly[year] = year_other
+            
+            # Milestone-driven categories
             education_expenses_yearly[year] = year_education
             child_expenses_yearly[year] = year_childcare
             debt_expenses_yearly[year] = year_debt
@@ -296,10 +337,19 @@ class FinancialCalculator:
                             
                             # Recalculate total expenses and categories for this year
                             year_expenses = 0
+                            
+                            # Base cost of living categories
                             year_housing = 0
                             year_transportation = 0
                             year_food = 0
                             year_healthcare = 0
+                            year_personal_insurance = 0
+                            year_apparel = 0
+                            year_services = 0
+                            year_entertainment = 0
+                            year_other = 0
+                            
+                            # Milestone-driven categories
                             year_education = 0
                             year_childcare = 0
                             year_debt = 0
@@ -310,29 +360,53 @@ class FinancialCalculator:
                                 year_expenses += expense_amount
                                 
                                 # Categorize expenses by type
-                                if isinstance(expense, Housing) or expense.name.lower().find('housing') >= 0 or expense.name.lower().find('rent') >= 0 or expense.name.lower().find('mortgage') >= 0:
+                                expense_name = expense.name.lower()
+                                
+                                # Base cost of living categories
+                                if isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
                                     year_housing += expense_amount
-                                elif isinstance(expense, Transportation) or expense.name.lower().find('transport') >= 0 or expense.name.lower().find('car') >= 0:
+                                elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0 or expense_name.find('car') >= 0:
                                     year_transportation += expense_amount
-                                elif expense.name.lower().find('food') >= 0:
+                                elif expense_name.find('food') >= 0:
                                     year_food += expense_amount
-                                elif expense.name.lower().find('health') >= 0 or expense.name.lower().find('medical') >= 0:
+                                elif expense_name.find('health') >= 0 or expense_name.find('medical') >= 0:
                                     year_healthcare += expense_amount
-                                elif expense.name.lower().find('education') >= 0 or expense.name.lower().find('college') >= 0 or expense.name.lower().find('school') >= 0:
+                                elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
+                                    year_personal_insurance += expense_amount
+                                elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
+                                    year_apparel += expense_amount
+                                elif expense_name.find('service') >= 0 or expense_name.find('utilities') >= 0:
+                                    year_services += expense_amount
+                                elif expense_name.find('entertainment') >= 0 or expense_name.find('recreation') >= 0:
+                                    year_entertainment += expense_amount
+                                
+                                # Milestone-driven categories
+                                elif expense_name.find('education') >= 0 or expense_name.find('college') >= 0 or expense_name.find('school') >= 0:
                                     year_education += expense_amount
-                                elif expense.name.lower().find('child') >= 0 or expense.name.lower().find('daycare') >= 0:
+                                elif expense_name.find('child') >= 0 or expense_name.find('daycare') >= 0:
                                     year_childcare += expense_amount
-                                elif expense.name.lower().find('debt') >= 0 or expense.name.lower().find('loan') >= 0:
+                                elif expense_name.find('debt') >= 0 or expense_name.find('loan') >= 0:
                                     year_debt += expense_amount
-                                else:
-                                    # Default to discretionary for any other expenses
+                                elif expense_name.find('discretionary') >= 0 or expense_name.find('leisure') >= 0:
                                     year_discretionary += expense_amount
+                                else:
+                                    # Default to other expenses
+                                    year_other += expense_amount
                                     
                             expenses_yearly[i] = year_expenses
+                            
+                            # Base cost of living categories
                             housing_expenses_yearly[i] = year_housing
                             transportation_expenses_yearly[i] = year_transportation
                             food_expenses_yearly[i] = year_food
                             healthcare_expenses_yearly[i] = year_healthcare
+                            personal_insurance_expenses_yearly[i] = year_personal_insurance
+                            apparel_expenses_yearly[i] = year_apparel
+                            services_expenses_yearly[i] = year_services
+                            entertainment_expenses_yearly[i] = year_entertainment
+                            other_expenses_yearly[i] = year_other
+                            
+                            # Milestone-driven categories
                             education_expenses_yearly[i] = year_education
                             child_expenses_yearly[i] = year_childcare
                             debt_expenses_yearly[i] = year_debt
@@ -380,10 +454,19 @@ class FinancialCalculator:
                         
                         # Recalculate total expenses and categories for this year since we've modified housing expenses
                         year_expenses = 0
+                        
+                        # Base cost of living categories
                         year_housing = 0
                         year_transportation = 0
                         year_food = 0
                         year_healthcare = 0
+                        year_personal_insurance = 0
+                        year_apparel = 0
+                        year_services = 0
+                        year_entertainment = 0
+                        year_other = 0
+                        
+                        # Milestone-driven categories
                         year_education = 0
                         year_childcare = 0
                         year_debt = 0
@@ -413,10 +496,19 @@ class FinancialCalculator:
                                 year_discretionary += expense_amount
                                 
                         expenses_yearly[i] = year_expenses
+                        
+                        # Base cost of living categories
                         housing_expenses_yearly[i] = year_housing
                         transportation_expenses_yearly[i] = year_transportation
                         food_expenses_yearly[i] = year_food
                         healthcare_expenses_yearly[i] = year_healthcare
+                        personal_insurance_expenses_yearly[i] = year_personal_insurance
+                        apparel_expenses_yearly[i] = year_apparel
+                        services_expenses_yearly[i] = year_services
+                        entertainment_expenses_yearly[i] = year_entertainment
+                        other_expenses_yearly[i] = year_other
+                        
+                        # Milestone-driven categories
                         education_expenses_yearly[i] = year_education
                         child_expenses_yearly[i] = year_childcare
                         debt_expenses_yearly[i] = year_debt
@@ -470,10 +562,19 @@ class FinancialCalculator:
                         
                         # Recalculate total expenses and categories for this year since we've modified transportation expenses
                         year_expenses = 0
+                        
+                        # Base cost of living categories
                         year_housing = 0
                         year_transportation = 0
                         year_food = 0
                         year_healthcare = 0
+                        year_personal_insurance = 0
+                        year_apparel = 0
+                        year_services = 0
+                        year_entertainment = 0
+                        year_other = 0
+                        
+                        # Milestone-driven categories
                         year_education = 0
                         year_childcare = 0
                         year_debt = 0
@@ -503,10 +604,19 @@ class FinancialCalculator:
                                 year_discretionary += expense_amount
                                 
                         expenses_yearly[i] = year_expenses
+                        
+                        # Base cost of living categories
                         housing_expenses_yearly[i] = year_housing
                         transportation_expenses_yearly[i] = year_transportation
                         food_expenses_yearly[i] = year_food
                         healthcare_expenses_yearly[i] = year_healthcare
+                        personal_insurance_expenses_yearly[i] = year_personal_insurance
+                        apparel_expenses_yearly[i] = year_apparel
+                        services_expenses_yearly[i] = year_services
+                        entertainment_expenses_yearly[i] = year_entertainment
+                        other_expenses_yearly[i] = year_other
+                        
+                        # Milestone-driven categories
                         education_expenses_yearly[i] = year_education
                         child_expenses_yearly[i] = year_childcare
                         debt_expenses_yearly[i] = year_debt
@@ -612,11 +722,18 @@ class FinancialCalculator:
             'carLoan': car_loan_yearly,
             'studentLoan': student_loan_yearly,
             
-            # Expense category breakdown
+            # Base cost of living categories
             'housing': housing_expenses_yearly,
             'transportation': transportation_expenses_yearly,
             'food': food_expenses_yearly,
             'healthcare': healthcare_expenses_yearly,
+            'personalInsurance': personal_insurance_expenses_yearly,
+            'apparel': apparel_expenses_yearly,
+            'services': services_expenses_yearly,
+            'entertainment': entertainment_expenses_yearly,
+            'other': other_expenses_yearly,
+            
+            # Milestone-driven categories
             'education': education_expenses_yearly,
             'childcare': child_expenses_yearly,
             'debt': debt_expenses_yearly,

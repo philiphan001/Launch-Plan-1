@@ -50,14 +50,18 @@ const CareerExplorationCard = ({
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 className="font-medium text-gray-700">Career Exploration</h3>
         <div className="flex items-center space-x-4">
-          <Link href="/career-builder">
-            <a className="text-primary hover:text-primary-dark text-sm flex items-center">
-              <span className="material-icons text-xs mr-1">auto_awesome</span>
-              AI Builder
-            </a>
+          <Link 
+            href="/career-builder"
+            className="text-primary hover:text-primary-dark text-sm flex items-center"
+          >
+            <span className="material-icons text-xs mr-1">auto_awesome</span>
+            AI Builder
           </Link>
-          <Link href="/careers">
-            <a className="text-primary hover:text-primary-dark text-sm">View All</a>
+          <Link 
+            href="/careers"
+            className="text-primary hover:text-primary-dark text-sm"
+          >
+            View All
           </Link>
         </div>
       </div>

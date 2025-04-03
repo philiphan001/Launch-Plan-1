@@ -9,14 +9,25 @@ interface CashFlowTableProps {
   income: number[];
   spouseIncome?: number[] | null;
   expenses?: number[] | null;
+  
+  // Base cost of living categories (from location_cost_of_living table)
   housingExpenses?: number[] | null;
   transportationExpenses?: number[] | null;
   foodExpenses?: number[] | null;
   healthcareExpenses?: number[] | null;
+  personalInsuranceExpenses?: number[] | null;
+  apparelExpenses?: number[] | null;
+  servicesExpenses?: number[] | null;
+  entertainmentExpenses?: number[] | null;
+  otherExpenses?: number[] | null;
+  
+  // Milestone-driven categories
   educationExpenses?: number[] | null;
   childcareExpenses?: number[] | null;
   debtExpenses?: number[] | null;
   discretionaryExpenses?: number[] | null;
+  
+  // Assets and liabilities
   assets?: number[] | null;
   liabilities?: number[] | null;
   netWorth?: number[] | null;
@@ -36,6 +47,11 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
   transportationExpenses,
   foodExpenses,
   healthcareExpenses,
+  personalInsuranceExpenses,
+  apparelExpenses,
+  servicesExpenses,
+  entertainmentExpenses,
+  otherExpenses,
   educationExpenses,
   childcareExpenses,
   debtExpenses,
@@ -123,7 +139,7 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
             </div>
             
             <div className="mt-6 mb-3 px-6">
-              <h4 className="text-md font-medium mb-2">Expense Breakdown by Year</h4>
+              <h4 className="text-md font-medium mb-2">Base Cost of Living Expenses</h4>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
@@ -134,10 +150,11 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       <TableHead className="font-semibold">Transportation</TableHead>
                       <TableHead className="font-semibold">Food</TableHead>
                       <TableHead className="font-semibold">Healthcare</TableHead>
-                      <TableHead className="font-semibold">Education</TableHead>
-                      <TableHead className="font-semibold">Childcare</TableHead>
-                      <TableHead className="font-semibold">Debt</TableHead>
-                      <TableHead className="font-semibold">Discretionary</TableHead>
+                      <TableHead className="font-semibold">Personal Insurance</TableHead>
+                      <TableHead className="font-semibold">Apparel</TableHead>
+                      <TableHead className="font-semibold">Services</TableHead>
+                      <TableHead className="font-semibold">Entertainment</TableHead>
+                      <TableHead className="font-semibold">Other</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -149,6 +166,37 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                         <TableCell>{formatCurrency(transportationExpenses, i)}</TableCell>
                         <TableCell>{formatCurrency(foodExpenses, i)}</TableCell>
                         <TableCell>{formatCurrency(healthcareExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(personalInsuranceExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(apparelExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(servicesExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(entertainmentExpenses, i)}</TableCell>
+                        <TableCell>{formatCurrency(otherExpenses, i)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+            
+            <div className="mt-6 mb-3 px-6">
+              <h4 className="text-md font-medium mb-2">Milestone-Driven Expenses</h4>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="font-semibold">Year</TableHead>
+                      <TableHead className="font-semibold">Age</TableHead>
+                      <TableHead className="font-semibold">Education</TableHead>
+                      <TableHead className="font-semibold">Childcare</TableHead>
+                      <TableHead className="font-semibold">Debt</TableHead>
+                      <TableHead className="font-semibold">Discretionary</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ages.map((age, i) => (
+                      <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <TableCell>{i}</TableCell>
+                        <TableCell>{age}</TableCell>
                         <TableCell>{formatCurrency(educationExpenses, i)}</TableCell>
                         <TableCell>{formatCurrency(childcareExpenses, i)}</TableCell>
                         <TableCell>{formatCurrency(debtExpenses, i)}</TableCell>

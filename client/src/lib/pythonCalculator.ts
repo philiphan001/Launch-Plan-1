@@ -54,14 +54,21 @@ export interface FinancialProjectionData {
   liabilities: number[];
   ages: number[];
   
-  // Expense breakdown
+  // Base cost of living categories
   housing?: number[];
   transportation?: number[];
   food?: number[];
   healthcare?: number[];
+  personalInsurance?: number[];
+  apparel?: number[];
+  services?: number[];
+  entertainment?: number[];
+  other?: number[];
+  
+  // Milestone-driven categories
   education?: number[];
-  debt?: number[];
   childcare?: number[];
+  debt?: number[];
   discretionary?: number[];
   
   // Asset breakdown
@@ -88,17 +95,27 @@ export const generatePythonCalculatorInput = (
   costOfLivingFactor: number = 1.0
 ): CalculatorInputData => {
   // Sort milestones by yearsAway 
-  const sortedMilestones = milestones ? [...milestones].sort((a, b) => a.yearsAway - b.yearsAway) : [];
+  const sortedMilestones = milestones ? [...milestones].sort((a, b) => {
+    const aYears = a.yearsAway ?? 0;
+    const bYears = b.yearsAway ?? 0;
+    return aYears - bYears;
+  }) : [];
   
   // Adjust income based on cost of living
   const adjustedIncome = income * costOfLivingFactor;
   
   // Format milestones for the Python calculator
-  const formattedMilestones = sortedMilestones.map(milestone => ({
-    type: milestone.type,
-    year: milestone.yearsAway,
-    ...milestone
-  }));
+  const formattedMilestones = sortedMilestones.map(milestone => {
+    // Extract milestone type and yearsAway
+    const { type, yearsAway, ...rest } = milestone;
+    
+    // Create a new milestone object with year property instead of yearsAway
+    return {
+      type,
+      year: yearsAway ?? 0,
+      ...rest
+    };
+  });
   
   // Create the input object for the Python calculator
   return {
@@ -204,25 +221,38 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       throw new Error(`Calculation error: ${result.error}`);
     }
     
+    // Helper function to calculate percentage of expenses
+    const calculatePercentage = (expenses: number[] | undefined, percentage: number): number[] => {
+      if (!expenses || expenses.length === 0) return [];
+      return expenses.map(exp => Math.round(exp * percentage));
+    };
+    
     // Format the result into the expected format for our components
     const projectionData: FinancialProjectionData = {
       netWorth: result.netWorth || [],
       income: result.income || [],
-      spouseIncome: Array(result.income?.length || 0).fill(0), // Initialize with zeros
+      spouseIncome: result.spouseIncome || Array(result.income?.length || 0).fill(0), // Initialize with zeros
       expenses: result.expenses || [],
       assets: result.assets || [],
       liabilities: result.liabilities || [],
       ages: result.ages || [],
       
-      // Default expense breakdown based on percentages if not provided by the calculator
-      housing: result.housing || (result.expenses ? result.expenses.map(exp => exp * 0.3) : []),
-      transportation: result.transportation || (result.expenses ? result.expenses.map(exp => exp * 0.15) : []),
-      food: result.food || (result.expenses ? result.expenses.map(exp => exp * 0.15) : []),
-      healthcare: result.healthcare || (result.expenses ? result.expenses.map(exp => exp * 0.1) : []),
+      // Base cost of living categories - default to percentage breakdowns if not provided
+      housing: result.housing || calculatePercentage(result.expenses, 0.25),
+      transportation: result.transportation || calculatePercentage(result.expenses, 0.12),
+      food: result.food || calculatePercentage(result.expenses, 0.14),
+      healthcare: result.healthcare || calculatePercentage(result.expenses, 0.08),
+      personalInsurance: result.personalInsurance || calculatePercentage(result.expenses, 0.05),
+      apparel: result.apparel || calculatePercentage(result.expenses, 0.04),
+      services: result.services || calculatePercentage(result.expenses, 0.07),
+      entertainment: result.entertainment || calculatePercentage(result.expenses, 0.05),
+      other: result.other || calculatePercentage(result.expenses, 0.05),
+      
+      // Milestone-driven categories - default to zeros if not provided
       education: result.education || Array(result.expenses?.length || 0).fill(0),
       debt: result.debt || Array(result.expenses?.length || 0).fill(0),
       childcare: result.childcare || Array(result.expenses?.length || 0).fill(0),
-      discretionary: result.discretionary || (result.expenses ? result.expenses.map(exp => exp * 0.3) : []),
+      discretionary: result.discretionary || calculatePercentage(result.expenses, 0.15),
       
       // Asset breakdown
       homeValue: result.homeValue || Array(result.assets?.length || 0).fill(0),
@@ -243,6 +273,11 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
     // In a real application, these should be based on user input or removed
     const baseExpense = 50000;
     
+    // Use the same helper function for the fallback
+    const calculatePercentage = (value: number, percentage: number): number => {
+      return Math.round(value * percentage);
+    };
+
     // Return empty results as fallback
     return {
       netWorth: [0],
@@ -252,14 +287,25 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       assets: [0],
       liabilities: [0],
       ages: [0],
-      housing: [baseExpense * 0.3],
-      transportation: [baseExpense * 0.15],
-      food: [baseExpense * 0.15],
-      healthcare: [baseExpense * 0.1],
+      
+      // Base cost of living categories
+      housing: [calculatePercentage(baseExpense, 0.25)],
+      transportation: [calculatePercentage(baseExpense, 0.12)],
+      food: [calculatePercentage(baseExpense, 0.14)],
+      healthcare: [calculatePercentage(baseExpense, 0.08)],
+      personalInsurance: [calculatePercentage(baseExpense, 0.05)],
+      apparel: [calculatePercentage(baseExpense, 0.04)],
+      services: [calculatePercentage(baseExpense, 0.07)],
+      entertainment: [calculatePercentage(baseExpense, 0.05)],
+      other: [calculatePercentage(baseExpense, 0.05)],
+      
+      // Milestone-driven categories
       education: [0],
       debt: [0],
-      childcare: [0],
-      discretionary: [baseExpense * 0.3],
+      childcare: [0], 
+      discretionary: [calculatePercentage(baseExpense, 0.15)],
+      
+      // Asset and liability breakdowns
       homeValue: [0],
       mortgage: [0],
       carValue: [0],
