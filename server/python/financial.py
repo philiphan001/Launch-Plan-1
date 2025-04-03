@@ -69,12 +69,37 @@ class FinancialCalculator:
         liabilities_yearly = [0] * (self.years_to_project + 1)
         cash_flow_yearly = [0] * (self.years_to_project + 1)
         
+        # Initialize asset breakdown arrays
+        car_value_yearly = [0] * (self.years_to_project + 1)
+        home_value_yearly = [0] * (self.years_to_project + 1)
+        
+        # Initialize liability breakdown arrays
+        car_loan_yearly = [0] * (self.years_to_project + 1)
+        mortgage_yearly = [0] * (self.years_to_project + 1)
+        student_loan_yearly = [0] * (self.years_to_project + 1)
+        
         # Set initial values
         for asset in self.assets:
-            assets_yearly[0] += int(asset.get_value(0))
+            asset_value = int(asset.get_value(0))
+            assets_yearly[0] += asset_value
+            
+            # Categorize assets by type
+            if isinstance(asset, DepreciableAsset) and asset.name.lower().find('car') >= 0:
+                car_value_yearly[0] += asset_value
+            elif asset.name.lower().find('home') >= 0 or asset.name.lower().find('house') >= 0:
+                home_value_yearly[0] += asset_value
             
         for liability in self.liabilities:
-            liabilities_yearly[0] += int(liability.get_balance(0))
+            liability_balance = int(liability.get_balance(0))
+            liabilities_yearly[0] += liability_balance
+            
+            # Categorize liabilities by type
+            if isinstance(liability, AutoLoan) or liability.name.lower().find('car') >= 0:
+                car_loan_yearly[0] += liability_balance
+            elif isinstance(liability, Mortgage) or liability.name.lower().find('mortgage') >= 0 or liability.name.lower().find('home') >= 0:
+                mortgage_yearly[0] += liability_balance
+            elif isinstance(liability, StudentLoan) or liability.name.lower().find('student') >= 0 or liability.name.lower().find('education') >= 0:
+                student_loan_yearly[0] += liability_balance
             
         net_worth[0] = assets_yearly[0] - liabilities_yearly[0]
         
@@ -97,23 +122,55 @@ class FinancialCalculator:
             
             # Assets and liabilities
             year_assets = 0
+            year_car_value = 0
+            year_home_value = 0
+            
             for asset in self.assets:
                 # Update asset values based on cash flow if applicable
                 if isinstance(asset, Investment) and cash_flow_yearly[year] > 0:
                     # Assume some of positive cash flow goes to investments
                     contribution_amount = int(cash_flow_yearly[year] * 0.2)  # 20% of positive cash flow
                     asset.add_contribution(contribution_amount, year)
-                year_assets += int(asset.get_value(year))
+                
+                asset_value = int(asset.get_value(year))
+                year_assets += asset_value
+                
+                # Categorize assets by type
+                if isinstance(asset, DepreciableAsset) and asset.name.lower().find('car') >= 0:
+                    year_car_value += asset_value
+                elif asset.name.lower().find('home') >= 0 or asset.name.lower().find('house') >= 0:
+                    year_home_value += asset_value
+            
             assets_yearly[year] = year_assets
+            car_value_yearly[year] = year_car_value
+            home_value_yearly[year] = year_home_value
             
             year_liabilities = 0
+            year_car_loan = 0
+            year_mortgage = 0
+            year_student_loan = 0
+            
             for liability in self.liabilities:
                 # Make payments from cash flow
                 if cash_flow_yearly[year] > 0:
                     payment = int(min(liability.get_payment(year), cash_flow_yearly[year]))
                     liability.make_payment(payment, year)
-                year_liabilities += int(liability.get_balance(year))
+                
+                liability_balance = int(liability.get_balance(year))
+                year_liabilities += liability_balance
+                
+                # Categorize liabilities by type
+                if isinstance(liability, AutoLoan) or liability.name.lower().find('car') >= 0:
+                    year_car_loan += liability_balance
+                elif isinstance(liability, Mortgage) or liability.name.lower().find('mortgage') >= 0 or liability.name.lower().find('home') >= 0:
+                    year_mortgage += liability_balance
+                elif isinstance(liability, StudentLoan) or liability.name.lower().find('student') >= 0 or liability.name.lower().find('education') >= 0:
+                    year_student_loan += liability_balance
+            
             liabilities_yearly[year] = year_liabilities
+            car_loan_yearly[year] = year_car_loan
+            mortgage_yearly[year] = year_mortgage
+            student_loan_yearly[year] = year_student_loan
             
             # Net worth
             net_worth[year] = assets_yearly[year] - liabilities_yearly[year]
@@ -163,9 +220,14 @@ class FinancialCalculator:
                     
                     for i in range(milestone_year, self.years_to_project + 1):
                         assets_yearly[i] += house_value
+                        home_value_yearly[i] += house_value
+                        
                         # Calculate remaining mortgage and convert to int
                         remaining_mortgage = int((house_value - down_payment) * max(0, 1 - (i - milestone_year) * 0.03))
-                        liabilities_yearly[i] += remaining_mortgage  # Simple mortgage calculation
+                        liabilities_yearly[i] += remaining_mortgage
+                        mortgage_yearly[i] += remaining_mortgage  # Add to mortgage category
+                        
+                        # Update net worth
                         net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
                 
                 elif milestone.get('type') == 'car':
@@ -179,12 +241,15 @@ class FinancialCalculator:
                         # Calculate car value with depreciation
                         depreciated_value = int(car_value * max(0.1, 0.85 ** years_owned))  # Minimum 10% of value
                         assets_yearly[i] += depreciated_value
+                        car_value_yearly[i] += depreciated_value  # Add to car value category
                         
                         # Car loan typically 5 years
                         if years_owned < 5:
                             # Calculate remaining car loan with payments and convert to int
-                            car_loan = int((car_value - down_payment) * (1 - years_owned / 5))
-                            liabilities_yearly[i] += car_loan
+                            car_loan_amount = int((car_value - down_payment) * (1 - years_owned / 5))
+                            liabilities_yearly[i] += car_loan_amount
+                            car_loan_yearly[i] += car_loan_amount  # Add to car loan category
+                        
                         # Update net worth
                         net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
                 
@@ -235,6 +300,16 @@ class FinancialCalculator:
             'assets': assets_yearly,
             'liabilities': liabilities_yearly,
             'cashFlow': cash_flow_yearly,
+            
+            # Asset breakdown
+            'homeValue': home_value_yearly,
+            'carValue': car_value_yearly,
+            
+            # Liability breakdown
+            'mortgage': mortgage_yearly,
+            'carLoan': car_loan_yearly,
+            'studentLoan': student_loan_yearly,
+            
             'milestones': self.milestones
         }
         
