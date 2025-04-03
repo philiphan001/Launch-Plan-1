@@ -284,8 +284,7 @@ const FinancialProjections = () => {
         const annualExpenses = monthlyExpenses * 12;
         
         // Make sure we're getting a reasonable result
-        console.log("Monthly expenses from location data:", monthlyExpenses);
-        console.log("Annual expenses from location data:", annualExpenses);
+
         
         // Use the calculated annual expenses, but ensure it's at least 50% of income
         // as a sanity check (people generally don't spend less than half their income)
@@ -542,7 +541,7 @@ const FinancialProjections = () => {
               hasChildren = true;
               // Set annual child expenses
               childrenExpenses = (milestone.childrenExpensePerYear || 0) * (milestone.childrenCount || 1);
-              console.log(`Children milestone: ${milestone.childrenCount} children, annual expenses $${childrenExpenses}`);
+
               break;
               
             case 'education':
@@ -987,13 +986,6 @@ const FinancialProjections = () => {
         // Call the Python calculator and get the results
         const result = await calculateFinancialProjection(pythonInput);
         console.log("Received projection data from Python calculator:", result);
-        
-        // Log expense categories for debugging
-        console.log("Housing expenses:", result.housing);
-        console.log("Transportation expenses:", result.transportation);
-        console.log("Food expenses:", result.food);
-        console.log("Healthcare expenses:", result.healthcare);
-        console.log("Discretionary expenses:", result.discretionary);
         
         // Update the projection data state
         setProjectionData(result);
@@ -1525,26 +1517,6 @@ const FinancialProjections = () => {
           </CardContent>
         </Card>
       )}
-      
-      {/* Debug display for expense data */}
-      <Card className="mb-6">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-medium mb-4">Debug Information (Expense Data)</h3>
-          <div className="text-sm">
-            <p className="mb-2">Raw expense data from Python calculator:</p>
-            <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
-              {JSON.stringify({
-                expenses: projectionData.expenses?.slice(0, 5),
-                housing: projectionData.housing?.slice(0, 5),
-                transportation: projectionData.transportation?.slice(0, 5),
-                food: projectionData.food?.slice(0, 5),
-                healthcare: projectionData.healthcare?.slice(0, 5),
-                discretionary: projectionData.discretionary?.slice(0, 5),
-              }, null, 2)}
-            </pre>
-          </div>
-        </CardContent>
-      </Card>
       
       {/* Detailed Cash Flow Table with collapsible container */}
       <CashFlowTable 
