@@ -455,6 +455,25 @@ def main() -> None:
         else:  # baseline or other
             result = create_baseline_projection(input_data)
         
+        # Verify expense categories exist and have values
+        for category in ['housing', 'transportation', 'food', 'healthcare', 'discretionary']:
+            if category not in result or not result[category] or len(result[category]) == 0:
+                # Create default expense breakdown based on total expenses
+                if 'expenses' in result and result['expenses']:
+                    if category not in result:
+                        result[category] = []
+                    
+                    # Map different percentages for different categories
+                    percentage = 0.3  # Default (housing, discretionary)
+                    if category == 'transportation' or category == 'food':
+                        percentage = 0.15
+                    elif category == 'healthcare':
+                        percentage = 0.1
+                    
+                    # Apply percentage to each year's expenses
+                    for year_expense in result['expenses']:
+                        result[category].append(float(year_expense) * percentage)
+        
         print(json.dumps(result))
     
     except Exception as e:

@@ -1525,20 +1525,40 @@ const FinancialProjections = () => {
         </Card>
       )}
       
+      {/* Debug display for expense data */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <h3 className="text-lg font-medium mb-4">Debug Information (Expense Data)</h3>
+          <div className="text-sm">
+            <p className="mb-2">Raw expense data from Python calculator:</p>
+            <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
+              {JSON.stringify({
+                expenses: projectionData.expenses?.slice(0, 5),
+                housing: projectionData.housing?.slice(0, 5),
+                transportation: projectionData.transportation?.slice(0, 5),
+                food: projectionData.food?.slice(0, 5),
+                healthcare: projectionData.healthcare?.slice(0, 5),
+                discretionary: projectionData.discretionary?.slice(0, 5),
+              }, null, 2)}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
+      
       {/* Detailed Cash Flow Table with collapsible container */}
       <CashFlowTable 
         ages={projectionData.ages}
         income={projectionData.income}
         spouseIncome={projectionData.spouseIncome}
         expenses={projectionData.expenses}
-        housingExpenses={projectionData.housingExpenses}
-        transportationExpenses={projectionData.transportationExpenses}
-        foodExpenses={projectionData.foodExpenses}
-        healthcareExpenses={projectionData.healthcareExpenses}
-        educationExpenses={projectionData.educationExpenses}
-        childcareExpenses={projectionData.childcareExpenses}
-        debtExpenses={projectionData.debtExpenses}
-        discretionaryExpenses={projectionData.discretionaryExpenses}
+        housingExpenses={projectionData.housing}
+        transportationExpenses={projectionData.transportation}
+        foodExpenses={projectionData.food}
+        healthcareExpenses={projectionData.healthcare}
+        educationExpenses={projectionData.education}
+        childcareExpenses={projectionData.childcare}
+        debtExpenses={projectionData.debt}
+        discretionaryExpenses={projectionData.discretionary}
         assets={projectionData.assets}
         liabilities={projectionData.liabilities}
         netWorth={projectionData.netWorth}
