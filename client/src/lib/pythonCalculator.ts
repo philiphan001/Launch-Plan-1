@@ -88,11 +88,11 @@ export const generatePythonCalculatorInput = (
   years: number,
   startingSavings: number,
   income: number,
-  expenses: number,
   incomeGrowth: number,
   studentLoanDebt: number,
   milestones: Milestone[] = [],
-  costOfLivingFactor: number = 1.0
+  costOfLivingFactor: number = 1.0,
+  locationCostData: any = null
 ): CalculatorInputData => {
   // Sort milestones by yearsAway 
   const sortedMilestones = milestones ? [...milestones].sort((a, b) => {
@@ -116,6 +116,114 @@ export const generatePythonCalculatorInput = (
       ...rest
     };
   });
+  
+  // Calculate total annual expenses if location data is available
+  const totalAnnualExpenses = locationCostData ? 
+    ((locationCostData.housing || 0) +
+     (locationCostData.transportation || 0) +
+     (locationCostData.food || 0) +
+     (locationCostData.healthcare || 0) +
+     (locationCostData.personal_insurance || 0) +
+     (locationCostData.apparel || 0) +
+     (locationCostData.services || 0) +
+     (locationCostData.entertainment || 0) +
+     (locationCostData.other || 0)) * 12 : 0;
+  
+  // Create expenditures array based on location data
+  const expenditures = [];
+  
+  // Only add location-based expenditures if we have the data
+  if (locationCostData) {
+    // Housing expenses (monthly → annual)
+    if (locationCostData.housing) {
+      expenditures.push({
+        type: "housing",
+        name: "Housing",
+        annualAmount: locationCostData.housing * 12,
+        inflationRate: 0.03
+      });
+    }
+    
+    // Transportation expenses
+    if (locationCostData.transportation) {
+      expenditures.push({
+        type: "transportation", 
+        name: "Transportation",
+        annualAmount: locationCostData.transportation * 12,
+        inflationRate: 0.02
+      });
+    }
+    
+    // Food expenses
+    if (locationCostData.food) {
+      expenditures.push({
+        type: "living",
+        name: "Food",
+        annualAmount: locationCostData.food * 12,
+        inflationRate: 0.03
+      });
+    }
+    
+    // Healthcare expenses
+    if (locationCostData.healthcare) {
+      expenditures.push({
+        type: "living",
+        name: "Healthcare",
+        annualAmount: locationCostData.healthcare * 12,
+        inflationRate: 0.04
+      });
+    }
+    
+    // Personal insurance expenses
+    if (locationCostData.personal_insurance) {
+      expenditures.push({
+        type: "living",
+        name: "Personal Insurance",
+        annualAmount: locationCostData.personal_insurance * 12,
+        inflationRate: 0.03
+      });
+    }
+    
+    // Apparel expenses
+    if (locationCostData.apparel) {
+      expenditures.push({
+        type: "living",
+        name: "Apparel",
+        annualAmount: locationCostData.apparel * 12,
+        inflationRate: 0.02
+      });
+    }
+    
+    // Services expenses
+    if (locationCostData.services) {
+      expenditures.push({
+        type: "living",
+        name: "Services",
+        annualAmount: locationCostData.services * 12,
+        inflationRate: 0.03
+      });
+    }
+    
+    // Entertainment expenses
+    if (locationCostData.entertainment) {
+      expenditures.push({
+        type: "living",
+        name: "Entertainment",
+        annualAmount: locationCostData.entertainment * 12,
+        inflationRate: 0.02
+      });
+    }
+    
+    // Other expenses
+    if (locationCostData.other) {
+      expenditures.push({
+        type: "living",
+        name: "Other",
+        annualAmount: locationCostData.other * 12,
+        inflationRate: 0.02
+      });
+    }
+  }
   
   // Create the input object for the Python calculator
   return {
@@ -155,39 +263,8 @@ export const generatePythonCalculatorInput = (
       }
     ],
     
-    // Basic expenses
-    expenditures: [
-      {
-        type: "housing",
-        name: "Housing",
-        annualAmount: expenses * 0.3, // 30% of expenses for housing
-        inflationRate: 0.03
-      },
-      {
-        type: "transportation",
-        name: "Transportation",
-        annualAmount: expenses * 0.15, // 15% of expenses for transportation 
-        inflationRate: 0.02
-      },
-      {
-        type: "living",
-        name: "Food",
-        annualAmount: expenses * 0.15, // 15% of expenses for food
-        inflationRate: 0.03
-      },
-      {
-        type: "living",
-        name: "Healthcare",
-        annualAmount: expenses * 0.1, // 10% of expenses for healthcare
-        inflationRate: 0.04
-      },
-      {
-        type: "living",
-        name: "Discretionary",
-        annualAmount: expenses * 0.3, // 30% of expenses for discretionary
-        inflationRate: 0.02
-      }
-    ],
+    // Use the location-based expenditures
+    expenditures,
     
     // Add milestones for the calculation
     milestones: formattedMilestones

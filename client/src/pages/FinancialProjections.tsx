@@ -969,16 +969,17 @@ const FinancialProjections = () => {
           educationCost: m.educationCost
         })) || [];
         
+        // Pass location data directly to the Python calculator
         const pythonInput = generatePythonCalculatorInput(
           age,
           years,
           startingSavings,
           income,
-          expenses,
           incomeGrowth,
           studentLoanDebt,
           formattedMilestones,
-          costOfLivingFactor
+          costOfLivingFactor,
+          locationCostData // Pass the location data directly
         );
         
         console.log("Sending data to Python calculator:", pythonInput);
@@ -1007,7 +1008,7 @@ const FinancialProjections = () => {
     // Execute the async function
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
-      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years]); // Include assumptions in dependency array
+      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData]); // Include location data in dependency array
   
   // Generate financial advice based on current financial state
   useEffect(() => {
