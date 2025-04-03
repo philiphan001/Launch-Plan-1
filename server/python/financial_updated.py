@@ -447,10 +447,10 @@ class FinancialCalculator:
                                 
                                 cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
-                elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
-                    # Process home purchase milestone implementation...
-                    # This section would be similar to the original code
-                    pass
+                    elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
+                        # Process home purchase milestone implementation...
+                        # This section would be similar to the original code
+                        pass
         
         # Compile results
         self.results = {

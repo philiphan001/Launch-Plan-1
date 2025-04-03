@@ -457,24 +457,36 @@ def main() -> None:
         else:  # baseline or other
             result = create_baseline_projection(input_data)
         
+        # Define all expense categories and their default percentages
+        expense_categories = {
+            # Base cost of living categories
+            'housing': 0.30,
+            'transportation': 0.15,
+            'food': 0.15,
+            'healthcare': 0.10,
+            'personal_insurance': 0.05,
+            'apparel': 0.04,
+            'services': 0.07,
+            'entertainment': 0.05,
+            'other': 0.05,
+            # Milestone-driven categories
+            'education': 0.0,  # Default to 0 as these are milestone-driven
+            'childcare': 0.0,  # Default to 0 as these are milestone-driven
+            'debt': 0.0,       # Default to 0 as these are milestone-driven
+            'discretionary': 0.04
+        }
+        
         # Verify expense categories exist and have values
-        for category in ['housing', 'transportation', 'food', 'healthcare', 'discretionary']:
+        for category, default_percentage in expense_categories.items():
             if category not in result or not result[category] or len(result[category]) == 0:
                 # Create default expense breakdown based on total expenses
                 if 'expenses' in result and result['expenses']:
                     if category not in result:
                         result[category] = []
                     
-                    # Map different percentages for different categories
-                    percentage = 0.3  # Default (housing, discretionary)
-                    if category == 'transportation' or category == 'food':
-                        percentage = 0.15
-                    elif category == 'healthcare':
-                        percentage = 0.1
-                    
                     # Apply percentage to each year's expenses
                     for year_expense in result['expenses']:
-                        result[category].append(float(year_expense) * percentage)
+                        result[category].append(float(year_expense) * default_percentage)
         
         print(json.dumps(result))
     
