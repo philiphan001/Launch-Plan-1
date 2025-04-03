@@ -16,6 +16,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import LaunchPlanAssumptionsCard from "@/components/assumptions/LaunchPlanAssumptionsCard";
 
 // Hard-coding user ID for demo purposes
 const DEMO_USER_ID = 1;
@@ -246,6 +247,9 @@ const AssumptionsPage = () => {
       </p>
 
       <div className="grid grid-cols-1 gap-6">
+        {/* Our new Launch Plan Assumptions Card - imported from a module we created */}
+        <LaunchPlanAssumptionsCard />
+        
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center justify-between">
