@@ -476,17 +476,34 @@ def main() -> None:
             'discretionary': 0.04
         }
         
+        # For debugging
+        print(f"Categories before processing: {list(result.keys())}")
+        
+        # First, explicitly convert to camelCase for frontend compatibility
+        if 'personal_insurance' in result:
+            result['personalInsurance'] = result.pop('personal_insurance')
+        
         # Verify expense categories exist and have values
         for category, default_percentage in expense_categories.items():
-            if category not in result or not result[category] or len(result[category]) == 0:
+            # Convert snake_case to camelCase for frontend compatibility
+            frontend_key = category
+            if category == 'personal_insurance':
+                frontend_key = 'personalInsurance'
+            
+            # Check if the category needs to be created or updated
+            if frontend_key not in result or not result[frontend_key] or len(result[frontend_key]) == 0:
                 # Create default expense breakdown based on total expenses
                 if 'expenses' in result and result['expenses']:
-                    if category not in result:
-                        result[category] = []
+                    if frontend_key not in result:
+                        result[frontend_key] = []
                     
                     # Apply percentage to each year's expenses
                     for year_expense in result['expenses']:
-                        result[category].append(float(year_expense) * default_percentage)
+                        expense_value = float(year_expense) * default_percentage
+                        result[frontend_key].append(expense_value)
+                        
+                    # For debugging
+                    print(f"Added {frontend_key} with values: {result[frontend_key]}")
         
         print(json.dumps(result))
     

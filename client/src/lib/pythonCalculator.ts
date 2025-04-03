@@ -227,6 +227,13 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       return expenses.map(exp => Math.round(exp * percentage));
     };
     
+    // For debugging
+    console.log("Python calculator returned these expense categories:", 
+                Object.keys(result).filter(key => 
+                  ['housing', 'transportation', 'food', 'healthcare', 'personalInsurance',
+                   'apparel', 'services', 'entertainment', 'other', 'education', 
+                   'childcare', 'debt', 'discretionary'].includes(key)));
+
     // Format the result into the expected format for our components
     const projectionData: FinancialProjectionData = {
       netWorth: result.netWorth || [],
@@ -237,22 +244,22 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       liabilities: result.liabilities || [],
       ages: result.ages || [],
       
-      // Base cost of living categories - default to percentage breakdowns if not provided
-      housing: result.housing || calculatePercentage(result.expenses, 0.25),
-      transportation: result.transportation || calculatePercentage(result.expenses, 0.12),
-      food: result.food || calculatePercentage(result.expenses, 0.14),
-      healthcare: result.healthcare || calculatePercentage(result.expenses, 0.08),
+      // Base cost of living categories - use Python calculator results with fallbacks
+      housing: result.housing || calculatePercentage(result.expenses, 0.30),
+      transportation: result.transportation || calculatePercentage(result.expenses, 0.15),
+      food: result.food || calculatePercentage(result.expenses, 0.15),
+      healthcare: result.healthcare || calculatePercentage(result.expenses, 0.10),
       personalInsurance: result.personalInsurance || calculatePercentage(result.expenses, 0.05),
       apparel: result.apparel || calculatePercentage(result.expenses, 0.04),
       services: result.services || calculatePercentage(result.expenses, 0.07),
       entertainment: result.entertainment || calculatePercentage(result.expenses, 0.05),
       other: result.other || calculatePercentage(result.expenses, 0.05),
       
-      // Milestone-driven categories - default to zeros if not provided
+      // Milestone-driven categories - use Python calculator results with fallbacks
       education: result.education || Array(result.expenses?.length || 0).fill(0),
       debt: result.debt || Array(result.expenses?.length || 0).fill(0),
       childcare: result.childcare || Array(result.expenses?.length || 0).fill(0),
-      discretionary: result.discretionary || calculatePercentage(result.expenses, 0.15),
+      discretionary: result.discretionary || calculatePercentage(result.expenses, 0.04),
       
       // Asset breakdown
       homeValue: result.homeValue || Array(result.assets?.length || 0).fill(0),
