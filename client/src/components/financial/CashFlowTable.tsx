@@ -53,14 +53,22 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
   
   // Helper function to safely format monetary values
   const formatCurrency = (array: number[] | null | undefined, index: number): string => {
-    if (!array || !array[index]) return "$0";
-    return `$${array[index].toLocaleString()}`;
+    if (!array || index >= array.length || array[index] === undefined || array[index] === null) {
+      return "$0";
+    }
+    // Force to a number and handle decimal values
+    const value = Number(array[index]);
+    if (isNaN(value)) return "$0";
+    return `$${value.toLocaleString()}`;
   };
   
   // Helper function to safely get a value with a default
   const getValue = (array: number[] | null | undefined, index: number): number => {
-    if (!array || !array[index]) return 0;
-    return array[index];
+    if (!array || index >= array.length || array[index] === undefined || array[index] === null) {
+      return 0;
+    }
+    const value = Number(array[index]);
+    return isNaN(value) ? 0 : value;
   };
 
   return (

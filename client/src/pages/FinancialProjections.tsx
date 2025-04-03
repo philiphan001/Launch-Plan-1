@@ -987,6 +987,13 @@ const FinancialProjections = () => {
         const result = await calculateFinancialProjection(pythonInput);
         console.log("Received projection data from Python calculator:", result);
         
+        // Log expense categories for debugging
+        console.log("Housing expenses:", result.housing);
+        console.log("Transportation expenses:", result.transportation);
+        console.log("Food expenses:", result.food);
+        console.log("Healthcare expenses:", result.healthcare);
+        console.log("Discretionary expenses:", result.discretionary);
+        
         // Update the projection data state
         setProjectionData(result);
       } catch (error) {
