@@ -223,7 +223,10 @@ const FinancialProjections = () => {
       const response = await fetch(`/api/milestones/user/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch milestones');
       return response.json() as Promise<Milestone[]>;
-    }
+    },
+    // Force a refetch when we return to this component or when there's a focus change
+    // This ensures the data is always up-to-date after edits
+    refetchOnWindowFocus: true
   });
   
   // Update form values based on user profile and saved calculations
@@ -1674,18 +1677,18 @@ const FinancialProjections = () => {
       <MilestonesSection 
         userId={userId} 
         onMilestoneChange={() => {
-          console.log("Milestone changed, forcing a refresh...");
+          console.log("Milestone changed, recalculating projections...");
           
-          // Force a re-fetch of milestone data
-          queryClient.invalidateQueries({ queryKey: ['/api/milestones/user', userId] });
+          // Force a re-fetch of milestone data with a higher priority
+          queryClient.invalidateQueries({ 
+            queryKey: ['/api/milestones/user', userId],
+            // This will cause the query to refetch immediately and update the UI
+            refetchType: 'active',
+          });
           
-          // Force a re-render by updating a random input value slightly and then back
-          // This is a workaround to ensure React notices the dependency changes
-          const originalIncome = income;
-          setIncome(originalIncome + 1);
-          setTimeout(() => {
-            setIncome(originalIncome);
-          }, 10);
+          // No need for the workaround with the income change - the refetchOnWindowFocus
+          // setting we added previously, combined with the invalidation above, ensures
+          // the data will refresh properly
         }} 
       />
     </div>

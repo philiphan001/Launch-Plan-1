@@ -150,10 +150,9 @@ export const generatePythonCalculatorInput = (
       // Check if there are any car purchase milestones
       const hasCarMilestones = milestones.some(m => 
         m.type === 'automobile' || 
+        m.type === 'car' || 
         (m.type === 'purchase' && (
-          (m.title?.toLowerCase().includes('car') || m.title?.toLowerCase().includes('vehicle')) ||
-          // Check name if it exists as a fallback for legacy data structure
-          (typeof m.name === 'string' && (m.name.toLowerCase().includes('car') || m.name.toLowerCase().includes('vehicle')))
+          (m.title?.toLowerCase().includes('car') || m.title?.toLowerCase().includes('vehicle'))
         ))
       );
       
