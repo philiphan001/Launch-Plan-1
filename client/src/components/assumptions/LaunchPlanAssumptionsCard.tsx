@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Info, Save } from "lucide-react";
+import { Loader2, Info, Save, RefreshCw } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface LaunchPlanAssumption {
   id: string;
@@ -30,6 +31,34 @@ interface LaunchPlanAssumption {
   description: string;
   category: string;
   isEnabled: boolean;
+  isLocationBased?: boolean; // Flag to indicate if this assumption is location-dependent
+}
+
+interface LocationCostOfLiving {
+  id: number;
+  zip_code: string;
+  city: string;
+  state: string;
+  housing: number;
+  transportation: number;
+  food: number;
+  healthcare: number;
+  personal_insurance: number;
+  apparel: number;
+  services: number;
+  entertainment: number;
+  other: number;
+  monthly_expense: number;
+  income_adjustment_factor: number;
+}
+
+interface User {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  zipCode: string;
+  [key: string]: any;
 }
 
 const LaunchPlanAssumptionsCard = () => {
@@ -39,15 +68,39 @@ const LaunchPlanAssumptionsCard = () => {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("housing");
   const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const queryClient = useQueryClient();
+  const [previousZipCode, setPreviousZipCode] = useState<string | null>(null);
+
+  // Fetch user data to get the zipcode
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/users', 1], // Using ID 1 for demo purposes
+    queryFn: async () => {
+      const response = await fetch('/api/users/1');
+      if (!response.ok) throw new Error('Failed to fetch user data');
+      return response.json() as Promise<User>;
+    }
+  });
+
+  // Fetch location cost of living data
+  const { data: locationData, isLoading: isLoadingLocation } = useQuery({
+    queryKey: ['/api/location-cost-of-living/zip', userData?.zipCode],
+    queryFn: async () => {
+      if (!userData?.zipCode) return null;
+      const response = await fetch(`/api/location-cost-of-living/zip/${userData.zipCode}`);
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error('Failed to fetch location data');
+      return response.json() as Promise<LocationCostOfLiving>;
+    },
+    enabled: !!userData?.zipCode
+  });
 
   useEffect(() => {
-    // In a real app, this would be an API call to fetch the latest values from the server
-    // For now, we'll use hard-coded values that match our Python configuration
+    // Load assumptions with hard-coded base values that match Python configuration
     const loadAssumptions = () => {
       setLoading(true);
       try {
         // These values should match those in server/python/launch_plan_assumptions.py
-        const assumptionsData: LaunchPlanAssumption[] = [
+        const baseAssumptionsData: LaunchPlanAssumption[] = [
           {
             id: "home-rent-reduction",
             name: "HOME_PURCHASE_RENT_REDUCTION",
@@ -132,79 +185,85 @@ const LaunchPlanAssumptionsCard = () => {
             category: "children",
             isEnabled: true
           },
+          // For expenses, we'll now use dollar values from location data instead of percentages
           {
-            id: "housing-allocation",
+            id: "housing-expense",
             name: "DEFAULT_EXPENSE_ALLOCATIONS.housing",
-            displayName: "Housing Expense Allocation",
-            value: 0.3,
-            defaultValue: 0.3,
-            minValue: 0.1,
-            maxValue: 0.5,
-            stepValue: 0.01,
-            unit: "%",
-            description: "Percentage of income allocated to housing",
+            displayName: "Monthly Housing Expense",
+            value: 2000, // Will be updated with location data
+            defaultValue: 2000, // Will be updated with location data
+            minValue: 500,
+            maxValue: 5000,
+            stepValue: 50,
+            unit: "$",
+            description: "Monthly expense for housing based on your location",
             category: "expenses",
-            isEnabled: true
+            isEnabled: true,
+            isLocationBased: true
           },
           {
-            id: "transportation-allocation",
+            id: "transportation-expense",
             name: "DEFAULT_EXPENSE_ALLOCATIONS.transportation",
-            displayName: "Transportation Expense Allocation",
-            value: 0.15,
-            defaultValue: 0.15,
-            minValue: 0.05,
-            maxValue: 0.3,
-            stepValue: 0.01,
-            unit: "%",
-            description: "Percentage of income allocated to transportation",
+            displayName: "Monthly Transportation Expense",
+            value: 600, // Will be updated with location data
+            defaultValue: 600, // Will be updated with location data
+            minValue: 100,
+            maxValue: 2000,
+            stepValue: 50,
+            unit: "$",
+            description: "Monthly expense for transportation based on your location",
             category: "expenses",
-            isEnabled: true
+            isEnabled: true,
+            isLocationBased: true
           },
           {
-            id: "food-allocation",
+            id: "food-expense",
             name: "DEFAULT_EXPENSE_ALLOCATIONS.food",
-            displayName: "Food Expense Allocation",
-            value: 0.15,
-            defaultValue: 0.15,
-            minValue: 0.05,
-            maxValue: 0.3,
-            stepValue: 0.01,
-            unit: "%",
-            description: "Percentage of income allocated to food",
+            displayName: "Monthly Food Expense",
+            value: 600, // Will be updated with location data
+            defaultValue: 600, // Will be updated with location data
+            minValue: 200,
+            maxValue: 2000,
+            stepValue: 50,
+            unit: "$",
+            description: "Monthly expense for food based on your location",
             category: "expenses",
-            isEnabled: true
+            isEnabled: true,
+            isLocationBased: true
           },
           {
-            id: "healthcare-allocation",
+            id: "healthcare-expense",
             name: "DEFAULT_EXPENSE_ALLOCATIONS.healthcare",
-            displayName: "Healthcare Expense Allocation",
-            value: 0.1,
-            defaultValue: 0.1,
-            minValue: 0.05,
-            maxValue: 0.2,
-            stepValue: 0.01,
-            unit: "%",
-            description: "Percentage of income allocated to healthcare",
+            displayName: "Monthly Healthcare Expense",
+            value: 400, // Will be updated with location data
+            defaultValue: 400, // Will be updated with location data
+            minValue: 100,
+            maxValue: 1500,
+            stepValue: 50,
+            unit: "$",
+            description: "Monthly expense for healthcare based on your location",
             category: "expenses",
-            isEnabled: true
+            isEnabled: true,
+            isLocationBased: true
           },
           {
-            id: "discretionary-allocation",
+            id: "discretionary-expense",
             name: "DEFAULT_EXPENSE_ALLOCATIONS.discretionary",
-            displayName: "Discretionary Expense Allocation",
-            value: 0.3,
-            defaultValue: 0.3,
-            minValue: 0.1,
-            maxValue: 0.5,
-            stepValue: 0.01,
-            unit: "%",
-            description: "Percentage of income allocated to discretionary spending",
+            displayName: "Monthly Discretionary Expense",
+            value: 1000, // Will be updated with location data
+            defaultValue: 1000, // Will be updated with location data
+            minValue: 200,
+            maxValue: 3000,
+            stepValue: 50,
+            unit: "$",
+            description: "Monthly expense for discretionary spending based on your location",
             category: "expenses",
-            isEnabled: true
+            isEnabled: true,
+            isLocationBased: true
           }
         ];
 
-        setAssumptions(assumptionsData);
+        setAssumptions(baseAssumptionsData);
         setLoading(false);
       } catch (err) {
         setError("Failed to load launch plan assumptions");
@@ -214,6 +273,64 @@ const LaunchPlanAssumptionsCard = () => {
 
     loadAssumptions();
   }, []);
+
+  // Update the expense assumptions when location data changes
+  useEffect(() => {
+    if (!locationData || !userData?.zipCode) return;
+
+    // Check if zip code has changed
+    const zipCodeChanged = previousZipCode !== null && previousZipCode !== userData.zipCode;
+    
+    // Update previous zip code
+    if (previousZipCode !== userData.zipCode) {
+      setPreviousZipCode(userData.zipCode);
+    }
+
+    // Get expense defaults from location data
+    const expenseDefaults = {
+      housing: locationData.housing || 2000,
+      transportation: locationData.transportation || 600,
+      food: locationData.food || 600,
+      healthcare: locationData.healthcare || 400,
+      discretionary: (locationData.entertainment + locationData.apparel + locationData.services + locationData.other) || 1000
+    };
+
+    // Update expense assumptions with location data
+    setAssumptions(prevAssumptions => 
+      prevAssumptions.map(assumption => {
+        // Only update location-based assumptions
+        if (!assumption.isLocationBased) return assumption;
+
+        // Get the expense category from the assumption name
+        const category = assumption.name.split('.')[1]; // e.g., "DEFAULT_EXPENSE_ALLOCATIONS.housing" -> "housing"
+        const defaultValue = expenseDefaults[category] || assumption.defaultValue;
+        
+        // If zip code changed, reset the value to the new default
+        const value = zipCodeChanged ? defaultValue : assumption.value;
+
+        // Update min and max values based on the default value
+        const minValue = Math.max(defaultValue * 0.5, 100);
+        const maxValue = defaultValue * 2.5;
+
+        return {
+          ...assumption,
+          defaultValue,
+          value,
+          minValue,
+          maxValue,
+        };
+      })
+    );
+
+    // If zip code changed, set unsaved changes to true and show a toast
+    if (zipCodeChanged) {
+      setUnsavedChanges(true);
+      toast({
+        title: "Location Updated",
+        description: `Expense defaults have been updated based on your new location: ${locationData.city}, ${locationData.state}`,
+      });
+    }
+  }, [locationData, userData?.zipCode, previousZipCode, toast]);
 
   // Format value for display with appropriate unit
   const formatValue = (value: number, unit: string) => {
@@ -279,14 +396,21 @@ const LaunchPlanAssumptionsCard = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Launch Plan Configuration</CardTitle>
+        <CardTitle className="flex justify-between items-center">
+          <span>Launch Plan Configuration</span>
+          {locationData && (
+            <Badge className="ml-2" variant="outline">
+              {locationData.city}, {locationData.state} ({userData?.zipCode})
+            </Badge>
+          )}
+        </CardTitle>
         <CardDescription>
           These are the core parameters used in financial calculations. Adjusting these values will change 
           how milestones affect your financial projections.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {loading || isLoadingLocation ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
@@ -309,81 +433,95 @@ const LaunchPlanAssumptionsCard = () => {
                 <TabsContent key={category} value={category} className="mt-0">
                   <div className="space-y-6">
                     {filteredAssumptions.length > 0 ? (
-                      filteredAssumptions.map((assumption) => (
-                        <div key={assumption.id} className="border-b pb-4 last:border-0">
-                          <div className="flex items-center justify-between mb-2">
+                      <>
+                        {category === "expenses" && (
+                          <div className="bg-muted rounded-lg p-3 mb-4">
                             <div className="flex items-center">
-                              <h3 className="text-lg font-medium">{assumption.displayName}</h3>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Info className="w-4 h-4 ml-2 text-gray-400" />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="max-w-xs">{assumption.description}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                            <div className="flex items-center">
-                              <Label htmlFor={`enable-${assumption.id}`} className="mr-2">
-                                {assumption.isEnabled ? "Enabled" : "Disabled"}
-                              </Label>
-                              <Switch
-                                id={`enable-${assumption.id}`}
-                                checked={assumption.isEnabled}
-                                onCheckedChange={() => toggleAssumptionEnabled(assumption.id)}
-                              />
+                              <RefreshCw className="h-4 w-4 mr-2 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                Expense defaults are based on your location ({locationData?.city || "unknown"}).
+                                Changing your profile location will reset these values.
+                              </p>
                             </div>
                           </div>
-                          <p className="text-sm text-gray-500 mb-4">{assumption.description}</p>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
-                            <div className="md:col-span-4">
-                              <Slider
-                                value={[assumption.value]}
-                                min={assumption.minValue}
-                                max={assumption.maxValue}
-                                step={assumption.stepValue}
-                                onValueChange={(value) => updateAssumptionValue(assumption.id, value[0])}
-                                disabled={!assumption.isEnabled}
-                                className="mb-2"
-                              />
-                              <div className="flex justify-between text-xs text-gray-500">
-                                <span>{formatValue(assumption.minValue, assumption.unit)}</span>
-                                <span>Default: {formatValue(assumption.defaultValue, assumption.unit)}</span>
-                                <span>{formatValue(assumption.maxValue, assumption.unit)}</span>
+                        )}
+                        
+                        {filteredAssumptions.map((assumption) => (
+                          <div key={assumption.id} className="border-b pb-4 last:border-0">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center">
+                                <h3 className="text-lg font-medium">{assumption.displayName}</h3>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="w-4 h-4 ml-2 text-gray-400" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="max-w-xs">{assumption.description}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                              <div className="flex items-center">
+                                <Label htmlFor={`enable-${assumption.id}`} className="mr-2">
+                                  {assumption.isEnabled ? "Enabled" : "Disabled"}
+                                </Label>
+                                <Switch
+                                  id={`enable-${assumption.id}`}
+                                  checked={assumption.isEnabled}
+                                  onCheckedChange={() => toggleAssumptionEnabled(assumption.id)}
+                                />
                               </div>
                             </div>
-                            <div className="md:col-span-2">
-                              <div className="flex items-center">
-                                <Input
-                                  type="number"
-                                  value={assumption.value}
-                                  onChange={(e) => updateAssumptionValue(
-                                    assumption.id,
-                                    Math.min(
-                                      Math.max(
-                                        Number(e.target.value), 
-                                        assumption.minValue
-                                      ), 
-                                      assumption.maxValue
-                                    )
-                                  )}
+                            <p className="text-sm text-gray-500 mb-4">{assumption.description}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+                              <div className="md:col-span-4">
+                                <Slider
+                                  value={[assumption.value]}
                                   min={assumption.minValue}
                                   max={assumption.maxValue}
                                   step={assumption.stepValue}
+                                  onValueChange={(value) => updateAssumptionValue(assumption.id, value[0])}
                                   disabled={!assumption.isEnabled}
-                                  className="w-24"
+                                  className="mb-2"
                                 />
-                                <span className="ml-2 text-gray-600">
-                                  {assumption.unit === "%" ? "%" : assumption.unit}
-                                </span>
+                                <div className="flex justify-between text-xs text-gray-500">
+                                  <span>{formatValue(assumption.minValue, assumption.unit)}</span>
+                                  <span>Default: {formatValue(assumption.defaultValue, assumption.unit)}</span>
+                                  <span>{formatValue(assumption.maxValue, assumption.unit)}</span>
+                                </div>
+                              </div>
+                              <div className="md:col-span-2">
+                                <div className="flex items-center">
+                                  <Input
+                                    type="number"
+                                    value={assumption.value}
+                                    onChange={(e) => updateAssumptionValue(
+                                      assumption.id,
+                                      Math.min(
+                                        Math.max(
+                                          Number(e.target.value), 
+                                          assumption.minValue
+                                        ), 
+                                        assumption.maxValue
+                                      )
+                                    )}
+                                    min={assumption.minValue}
+                                    max={assumption.maxValue}
+                                    step={assumption.stepValue}
+                                    disabled={!assumption.isEnabled}
+                                    className="w-24"
+                                  />
+                                  <span className="ml-2 text-gray-600">
+                                    {assumption.unit}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                      </>
                     ) : (
                       <p className="text-gray-500 italic">No assumptions configured for this category yet.</p>
                     )}
