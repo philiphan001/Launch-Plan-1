@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financial Calculator Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-section {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #results {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Financial Calculator Test</h1>
+  
+  <form id="calculator-form">
+    <div class="form-section">
+      <h2>Basic Information</h2>
+      <div class="form-group">
+        <label for="startAge">Start Age</label>
+        <input type="number" id="startAge" value="25" min="0" max="100">
+      </div>
+      <div class="form-group">
+        <label for="yearsToProject">Years to Project</label>
+        <input type="number" id="yearsToProject" value="10" min="1" max="75">
+      </div>
+      <div class="form-group">
+        <label for="pathType">Path Type</label>
+        <select id="pathType">
+          <option value="baseline">Baseline</option>
+          <option value="education">Education</option>
+          <option value="job">Job</option>
+          <option value="military">Military</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <h2>Assets</h2>
+      <div id="assets-container">
+        <div class="asset-item">
+          <div class="form-group">
+            <label>Type</label>
+            <select class="asset-type">
+              <option value="investment">Investment</option>
+              <option value="cash">Cash</option>
+              <option value="property">Property</option>
+              <option value="vehicle">Vehicle</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="asset-name" value="Savings Account">
+          </div>
+          <div class="form-group">
+            <label>Initial Value</label>
+            <input type="number" class="asset-value" value="10000">
+          </div>
+          <div class="form-group">
+            <label>Growth Rate (%)</label>
+            <input type="number" class="asset-growth" value="2" step="0.1" min="-100" max="100">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <h2>Liabilities</h2>
+      <div id="liabilities-container">
+        <div class="liability-item">
+          <div class="form-group">
+            <label>Type</label>
+            <select class="liability-type">
+              <option value="loan">Loan</option>
+              <option value="student-loan">Student Loan</option>
+              <option value="mortgage">Mortgage</option>
+              <option value="credit-card">Credit Card</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="liability-name" value="Student Loan">
+          </div>
+          <div class="form-group">
+            <label>Initial Balance</label>
+            <input type="number" class="liability-balance" value="20000">
+          </div>
+          <div class="form-group">
+            <label>Interest Rate (%)</label>
+            <input type="number" class="liability-interest" value="5" step="0.1" min="0" max="100">
+          </div>
+          <div class="form-group">
+            <label>Term (Years)</label>
+            <input type="number" class="liability-term" value="10" min="1" max="50">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <h2>Income</h2>
+      <div id="income-container">
+        <div class="income-item">
+          <div class="form-group">
+            <label>Type</label>
+            <select class="income-type">
+              <option value="salary">Salary</option>
+              <option value="self-employment">Self Employment</option>
+              <option value="investment">Investment Income</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="income-name" value="Primary Job">
+          </div>
+          <div class="form-group">
+            <label>Annual Amount</label>
+            <input type="number" class="income-amount" value="60000">
+          </div>
+          <div class="form-group">
+            <label>Growth Rate (%)</label>
+            <input type="number" class="income-growth" value="3" step="0.1" min="-100" max="100">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-section">
+      <h2>Expenditures</h2>
+      <div id="expenditures-container">
+        <div class="expenditure-item">
+          <div class="form-group">
+            <label>Type</label>
+            <select class="expenditure-type">
+              <option value="living">Living Expenses</option>
+              <option value="housing">Housing</option>
+              <option value="transportation">Transportation</option>
+              <option value="food">Food</option>
+              <option value="healthcare">Healthcare</option>
+              <option value="discretionary">Discretionary</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" class="expenditure-name" value="Living Expenses">
+          </div>
+          <div class="form-group">
+            <label>Annual Amount</label>
+            <input type="number" class="expenditure-amount" value="40000">
+          </div>
+          <div class="form-group">
+            <label>Inflation Rate (%)</label>
+            <input type="number" class="expenditure-inflation" value="2" step="0.1" min="0" max="100">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <button type="submit">Calculate Financial Projection</button>
+  </form>
+  
+  <div id="results"></div>
+  
+  <script>
+    document.getElementById('calculator-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Collect form data
+      const inputData = {
+        startAge: parseInt(document.getElementById('startAge').value),
+        yearsToProject: parseInt(document.getElementById('yearsToProject').value),
+        pathType: document.getElementById('pathType').value,
+        assets: [],
+        liabilities: [],
+        incomes: [],
+        expenditures: [],
+        milestones: []
+      };
+      
+      // Process assets
+      document.querySelectorAll('.asset-item').forEach(item => {
+        inputData.assets.push({
+          type: item.querySelector('.asset-type').value,
+          name: item.querySelector('.asset-name').value,
+          initialValue: parseFloat(item.querySelector('.asset-value').value),
+          growthRate: parseFloat(item.querySelector('.asset-growth').value) / 100
+        });
+      });
+      
+      // Process liabilities
+      document.querySelectorAll('.liability-item').forEach(item => {
+        inputData.liabilities.push({
+          type: item.querySelector('.liability-type').value,
+          name: item.querySelector('.liability-name').value,
+          initialBalance: parseFloat(item.querySelector('.liability-balance').value),
+          interestRate: parseFloat(item.querySelector('.liability-interest').value) / 100,
+          termYears: parseInt(item.querySelector('.liability-term').value)
+        });
+      });
+      
+      // Process income
+      document.querySelectorAll('.income-item').forEach(item => {
+        inputData.incomes.push({
+          type: item.querySelector('.income-type').value,
+          name: item.querySelector('.income-name').value,
+          annualAmount: parseFloat(item.querySelector('.income-amount').value),
+          growthRate: parseFloat(item.querySelector('.income-growth').value) / 100
+        });
+      });
+      
+      // Process expenditures
+      document.querySelectorAll('.expenditure-item').forEach(item => {
+        inputData.expenditures.push({
+          type: item.querySelector('.expenditure-type').value,
+          name: item.querySelector('.expenditure-name').value,
+          annualAmount: parseFloat(item.querySelector('.expenditure-amount').value),
+          inflationRate: parseFloat(item.querySelector('.expenditure-inflation').value) / 100
+        });
+      });
+      
+      // Display loading message
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.textContent = 'Calculating...';
+      
+      try {
+        // Send to API
+        const response = await fetch('/api/calculate/financial-projection', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(inputData)
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error (${response.status}): ${errorText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Format and display results
+        const results = `
+          Net Worth Projection (First 5 years): ${formatArray(data.netWorth?.slice(0, 5))}
+          Income Projection (First 5 years): ${formatArray(data.income?.slice(0, 5))}
+          Expenses Projection (First 5 years): ${formatArray(data.expenses?.slice(0, 5))}
+          
+          Total projection years: ${data.netWorth?.length || 0}
+          
+          Full result:
+          ${JSON.stringify(data, null, 2)}
+        `;
+        
+        resultsDiv.textContent = results;
+      } catch (error) {
+        resultsDiv.textContent = `Error: ${error.message}`;
+        console.error('Calculation error:', error);
+      }
+    });
+    
+    function formatArray(arr) {
+      if (!arr) return '[]';
+      return '[' + arr.map(v => Math.round(v)).join(', ') + ']';
+    }
+  </script>
+</body>
+</html>

@@ -30,6 +30,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import MilestonesSection from "@/components/milestones/MilestonesSection";
 import { AdvicePanel } from "@/components/financial-advice/AdvicePanel";
 import { generateFinancialAdvice, FinancialAdvice, FinancialState } from "@/lib/financialAdvice";
+import { 
+  calculateFinancialProjection, 
+  generatePythonCalculatorInput,
+  FinancialProjectionData
+} from "@/lib/pythonCalculator";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities";
 
@@ -358,6 +363,28 @@ const FinancialProjections = () => {
   // This is now a function to be called both during rendering and via onMilestoneChange
   // We directly use the state values and the milestones parameter 
   const generateProjectionData = (milestonesList = milestones) => {
+    // Format milestones to match expected format if needed
+    const formattedMilestones = milestonesList?.map(m => ({
+      id: m.id,
+      userId: m.userId,
+      type: m.type,
+      title: m.title,
+      date: m.date,
+      yearsAway: m.yearsAway,
+      spouseOccupation: m.spouseOccupation,
+      spouseIncome: m.spouseIncome,
+      spouseAssets: m.spouseAssets,
+      spouseLiabilities: m.spouseLiabilities,
+      homeValue: m.homeValue,
+      homeDownPayment: m.homeDownPayment,
+      homeMonthlyPayment: m.homeMonthlyPayment,
+      carValue: m.carValue,
+      carDownPayment: m.carDownPayment,
+      carMonthlyPayment: m.carMonthlyPayment,
+      childrenCount: m.childrenCount,
+      childrenExpensePerYear: m.childrenExpensePerYear,
+      educationCost: m.educationCost
+    })) || [];
     // Set up initial values for assets and liabilities
     let initialSavings = startingSavings;
     let initialStudentLoanDebt = studentLoanDebt;
@@ -915,10 +942,65 @@ const FinancialProjections = () => {
   
   // Update projection data when inputs change
   useEffect(() => {
-    console.log("Inputs changed, recalculating projection data with milestones:", milestones);
-    setProjectionData(generateProjectionData(milestones));
+    const updateProjectionData = async () => {
+      console.log("Inputs changed, calculating projection data using Python calculator");
+      try {
+        // Generate input data for the Python calculator
+        // Format milestones to match expected format
+        const formattedMilestones = milestones?.map(m => ({
+          id: m.id,
+          userId: m.userId,
+          type: m.type,
+          title: m.title,
+          date: m.date,
+          yearsAway: m.yearsAway,
+          spouseOccupation: m.spouseOccupation,
+          spouseIncome: m.spouseIncome,
+          spouseAssets: m.spouseAssets,
+          spouseLiabilities: m.spouseLiabilities,
+          homeValue: m.homeValue,
+          homeDownPayment: m.homeDownPayment,
+          homeMonthlyPayment: m.homeMonthlyPayment,
+          carValue: m.carValue,
+          carDownPayment: m.carDownPayment,
+          carMonthlyPayment: m.carMonthlyPayment,
+          childrenCount: m.childrenCount,
+          childrenExpensePerYear: m.childrenExpensePerYear,
+          educationCost: m.educationCost
+        })) || [];
+        
+        const pythonInput = generatePythonCalculatorInput(
+          age,
+          years,
+          startingSavings,
+          income,
+          expenses,
+          incomeGrowth,
+          studentLoanDebt,
+          formattedMilestones,
+          costOfLivingFactor
+        );
+        
+        console.log("Sending data to Python calculator:", pythonInput);
+        
+        // Call the Python calculator and get the results
+        const result = await calculateFinancialProjection(pythonInput);
+        console.log("Received projection data from Python calculator:", result);
+        
+        // Update the projection data state
+        setProjectionData(result);
+      } catch (error) {
+        console.error("Error calculating projections:", error);
+        // Fall back to the JavaScript calculator on error
+        console.log("Falling back to JavaScript calculator");
+        setProjectionData(generateProjectionData(milestones));
+      }
+    };
+    
+    // Execute the async function
+    updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
-      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth]); // Include assumptions in dependency array
+      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years]); // Include assumptions in dependency array
   
   // Generate financial advice based on current financial state
   useEffect(() => {

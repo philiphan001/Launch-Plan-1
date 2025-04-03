@@ -7,10 +7,10 @@ import json
 import os
 from typing import Dict, List, Any, Optional
 
-from models.asset import Asset, DepreciableAsset, Investment
-from models.liability import Liability, Mortgage, StudentLoan, AutoLoan
-from models.income import Income, SalaryIncome, SpouseIncome
-from models.expenditure import Expenditure, Housing, Transportation, Living, Tax
+from server.python.models.asset import Asset, DepreciableAsset, Investment
+from server.python.models.liability import Liability, Mortgage, StudentLoan, AutoLoan
+from server.python.models.income import Income, SalaryIncome, SpouseIncome
+from server.python.models.expenditure import Expenditure, Housing, Transportation, Living, Tax
 
 class FinancialCalculator:
     """

@@ -26,7 +26,9 @@ class DataLoader:
         if data_dir is None:
             # Default to a 'data' directory in the parent directory of this file
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            self.data_dir = os.path.join(script_dir, '..', 'data')
+            self.data_dir = os.path.join(script_dir, 'data')
+            # Ensure the data directory exists
+            os.makedirs(self.data_dir, exist_ok=True)
         else:
             self.data_dir = data_dir
         

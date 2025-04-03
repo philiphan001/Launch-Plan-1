@@ -9,12 +9,26 @@ import sys
 import os
 from typing import Dict, Any, List, Optional
 
-from financial import FinancialCalculator
-from models.asset import Asset, DepreciableAsset, Investment
-from models.liability import Liability, Mortgage, StudentLoan, AutoLoan
-from models.income import Income, SalaryIncome, SpouseIncome
-from models.expenditure import Expenditure, Housing, Transportation, Living, Tax
-from data_loader import DataLoader
+# Set the current directory to our path so we can use relative imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(current_dir)))
+
+try:
+    # First try direct imports (these will work when executed directly)
+    from financial import FinancialCalculator
+    from models.asset import Asset, DepreciableAsset, Investment
+    from models.liability import Liability, Mortgage, StudentLoan, AutoLoan
+    from models.income import Income, SalaryIncome, SpouseIncome
+    from models.expenditure import Expenditure, Housing, Transportation, Living, Tax
+    from data_loader import DataLoader
+except ImportError:
+    # Fallback to full imports (these will work when executed from parent directory)
+    from server.python.financial import FinancialCalculator
+    from server.python.models.asset import Asset, DepreciableAsset, Investment
+    from server.python.models.liability import Liability, Mortgage, StudentLoan, AutoLoan
+    from server.python.models.income import Income, SalaryIncome, SpouseIncome
+    from server.python.models.expenditure import Expenditure, Housing, Transportation, Living, Tax
+    from server.python.data_loader import DataLoader
 
 
 def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -289,6 +303,7 @@ def create_military_projection(input_data: Dict[str, Any], branch: str, occupati
     
     # Add post-military income (either civilian job or using GI Bill for education)
     post_military_start = service_years
+    post_mil_salary = 55000  # Default post-military salary
     
     if occupation_data:
         # Transition to civilian career
@@ -308,7 +323,7 @@ def create_military_projection(input_data: Dict[str, Any], branch: str, occupati
         # Generic post-military career
         career_income = SalaryIncome(
             name="Post-Military Career",
-            annual_amount=55000,  # Average post-military salary
+            annual_amount=post_mil_salary,  # Using default salary
             growth_rate=0.03,
             start_year=post_military_start
         )
@@ -330,9 +345,9 @@ def create_military_projection(input_data: Dict[str, Any], branch: str, occupati
         inflation_rate=0.02,
         lifestyle_factor=1.1
     )
-    civilian_living.expense_history = {i: 0 for i in range(service_years)}
+    civilian_living.expense_history = {i: 0.0 for i in range(service_years)}
     for i in range(service_years, calculator.years_to_project + 1):
-        civilian_living.expense_history[i] = 18000 * (1.02 ** (i - service_years))
+        civilian_living.expense_history[i] = float(18000 * (1.02 ** (i - service_years)))
     calculator.add_expenditure(civilian_living)
     
     # Add VA loan for home purchase after service
@@ -398,17 +413,22 @@ def create_military_projection(input_data: Dict[str, Any], branch: str, occupati
 
 def main() -> None:
     """
-    Main function to process input from command line and output results.
+    Main function to process input from stdin and output results.
     """
-    if len(sys.argv) < 2:
-        print(json.dumps({"error": "No input file provided"}))
-        sys.exit(1)
-    
-    input_file = sys.argv[1]
-    
     try:
-        with open(input_file, 'r') as f:
-            input_data = json.load(f)
+        # Read input data from stdin
+        input_data_str = sys.stdin.read()
+        
+        if not input_data_str:
+            print(json.dumps({"error": "No input data provided"}))
+            sys.exit(1)
+        
+        # Parse JSON input
+        try:
+            input_data = json.loads(input_data_str)
+        except json.JSONDecodeError as e:
+            print(json.dumps({"error": f"Invalid JSON input: {str(e)}"}))
+            sys.exit(1)
         
         path_type = input_data.get("pathType", "baseline")
         

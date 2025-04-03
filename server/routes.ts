@@ -6,7 +6,12 @@ import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjecti
 import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import { generateCareerInsights, generateCareerTimeline } from "./openai";
+
+// Get the directory name in ESM context
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -575,25 +580,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Python financial calculator route
-  app.post("/api/calculate/financial-projection", async (req: Request, res: Response) => {
+  app.post("/api/calculate/financial-projection", (req: Request, res: Response) => {
     try {
       const inputData = req.body;
-      const pythonScriptPath = path.join(__dirname, "python", "calculator.py");
+      // Use path.resolve and the current directory for ESM compatibility
+      const pythonScriptPath = path.resolve("server/python/calculator.py");
       
       // Check if the Python script exists
       if (!fs.existsSync(pythonScriptPath)) {
-        return res.status(500).json({ message: "Financial calculator script not found" });
+        return res.status(500).json({ message: "Financial calculator script not found", path: pythonScriptPath });
       }
       
-      // Create a temporary file to store the input data
-      const inputFile = path.join(__dirname, "temp_input.json");
-      fs.writeFileSync(inputFile, JSON.stringify(inputData));
+      // Log the inputs for debugging
+      console.log("Running financial calculation with input:", JSON.stringify(inputData).substring(0, 200) + "...");
       
-      // Spawn the Python process
-      const pythonProcess = spawn("python3", [pythonScriptPath, inputFile]);
+      // Direct Python execution without temporary files
+      const pythonProcess = spawn("python3", [pythonScriptPath], {
+        env: { ...process.env },
+      });
       
       let resultData = "";
       let errorData = "";
+      
+      // Send input data to Python process stdin
+      pythonProcess.stdin.write(JSON.stringify(inputData));
+      pythonProcess.stdin.end();
       
       pythonProcess.stdout.on("data", (data) => {
         resultData += data.toString();
@@ -601,14 +612,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       pythonProcess.stderr.on("data", (data) => {
         errorData += data.toString();
+        console.error("Python stderr:", data.toString());
       });
       
       pythonProcess.on("close", (code) => {
-        // Remove the temporary input file
-        if (fs.existsSync(inputFile)) {
-          fs.unlinkSync(inputFile);
-        }
-        
         if (code !== 0) {
           console.error("Python script exited with code", code);
           console.error("Error:", errorData);
@@ -616,16 +623,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         try {
+          console.log("Python returned data:", resultData.substring(0, 200) + "...");
           const parsedData = JSON.parse(resultData);
-          res.json(parsedData);
+          return res.json(parsedData);
         } catch (error) {
           console.error("Failed to parse Python output:", error);
-          res.status(500).json({ message: "Failed to parse calculation results", error: errorData });
+          return res.status(500).json({ message: "Failed to parse calculation results", error: errorData });
         }
       });
+      
     } catch (error) {
       console.error("Exception in financial calculation:", error);
-      res.status(500).json({ message: "Financial calculation failed" });
+      return res.status(500).json({ message: "Financial calculation failed", error: String(error) });
     }
   });
 
