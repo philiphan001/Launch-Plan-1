@@ -87,6 +87,16 @@ class FinancialCalculator:
         mortgage_yearly = [0] * (self.years_to_project + 1)
         student_loan_yearly = [0] * (self.years_to_project + 1)
         
+        # Initialize expense category breakdown arrays
+        housing_expenses_yearly = [0] * (self.years_to_project + 1)
+        transportation_expenses_yearly = [0] * (self.years_to_project + 1)
+        food_expenses_yearly = [0] * (self.years_to_project + 1)
+        healthcare_expenses_yearly = [0] * (self.years_to_project + 1)
+        education_expenses_yearly = [0] * (self.years_to_project + 1)
+        child_expenses_yearly = [0] * (self.years_to_project + 1)
+        debt_expenses_yearly = [0] * (self.years_to_project + 1)
+        discretionary_expenses_yearly = [0] * (self.years_to_project + 1)
+        
         # Set initial values
         for asset in self.assets:
             asset_value = int(asset.get_value(0))
@@ -120,11 +130,49 @@ class FinancialCalculator:
                 year_income += int(income_source.get_income(year))
             income_yearly[year] = year_income
             
-            # Expense calculation
+            # Expense calculation with categorization
             year_expenses = 0
+            year_housing = 0
+            year_transportation = 0
+            year_food = 0
+            year_healthcare = 0
+            year_education = 0
+            year_childcare = 0
+            year_debt = 0
+            year_discretionary = 0
+            
             for expense in self.expenditures:
-                year_expenses += int(expense.get_expense(year))
+                expense_amount = int(expense.get_expense(year))
+                year_expenses += expense_amount
+                
+                # Categorize expenses by type
+                if isinstance(expense, Housing) or expense.name.lower().find('housing') >= 0 or expense.name.lower().find('rent') >= 0 or expense.name.lower().find('mortgage') >= 0:
+                    year_housing += expense_amount
+                elif isinstance(expense, Transportation) or expense.name.lower().find('transport') >= 0 or expense.name.lower().find('car') >= 0:
+                    year_transportation += expense_amount
+                elif expense.name.lower().find('food') >= 0:
+                    year_food += expense_amount
+                elif expense.name.lower().find('health') >= 0 or expense.name.lower().find('medical') >= 0:
+                    year_healthcare += expense_amount
+                elif expense.name.lower().find('education') >= 0 or expense.name.lower().find('college') >= 0 or expense.name.lower().find('school') >= 0:
+                    year_education += expense_amount
+                elif expense.name.lower().find('child') >= 0 or expense.name.lower().find('daycare') >= 0:
+                    year_childcare += expense_amount
+                elif expense.name.lower().find('debt') >= 0 or expense.name.lower().find('loan') >= 0:
+                    year_debt += expense_amount
+                else:
+                    # Default to discretionary for any other expenses
+                    year_discretionary += expense_amount
+                    
             expenses_yearly[year] = year_expenses
+            housing_expenses_yearly[year] = year_housing
+            transportation_expenses_yearly[year] = year_transportation
+            food_expenses_yearly[year] = year_food
+            healthcare_expenses_yearly[year] = year_healthcare
+            education_expenses_yearly[year] = year_education
+            child_expenses_yearly[year] = year_childcare
+            debt_expenses_yearly[year] = year_debt
+            discretionary_expenses_yearly[year] = year_discretionary
             
             # Cash flow
             cash_flow_yearly[year] = year_income - year_expenses
@@ -246,11 +294,50 @@ class FinancialCalculator:
                                     # Increase general expenses according to marriage assumption
                                     expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 + MARRIAGE_EXPENSE_INCREASE)
                             
-                            # Recalculate total expenses for this year
+                            # Recalculate total expenses and categories for this year
                             year_expenses = 0
+                            year_housing = 0
+                            year_transportation = 0
+                            year_food = 0
+                            year_healthcare = 0
+                            year_education = 0
+                            year_childcare = 0
+                            year_debt = 0
+                            year_discretionary = 0
+                            
                             for expense in self.expenditures:
-                                year_expenses += int(expense.get_expense(i))
+                                expense_amount = int(expense.get_expense(i))
+                                year_expenses += expense_amount
+                                
+                                # Categorize expenses by type
+                                if isinstance(expense, Housing) or expense.name.lower().find('housing') >= 0 or expense.name.lower().find('rent') >= 0 or expense.name.lower().find('mortgage') >= 0:
+                                    year_housing += expense_amount
+                                elif isinstance(expense, Transportation) or expense.name.lower().find('transport') >= 0 or expense.name.lower().find('car') >= 0:
+                                    year_transportation += expense_amount
+                                elif expense.name.lower().find('food') >= 0:
+                                    year_food += expense_amount
+                                elif expense.name.lower().find('health') >= 0 or expense.name.lower().find('medical') >= 0:
+                                    year_healthcare += expense_amount
+                                elif expense.name.lower().find('education') >= 0 or expense.name.lower().find('college') >= 0 or expense.name.lower().find('school') >= 0:
+                                    year_education += expense_amount
+                                elif expense.name.lower().find('child') >= 0 or expense.name.lower().find('daycare') >= 0:
+                                    year_childcare += expense_amount
+                                elif expense.name.lower().find('debt') >= 0 or expense.name.lower().find('loan') >= 0:
+                                    year_debt += expense_amount
+                                else:
+                                    # Default to discretionary for any other expenses
+                                    year_discretionary += expense_amount
+                                    
                             expenses_yearly[i] = year_expenses
+                            housing_expenses_yearly[i] = year_housing
+                            transportation_expenses_yearly[i] = year_transportation
+                            food_expenses_yearly[i] = year_food
+                            healthcare_expenses_yearly[i] = year_healthcare
+                            education_expenses_yearly[i] = year_education
+                            child_expenses_yearly[i] = year_childcare
+                            debt_expenses_yearly[i] = year_debt
+                            discretionary_expenses_yearly[i] = year_discretionary
+                            
                             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
                 elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
@@ -291,11 +378,50 @@ class FinancialCalculator:
                         # Update net worth
                         net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
                         
-                        # Recalculate total expenses for this year since we've modified housing expenses
+                        # Recalculate total expenses and categories for this year since we've modified housing expenses
                         year_expenses = 0
+                        year_housing = 0
+                        year_transportation = 0
+                        year_food = 0
+                        year_healthcare = 0
+                        year_education = 0
+                        year_childcare = 0
+                        year_debt = 0
+                        year_discretionary = 0
+                        
                         for expense in self.expenditures:
-                            year_expenses += int(expense.get_expense(i))
+                            expense_amount = int(expense.get_expense(i))
+                            year_expenses += expense_amount
+                            
+                            # Categorize expenses by type
+                            if isinstance(expense, Housing) or expense.name.lower().find('housing') >= 0 or expense.name.lower().find('rent') >= 0 or expense.name.lower().find('mortgage') >= 0:
+                                year_housing += expense_amount
+                            elif isinstance(expense, Transportation) or expense.name.lower().find('transport') >= 0 or expense.name.lower().find('car') >= 0:
+                                year_transportation += expense_amount
+                            elif expense.name.lower().find('food') >= 0:
+                                year_food += expense_amount
+                            elif expense.name.lower().find('health') >= 0 or expense.name.lower().find('medical') >= 0:
+                                year_healthcare += expense_amount
+                            elif expense.name.lower().find('education') >= 0 or expense.name.lower().find('college') >= 0 or expense.name.lower().find('school') >= 0:
+                                year_education += expense_amount
+                            elif expense.name.lower().find('child') >= 0 or expense.name.lower().find('daycare') >= 0:
+                                year_childcare += expense_amount
+                            elif expense.name.lower().find('debt') >= 0 or expense.name.lower().find('loan') >= 0:
+                                year_debt += expense_amount
+                            else:
+                                # Default to discretionary for any other expenses
+                                year_discretionary += expense_amount
+                                
                         expenses_yearly[i] = year_expenses
+                        housing_expenses_yearly[i] = year_housing
+                        transportation_expenses_yearly[i] = year_transportation
+                        food_expenses_yearly[i] = year_food
+                        healthcare_expenses_yearly[i] = year_healthcare
+                        education_expenses_yearly[i] = year_education
+                        child_expenses_yearly[i] = year_childcare
+                        debt_expenses_yearly[i] = year_debt
+                        discretionary_expenses_yearly[i] = year_discretionary
+                        
                         cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
                 elif milestone.get('type') == 'car':
@@ -342,11 +468,50 @@ class FinancialCalculator:
                         # Update net worth
                         net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
                         
-                        # Recalculate total expenses for this year since we've modified transportation expenses
+                        # Recalculate total expenses and categories for this year since we've modified transportation expenses
                         year_expenses = 0
+                        year_housing = 0
+                        year_transportation = 0
+                        year_food = 0
+                        year_healthcare = 0
+                        year_education = 0
+                        year_childcare = 0
+                        year_debt = 0
+                        year_discretionary = 0
+                        
                         for expense in self.expenditures:
-                            year_expenses += int(expense.get_expense(i))
+                            expense_amount = int(expense.get_expense(i))
+                            year_expenses += expense_amount
+                            
+                            # Categorize expenses by type
+                            if isinstance(expense, Housing) or expense.name.lower().find('housing') >= 0 or expense.name.lower().find('rent') >= 0 or expense.name.lower().find('mortgage') >= 0:
+                                year_housing += expense_amount
+                            elif isinstance(expense, Transportation) or expense.name.lower().find('transport') >= 0 or expense.name.lower().find('car') >= 0:
+                                year_transportation += expense_amount
+                            elif expense.name.lower().find('food') >= 0:
+                                year_food += expense_amount
+                            elif expense.name.lower().find('health') >= 0 or expense.name.lower().find('medical') >= 0:
+                                year_healthcare += expense_amount
+                            elif expense.name.lower().find('education') >= 0 or expense.name.lower().find('college') >= 0 or expense.name.lower().find('school') >= 0:
+                                year_education += expense_amount
+                            elif expense.name.lower().find('child') >= 0 or expense.name.lower().find('daycare') >= 0:
+                                year_childcare += expense_amount
+                            elif expense.name.lower().find('debt') >= 0 or expense.name.lower().find('loan') >= 0:
+                                year_debt += expense_amount
+                            else:
+                                # Default to discretionary for any other expenses
+                                year_discretionary += expense_amount
+                                
                         expenses_yearly[i] = year_expenses
+                        housing_expenses_yearly[i] = year_housing
+                        transportation_expenses_yearly[i] = year_transportation
+                        food_expenses_yearly[i] = year_food
+                        healthcare_expenses_yearly[i] = year_healthcare
+                        education_expenses_yearly[i] = year_education
+                        child_expenses_yearly[i] = year_childcare
+                        debt_expenses_yearly[i] = year_debt
+                        discretionary_expenses_yearly[i] = year_discretionary
+                        
                         cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
                 elif milestone.get('type') == 'children':
@@ -375,6 +540,9 @@ class FinancialCalculator:
                         # Children costs increase with age
                         annual_child_expenses = int(children_count * expense_per_child * (1 + years_with_children * 0.03))
                         expenses_yearly[i] += annual_child_expenses
+                        
+                        # Update child expense category
+                        child_expenses_yearly[i] += annual_child_expenses
                         
                         # Recalculate cash flow with new expenses
                         cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
@@ -406,6 +574,9 @@ class FinancialCalculator:
                     for i in range(milestone_year, min(milestone_year + 4, self.years_to_project + 1)):
                         # Add remaining education expenses
                         expenses_yearly[i] += yearly_payment
+                        
+                        # Update education expense category
+                        education_expenses_yearly[i] += yearly_payment
                         
                         # Recalculate cash flow
                         cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
@@ -440,6 +611,16 @@ class FinancialCalculator:
             'mortgage': mortgage_yearly,
             'carLoan': car_loan_yearly,
             'studentLoan': student_loan_yearly,
+            
+            # Expense category breakdown
+            'housing': housing_expenses_yearly,
+            'transportation': transportation_expenses_yearly,
+            'food': food_expenses_yearly,
+            'healthcare': healthcare_expenses_yearly,
+            'education': education_expenses_yearly,
+            'childcare': child_expenses_yearly,
+            'debt': debt_expenses_yearly,
+            'discretionary': discretionary_expenses_yearly,
             
             'milestones': self.milestones
         }

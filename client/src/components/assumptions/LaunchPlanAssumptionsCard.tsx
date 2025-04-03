@@ -273,7 +273,8 @@ const LaunchPlanAssumptionsCard = () => {
   );
 
   // Get unique categories for tabs
-  const categories = [...new Set(assumptions.map(a => a.category))];
+  const categoriesSet = new Set(assumptions.map(a => a.category));
+  const categories = Array.from(categoriesSet);
 
   return (
     <Card>
