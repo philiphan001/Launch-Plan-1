@@ -15,7 +15,8 @@ sys.path.append(os.path.dirname(os.path.dirname(current_dir)))
 
 try:
     # First try direct imports (these will work when executed directly)
-    from financial import FinancialCalculator
+    # Use the updated financial module with fixed expense categorization
+    from financial_updated import FinancialCalculator
     from models.asset import Asset, DepreciableAsset, Investment
     from models.liability import Liability, Mortgage, StudentLoan, AutoLoan
     from models.income import Income, SalaryIncome, SpouseIncome
@@ -23,7 +24,8 @@ try:
     from data_loader import DataLoader
 except ImportError:
     # Fallback to full imports (these will work when executed from parent directory)
-    from server.python.financial import FinancialCalculator
+    # Use the updated financial module with fixed expense categorization
+    from server.python.financial_updated import FinancialCalculator
     from server.python.models.asset import Asset, DepreciableAsset, Investment
     from server.python.models.liability import Liability, Mortgage, StudentLoan, AutoLoan
     from server.python.models.income import Income, SalaryIncome, SpouseIncome
