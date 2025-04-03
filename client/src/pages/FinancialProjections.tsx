@@ -529,14 +529,40 @@ const FinancialProjections = () => {
         });
       }
       
+      // Calculate education loan payments for this year
+      let studentLoanPaymentForYear = 0;
+      if (remainingStudentLoanDebt > 0 && i <= 10) {
+        const studentLoanInterestRate = 0.05; // 5% annual interest rate
+        const studentLoanTerm = 10; // 10 year term
+        const r = studentLoanInterestRate;
+        const n = studentLoanTerm;
+        const amortizedAnnualPayment = (studentLoanDebt * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        studentLoanPaymentForYear = amortizedAnnualPayment;
+      }
+      
+      // Calculate education debt payment for this year
+      let educationLoanPaymentForYear = 0;
+      if (hasEducationDebt && i > 1 && i <= 6) {
+        const educationLoanInterestRate = 0.06; // 6% annual interest rate
+        const educationLoanTerm = 5; // 5 year term
+        const educationMilestone = sortedMilestones.find((m: { type: string }) => m.type === 'education');
+        const initialEducationCost = educationMilestone?.educationCost || 0;
+        const r = educationLoanInterestRate;
+        const n = educationLoanTerm;
+        const amortizedAnnualPayment = (initialEducationCost * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        educationLoanPaymentForYear = amortizedAnnualPayment;
+      }
+      
       // Track personal and spouse income separately
       const totalIncome = currentIncome + (hasSpouse ? spouseIncome : 0);
       
-      // Add milestone-related expenses
+      // Add all expenses together, including loan payments
       const totalExpenses = currentExpenses + 
         (hasHome ? mortgagePayment : 0) +
         (hasCar ? carPayment : 0) +
-        (hasChildren ? childrenExpenses : 0);
+        (hasChildren ? childrenExpenses : 0) +
+        studentLoanPaymentForYear +
+        educationLoanPaymentForYear;
       
       // Calculate annual surplus or deficit
       const annualSurplus = totalIncome - totalExpenses;
@@ -565,9 +591,6 @@ const FinancialProjections = () => {
           amortizedAnnualPayment - annualInterestPaid,
           remainingStudentLoanDebt // Can't reduce more than remaining principal
         );
-        
-        // Add student loan payment to expenses (affects cash flow)
-        currentExpenses += amortizedAnnualPayment;
         
         // Track student loan payment in the education expenses category
         educationExpensesData[i-1] = (educationExpensesData[i-1] || 0) + amortizedAnnualPayment;
@@ -604,9 +627,6 @@ const FinancialProjections = () => {
           amortizedAnnualPayment - annualInterestPaid,
           educationDebt // Can't reduce more than remaining principal
         );
-        
-        // Add education loan payment to expenses (affects cash flow)
-        currentExpenses += amortizedAnnualPayment;
         
         // Track education loan payment in the education expenses category
         educationExpensesData[i-1] = (educationExpensesData[i-1] || 0) + amortizedAnnualPayment;
@@ -649,8 +669,7 @@ const FinancialProjections = () => {
           mortgagePrincipal // Can't reduce more than remaining principal
         );
         
-        // Add mortgage payment to expenses (affects cash flow)
-        currentExpenses += annualMortgagePayment;
+        // Note: Mortgage payment is already included in totalExpenses
         
         console.log(`Mortgage payment for year ${i}: $${annualMortgagePayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
         console.log(`Mortgage balance: $${mortgagePrincipal.toFixed(2)} → $${(mortgagePrincipal - principalReduction).toFixed(2)}`);
@@ -695,8 +714,7 @@ const FinancialProjections = () => {
           carLoanPrincipal // Can't reduce more than remaining principal
         );
         
-        // Add car payment to expenses (affects cash flow)
-        currentExpenses += annualCarPayment;
+        // Note: Car payment is already included in totalExpenses
         
         console.log(`Car loan payment for year ${i}: $${annualCarPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
         console.log(`Car loan balance: $${carLoanPrincipal.toFixed(2)} → $${(carLoanPrincipal - principalReduction).toFixed(2)}`);
@@ -742,9 +760,7 @@ const FinancialProjections = () => {
           // We don't need to directly impact netWorth here anymore because it's handled by the overall cash flow
           // netWorth -= amortizedAnnualPayment;
           
-          // Add spouse loan payment to the total expenses for this year
-          // This ensures it impacts cash flow calculations
-          currentExpenses += amortizedAnnualPayment;
+          // Note: Spouse loan payments are already accounted for in the main cash flow calculation
           
           console.log(`Spouse loan payment for year ${i}: $${amortizedAnnualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
           console.log(`Spouse loan balance: $${spouseLiabilities.toFixed(2)} → $${(spouseLiabilities - principalReduction).toFixed(2)}`);
