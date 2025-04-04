@@ -319,6 +319,15 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       }))
     );
     
+    // Debug healthcare data more extensively to see what's coming back
+    console.log("Healthcare data details:", {
+      exists: !!result.healthcare,
+      length: result.healthcare ? result.healthcare.length : 0,
+      firstFewValues: result.healthcare ? result.healthcare.slice(0, 3) : [],
+      isArray: Array.isArray(result.healthcare),
+      dataType: result.healthcare && result.healthcare.length > 0 ? typeof result.healthcare[0] : 'unknown'
+    });
+    
     // If there's an error in the calculation
     if (result.error) {
       console.error("Python calculation error:", result.error);

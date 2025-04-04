@@ -191,7 +191,21 @@ const FinancialProjections = () => {
       const response = await fetch(`/api/location-cost-of-living/zip/${userData.zipCode}`);
       if (response.status === 404) return null;
       if (!response.ok) throw new Error('Failed to fetch location cost of living data');
-      return response.json();
+      const data = await response.json();
+      
+      // Debug location data to check healthcare value
+      console.log("Location cost of living data:", {
+        zipCode: userData?.zipCode,
+        city: data?.city,
+        state: data?.state,
+        healthcare: data?.healthcare,
+        healthcare_exists: data?.healthcare !== undefined && data?.healthcare !== null,
+        healthcare_type: typeof data?.healthcare,
+        allKeys: data ? Object.keys(data) : [],
+        allValues: data ? Object.keys(data).map(key => ({ key, value: data[key] })) : []
+      });
+      
+      return data;
     },
     enabled: !!userData?.zipCode
   });
