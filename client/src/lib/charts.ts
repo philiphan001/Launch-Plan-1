@@ -433,7 +433,9 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
   
   // Debug the input data to see what categories are available
   console.log("Creating stacked expense chart with data keys:", Object.keys(data));
-  console.log("Expense data sample:", {
+  
+  // More detailed logging for expense categories
+  const expenseSample = {
     housing: data.housing?.[0],
     transportation: data.transportation?.[0],
     food: data.food?.[0],
@@ -447,6 +449,17 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
     apparel: data.apparel?.[0],
     services: data.services?.[0],
     other: data.other?.[0]
+  };
+  
+  console.log("Expense data sample:", expenseSample);
+  
+  // Debug healthcare specifically since it might be problematic
+  console.log("Healthcare data details:", {
+    exists: !!data.healthcare,
+    length: data.healthcare?.length || 0,
+    firstFewValues: data.healthcare?.slice(0, 5),
+    isArray: Array.isArray(data.healthcare),
+    dataType: data.healthcare ? typeof data.healthcare[0] : 'N/A'
   });
 
   // Define expense categories and their colors

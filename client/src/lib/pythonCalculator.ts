@@ -177,13 +177,23 @@ export const generatePythonCalculatorInput = (
     }
     
     // Healthcare expenses
+    console.log("Healthcare data from location:", {
+      exists: !!locationCostData.healthcare,
+      value: locationCostData.healthcare,
+      annualValue: locationCostData.healthcare ? locationCostData.healthcare * 12 : 0
+    });
+    
     if (locationCostData.healthcare) {
-      expenditures.push({
+      const healthcareExpenditure = {
         type: "living",
         name: "Healthcare",
         annualAmount: locationCostData.healthcare * 12,
         inflationRate: 0.04
-      });
+      };
+      console.log("Adding healthcare expenditure:", healthcareExpenditure);
+      expenditures.push(healthcareExpenditure);
+    } else {
+      console.warn("No healthcare cost data available from location data");
     }
     
     // Personal insurance expenses

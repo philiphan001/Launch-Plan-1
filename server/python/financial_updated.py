@@ -144,12 +144,20 @@ class FinancialCalculator:
         housing_expenses_yearly = [0] * (self.years_to_project + 1)
         transportation_expenses_yearly = [0] * (self.years_to_project + 1)
         food_expenses_yearly = [0] * (self.years_to_project + 1)
+        # Initialize expense tracking arrays for all categories
         healthcare_expenses_yearly = [0] * (self.years_to_project + 1)
         personal_insurance_expenses_yearly = [0] * (self.years_to_project + 1)
         apparel_expenses_yearly = [0] * (self.years_to_project + 1)
         services_expenses_yearly = [0] * (self.years_to_project + 1)
         entertainment_expenses_yearly = [0] * (self.years_to_project + 1)
         other_expenses_yearly = [0] * (self.years_to_project + 1)
+        
+        # Debug: List all healthcare-related expenses from input
+        healthcare_expenditures = [exp for exp in self.expenditures if 'healthcare' in exp.name.lower()]
+        print(f"[DEBUG] Found {len(healthcare_expenditures)} healthcare expenditures:")
+        for exp in healthcare_expenditures:
+            # Use str() to avoid type issues, since we're just printing debug info
+            print(f"[DEBUG] - {exp.name}: Initial amount = ${exp.annual_amount}, Inflation rate = {exp.inflation_rate * 100}%")
         
         # Milestone-driven categories
         education_expenses_yearly = [0] * (self.years_to_project + 1)
