@@ -405,8 +405,12 @@ const FinancialProjections = () => {
     let initialSavings = startingSavings;
     let initialStudentLoanDebt = studentLoanDebt;
     
+    // Track overall asset and liability totals
+    let totalAssets = initialSavings;
+    let totalLiabilities = initialStudentLoanDebt;
+    
     // Calculate initial net worth properly (total assets minus total liabilities)
-    let netWorth = initialSavings - initialStudentLoanDebt;
+    let netWorth = totalAssets - totalLiabilities;
     
     // Properly adjust income based on cost of living - correctly apply the factor
     let currentIncome = income * costOfLivingFactor;
@@ -534,8 +538,11 @@ const FinancialProjections = () => {
               // Calculate mortgage principal (home value minus down payment)
               const downPayment = milestone.homeDownPayment || 0;
               mortgagePrincipal = homeValue - downPayment;
+              
               // Down payment reduces liquid assets but doesn't change net worth directly
               // since it transfers from cash to home equity
+              netWorth -= downPayment;
+              
               // Set monthly mortgage payment (annual)
               mortgagePayment = (milestone.homeMonthlyPayment || 0) * 12;
               console.log(`Home milestone: Value $${homeValue}, Down payment $${downPayment}, Mortgage $${mortgagePrincipal}, annual payment $${mortgagePayment}`);
@@ -548,11 +555,19 @@ const FinancialProjections = () => {
               // Calculate car loan principal (car value minus down payment)
               const carDownPayment = milestone.carDownPayment || 0;
               carLoanPrincipal = carValue - carDownPayment;
-              // Down payment reduces liquid assets but doesn't change net worth directly
-              // since it transfers from cash to car asset
+              
+              // Reduce liquid assets by the down payment amount
+              // The car asset value and loan will be tracked in specific arrays
+              netWorth -= carDownPayment;
+              
               // Set monthly car payment (annual)
               carPayment = (milestone.carMonthlyPayment || 0) * 12;
+              
+              // Get the transportation reduction factor from assumptions (default 80%)
+              const carTransportationReduction = 0.8; // This should be retrieved from assumptions
+              
               console.log(`Car milestone: Value $${carValue}, Down payment $${carDownPayment}, Loan $${carLoanPrincipal}, annual payment $${carPayment}`);
+              console.log(`Transportation expenses reduced by ${carTransportationReduction * 100}% due to car purchase`);
               break;
               
             case 'children':

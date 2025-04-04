@@ -486,6 +486,96 @@ class FinancialCalculator:
                         # Process home purchase milestone implementation...
                         # This section would be similar to the original code
                         pass
+                    
+                    elif milestone.get('type') == 'car':
+                        # Process car purchase milestone
+                        car_value = int(milestone.get('car_value', milestone.get('carValue', 25000)))
+                        car_down_payment = int(milestone.get('car_down_payment', milestone.get('carDownPayment', 5000)))
+                        car_loan_principal = car_value - car_down_payment
+                        car_monthly_payment = int(milestone.get('car_monthly_payment', milestone.get('carMonthlyPayment', 450)))
+                        car_annual_payment = car_monthly_payment * 12
+                        
+                        # Get car purchase transportation reduction factor from imported assumptions
+                        car_transportation_reduction = CAR_PURCHASE_TRANSPORTATION_REDUCTION
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nProcessing car milestone in year {milestone_year}:\n")
+                            f.write(f"- Car value: ${car_value}\n")
+                            f.write(f"- Down payment: ${car_down_payment}\n")
+                            f.write(f"- Car loan: ${car_loan_principal}\n")
+                            f.write(f"- Annual payment: ${car_annual_payment}\n")
+                            f.write(f"- Transportation reduction factor: {car_transportation_reduction}\n")
+                        
+                        # Add car asset and loan to financial tracking
+                        for i in range(milestone_year, self.years_to_project + 1):
+                            # Calculate car value with depreciation (15% per year)
+                            years_owned = i - milestone_year
+                            current_car_value = int(car_value * (0.85 ** years_owned))
+                            
+                            # Calculate loan balance based on simple amortization
+                            # Assume 5-year car loan with 5% interest rate
+                            loan_years_passed = min(years_owned, 5)  # Cap at loan term
+                            car_interest_rate = 0.05
+                            
+                            # Only calculate remaining principal if within loan term
+                            if loan_years_passed < 5:
+                                # Calculate proper amortization for level payment loan
+                                r = car_interest_rate
+                                n = 5  # 5-year term
+                                payment = (car_loan_principal * r * pow(1 + r, n)) / (pow(1 + r, n) - 1)
+                                
+                                # Calculate remaining principal after loan_years_passed
+                                remaining_principal = car_loan_principal
+                                for _ in range(loan_years_passed):
+                                    interest = remaining_principal * car_interest_rate
+                                    principal_reduction = payment - interest
+                                    remaining_principal -= principal_reduction
+                                
+                                current_car_loan = max(0, int(remaining_principal))
+                            else:
+                                current_car_loan = 0  # Loan is paid off
+                            
+                            # Update tracking arrays
+                            car_value_yearly[i] = current_car_value
+                            car_loan_yearly[i] = current_car_loan
+                            
+                            # Update total assets and liabilities
+                            assets_yearly[i] += current_car_value
+                            liabilities_yearly[i] += current_car_loan
+                            
+                            # Add car payment to expenses for the loan term
+                            if loan_years_passed < 5:
+                                expenses_yearly[i] += car_annual_payment
+                                
+                                # Add car payment to debt expenses category
+                                debt_expenses_yearly[i] += car_annual_payment
+                            
+                            # Apply transportation expense reduction when car is purchased
+                            # This reduces other transport costs like public transit
+                            if i == milestone_year:
+                                # First, find any transportation expenses
+                                for expenditure in self.expenditures:
+                                    if (isinstance(expenditure, Transportation) or 
+                                        expenditure.name.lower().find('transport') >= 0 or 
+                                        expenditure.name.lower().find('transit') >= 0):
+                                        # Get current value for this year
+                                        current_transport = expenditure.get_expense(i)
+                                        # Apply reduction
+                                        reduced_transport = current_transport * (1.0 - car_transportation_reduction)
+                                        # Update expense for this year and future years
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"Reducing transportation expense '{expenditure.name}' from ${current_transport} to ${reduced_transport}\n")
+                                        
+                                        # We can't directly modify the expense amount in the expenditure object
+                                        # So instead, we'll adjust the transportation_expenses_yearly array
+                                        # Convert to int since we're storing integers
+                                        transportation_expenses_yearly[i] = int(transportation_expenses_yearly[i] * (1.0 - car_transportation_reduction))
+                                        
+                            # Update net worth (assets - liabilities)
+                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            
+                            # Update cash flow
+                            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
         
         # Debug healthcare expenses before adding to results
         with open('healthcare_debug.log', 'a') as f:

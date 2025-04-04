@@ -115,20 +115,7 @@ const LaunchPlanAssumptionsCard = () => {
             category: "housing",
             isEnabled: true
           },
-          {
-            id: "car-transport-reduction",
-            name: "CAR_PURCHASE_TRANSPORTATION_REDUCTION",
-            displayName: "Car Purchase Transportation Reduction",
-            value: 0.8,
-            defaultValue: 0.8,
-            minValue: 0,
-            maxValue: 1,
-            stepValue: 0.05,
-            unit: "%",
-            description: "Percentage reduction in transportation expenses when buying a car",
-            category: "car",
-            isEnabled: true
-          },
+          // Removed duplicate car-transport-reduction assumption since we already have it in transportation category
           {
             id: "marriage-expense-increase",
             name: "MARRIAGE_EXPENSE_INCREASE",
@@ -287,6 +274,20 @@ const LaunchPlanAssumptionsCard = () => {
             description: "Whether to automatically replace cars on a schedule (causes jumps in transportation expenses)",
             category: "transportation",
             isEnabled: false
+          },
+          {
+            id: "car-transportation-reduction",
+            name: "CAR_PURCHASE_TRANSPORTATION_REDUCTION",
+            displayName: "Car Purchase Transit Reduction",
+            value: 0.8,
+            defaultValue: 0.8,
+            minValue: 0.0,
+            maxValue: 1.0,
+            stepValue: 0.05,
+            unit: "%",
+            description: "How much public transportation expenses are reduced when you purchase a car (80% by default)",
+            category: "transportation",
+            isEnabled: true
           },
           {
             id: "discretionary-expense",
