@@ -637,6 +637,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: "Financial calculation failed", error: String(error) });
     }
   });
+  
+  // Calculate future savings for milestone planning
+  app.post("/api/calculate/future-savings", async (req: Request, res: Response) => {
+    try {
+      const { userId, targetYear } = req.body;
+      
+      if (!userId || !targetYear) {
+        return res.status(400).json({ message: "Missing required parameters: userId and targetYear" });
+      }
+      
+      // Get user's financial profile
+      const profile = await activeStorage.getFinancialProfileByUserId(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Financial profile not found" });
+      }
+      
+      // Get user data to determine age
+      const user = await activeStorage.getUser(userId);
+      if (!user || !user.birthYear) {
+        return res.status(404).json({ message: "User not found or missing birth year" });
+      }
+      
+      // Calculate current age and years to project
+      const currentYear = new Date().getFullYear();
+      const startAge = currentYear - user.birthYear;
+      const yearsToProject = targetYear - currentYear;
+      
+      if (yearsToProject < 0) {
+        return res.status(400).json({ message: "Target year must be in the future" });
+      }
+      
+      // Prepare input data for the financial calculator
+      const inputData = {
+        startAge,
+        yearsToProject: yearsToProject + 1, // Add 1 to include the target year
+        pathType: "baseline",
+        assets: [
+          {
+            type: "investment",
+            name: "Savings",
+            initialValue: profile.savingsAmount || 0,
+            growthRate: 0.03 // Default growth rate of 3%
+          }
+        ],
+        liabilities: [],
+        incomes: [
+          {
+            type: "salary",
+            name: "Primary Income",
+            amount: profile.householdIncome || 50000,
+            growthRate: 0.03 // Default growth rate of 3%
+          }
+        ],
+        expenses: {
+          housing: 1500 * 12, // Estimated monthly * 12
+          food: 500 * 12,
+          transportation: 400 * 12,
+          healthcare: 300 * 12,
+          other: 800 * 12
+        }
+      };
+      
+      // Get career calculations to update income
+      const careerCalcs = await activeStorage.getCareerCalculationsByUserId(userId);
+      if (careerCalcs && careerCalcs.length > 0) {
+        // Use the first included career calculation's projected salary
+        const includedCareer = careerCalcs.find(calc => calc.includedInProjection);
+        if (includedCareer && includedCareer.career) {
+          inputData.incomes[0].amount = includedCareer.projectedSalary || inputData.incomes[0].amount;
+        }
+      }
+      
+      // Use path.resolve and the current directory for ESM compatibility
+      const pythonScriptPath = path.resolve("server/python/calculator.py");
+      
+      // Check if the Python script exists
+      if (!fs.existsSync(pythonScriptPath)) {
+        return res.status(500).json({ message: "Financial calculator script not found", path: pythonScriptPath });
+      }
+      
+      // Log the inputs for debugging
+      console.log("Calculating future savings with input:", JSON.stringify(inputData).substring(0, 200) + "...");
+      
+      // Direct Python execution without temporary files
+      const pythonProcess = spawn("python3", [pythonScriptPath], {
+        env: { ...process.env },
+      });
+      
+      let resultData = "";
+      let errorData = "";
+      
+      // Send input data to Python process stdin
+      pythonProcess.stdin.write(JSON.stringify(inputData));
+      pythonProcess.stdin.end();
+      
+      pythonProcess.stdout.on("data", (data) => {
+        resultData += data.toString();
+      });
+      
+      pythonProcess.stderr.on("data", (data) => {
+        errorData += data.toString();
+        console.error("Python stderr:", data.toString());
+      });
+      
+      pythonProcess.on("close", (code) => {
+        if (code !== 0) {
+          console.error("Python script exited with code", code);
+          console.error("Error:", errorData);
+          return res.status(500).json({ message: "Future savings calculation failed", error: errorData });
+        }
+        
+        try {
+          // Parse the full results
+          const parsedData = JSON.parse(resultData);
+          
+          // Extract the savings amount for the target year
+          const targetYearIndex = yearsToProject;
+          const futureSavings = parsedData.netWorth ? parsedData.netWorth[targetYearIndex] : 0;
+          
+          // Return just the future savings amount and full projection data
+          return res.json({ 
+            currentSavings: profile.savingsAmount || 0,
+            futureSavings,
+            targetYear,
+            yearsAway: yearsToProject,
+            fullProjection: parsedData // Include the full projection data in case the client needs it
+          });
+        } catch (error) {
+          console.error("Failed to parse Python output:", error);
+          return res.status(500).json({ message: "Failed to parse calculation results", error: errorData });
+        }
+      });
+      
+    } catch (error) {
+      console.error("Exception in future savings calculation:", error);
+      return res.status(500).json({ message: "Future savings calculation failed", error: String(error) });
+    }
+  });
 
   // College calculations routes
   app.post("/api/college-calculations", validateRequest({ body: insertCollegeCalculationSchema }), async (req: Request, res: Response) => {

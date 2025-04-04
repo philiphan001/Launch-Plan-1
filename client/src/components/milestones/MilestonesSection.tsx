@@ -124,6 +124,31 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
     }
   });
   
+  // Get future savings projection for the milestone year
+  const { data: futureSavings, isLoading: isLoadingFutureSavings } = useQuery({
+    queryKey: ['/api/calculate/future-savings', userId, yearsAway],
+    queryFn: async () => {
+      const currentYear = new Date().getFullYear();
+      const targetYear = currentYear + yearsAway;
+      
+      const response = await fetch('/api/calculate/future-savings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          targetYear
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to calculate future savings');
+      
+      return response.json();
+    },
+    enabled: !!userId && yearsAway > 0 && dialogOpen, // Only fetch when dialog is open and we have valid inputs
+  });
+  
   // Get existing milestones for the user
   const { data: milestones, isLoading: isLoadingMilestones } = useQuery({
     queryKey: ['/api/milestones', userId],
@@ -833,17 +858,49 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                       <div>
                         <h4 className="font-medium text-blue-700">Available Savings</h4>
                         <p className="text-sm text-blue-600">
-                          Funds available for your down payment
+                          {yearsAway > 0 
+                            ? `Projected savings in ${yearsAway} years (${new Date().getFullYear() + yearsAway})`
+                            : 'Current funds available for your down payment'
+                          }
                         </p>
                       </div>
                       <div className="text-xl font-semibold text-blue-700">
-                        ${financialProfile?.savingsAmount?.toLocaleString() || '0'}
+                        {isLoadingFutureSavings ? (
+                          <span className="text-sm text-blue-600">Calculating...</span>
+                        ) : (
+                          yearsAway > 0 && futureSavings 
+                            ? `$${Math.round(futureSavings.futureSavings).toLocaleString()}`
+                            : `$${financialProfile?.savingsAmount?.toLocaleString() || '0'}`
+                        )}
                       </div>
                     </div>
-                    {financialProfile?.savingsAmount && homeDownPayment > financialProfile.savingsAmount && (
+                    
+                    {/* Show warning if down payment exceeds available funds */}
+                    {yearsAway > 0 && futureSavings && homeDownPayment > futureSavings.futureSavings && (
                       <div className="mt-2 text-sm text-red-600 flex items-center">
                         <AlertTriangle className="h-4 w-4 mr-1" />
-                        Your down payment exceeds your available savings
+                        Your down payment would exceed your projected savings in {yearsAway} years
+                      </div>
+                    )}
+                    
+                    {yearsAway === 0 && financialProfile?.savingsAmount && homeDownPayment > financialProfile.savingsAmount && (
+                      <div className="mt-2 text-sm text-red-600 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Your down payment exceeds your current available savings
+                      </div>
+                    )}
+                    
+                    {/* Show comparison between current and future savings when applicable */}
+                    {yearsAway > 0 && futureSavings && (
+                      <div className="mt-2 text-sm text-blue-700">
+                        <div className="flex justify-between">
+                          <span>Current savings:</span>
+                          <span>${Math.round(futureSavings.currentSavings).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Projected growth:</span>
+                          <span>${Math.round(futureSavings.futureSavings - futureSavings.currentSavings).toLocaleString()}</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -942,17 +999,49 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                       <div>
                         <h4 className="font-medium text-blue-700">Available Savings</h4>
                         <p className="text-sm text-blue-600">
-                          Funds available for your down payment
+                          {yearsAway > 0 
+                            ? `Projected savings in ${yearsAway} years (${new Date().getFullYear() + yearsAway})`
+                            : 'Current funds available for your down payment'
+                          }
                         </p>
                       </div>
                       <div className="text-xl font-semibold text-blue-700">
-                        ${financialProfile?.savingsAmount?.toLocaleString() || '0'}
+                        {isLoadingFutureSavings ? (
+                          <span className="text-sm text-blue-600">Calculating...</span>
+                        ) : (
+                          yearsAway > 0 && futureSavings 
+                            ? `$${Math.round(futureSavings.futureSavings).toLocaleString()}`
+                            : `$${financialProfile?.savingsAmount?.toLocaleString() || '0'}`
+                        )}
                       </div>
                     </div>
-                    {financialProfile?.savingsAmount && carDownPayment > financialProfile.savingsAmount && (
+                    
+                    {/* Show warning if down payment exceeds available funds */}
+                    {yearsAway > 0 && futureSavings && carDownPayment > futureSavings.futureSavings && (
                       <div className="mt-2 text-sm text-red-600 flex items-center">
                         <AlertTriangle className="h-4 w-4 mr-1" />
-                        Your down payment exceeds your available savings
+                        Your down payment would exceed your projected savings in {yearsAway} years
+                      </div>
+                    )}
+                    
+                    {yearsAway === 0 && financialProfile?.savingsAmount && carDownPayment > financialProfile.savingsAmount && (
+                      <div className="mt-2 text-sm text-red-600 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Your down payment exceeds your current available savings
+                      </div>
+                    )}
+                    
+                    {/* Show comparison between current and future savings when applicable */}
+                    {yearsAway > 0 && futureSavings && (
+                      <div className="mt-2 text-sm text-blue-700">
+                        <div className="flex justify-between">
+                          <span>Current savings:</span>
+                          <span>${Math.round(futureSavings.currentSavings).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Projected growth:</span>
+                          <span>${Math.round(futureSavings.futureSavings - futureSavings.currentSavings).toLocaleString()}</span>
+                        </div>
                       </div>
                     )}
                   </div>
