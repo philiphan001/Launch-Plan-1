@@ -248,7 +248,8 @@ class AutoLoan(Liability):
     """Auto loan for vehicle purchases."""
     
     def __init__(self, name: str, initial_balance: float, 
-                 interest_rate: float = 0.06, term_years: int = 5):
+                 interest_rate: float = 0.06, term_years: int = 5,
+                 vehicle_value: float = None):
         """
         Initialize an auto loan.
         
@@ -257,8 +258,12 @@ class AutoLoan(Liability):
             initial_balance: Initial balance of the loan
             interest_rate: Annual interest rate (e.g., 0.06 for 6%)
             term_years: Term length in years
+            vehicle_value: Value of the vehicle (if None, defaults to initial_balance * 1.1)
         """
         super().__init__(name, initial_balance, interest_rate, term_years)
+        
+        # Set the vehicle value or default to 110% of loan amount
+        self.vehicle_value = vehicle_value if vehicle_value is not None else initial_balance * 1.1
         
         # Usually there's a corresponding asset (the car)
         # The asset would be created separately as a DepreciableAsset

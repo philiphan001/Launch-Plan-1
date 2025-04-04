@@ -54,7 +54,7 @@ import {
   InsertMilestone 
 } from "@shared/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search, Pencil, Trash2 } from "lucide-react";
+import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search, Pencil, Trash2, AlertTriangle } from "lucide-react";
 
 type MilestoneType = "marriage" | "children" | "home" | "car" | "education";
 
@@ -103,6 +103,24 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       const response = await fetch('/api/careers');
       if (!response.ok) throw new Error('Failed to fetch careers');
       return response.json() as Promise<Career[]>;
+    }
+  });
+  
+  // Get financial profile for the user to show available savings
+  const { data: financialProfile } = useQuery({
+    queryKey: ['/api/financial-profiles/user', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/financial-profiles/user/${userId}`);
+      if (!response.ok && response.status !== 404) throw new Error('Failed to fetch financial profile');
+      
+      // Return default values if profile doesn't exist
+      if (response.status === 404) {
+        return { 
+          savingsAmount: 0
+        };
+      }
+      
+      return response.json();
     }
   });
   
@@ -809,6 +827,27 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
               {/* Home specific fields */}
               {currentMilestone === "home" && (
                 <div className="space-y-4">
+                  {/* Display available savings information */}
+                  <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-blue-700">Available Savings</h4>
+                        <p className="text-sm text-blue-600">
+                          Funds available for your down payment
+                        </p>
+                      </div>
+                      <div className="text-xl font-semibold text-blue-700">
+                        ${financialProfile?.savingsAmount?.toLocaleString() || '0'}
+                      </div>
+                    </div>
+                    {financialProfile?.savingsAmount && homeDownPayment > financialProfile.savingsAmount && (
+                      <div className="mt-2 text-sm text-red-600 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Your down payment exceeds your available savings
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <Label htmlFor="home-value">Home Value</Label>
                     <div className="flex items-center mt-1">
@@ -897,6 +936,27 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
               {/* Car specific fields */}
               {currentMilestone === "car" && (
                 <div className="space-y-4">
+                  {/* Display available savings information */}
+                  <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-blue-700">Available Savings</h4>
+                        <p className="text-sm text-blue-600">
+                          Funds available for your down payment
+                        </p>
+                      </div>
+                      <div className="text-xl font-semibold text-blue-700">
+                        ${financialProfile?.savingsAmount?.toLocaleString() || '0'}
+                      </div>
+                    </div>
+                    {financialProfile?.savingsAmount && carDownPayment > financialProfile.savingsAmount && (
+                      <div className="mt-2 text-sm text-red-600 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        Your down payment exceeds your available savings
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <Label htmlFor="car-value">Car Value</Label>
                     <div className="flex items-center mt-1">
