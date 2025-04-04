@@ -555,31 +555,41 @@ class FinancialCalculator:
                             assets_yearly[i] += appreciated_value
                             liabilities_yearly[i] += remaining_principal
                             
-                            # COMPLETE REWRITE OF HOME PURCHASE IMPACT ON EXPENSES
+                            # SUPER SIMPLE HOME PURCHASE IMPACT ON EXPENSES (back to basics)
                             
-                            # 1. Store original housing expense for logging only
+                            # 1. Store original housing expense for logging
                             old_housing_expense = housing_expenses_yearly[i]
                             
-                            # 2. COMPLETELY REPLACE housing expense with mortgage payment
-                            #    Don't try to calculate reductions - just set it directly
-                            housing_expenses_yearly[i] = home_annual_payment
+                            # 2. Calculate reduction amount based on HOME_PURCHASE_RENT_REDUCTION
+                            #    This is the percentage of rent that goes away when buying a home
+                            rent_reduction = int(old_housing_expense * home_rent_reduction)
                             
-                            # 3. Add mortgage payment to debt expenses category for tracking
+                            # 3. Apply the reduction (reduce rent by the specified percentage)
+                            new_housing_expense = old_housing_expense - rent_reduction
+                            
+                            # 4. Add mortgage payment to the reduced housing expense
+                            housing_expenses_yearly[i] = new_housing_expense + home_annual_payment
+                            
+                            # 5. Add mortgage payment to debt expenses category for tracking
                             debt_expenses_yearly[i] += home_annual_payment
                             
-                            # 4. Log the completely rewritten approach
+                            # 6. Log detailed changes
                             with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"\n[RADICAL FIX] Home purchase housing expense for year {i}:\n")
+                                f.write(f"\n[SIMPLE FIX] Home purchase housing expense for year {i}:\n")
                                 f.write(f"  Original housing expense (rent): ${old_housing_expense}\n")
-                                f.write(f"  COMPLETELY REPLACED with mortgage payment: ${home_annual_payment}\n")
+                                f.write(f"  Rent reduction ({home_rent_reduction*100}%): -${rent_reduction}\n")
+                                f.write(f"  After reduction: ${new_housing_expense}\n")
+                                f.write(f"  Add mortgage payment: +${home_annual_payment}\n")
+                                f.write(f"  Final housing expense: ${housing_expenses_yearly[i]}\n")
                                 f.write(f"  Home value: ${appreciated_value}\n")
                                 f.write(f"  Mortgage principal: ${remaining_principal}\n")
                             
-                            # Log changes
+                            # Log changes - more consistent with our new approach
                             with open('healthcare_debug.log', 'a') as f:
                                 if i == milestone_year:  # Only log the first year to avoid excessive logging
                                     f.write(f"After home purchase:\n")
-                                    f.write(f"- Replaced housing expenses (rent) with mortgage payment: ${home_annual_payment}\n")
+                                    f.write(f"- Reduced rent by: ${rent_reduction} ({home_rent_reduction*100}%)\n")
+                                    f.write(f"- Added mortgage payment: ${home_annual_payment}\n")
                                     f.write(f"- Home value: ${appreciated_value}\n")
                                     f.write(f"- Mortgage principal: ${remaining_principal}\n")
                                     
