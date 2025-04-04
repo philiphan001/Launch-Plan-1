@@ -141,6 +141,8 @@ class FinancialCalculator:
         net_worth = [0] * (self.years_to_project + 1)
         assets_yearly = [0] * (self.years_to_project + 1)
         liabilities_yearly = [0] * (self.years_to_project + 1)
+        # Initialize an array to track all personal loans across years
+        all_personal_loans = [0] * (self.years_to_project + 1)
         
         # Debug helper - output to healthcare log file
         with open('healthcare_debug.log', 'a') as f:
@@ -156,6 +158,7 @@ class FinancialCalculator:
         mortgage_yearly = [0] * (self.years_to_project + 1)
         car_loan_yearly = [0] * (self.years_to_project + 1)
         student_loan_yearly = [0] * (self.years_to_project + 1)
+        all_personal_loans = [0] * (self.years_to_project + 1)  # New array to track all personal loans
         
         # Track expense categories
         # Base cost of living categories
@@ -208,7 +211,10 @@ class FinancialCalculator:
                 student_loan_yearly[0] += int(liability_balance)
         
         # Calculate initial net worth
+        # No personal loans at the start, so we don't need to include all_personal_loans[0]
         net_worth[0] = int(assets_yearly[0] - liabilities_yearly[0])
+        # Initialize all_personal_loans to empty array for year 0
+        all_personal_loans[0] = 0
         
         # Project for each year
         for i in range(1, self.years_to_project + 1):
@@ -274,8 +280,9 @@ class FinancialCalculator:
             # Calculate cash flow for this year
             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
             
-            # Calculate net worth for this year
-            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+            # Calculate net worth for this year including any personal loans
+            # Add personal loan value from tracking array to net worth calculation
+            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
             
             # Calculate expense categories for this year
             # Base cost of living categories
@@ -480,7 +487,7 @@ class FinancialCalculator:
                             # Calculate liability reduction and convert to int
                             reduced_liability = int(spouse_liabilities * max(0, 1 - (i - milestone_year) * 0.1))
                             liabilities_yearly[i] += reduced_liability  # Simple reduction of liabilities over time
-                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
                             
                             # Increase general expenses due to marriage
                             # Only apply to expenses after the wedding year (to avoid double counting wedding costs)
@@ -672,7 +679,9 @@ class FinancialCalculator:
                                 if year == milestone_year:
                                     # In the milestone year, add the full loan amount
                                     liabilities_yearly[year] += loan_needed
-                                    personal_loan_yearly[year] = loan_needed
+                                    personal_loan_yearly[year] = int(loan_needed)
+                                    # Track in all_personal_loans array for net worth calculation
+                                    all_personal_loans[year] += int(loan_needed)
                                     
                                     # Add the loan balance to debts
                                     # Add the loan balance to debts (assume loan starts mid-year)
@@ -690,8 +699,10 @@ class FinancialCalculator:
                                     personal_loan_balance = max(0, personal_loan_balance)
                                     
                                     # Update yearly values
-                                    personal_loan_yearly[year] = personal_loan_balance
-                                    liabilities_yearly[year] += personal_loan_balance
+                                    personal_loan_yearly[year] = int(personal_loan_balance)
+                                    # Do not add to liabilities here - we will update total liabilities at the end
+                                    # Track in all_personal_loans array for net worth calculation
+                                    all_personal_loans[year] += int(personal_loan_balance)
                                     
                                     # Add loan payments to debt expenses
                                     years_left = year - milestone_year
@@ -845,7 +856,7 @@ class FinancialCalculator:
                             )
                             
                             # Update net worth and cash flow
-                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
                             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                     
                     elif milestone.get('type') == 'car':
@@ -930,6 +941,8 @@ class FinancialCalculator:
                                     liabilities_yearly[year] += loan_needed
                                     personal_loan_yearly[year] = loan_needed
                                     
+                                    # Track in all_personal_loans array for net worth calculation
+                                    all_personal_loans[year] += int(loan_needed)
                                     # Add the loan balance to debts
                                     debt_expenses_yearly[year] += monthly_payment * 12
                                 elif personal_loan_balance > 0:
@@ -945,8 +958,10 @@ class FinancialCalculator:
                                     personal_loan_balance = max(0, personal_loan_balance)
                                     
                                     # Update yearly values
-                                    personal_loan_yearly[year] = personal_loan_balance
-                                    liabilities_yearly[year] += personal_loan_balance
+                                    personal_loan_yearly[year] = int(personal_loan_balance)
+                                    # Do not add to liabilities here - we will update total liabilities at the end
+                                    # Track in all_personal_loans array for net worth calculation
+                                    all_personal_loans[year] += int(personal_loan_balance)
                                     
                                     # Add loan payments to debt expenses
                                     years_left = year - milestone_year
@@ -1092,7 +1107,7 @@ class FinancialCalculator:
                                             transportation_expenses_yearly[i] = int(transportation_expenses_yearly[i] * (1.0 - car_transportation_reduction))
                                         
                             # Update net worth (assets - liabilities)
-                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
                             
                             # Recalculate total expenses for the year with all components
                             expenses_yearly[i] = (
@@ -1215,6 +1230,7 @@ class FinancialCalculator:
             'mortgage': mortgage_yearly,
             'carLoan': car_loan_yearly,
             'studentLoan': student_loan_yearly,
+            'personalLoans': all_personal_loans,
             
             # Base cost of living categories
             'housing': housing_expenses_yearly,
