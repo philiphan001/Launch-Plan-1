@@ -262,3 +262,81 @@ class AutoLoan(Liability):
         
         # Usually there's a corresponding asset (the car)
         # The asset would be created separately as a DepreciableAsset
+
+
+class PersonalLoan(Liability):
+    """Personal loan used for various purposes (down payments, etc.)."""
+    
+    def __init__(self, name: str, initial_balance: float, 
+                 interest_rate: float = 0.08, term_years: int = 5,
+                 milestone_year: int = 0, milestone_month: int = 6):
+        """
+        Initialize a personal loan.
+        
+        Args:
+            name: Personal loan name
+            initial_balance: Initial balance of the loan
+            interest_rate: Annual interest rate (e.g., 0.08 for 8%)
+            term_years: Term length in years
+            milestone_year: Year when the loan was originated
+            milestone_month: Month when the loan was originated (1-12)
+        """
+        super().__init__(name, initial_balance, interest_rate, term_years)
+        self.milestone_year = milestone_year
+        self.milestone_month = milestone_month
+        
+        # Calculate partial year interest if loan doesn't start at beginning of year
+        self.first_year_fraction = (12 - milestone_month + 1) / 12 if milestone_month > 1 else 1.0
+    
+    def _calculate_balance(self, previous_balance: float, year: int) -> float:
+        """
+        Calculate the balance for a given year based on the previous balance.
+        
+        Args:
+            previous_balance: Balance from the previous year
+            year: Current year to calculate
+            
+        Returns:
+            Calculated balance
+        """
+        # If this is the milestone year (loan origination year), use partial year calculation
+        if year == self.milestone_year:
+            # Apply interest for partial year
+            interest = previous_balance * self.interest_rate * self.first_year_fraction
+            balance = previous_balance + interest
+            
+            # Calculate partial year payment
+            partial_payment = self.monthly_payment * (12 - self.milestone_month + 1)
+            if year in self.payment_history:
+                payment = self.payment_history.get(year, 0)
+            else:
+                # Use calculated partial payment
+                payment = min(partial_payment, balance)
+                
+            balance -= payment
+            return max(0, balance)
+        
+        # For years after milestone, use standard calculation
+        return super()._calculate_balance(previous_balance, year)
+    
+    def get_payment(self, year: int) -> float:
+        """
+        Get the annual payment amount for the personal loan, considering mid-year start.
+        
+        Args:
+            year: Year to get payment for
+            
+        Returns:
+            Annual payment amount
+        """
+        # No payments before the loan starts
+        if year < self.milestone_year:
+            return 0
+            
+        # First year may have partial payments
+        if year == self.milestone_year:
+            # Partial year payment
+            return self.monthly_payment * (12 - self.milestone_month + 1)
+        
+        # After milestone year, use standard payment
+        return super().get_payment(year)

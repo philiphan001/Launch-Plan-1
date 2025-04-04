@@ -13,7 +13,7 @@ from typing import Dict, Any, List, Optional, Union, Callable
 try:
     # First try direct imports (these will work when executed directly)
     from models.asset import Asset, DepreciableAsset, Investment
-    from models.liability import Liability, Mortgage, StudentLoan, AutoLoan
+    from models.liability import Liability, Mortgage, StudentLoan, AutoLoan, PersonalLoan
     from models.income import Income, SalaryIncome, SpouseIncome
     from models.expenditure import Expenditure, Housing, Transportation, Living, Tax
     from launch_plan_assumptions import (
@@ -28,7 +28,7 @@ try:
 except ImportError:
     # Fallback to full imports (these will work when executed from parent directory)
     from server.python.models.asset import Asset, DepreciableAsset, Investment
-    from server.python.models.liability import Liability, Mortgage, StudentLoan, AutoLoan
+    from server.python.models.liability import Liability, Mortgage, StudentLoan, AutoLoan, PersonalLoan
     from server.python.models.income import Income, SalaryIncome, SpouseIncome
     from server.python.models.expenditure import Expenditure, Housing, Transportation, Living, Tax
     from server.python.launch_plan_assumptions import (
@@ -200,7 +200,8 @@ class FinancialCalculator:
         # Sum all liability balances for year 0
         for liability in self.liabilities:
             liability_balance = liability.get_balance(0)
-            liabilities_yearly[0] += int(liability_balance)
+            liability_balance_int = int(liability_balance)
+            liabilities_yearly[0] += liability_balance_int
             
             # Categorize liabilities
             if isinstance(liability, Mortgage):
@@ -261,7 +262,8 @@ class FinancialCalculator:
                 
                 # Categorize liabilities
                 if isinstance(liability, Mortgage):
-                    mortgage_yearly[i] += int(liability_balance)
+                    mortgage_balance_int = int(liability_balance)
+                    mortgage_yearly[i] += mortgage_balance_int
                 elif isinstance(liability, AutoLoan):
                     car_loan_yearly[i] += int(liability_balance)
                 elif isinstance(liability, StudentLoan):
@@ -662,52 +664,40 @@ class FinancialCalculator:
                             num_payments = personal_loan_term * 12
                             monthly_payment = loan_needed * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
                             
-                            # Add this loan to liabilities
-                            personal_loan_yearly = [0] * (self.years_to_project + 1)
-                            personal_loan_balance = loan_needed
+                            # Create a personal loan object for home down payment
+                            # Assuming the loan starts in June (month 6)
+                            personal_loan = PersonalLoan(
+                                name="Home Down Payment Loan",
+                                initial_balance=loan_needed,
+                                interest_rate=personal_loan_rate,
+                                term_years=personal_loan_term,
+                                milestone_year=milestone_year,
+                                milestone_month=6  # Assume loan starts mid-year
+                            )
+                            
+                            # Add the personal loan to the calculator's liabilities
+                            self.add_liability(personal_loan)
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"\nCreating personal loan for home down payment:\n")
                                 f.write(f"- Loan amount: ${loan_needed}\n")
                                 f.write(f"- Term: {personal_loan_term} years\n")
                                 f.write(f"- Rate: {personal_loan_rate * 100}%\n")
-                                f.write(f"- Monthly payment: ${monthly_payment:.2f}\n")
+                                f.write(f"- Monthly payment: ${personal_loan.monthly_payment:.2f}\n")
                             
                             # Track the loan balance for all future years
                             for year in range(milestone_year, self.years_to_project + 1):
-                                # Add loan amount to our liabilities for this milestone year
-                                if year == milestone_year:
-                                    # In the milestone year, add the full loan amount
-                                    liabilities_yearly[year] += loan_needed
-                                    personal_loan_yearly[year] = int(loan_needed)
-                                    # Track in all_personal_loans array for net worth calculation
-                                    all_personal_loans[year] += int(loan_needed)
-                                    
-                                    # Add the loan balance to debts
-                                    # Add the loan balance to debts (assume loan starts mid-year)
-                                    debt_expenses_yearly[year] += int(monthly_payment * 6)
-                                elif personal_loan_balance > 0:
-                                    # For future years, calculate remaining balance after payments
-                                    interest_for_year = personal_loan_balance * personal_loan_rate
-                                    principal_for_year = (monthly_payment * 12) - interest_for_year
-                                    
-                                    # Ensure we don't reduce balance below zero
-                                    principal_for_year = min(principal_for_year, personal_loan_balance)
-                                    
-                                    # Update balance
-                                    personal_loan_balance -= principal_for_year
-                                    personal_loan_balance = max(0, personal_loan_balance)
-                                    
-                                    # Update yearly values
-                                    personal_loan_yearly[year] = int(personal_loan_balance)
-                                    # Do not add to liabilities here - we will update total liabilities at the end
-                                    # Track in all_personal_loans array for net worth calculation
-                                    all_personal_loans[year] += int(personal_loan_balance)
-                                    
-                                    # Add loan payments to debt expenses
-                                    years_left = year - milestone_year
-                                    if years_left < personal_loan_term:
-                                        debt_expenses_yearly[year] += monthly_payment * 12
+                                # Get the loan balance for this year
+                                loan_balance = personal_loan.get_balance(year)
+                                
+                                # Add to all_personal_loans array for net worth calculation
+                                loan_balance_int = int(loan_balance)
+                                all_personal_loans[year] += loan_balance_int
+                                
+                                # Add the loan payment to debt expenses
+                                payment = personal_loan.get_payment(year)
+                                payment_int = int(payment)
+                                debt_expenses_yearly[year] += payment_int
                         
                         # Update cash flow by the actual savings withdrawal
                         cash_flow_yearly[milestone_year] -= savings_portion
@@ -922,51 +912,38 @@ class FinancialCalculator:
                             num_payments = personal_loan_term * 12
                             monthly_payment = loan_needed * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
                             
-                            # Add this loan to liabilities
-                            personal_loan_yearly = [0] * (self.years_to_project + 1)
-                            personal_loan_balance = loan_needed
+                            # Create a personal loan object for car down payment
+                            # Assuming the loan starts in the same month as the milestone
+                            personal_loan = PersonalLoan(
+                                name="Car Down Payment Loan",
+                                initial_balance=loan_needed,
+                                interest_rate=personal_loan_rate,
+                                term_years=personal_loan_term,
+                                milestone_year=milestone_year,
+                                milestone_month=6  # Assume loan starts mid-year
+                            )
+                            
+                            # Add the personal loan to the calculator's liabilities
+                            self.add_liability(personal_loan)
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"\nCreating personal loan for car down payment:\n")
                                 f.write(f"- Loan amount: ${loan_needed}\n")
                                 f.write(f"- Term: {personal_loan_term} years\n")
                                 f.write(f"- Rate: {personal_loan_rate * 100}%\n")
-                                f.write(f"- Monthly payment: ${monthly_payment:.2f}\n")
+                                f.write(f"- Monthly payment: ${personal_loan.monthly_payment:.2f}\n")
                             
                             # Track the loan balance for all future years
                             for year in range(milestone_year, self.years_to_project + 1):
-                                # Add loan amount to our liabilities for this milestone year
-                                if year == milestone_year:
-                                    # In the milestone year, add the full loan amount
-                                    liabilities_yearly[year] += loan_needed
-                                    personal_loan_yearly[year] = loan_needed
-                                    
-                                    # Track in all_personal_loans array for net worth calculation
-                                    all_personal_loans[year] += int(loan_needed)
-                                    # Add the loan balance to debts
-                                    debt_expenses_yearly[year] += monthly_payment * 12
-                                elif personal_loan_balance > 0:
-                                    # For future years, calculate remaining balance after payments
-                                    interest_for_year = personal_loan_balance * personal_loan_rate
-                                    principal_for_year = (monthly_payment * 12) - interest_for_year
-                                    
-                                    # Ensure we don't reduce balance below zero
-                                    principal_for_year = min(principal_for_year, personal_loan_balance)
-                                    
-                                    # Update balance
-                                    personal_loan_balance -= principal_for_year
-                                    personal_loan_balance = max(0, personal_loan_balance)
-                                    
-                                    # Update yearly values
-                                    personal_loan_yearly[year] = int(personal_loan_balance)
-                                    # Do not add to liabilities here - we will update total liabilities at the end
-                                    # Track in all_personal_loans array for net worth calculation
-                                    all_personal_loans[year] += int(personal_loan_balance)
-                                    
-                                    # Add loan payments to debt expenses
-                                    years_left = year - milestone_year
-                                    if years_left < personal_loan_term:
-                                        debt_expenses_yearly[year] += monthly_payment * 12
+                                # Get the loan balance for this year
+                                loan_balance = personal_loan.get_balance(year)
+                                
+                                # Add to all_personal_loans array for net worth calculation
+                                all_personal_loans[year] += int(loan_balance)
+                                
+                                # Add the loan payment to debt expenses
+                                payment = personal_loan.get_payment(year)
+                                debt_expenses_yearly[year] += int(payment)
                         
                         # Update cash flow by the actual savings withdrawal
                         cash_flow_yearly[milestone_year] -= savings_portion
