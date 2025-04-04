@@ -136,7 +136,7 @@ class Transportation(Expenditure):
                  inflation_rate: float = 0.03,
                  car_replacement_years: int = 7,
                  car_replacement_cost: float = 20000,
-                 auto_replace: bool = True):
+                 auto_replace: bool = False):  # Default changed to False for more predictable calculations
         """
         Initialize transportation expenses.
         
@@ -146,13 +146,17 @@ class Transportation(Expenditure):
             inflation_rate: Annual inflation rate (e.g., 0.03 for 3%)
             car_replacement_years: Years between car replacements
             car_replacement_cost: Cost of replacing car
-            auto_replace: Whether to automatically replace the car on schedule
+            auto_replace: Whether to automatically replace the car on schedule (defaults to False for predictable calculations)
         """
         super().__init__(name, annual_amount, inflation_rate)
         self.car_replacement_years = car_replacement_years
         self.car_replacement_cost = car_replacement_cost
         self.auto_replace = auto_replace
         self.car_purchases = {}  # Track car purchases over time
+        
+        # Debug transportation expenses
+        with open('healthcare_debug.log', 'a') as f:
+            f.write(f"Created transportation expense: {name}, annual_amount={annual_amount}, inflation={inflation_rate}, auto_replace={auto_replace}\n")
     
     def _calculate_expense(self, previous_expense: float, year: int) -> float:
         """
@@ -165,6 +169,21 @@ class Transportation(Expenditure):
         Returns:
             Calculated expense amount
         """
+        # For predictable calculations (when auto_replace is False), use a consistent formula similar to healthcare
+        if not self.auto_replace:
+            # Calculate with cumulative inflation over the years
+            year_0_amount = self.expense_history[0]
+            predictable_expense = year_0_amount * ((1 + self.inflation_rate) ** year)
+            
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"Transportation predictable calculation for year {year}:\n")
+                f.write(f"   Initial amount (year 0): {year_0_amount}\n")
+                f.write(f"   Inflation rate: {self.inflation_rate}\n")
+                f.write(f"   Calculation: {year_0_amount} * (1 + {self.inflation_rate})^{year} = {predictable_expense}\n")
+                
+            return predictable_expense
+        
+        # If auto_replace is enabled, use the original car replacement logic
         # Apply standard inflation
         base_expense = previous_expense * (1 + self.inflation_rate)
         

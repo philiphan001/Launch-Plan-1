@@ -247,6 +247,48 @@ const LaunchPlanAssumptionsCard = () => {
             isLocationBased: true
           },
           {
+            id: "healthcare-inflation",
+            name: "HEALTHCARE_INFLATION_RATE",
+            displayName: "Healthcare Inflation Rate",
+            value: 0.04,
+            defaultValue: 0.04,
+            minValue: 0.01,
+            maxValue: 0.10,
+            stepValue: 0.01,
+            unit: "%",
+            description: "Annual inflation rate for healthcare expenses, typically higher than general inflation",
+            category: "inflation",
+            isEnabled: true
+          },
+          {
+            id: "transportation-inflation",
+            name: "TRANSPORTATION_INFLATION_RATE",
+            displayName: "Transportation Inflation Rate",
+            value: 0.03,
+            defaultValue: 0.03,
+            minValue: 0.01,
+            maxValue: 0.08,
+            stepValue: 0.01,
+            unit: "%",
+            description: "Annual inflation rate for transportation expenses",
+            category: "inflation",
+            isEnabled: true
+          },
+          {
+            id: "transport-auto-replace",
+            name: "CAR_AUTO_REPLACE",
+            displayName: "Auto-Replace Cars",
+            value: 0,
+            defaultValue: 0,
+            minValue: 0,
+            maxValue: 1,
+            stepValue: 1,
+            unit: "",
+            description: "Whether to automatically replace cars on a schedule (causes jumps in transportation expenses)",
+            category: "transportation",
+            isEnabled: false
+          },
+          {
             id: "discretionary-expense",
             name: "DEFAULT_EXPENSE_ALLOCATIONS.discretionary",
             displayName: "Monthly Discretionary Expense",

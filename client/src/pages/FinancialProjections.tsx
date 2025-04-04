@@ -428,13 +428,14 @@ const FinancialProjections = () => {
     const liabilitiesData = [studentLoanDebt]; // Initial liabilities (student loan only)
     
     // Track expense categories for detailed breakdown with initial values as percentages of base expenses
-    const housingExpensesData = [currentExpenses * 0.3]; // Mortgage/rent expenses - estimate 30%
-    const transportationExpensesData = [currentExpenses * 0.15]; // Transportation expenses - estimate 15%
-    const foodExpensesData = [currentExpenses * 0.15]; // Food expenses - estimate 15%
-    const healthcareExpensesData = [currentExpenses * 0.1]; // Healthcare expenses - estimate 10%
+    // Initialize with empty arrays, the backend will provide the proper data
+    const housingExpensesData = [0]; // Will be populated with backend data
+    const transportationExpensesData = [0]; // Will be populated with backend data
+    const foodExpensesData = [0]; // Will be populated with backend data
+    const healthcareExpensesData = [0]; // Will be populated with backend data
     const educationExpensesData = [0]; // Student loan and education loan expenses
     const debtExpensesData = [0]; // Other debt payments
-    const discretionaryExpensesData = [currentExpenses * 0.3]; // Discretionary spending - remaining 30%
+    const discretionaryExpensesData = [0]; // Will be populated with backend data
     const childcareExpensesData = [0]; // Child-related expenses
     
     // Specific asset and liability tracking

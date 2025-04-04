@@ -16,7 +16,9 @@ try:
     from launch_plan_assumptions import (
         HOME_PURCHASE_RENT_REDUCTION, CAR_PURCHASE_TRANSPORTATION_REDUCTION,
         MARRIAGE_EXPENSE_INCREASE, GRADUATE_SCHOOL_INCOME_INCREASE,
-        CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS
+        CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
+        HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
+        CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE
     )
 except ImportError:
     # Fallback to full imports (these will work when executed from parent directory)
@@ -27,7 +29,9 @@ except ImportError:
     from server.python.launch_plan_assumptions import (
         HOME_PURCHASE_RENT_REDUCTION, CAR_PURCHASE_TRANSPORTATION_REDUCTION,
         MARRIAGE_EXPENSE_INCREASE, GRADUATE_SCHOOL_INCOME_INCREASE,
-        CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS
+        CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
+        HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
+        CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE
     )
 
 
@@ -648,18 +652,33 @@ class FinancialCalculator:
             
             # Debug healthcare expenses
             is_healthcare = ('health' in name.lower() or 'medical' in name.lower())
+            is_transportation = ('transport' in name.lower() or 'car' in name.lower() or expenditure_type == 'transportation')
+            
             if is_healthcare:
                 with open('healthcare_debug.log', 'a') as f:
                     f.write(f"Processing healthcare expenditure: {name}\n")
-                    f.write(f"Type: {expenditure_type}, Annual Amount: {annual_amount}, Inflation: {inflation_rate}\n")
+                    f.write(f"Type: {expenditure_type}, Annual Amount: {annual_amount}, Using HEALTHCARE_INFLATION_RATE: {HEALTHCARE_INFLATION_RATE}\n")
+                # Use the healthcare inflation rate constant for healthcare expenses
+                inflation_rate = HEALTHCARE_INFLATION_RATE
+            
+            if is_transportation and expenditure_type != 'transportation':
+                # For transportation-named expenses that aren't explicitly typed as transportation
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Processing transportation expenditure: {name}\n")
+                    f.write(f"Type: {expenditure_type}, Annual Amount: {annual_amount}, Using TRANSPORTATION_INFLATION_RATE: {TRANSPORTATION_INFLATION_RATE}\n")
+                # Use the transportation inflation rate constant
+                inflation_rate = TRANSPORTATION_INFLATION_RATE
             
             if expenditure_type == 'housing':
                 is_rent = 'rent' in name.lower()
                 expenditure = Housing(name, annual_amount, inflation_rate, is_rent)
             elif expenditure_type == 'transportation':
-                car_replacement_years = expenditure_data.get('car_replacement_years', 7)
-                car_replacement_cost = expenditure_data.get('car_replacement_cost', 20000)
-                auto_replace = expenditure_data.get('auto_replace', True)
+                # Use our new constants for transportation expenses
+                car_replacement_years = expenditure_data.get('car_replacement_years', CAR_REPLACEMENT_YEARS)
+                car_replacement_cost = expenditure_data.get('car_replacement_cost', CAR_REPLACEMENT_COST)
+                auto_replace = expenditure_data.get('auto_replace', CAR_AUTO_REPLACE)
+                # Use the transportation inflation rate constant
+                inflation_rate = TRANSPORTATION_INFLATION_RATE
                 expenditure = Transportation(name, annual_amount, inflation_rate, car_replacement_years, car_replacement_cost, auto_replace)
             elif expenditure_type == 'tax':
                 tax_rate = expenditure_data.get('tax_rate', 0.25)

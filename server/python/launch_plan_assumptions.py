@@ -8,6 +8,13 @@ HOME_PURCHASE_RENT_REDUCTION = 1.0  # 100% reduction in rent when purchasing a h
 
 # Transportation assumptions
 CAR_PURCHASE_TRANSPORTATION_REDUCTION = 0.8  # 80% reduction in transportation expenses when buying a car
+TRANSPORTATION_INFLATION_RATE = 0.03  # 3% annual inflation for transportation expenses
+CAR_REPLACEMENT_YEARS = 7  # Number of years between car replacements
+CAR_REPLACEMENT_COST = 20000  # Default cost of car replacement
+CAR_AUTO_REPLACE = False  # Default setting for auto-replace cars (False for predictable calculations)
+
+# Healthcare assumptions
+HEALTHCARE_INFLATION_RATE = 0.04  # 4% annual inflation for healthcare expenses
 
 # Marriage assumptions
 MARRIAGE_EXPENSE_INCREASE = 0.5  # 50% increase in general expenses after marriage
