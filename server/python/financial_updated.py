@@ -18,7 +18,8 @@ try:
         MARRIAGE_EXPENSE_INCREASE, GRADUATE_SCHOOL_INCOME_INCREASE,
         CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
-        CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE
+        CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
+        CAR_LOAN_TERM, CAR_LOAN_INTEREST_RATE
     )
 except ImportError:
     # Fallback to full imports (these will work when executed from parent directory)
@@ -31,7 +32,8 @@ except ImportError:
         MARRIAGE_EXPENSE_INCREASE, GRADUATE_SCHOOL_INCOME_INCREASE,
         CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
-        CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE
+        CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
+        CAR_LOAN_TERM, CAR_LOAN_INTEREST_RATE
     )
 
 
@@ -513,15 +515,16 @@ class FinancialCalculator:
                             current_car_value = int(car_value * (0.85 ** years_owned))
                             
                             # Calculate loan balance based on simple amortization
-                            # Assume 5-year car loan with 5% interest rate
-                            loan_years_passed = min(years_owned, 5)  # Cap at loan term
-                            car_interest_rate = 0.05
+                            # Use constants from launch_plan_assumptions.py
+                            loan_term = CAR_LOAN_TERM  # From assumptions
+                            loan_years_passed = min(years_owned, loan_term)  # Cap at loan term
+                            car_interest_rate = CAR_LOAN_INTEREST_RATE  # From assumptions
                             
                             # Only calculate remaining principal if within loan term
-                            if loan_years_passed < 5:
+                            if loan_years_passed < loan_term:
                                 # Calculate proper amortization for level payment loan
                                 r = car_interest_rate
-                                n = 5  # 5-year term
+                                n = loan_term  # Loan term from constants
                                 payment = (car_loan_principal * r * pow(1 + r, n)) / (pow(1 + r, n) - 1)
                                 
                                 # Calculate remaining principal after loan_years_passed
@@ -544,7 +547,7 @@ class FinancialCalculator:
                             liabilities_yearly[i] += current_car_loan
                             
                             # Add car payment to expenses for the loan term
-                            if loan_years_passed < 5:
+                            if loan_years_passed < loan_term:
                                 expenses_yearly[i] += car_annual_payment
                                 
                                 # Add car payment to debt expenses category

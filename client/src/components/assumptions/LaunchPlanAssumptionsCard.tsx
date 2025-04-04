@@ -290,6 +290,34 @@ const LaunchPlanAssumptionsCard = () => {
             isEnabled: true
           },
           {
+            id: "car-loan-term",
+            name: "CAR_LOAN_TERM",
+            displayName: "Car Loan Term",
+            value: 5,
+            defaultValue: 5,
+            minValue: 2,
+            maxValue: 8,
+            stepValue: 1,
+            unit: "years",
+            description: "The length of the car loan term in years (affects monthly payments and total interest paid)",
+            category: "transportation",
+            isEnabled: true
+          },
+          {
+            id: "car-loan-interest",
+            name: "CAR_LOAN_INTEREST_RATE",
+            displayName: "Car Loan Interest Rate",
+            value: 0.05,
+            defaultValue: 0.05,
+            minValue: 0.01,
+            maxValue: 0.15,
+            stepValue: 0.005,
+            unit: "%",
+            description: "The annual interest rate for car loans",
+            category: "transportation",
+            isEnabled: true
+          },
+          {
             id: "discretionary-expense",
             name: "DEFAULT_EXPENSE_ALLOCATIONS.discretionary",
             displayName: "Monthly Discretionary Expense",

@@ -12,6 +12,8 @@ TRANSPORTATION_INFLATION_RATE = 0.03  # 3% annual inflation for transportation e
 CAR_REPLACEMENT_YEARS = 7  # Number of years between car replacements
 CAR_REPLACEMENT_COST = 20000  # Default cost of car replacement
 CAR_AUTO_REPLACE = False  # Default setting for auto-replace cars (False for predictable calculations)
+CAR_LOAN_TERM = 5  # Default car loan term in years
+CAR_LOAN_INTEREST_RATE = 0.05  # Default car loan interest rate (5%)
 
 # Healthcare assumptions
 HEALTHCARE_INFLATION_RATE = 0.04  # 4% annual inflation for healthcare expenses
