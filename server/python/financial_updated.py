@@ -379,6 +379,36 @@ class FinancialCalculator:
                         # Also reduce cash flow by the wedding cost for this year
                         cash_flow_yearly[milestone_year] -= wedding_cost
                         
+                        # CRITICAL FIX: Update the investment asset value in our asset collection
+                        # This ensures the reduction in savings persists to future years
+                        savings_asset = None
+                        
+                        # Find the first investment asset (savings)
+                        for asset in self.assets:
+                            if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                                savings_asset = asset
+                                break
+                        
+                        # If we found a savings asset, permanently reduce its value
+                        if savings_asset:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Found savings asset: {savings_asset.name}\n")
+                                f.write(f"Original value at year {milestone_year}: ${savings_asset.get_value(milestone_year)}\n")
+                            
+                            # Get current value and reduce by wedding cost
+                            current_value = savings_asset.get_value(milestone_year)
+                            new_value = max(0, current_value - wedding_cost)
+                            
+                            # Update the value for this year and all future years will be based on this reduced amount
+                            savings_asset.update_value(milestone_year, new_value)
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Updated savings asset value: ${new_value}\n")
+                                f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                        else:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"WARNING: Could not find a savings asset to update for wedding cost!\n")
+                        
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"Assets after wedding cost: ${assets_yearly[milestone_year]}\n")
                             f.write(f"Cash flow reduced by wedding cost: ${cash_flow_yearly[milestone_year]}\n")
@@ -538,6 +568,36 @@ class FinancialCalculator:
                         # Also reduce cash flow by the down payment amount for this year
                         cash_flow_yearly[milestone_year] -= home_down_payment
                         
+                        # CRITICAL FIX: Update the investment asset value in our asset collection
+                        # This ensures the reduction in savings persists to future years
+                        savings_asset = None
+                        
+                        # Find the first investment asset (savings)
+                        for asset in self.assets:
+                            if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                                savings_asset = asset
+                                break
+                        
+                        # If we found a savings asset, permanently reduce its value
+                        if savings_asset:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Found savings asset: {savings_asset.name}\n")
+                                f.write(f"Original value at year {milestone_year}: ${savings_asset.get_value(milestone_year)}\n")
+                            
+                            # Get current value and reduce by down payment
+                            current_value = savings_asset.get_value(milestone_year)
+                            new_value = max(0, current_value - home_down_payment)
+                            
+                            # Update the value for this year and all future years will be based on this reduced amount
+                            savings_asset.update_value(milestone_year, new_value)
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Updated savings asset value: ${new_value}\n")
+                                f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                        else:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"WARNING: Could not find a savings asset to update for home down payment!\n")
+                        
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"Assets after down payment: ${assets_yearly[milestone_year]}\n")
                             f.write(f"Cash flow reduced by down payment: ${cash_flow_yearly[milestone_year]}\n")
@@ -660,6 +720,36 @@ class FinancialCalculator:
                         
                         # Also reduce cash flow by the down payment amount for this year
                         cash_flow_yearly[milestone_year] -= car_down_payment
+                        
+                        # CRITICAL FIX: Update the investment asset value in our asset collection
+                        # This ensures the reduction in savings persists to future years 
+                        savings_asset = None
+                        
+                        # Find the first investment asset (savings)
+                        for asset in self.assets:
+                            if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                                savings_asset = asset
+                                break
+                        
+                        # If we found a savings asset, permanently reduce its value
+                        if savings_asset:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Found savings asset: {savings_asset.name}\n")
+                                f.write(f"Original value at year {milestone_year}: ${savings_asset.get_value(milestone_year)}\n")
+                            
+                            # Get current value and reduce by down payment
+                            current_value = savings_asset.get_value(milestone_year)
+                            new_value = max(0, current_value - car_down_payment)
+                            
+                            # Update the value for this year and all future years will be based on this reduced amount
+                            savings_asset.update_value(milestone_year, new_value)
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Updated savings asset value: ${new_value}\n")
+                                f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                        else:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"WARNING: Could not find a savings asset to update for car down payment!\n")
                         
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"Assets after down payment: ${assets_yearly[milestone_year]}\n")
