@@ -138,6 +138,10 @@ class FinancialCalculator:
         net_worth = [0] * (self.years_to_project + 1)
         assets_yearly = [0] * (self.years_to_project + 1)
         liabilities_yearly = [0] * (self.years_to_project + 1)
+        
+        # Debug helper - output to healthcare log file
+        with open('healthcare_debug.log', 'a') as f:
+            f.write(f"\nStarting calculate_projection method\n")
         income_yearly = [0] * (self.years_to_project + 1)
         expenses_yearly = [0] * (self.years_to_project + 1)
         cash_flow_yearly = [0] * (self.years_to_project + 1)
@@ -986,5 +990,11 @@ class FinancialCalculator:
         # Add milestones
         for milestone_data in input_data.get('milestones', []):
             calculator.add_milestone(milestone_data)
-        
+          
+        # Add debug logging
+        with open('healthcare_debug.log', 'a') as f:
+            f.write(f"\nFinancial calculator created from input data\n")
+            
+        # Just return the calculator object - don't run calculation here
+        # The caller will run calculator.calculate_projection() as needed
         return calculator
