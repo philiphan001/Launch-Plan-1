@@ -558,6 +558,10 @@ class FinancialCalculator:
                             # Apply housing expense changes
                             # 1. Reduce base housing expenses (rent) after home purchase
                             housing_expense_reduction = 0
+                            
+                            # NEW APPROACH: First store the old value for debugging
+                            old_housing_expense = housing_expenses_yearly[i]
+                            
                             # Only reduce if there are existing housing expenses (rent)
                             if housing_expenses_yearly[i] > 0:
                                 housing_expense_reduction = int(housing_expenses_yearly[i] * home_rent_reduction)
@@ -565,15 +569,32 @@ class FinancialCalculator:
                                 with open('healthcare_debug.log', 'a') as f:
                                     f.write(f"Reducing housing expenses from ${housing_expenses_yearly[i]} by ${housing_expense_reduction}\n")
                                 
-                                # Apply the reduction
-                                housing_expenses_yearly[i] -= housing_expense_reduction
+                                # Apply the reduction by FULLY RESETTING the housing expense
+                                # This is critical because housing_expenses_yearly might be getting
+                                # overwritten elsewhere in the code
+                                housing_expenses_yearly[i] = housing_expenses_yearly[i] - housing_expense_reduction
                             else:
                                 # Log that no rent reduction occurred
                                 with open('healthcare_debug.log', 'a') as f:
                                     f.write(f"No housing expenses to reduce in year {i}\n")
                             
+                            # Update expenses for proper tracking
+                            expenses_yearly[i] = expenses_yearly[i] - old_housing_expense + housing_expenses_yearly[i]
+                            
                             # 2. Add mortgage payment to housing expenses
                             housing_expenses_yearly[i] += home_annual_payment
+                            
+                            # 3. Update the total expenses with the new housing cost
+                            expenses_yearly[i] += home_annual_payment
+                            
+                            # 4. Log the changes in detail
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nHousing expense adjustment details for year {i}:\n")
+                                f.write(f"  Original housing expense: ${old_housing_expense}\n")
+                                f.write(f"  Reduction applied: ${housing_expense_reduction}\n")
+                                f.write(f"  After reduction: ${old_housing_expense - housing_expense_reduction}\n")
+                                f.write(f"  Adding mortgage payment: ${home_annual_payment}\n")
+                                f.write(f"  Final housing expense: ${housing_expenses_yearly[i]}\n")
                             
                             # 3. Add mortgage payment to debt expenses
                             debt_expenses_yearly[i] += home_annual_payment
