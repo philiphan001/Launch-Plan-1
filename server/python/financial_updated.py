@@ -363,19 +363,21 @@ class FinancialCalculator:
                         spouse_liabilities = int(milestone.get('spouse_liabilities', milestone.get('spouseLiabilities', 0)))
                         wedding_cost = int(milestone.get('wedding_cost', milestone.get('weddingCost', 10000)))
                         
-                        # Apply wedding cost as a one-time expense
-                        expenses_yearly[milestone_year] += wedding_cost
-                        cash_flow_yearly[milestone_year] = income_yearly[milestone_year] - expenses_yearly[milestone_year]
+                        # Apply the one-time expense (wedding cost) to the milestone year
+                        # This is consistent with our handling of down payments for home and car
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nApplying one-time wedding cost of ${wedding_cost} in year {milestone_year}\n")
+                            f.write(f"Assets before wedding cost: ${assets_yearly[milestone_year]}\n")
                         
-                        # Reduce savings/investments for the wedding cost
-                        investment_reduced = False
-                        for asset in self.assets:
-                            if isinstance(asset, Investment) and not investment_reduced:
-                                asset_value = asset.get_value(milestone_year)
-                                if asset_value >= wedding_cost:
-                                    # Reduce the investment by the wedding cost
-                                    asset.value_history[milestone_year] = asset_value - wedding_cost
-                                    investment_reduced = True
+                        # Reduce assets by the wedding cost (for milestone year only)
+                        assets_yearly[milestone_year] -= wedding_cost
+                        
+                        # Also reduce cash flow by the wedding cost for this year
+                        cash_flow_yearly[milestone_year] -= wedding_cost
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"Assets after wedding cost: ${assets_yearly[milestone_year]}\n")
+                            f.write(f"Cash flow reduced by wedding cost: ${cash_flow_yearly[milestone_year]}\n")
                         
                         # Add spouse income to our income projection
                         for i in range(milestone_year, self.years_to_project + 1):
@@ -520,6 +522,22 @@ class FinancialCalculator:
                         mortgage_term = MORTGAGE_TERM_YEARS
                         mortgage_interest_rate = MORTGAGE_INTEREST_RATE
                         
+                        # Apply the one-time expense (down payment) to the milestone year
+                        # Reduce assets (savings/investments) to account for home down payment
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nApplying one-time home down payment expense of ${home_down_payment} in year {milestone_year}\n")
+                            f.write(f"Assets before down payment: ${assets_yearly[milestone_year]}\n")
+                        
+                        # Reduce assets by the down payment amount (for milestone year only)
+                        assets_yearly[milestone_year] -= home_down_payment
+                        
+                        # Also reduce cash flow by the down payment amount for this year
+                        cash_flow_yearly[milestone_year] -= home_down_payment
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"Assets after down payment: ${assets_yearly[milestone_year]}\n")
+                            f.write(f"Cash flow reduced by down payment: ${cash_flow_yearly[milestone_year]}\n")
+                        
                         for i in range(milestone_year, self.years_to_project + 1):
                             # Home appreciates at 3% per year
                             years_owned = i - milestone_year
@@ -626,6 +644,22 @@ class FinancialCalculator:
                             f.write(f"- Car loan: ${car_loan_principal}\n")
                             f.write(f"- Annual payment: ${car_annual_payment}\n")
                             f.write(f"- Transportation reduction factor: {car_transportation_reduction}\n")
+                            
+                        # Apply the one-time expense (down payment) to the milestone year
+                        # Reduce assets (savings/investments) to account for car down payment
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nApplying one-time car down payment expense of ${car_down_payment} in year {milestone_year}\n")
+                            f.write(f"Assets before down payment: ${assets_yearly[milestone_year]}\n")
+                        
+                        # Reduce assets by the down payment amount (for milestone year only)
+                        assets_yearly[milestone_year] -= car_down_payment
+                        
+                        # Also reduce cash flow by the down payment amount for this year
+                        cash_flow_yearly[milestone_year] -= car_down_payment
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"Assets after down payment: ${assets_yearly[milestone_year]}\n")
+                            f.write(f"Cash flow reduced by down payment: ${cash_flow_yearly[milestone_year]}\n")
                         
                         # Add car asset and loan to financial tracking
                         for i in range(milestone_year, self.years_to_project + 1):
