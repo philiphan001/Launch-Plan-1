@@ -3,6 +3,9 @@ Financial calculator module for the FinancialFuture application.
 This module contains the calculator class responsible for generating financial projections.
 """
 
+# Default milestone month (assuming milestones occur mid-year)
+milestone_month = 6
+
 import json
 import logging
 from typing import Dict, Any, List, Optional, Union, Callable
@@ -617,13 +620,86 @@ class FinancialCalculator:
                         # Reduce assets by the down payment amount (for milestone year only)
                         assets_yearly[milestone_year] -= home_down_payment
                         
-                        # CRITICAL FIX: Rather than just reducing savings for the milestone year,
-                        # allow the savings value to go negative to properly track the impact
+                        # NEW APPROACH: Don't allow savings to go negative. Instead, create a personal loan
+                        # for any amount that exceeds available savings
                         current_savings = savings_value_yearly[milestone_year]
-                        savings_value_yearly[milestone_year] = current_savings - home_down_payment
+                        available_savings_for_down_payment = max(0, current_savings)
                         
-                        # Also reduce cash flow by the down payment amount for this year
-                        cash_flow_yearly[milestone_year] -= home_down_payment
+                        # Calculate how much of the down payment can be covered by savings
+                        savings_portion = min(available_savings_for_down_payment, home_down_payment)
+                        
+                        # Calculate loan amount needed if savings doesn't cover full down payment
+                        loan_needed = max(0, home_down_payment - savings_portion)
+                        
+                        # Log details of available savings and potential personal loan
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nChecking savings availability for home down payment:\n")
+                            f.write(f"- Available savings: ${available_savings_for_down_payment}\n")
+                            f.write(f"- Down payment needed: ${home_down_payment}\n")
+                            f.write(f"- Savings portion: ${savings_portion}\n")
+                            f.write(f"- Loan needed: ${loan_needed}\n")
+                        
+                        # Only reduce savings by what's available
+                        savings_value_yearly[milestone_year] = current_savings - savings_portion
+                        
+                        # Create a personal loan if needed
+                        if loan_needed > 0:
+                            # Use assumption values for personal loan term and rate
+                            # Default to 5 years and 8% if not specified
+                            personal_loan_term = 5  # years
+                            personal_loan_rate = 0.08  # 8%
+                            
+                            # Calculate monthly payment for the personal loan
+                            # Formula: P * (r/12) * (1+r/12)^(n*12) / ((1+r/12)^(n*12) - 1)
+                            monthly_rate = personal_loan_rate / 12
+                            num_payments = personal_loan_term * 12
+                            monthly_payment = loan_needed * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+                            
+                            # Add this loan to liabilities
+                            personal_loan_yearly = [0] * (self.years_to_project + 1)
+                            personal_loan_balance = loan_needed
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nCreating personal loan for home down payment:\n")
+                                f.write(f"- Loan amount: ${loan_needed}\n")
+                                f.write(f"- Term: {personal_loan_term} years\n")
+                                f.write(f"- Rate: {personal_loan_rate * 100}%\n")
+                                f.write(f"- Monthly payment: ${monthly_payment:.2f}\n")
+                            
+                            # Track the loan balance for all future years
+                            for year in range(milestone_year, self.years_to_project + 1):
+                                # Add loan amount to our liabilities for this milestone year
+                                if year == milestone_year:
+                                    # In the milestone year, add the full loan amount
+                                    liabilities_yearly[year] += loan_needed
+                                    personal_loan_yearly[year] = loan_needed
+                                    
+                                    # Add the loan balance to debts
+                                    # Add the loan balance to debts (assume loan starts mid-year)
+                                    debt_expenses_yearly[year] += int(monthly_payment * 6)
+                                elif personal_loan_balance > 0:
+                                    # For future years, calculate remaining balance after payments
+                                    interest_for_year = personal_loan_balance * personal_loan_rate
+                                    principal_for_year = (monthly_payment * 12) - interest_for_year
+                                    
+                                    # Ensure we don't reduce balance below zero
+                                    principal_for_year = min(principal_for_year, personal_loan_balance)
+                                    
+                                    # Update balance
+                                    personal_loan_balance -= principal_for_year
+                                    personal_loan_balance = max(0, personal_loan_balance)
+                                    
+                                    # Update yearly values
+                                    personal_loan_yearly[year] = personal_loan_balance
+                                    liabilities_yearly[year] += personal_loan_balance
+                                    
+                                    # Add loan payments to debt expenses
+                                    years_left = year - milestone_year
+                                    if years_left < personal_loan_term:
+                                        debt_expenses_yearly[year] += monthly_payment * 12
+                        
+                        # Update cash flow by the actual savings withdrawal
+                        cash_flow_yearly[milestone_year] -= savings_portion
                         
                         # CRITICAL FIX: Update the investment asset value in our asset collection
                         # This ensures the reduction in savings persists to future years
@@ -800,13 +876,85 @@ class FinancialCalculator:
                         # Reduce assets by the down payment amount (for milestone year only)
                         assets_yearly[milestone_year] -= car_down_payment
                         
-                        # CRITICAL FIX: Rather than just reducing savings for the milestone year,
-                        # allow the savings value to go negative to properly track the impact
+                        # NEW APPROACH: Don't allow savings to go negative. Instead, create a personal loan
+                        # for any amount that exceeds available savings
                         current_savings = savings_value_yearly[milestone_year]
-                        savings_value_yearly[milestone_year] = current_savings - car_down_payment
+                        available_savings_for_down_payment = max(0, current_savings)
                         
-                        # Also reduce cash flow by the down payment amount for this year
-                        cash_flow_yearly[milestone_year] -= car_down_payment
+                        # Calculate how much of the down payment can be covered by savings
+                        savings_portion = min(available_savings_for_down_payment, car_down_payment)
+                        
+                        # Calculate loan amount needed if savings doesn't cover full down payment
+                        loan_needed = max(0, car_down_payment - savings_portion)
+                        
+                        # Log details of available savings and potential personal loan
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nChecking savings availability for car down payment:\n")
+                            f.write(f"- Available savings: ${available_savings_for_down_payment}\n")
+                            f.write(f"- Down payment needed: ${car_down_payment}\n")
+                            f.write(f"- Savings portion: ${savings_portion}\n")
+                            f.write(f"- Loan needed: ${loan_needed}\n")
+                        
+                        # Only reduce savings by what's available
+                        savings_value_yearly[milestone_year] = current_savings - savings_portion
+                        
+                        # Create a personal loan if needed
+                        if loan_needed > 0:
+                            # Use assumption values for personal loan term and rate
+                            # Default to 5 years and 8% if not specified
+                            personal_loan_term = 5  # years
+                            personal_loan_rate = 0.08  # 8%
+                            
+                            # Calculate monthly payment for the personal loan
+                            # Formula: P * (r/12) * (1+r/12)^(n*12) / ((1+r/12)^(n*12) - 1)
+                            monthly_rate = personal_loan_rate / 12
+                            num_payments = personal_loan_term * 12
+                            monthly_payment = loan_needed * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+                            
+                            # Add this loan to liabilities
+                            personal_loan_yearly = [0] * (self.years_to_project + 1)
+                            personal_loan_balance = loan_needed
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nCreating personal loan for car down payment:\n")
+                                f.write(f"- Loan amount: ${loan_needed}\n")
+                                f.write(f"- Term: {personal_loan_term} years\n")
+                                f.write(f"- Rate: {personal_loan_rate * 100}%\n")
+                                f.write(f"- Monthly payment: ${monthly_payment:.2f}\n")
+                            
+                            # Track the loan balance for all future years
+                            for year in range(milestone_year, self.years_to_project + 1):
+                                # Add loan amount to our liabilities for this milestone year
+                                if year == milestone_year:
+                                    # In the milestone year, add the full loan amount
+                                    liabilities_yearly[year] += loan_needed
+                                    personal_loan_yearly[year] = loan_needed
+                                    
+                                    # Add the loan balance to debts
+                                    debt_expenses_yearly[year] += monthly_payment * 12
+                                elif personal_loan_balance > 0:
+                                    # For future years, calculate remaining balance after payments
+                                    interest_for_year = personal_loan_balance * personal_loan_rate
+                                    principal_for_year = (monthly_payment * 12) - interest_for_year
+                                    
+                                    # Ensure we don't reduce balance below zero
+                                    principal_for_year = min(principal_for_year, personal_loan_balance)
+                                    
+                                    # Update balance
+                                    personal_loan_balance -= principal_for_year
+                                    personal_loan_balance = max(0, personal_loan_balance)
+                                    
+                                    # Update yearly values
+                                    personal_loan_yearly[year] = personal_loan_balance
+                                    liabilities_yearly[year] += personal_loan_balance
+                                    
+                                    # Add loan payments to debt expenses
+                                    years_left = year - milestone_year
+                                    if years_left < personal_loan_term:
+                                        debt_expenses_yearly[year] += monthly_payment * 12
+                        
+                        # Update cash flow by the actual savings withdrawal
+                        cash_flow_yearly[milestone_year] -= savings_portion
                         
                         # CRITICAL FIX: Update the investment asset value in our asset collection
                         # This ensures the reduction in savings persists to future years 

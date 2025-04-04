@@ -22,7 +22,7 @@ import LaunchPlanAssumptionsCard from "@/components/assumptions/LaunchPlanAssump
 const DEMO_USER_ID = 1;
 
 // Assumption type definition from schema
-type AssumptionCategory = "marriage" | "housing" | "car" | "children" | "education";
+type AssumptionCategory = "general" | "marriage" | "housing" | "car" | "children" | "education";
 
 interface Assumption {
   id: number;
@@ -305,6 +305,7 @@ const AssumptionsPage = () => {
               <>
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as AssumptionCategory)}>
                   <TabsList className="mb-6">
+                    <TabsTrigger value="general">General</TabsTrigger>
                     <TabsTrigger value="marriage">Marriage</TabsTrigger>
                     <TabsTrigger value="housing">Housing</TabsTrigger>
                     <TabsTrigger value="car">Car</TabsTrigger>
@@ -313,7 +314,7 @@ const AssumptionsPage = () => {
                   </TabsList>
 
                   {/* Tab content for different assumption categories */}
-                  {["marriage", "housing", "car", "children", "education"].map((category) => (
+                  {["general", "marriage", "housing", "car", "children", "education"].map((category) => (
                     <TabsContent key={category} value={category} className="mt-0">
                       <div className="space-y-6">
                         {filteredAssumptions.length > 0 ? (

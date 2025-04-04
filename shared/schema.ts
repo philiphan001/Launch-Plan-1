@@ -466,6 +466,32 @@ export type InsertAssumption = z.infer<typeof insertAssumptionSchema>;
 // Default assumptions to be used when first creating a user profile
 export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
   {
+    category: "general",
+    key: "personal-loan-term",
+    label: "Personal Loan Term",
+    description: "Length of personal loans created when milestone expenses exceed available savings",
+    value: 5,
+    defaultValue: 5,
+    minValue: 1,
+    maxValue: 10,
+    stepValue: 1,
+    unit: "years",
+    isEnabled: true
+  },
+  {
+    category: "general",
+    key: "personal-loan-rate",
+    label: "Personal Loan Interest Rate",
+    description: "Annual interest rate for personal loans",
+    value: 8.0,
+    defaultValue: 8.0,
+    minValue: 3.0,
+    maxValue: 15.0,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  },
+  {
     category: "marriage",
     key: "spouse-loan-term",
     label: "Spouse Loan Repayment Term",
