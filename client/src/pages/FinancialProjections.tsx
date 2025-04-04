@@ -243,6 +243,28 @@ const FinancialProjections = () => {
     refetchOnWindowFocus: true
   });
   
+  // Create mutation to update financial profile
+  const updateFinancialProfileMutation = useMutation({
+    mutationFn: async (data: Partial<FinancialProfile>) => {
+      if (!financialProfile?.id) return null;
+      
+      const response = await fetch(`/api/financial-profiles/${financialProfile.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update financial profile');
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['/api/financial-profiles/user', userId] });
+    },
+  });
+
   // Update form values based on user profile and saved calculations
   useEffect(() => {
     // Calculate current age from birth year if available
@@ -1135,7 +1157,17 @@ const FinancialProjections = () => {
                   id="savings" 
                   type="number" 
                   value={startingSavings} 
-                  onChange={(e) => setStartingSavings(Number(e.target.value))} 
+                  onChange={(e) => {
+                    const newValue = Number(e.target.value);
+                    setStartingSavings(newValue);
+                    
+                    // Update financial profile in database when savings amount changes
+                    if (financialProfile?.id) {
+                      updateFinancialProfileMutation.mutate({
+                        savingsAmount: newValue
+                      });
+                    }
+                  }} 
                   className="mt-1"
                 />
               </div>

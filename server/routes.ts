@@ -579,6 +579,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Calculate future savings for a specific year (simple version)
+  app.post("/api/calculate/future-savings-simple", async (req: Request, res: Response) => {
+    try {
+      const { userId, year, currentSavings, growthRate = 0.03 } = req.body;
+      
+      if (!userId || typeof year !== 'number' || typeof currentSavings !== 'number') {
+        return res.status(400).json({ message: "Invalid input parameters" });
+      }
+      
+      // Use financial profile data if currentSavings is not provided
+      let savings = currentSavings;
+      if (!savings && userId) {
+        const profile = await activeStorage.getFinancialProfileByUserId(parseInt(userId.toString()));
+        if (profile && profile.savingsAmount) {
+          savings = profile.savingsAmount;
+        } else {
+          savings = 0;
+        }
+      }
+      
+      // Simple future value calculation: FV = PV * (1 + r)^n
+      // Where FV = future value, PV = present value (savings), r = growth rate, n = years
+      const futureSavings = savings * Math.pow(1 + growthRate, year);
+      
+      res.json({
+        currentSavings: savings,
+        futureSavings,
+        year,
+        growthRate
+      });
+    } catch (error) {
+      console.error("Error calculating future savings:", error);
+      res.status(500).json({ message: "Failed to calculate future savings" });
+    }
+  });
+
   // Python financial calculator route
   app.post("/api/calculate/financial-projection", (req: Request, res: Response) => {
     try {
