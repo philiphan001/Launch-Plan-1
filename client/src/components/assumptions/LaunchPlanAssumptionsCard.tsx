@@ -115,6 +115,34 @@ const LaunchPlanAssumptionsCard = () => {
             category: "housing",
             isEnabled: true
           },
+          {
+            id: "mortgage-term",
+            name: "MORTGAGE_TERM_YEARS",
+            displayName: "Mortgage Term",
+            value: 30,
+            defaultValue: 30,
+            minValue: 15,
+            maxValue: 40,
+            stepValue: 5,
+            unit: "years",
+            description: "The length of the mortgage term in years (affects monthly payments and total interest paid)",
+            category: "housing",
+            isEnabled: true
+          },
+          {
+            id: "mortgage-interest",
+            name: "MORTGAGE_INTEREST_RATE",
+            displayName: "Mortgage Interest Rate",
+            value: 0.05,
+            defaultValue: 0.05,
+            minValue: 0.02,
+            maxValue: 0.08,
+            stepValue: 0.005,
+            unit: "%",
+            description: "The annual interest rate for home mortgages",
+            category: "housing",
+            isEnabled: true
+          },
           // Removed duplicate car-transport-reduction assumption since we already have it in transportation category
           {
             id: "marriage-expense-increase",

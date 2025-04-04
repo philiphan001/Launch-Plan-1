@@ -5,6 +5,8 @@ This contains default assumptions used in financial calculations.
 
 # Housing assumptions
 HOME_PURCHASE_RENT_REDUCTION = 1.0  # 100% reduction in rent when purchasing a home
+MORTGAGE_TERM_YEARS = 30  # Default mortgage term in years
+MORTGAGE_INTEREST_RATE = 0.05  # Default mortgage interest rate (5%)
 
 # Transportation assumptions
 CAR_PURCHASE_TRANSPORTATION_REDUCTION = 0.8  # 80% reduction in transportation expenses when buying a car

@@ -19,7 +19,8 @@ try:
         CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
         CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
-        CAR_LOAN_TERM, CAR_LOAN_INTEREST_RATE
+        CAR_LOAN_TERM, CAR_LOAN_INTEREST_RATE,
+        MORTGAGE_TERM_YEARS, MORTGAGE_INTEREST_RATE
     )
 except ImportError:
     # Fallback to full imports (these will work when executed from parent directory)
@@ -28,7 +29,10 @@ except ImportError:
     from server.python.models.income import Income, SalaryIncome, SpouseIncome
     from server.python.models.expenditure import Expenditure, Housing, Transportation, Living, Tax
     from server.python.launch_plan_assumptions import (
-        HOME_PURCHASE_RENT_REDUCTION, CAR_PURCHASE_TRANSPORTATION_REDUCTION,
+        HOME_PURCHASE_RENT_REDUCTION,
+        MORTGAGE_TERM_YEARS,
+        MORTGAGE_INTEREST_RATE,
+        CAR_PURCHASE_TRANSPORTATION_REDUCTION,
         MARRIAGE_EXPENSE_INCREASE, GRADUATE_SCHOOL_INCOME_INCREASE,
         CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
@@ -485,9 +489,103 @@ class FinancialCalculator:
                                 cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                 
                     elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
-                        # Process home purchase milestone implementation...
-                        # This section would be similar to the original code
-                        pass
+                        # Process home purchase milestone
+                        home_value = int(milestone.get('home_value', milestone.get('homeValue', 300000)))
+                        home_down_payment = int(milestone.get('home_down_payment', milestone.get('homeDownPayment', 60000)))
+                        home_loan_principal = home_value - home_down_payment
+                        home_monthly_payment = int(milestone.get('home_monthly_payment', milestone.get('homeMonthlyPayment', 1800)))
+                        home_annual_payment = home_monthly_payment * 12
+                        
+                        # Get home purchase rent reduction factor from imported assumptions
+                        home_rent_reduction = HOME_PURCHASE_RENT_REDUCTION
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nProcessing home purchase milestone in year {milestone_year}:\n")
+                            f.write(f"- Home value: ${home_value}\n")
+                            f.write(f"- Down payment: ${home_down_payment}\n")
+                            f.write(f"- Mortgage loan: ${home_loan_principal}\n")
+                            f.write(f"- Annual payment: ${home_annual_payment}\n")
+                        
+                        # Add home as an asset (appreciating at 3% annually)
+                        # And add mortgage as a liability
+                        mortgage_term = MORTGAGE_TERM_YEARS
+                        mortgage_interest_rate = MORTGAGE_INTEREST_RATE
+                        
+                        for i in range(milestone_year, self.years_to_project + 1):
+                            # Home appreciates at 3% per year
+                            years_owned = i - milestone_year
+                            appreciated_value = int(home_value * ((1 + 0.03) ** years_owned))
+                            
+                            # Only calculate remaining principal if within loan term
+                            if years_owned < mortgage_term:
+                                # Calculate proper amortization for level payment loan
+                                r = mortgage_interest_rate / 12  # Monthly rate
+                                n = mortgage_term * 12  # Total payments (months)
+                                
+                                # Calculate monthly payment (P&I only)
+                                # Formula: P = L[c(1+c)^n]/[(1+c)^n-1]
+                                monthly_payment = (home_loan_principal * r * pow(1 + r, n)) / (pow(1 + r, n) - 1)
+                                
+                                # Calculate remaining principal after years_owned
+                                remaining_principal = home_loan_principal
+                                for _ in range(years_owned * 12):  # Convert years to months
+                                    interest = remaining_principal * r
+                                    principal_reduction = monthly_payment - interest
+                                    remaining_principal -= principal_reduction
+                                
+                                remaining_principal = int(max(0, remaining_principal))
+                            else:
+                                # Loan is fully paid off
+                                remaining_principal = 0
+                            
+                            # Update tracking arrays for home and mortgage
+                            home_value_yearly[i] += appreciated_value
+                            mortgage_yearly[i] += remaining_principal
+                            
+                            # Update overall assets and liabilities
+                            assets_yearly[i] += appreciated_value
+                            liabilities_yearly[i] += remaining_principal
+                            
+                            # Apply housing expense changes
+                            # 1. Reduce base housing expenses (rent) after home purchase
+                            housing_expense_reduction = int(housing_expenses_yearly[i] * home_rent_reduction)
+                            housing_expenses_yearly[i] -= housing_expense_reduction
+                            
+                            # 2. Add mortgage payment to housing expenses
+                            housing_expenses_yearly[i] += home_annual_payment
+                            
+                            # 3. Add mortgage payment to debt expenses
+                            debt_expenses_yearly[i] += home_annual_payment
+                            
+                            # Log changes
+                            with open('healthcare_debug.log', 'a') as f:
+                                if i == milestone_year:  # Only log the first year to avoid excessive logging
+                                    f.write(f"After home purchase:\n")
+                                    f.write(f"- Reduced housing expenses (rent) by ${housing_expense_reduction}\n")
+                                    f.write(f"- Added mortgage payment of ${home_annual_payment}\n")
+                                    f.write(f"- Home value: ${appreciated_value}\n")
+                                    f.write(f"- Mortgage principal: ${remaining_principal}\n")
+                                    
+                            # Update total expenses
+                            expenses_yearly[i] = (
+                                housing_expenses_yearly[i] +
+                                transportation_expenses_yearly[i] +
+                                food_expenses_yearly[i] +
+                                healthcare_expenses_yearly[i] +
+                                personal_insurance_expenses_yearly[i] +
+                                apparel_expenses_yearly[i] +
+                                services_expenses_yearly[i] +
+                                entertainment_expenses_yearly[i] +
+                                other_expenses_yearly[i] +
+                                education_expenses_yearly[i] +
+                                child_expenses_yearly[i] +
+                                debt_expenses_yearly[i] +
+                                discretionary_expenses_yearly[i]
+                            )
+                            
+                            # Update net worth and cash flow
+                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
                     
                     elif milestone.get('type') == 'car':
                         # Process car purchase milestone
