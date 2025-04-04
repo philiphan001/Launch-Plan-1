@@ -188,7 +188,8 @@ class FinancialCalculator:
                 car_value_yearly[0] += asset_value
             elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
                 # Track savings specifically
-                savings_value_yearly[0] += asset_value
+                # Use direct assignment for year 0 just like we do for later years
+                savings_value_yearly[0] = asset_value
         
         # Sum all liability balances for year 0
         for liability in self.liabilities:
@@ -223,7 +224,9 @@ class FinancialCalculator:
                     car_value_yearly[i] += asset_value
                 elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
                     # Track savings specifically
-                    savings_value_yearly[i] += asset_value
+                    # Use direct assignment instead of += to avoid double counting
+                    # This ensures reductions from previous years are preserved
+                    savings_value_yearly[i] = asset_value
             
             # Calculate liability balances for this year
             for liability in self.liabilities:
