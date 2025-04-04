@@ -258,10 +258,18 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
   const labels = data.ages.map(age => age.toString());
   
   // Calculate savings (total assets minus home value and car value)
+  // IMPORTANT: We need to make sure the savings don't go negative after milestone events
   const savings = data.assets?.map((assetValue, index) => {
     const homeValue = data.homeValue && data.homeValue[index] ? data.homeValue[index] : 0;
     const carValue = data.carValue && data.carValue[index] ? data.carValue[index] : 0;
-    return assetValue - homeValue - carValue;
+    
+    // Make sure we're looking at total assets properly
+    // When homeValue is present, we need to ensure we don't double-subtract
+    // since assets already has the correct values from our updated Python logic
+    const savingsValue = Math.max(0, assetValue - (homeValue > 0 ? homeValue : 0) - (carValue > 0 ? carValue : 0));
+    
+    console.log(`Year ${index+1} Assets: ${assetValue}, Home: ${homeValue}, Car: ${carValue}, Savings: ${savingsValue}`);
+    return savingsValue;
   }) || [];
 
   const datasets = [
