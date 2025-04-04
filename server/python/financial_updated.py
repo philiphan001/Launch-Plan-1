@@ -578,16 +578,14 @@ class FinancialCalculator:
                                 with open('healthcare_debug.log', 'a') as f:
                                     f.write(f"No housing expenses to reduce in year {i}\n")
                             
-                            # New approach: We've already modified housing_expenses_yearly[i] by subtracting housing_expense_reduction
-                            # So we just need to update total expenses to match this reduction
-                            if housing_expenses_yearly[i] > 0:  # Only adjust expenses if we modified housing expenses
-                                expenses_yearly[i] = expenses_yearly[i] - housing_expense_reduction
+                            # FIXED APPROACH: Don't modify expenses_yearly directly here
+                            # Because we will recompute it entirely at the end
                             
                             # 2. Add mortgage payment to housing expenses
                             housing_expenses_yearly[i] += home_annual_payment
                             
-                            # 3. Update the total expenses with the new housing cost
-                            expenses_yearly[i] += home_annual_payment
+                            # NOTE: We no longer update expenses_yearly here, as it will be fully 
+                            # recalculated at the end of this block based on all expense categories
                             
                             # 4. Log the changes in detail
                             with open('healthcare_debug.log', 'a') as f:
@@ -688,12 +686,12 @@ class FinancialCalculator:
                             assets_yearly[i] += current_car_value
                             liabilities_yearly[i] += current_car_loan
                             
-                            # Add car payment to expenses for the loan term
+                            # Add car payment to debt expenses category (don't modify expenses_yearly directly)
                             if loan_years_passed < loan_term:
-                                expenses_yearly[i] += car_annual_payment
-                                
                                 # Add car payment to debt expenses category
                                 debt_expenses_yearly[i] += car_annual_payment
+                                
+                                # Note: We will recompute expenses_yearly at the end based on all categories
                             
                             # Apply transportation expense reduction while the car is owned
                             # This reduces other transport costs like public transit
@@ -728,6 +726,23 @@ class FinancialCalculator:
                                         
                             # Update net worth (assets - liabilities)
                             net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            
+                            # Recalculate total expenses for the year with all components
+                            expenses_yearly[i] = (
+                                housing_expenses_yearly[i] +
+                                transportation_expenses_yearly[i] +
+                                food_expenses_yearly[i] +
+                                healthcare_expenses_yearly[i] +
+                                personal_insurance_expenses_yearly[i] +
+                                apparel_expenses_yearly[i] +
+                                services_expenses_yearly[i] +
+                                entertainment_expenses_yearly[i] +
+                                other_expenses_yearly[i] +
+                                education_expenses_yearly[i] +
+                                child_expenses_yearly[i] +
+                                debt_expenses_yearly[i] +
+                                discretionary_expenses_yearly[i]
+                            )
                             
                             # Update cash flow
                             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
