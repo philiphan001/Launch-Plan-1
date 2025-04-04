@@ -426,6 +426,16 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Found savings asset: {savings_asset.name}\n")
                                 f.write(f"Original value at year {milestone_year}: ${savings_asset.get_value(milestone_year)}\n")
+                                
+                                # Debug - show current projected values for all years
+                                f.write("\nSavings values before wedding expense:\n")
+                                f.write("Savings_value_yearly array values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
+                                
+                                f.write("\nSavings asset's calculated values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                             
                             # Get current value and reduce by wedding cost
                             current_value = savings_asset.get_value(milestone_year)
@@ -437,6 +447,16 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Updated savings asset value: ${new_value}\n")
                                 f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                                
+                                # Debug - show updated projected values for all years
+                                f.write("\nSavings values after wedding expense:\n")
+                                f.write("Updated savings_value_yearly array values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
+                                
+                                f.write("\nUpdated savings asset's calculated values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                         else:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"WARNING: Could not find a savings asset to update for wedding cost!\n")
@@ -623,6 +643,11 @@ class FinancialCalculator:
                                 
                                 # Debug - show current projected values for all years
                                 f.write("\nSavings values before home purchase:\n")
+                                f.write("Savings_value_yearly array values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
+                                
+                                f.write("\nSavings asset's calculated values:\n")
                                 for yr in range(milestone_year, self.years_to_project + 1):
                                     f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                             
@@ -639,6 +664,11 @@ class FinancialCalculator:
                                 
                                 # Debug - show updated projected values for all years
                                 f.write("\nSavings values after home purchase:\n")
+                                f.write("Updated savings_value_yearly array values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
+                                
+                                f.write("\nUpdated savings asset's calculated values:\n")
                                 for yr in range(milestone_year, self.years_to_project + 1):
                                     f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                         else:
@@ -791,6 +821,11 @@ class FinancialCalculator:
                                 
                                 # Debug - show current projected values for all years
                                 f.write("\nSavings values before car purchase:\n")
+                                f.write("Savings_value_yearly array values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
+                                
+                                f.write("\nSavings asset's calculated values:\n")
                                 for yr in range(milestone_year, self.years_to_project + 1):
                                     f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                             
@@ -807,6 +842,11 @@ class FinancialCalculator:
                                 
                                 # Debug - show updated projected values for all years
                                 f.write("\nSavings values after car purchase:\n")
+                                f.write("Updated savings_value_yearly array values:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
+                                
+                                f.write("\nUpdated savings asset's calculated values:\n")
                                 for yr in range(milestone_year, self.years_to_project + 1):
                                     f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                         else:
@@ -916,6 +956,34 @@ class FinancialCalculator:
                             # Update cash flow
                             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
         
+        # CRITICAL FIX FOR MILESTONE SAVINGS TRACKING
+        # After all milestones are processed, ensure that the savings values are properly synced
+        # This guarantees that savings_value_yearly matches the actually calculated savings asset values
+        # Find the savings asset
+        savings_asset = None
+        for asset in self.assets:
+            if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                savings_asset = asset
+                break
+                
+        if savings_asset:
+            with open('healthcare_debug.log', 'a') as f:
+                f.write("\n\n=== SYNCHRONIZING SAVINGS ARRAYS AFTER ALL MILESTONES ===\n")
+                
+                # Log the current values
+                f.write("Current values before sync:\n")
+                for yr in range(0, self.years_to_project + 1):
+                    f.write(f"Year {yr}: Array=${savings_value_yearly[yr]}, Asset=${savings_asset.get_value(yr)}\n")
+                
+                # Sync all values from the savings asset to the array
+                for yr in range(0, self.years_to_project + 1):
+                    savings_value_yearly[yr] = int(savings_asset.get_value(yr))
+                
+                # Log the updated values
+                f.write("\nUpdated values after sync:\n")
+                for yr in range(0, self.years_to_project + 1):
+                    f.write(f"Year {yr}: Array=${savings_value_yearly[yr]}, Asset=${savings_asset.get_value(yr)}\n")
+        
         # Debug healthcare expenses before adding to results
         with open('healthcare_debug.log', 'a') as f:
             f.write(f"\nBefore adding to results:\n")
@@ -950,6 +1018,26 @@ class FinancialCalculator:
                                 
             f.write(f"After manual correction: {healthcare_expenses_yearly}\n")
             
+        # Debug savings value tracking before compiling results
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\n\n=== SAVINGS VALUES FOR EACH YEAR (FINAL VALUES) ===\n")
+            for i in range(self.years_to_project + 1):
+                f.write(f"Year {i}: ${savings_value_yearly[i]}\n")
+            
+            # Find the savings asset and print its values as well
+            savings_asset = None
+            for asset in self.assets:
+                if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                    savings_asset = asset
+                    break
+            
+            if savings_asset:
+                f.write("\n=== SAVINGS ASSET VALUES FROM CLASS (FINAL VALUES) ===\n")
+                for i in range(self.years_to_project + 1):
+                    f.write(f"Year {i}: ${savings_asset.get_value(i)}\n")
+            else:
+                f.write("\nNo savings asset found to compare against savings_value_yearly array\n")
+
         # Compile results
         self.results = {
             'ages': ages,
