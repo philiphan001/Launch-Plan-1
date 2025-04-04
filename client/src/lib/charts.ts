@@ -257,22 +257,15 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
 export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
-  // Calculate savings (total assets minus home value and car value)
-  // IMPORTANT: We need to make sure the savings don't go negative after milestone events
-  const savings = data.assets?.map((assetValue, index) => {
-    const homeValue = data.homeValue && data.homeValue[index] ? data.homeValue[index] : 0;
-    const carValue = data.carValue && data.carValue[index] ? data.carValue[index] : 0;
-    
-    // Check if we have direct savings values from Python
-    const pythonSavings = data.savingsValue?.[index];
-    
-    // If we have direct savings data from Python, use it
-    // Otherwise, use the asset value directly (which should already represent savings)
-    const savingsValue = pythonSavings !== undefined ? pythonSavings : assetValue;
-    
-    console.log(`Year ${index+1} Assets: ${assetValue}, Home: ${homeValue}, Car: ${carValue}, Python Savings: ${pythonSavings}, Used Savings: ${savingsValue}`);
-    return savingsValue;
-  }) || [];
+  // Use savingsValue directly from the Python backend
+  // If not available, fall back to zero - we should never calculate this in the frontend
+  const savings = data.savingsValue || Array(data.ages.length).fill(0);
+  
+  // Debug output
+  console.log("Asset Breakdown Chart Data:");
+  for (let i = 0; i < data.ages.length; i++) {
+    console.log(`Year ${i} (Age ${data.ages[i]}): Savings=${data.savingsValue?.[i] || 0}, Home=${data.homeValue?.[i] || 0}, Car=${data.carValue?.[i] || 0}, Total Assets=${data.assets?.[i] || 0}`);
+  }
 
   const datasets = [
     {

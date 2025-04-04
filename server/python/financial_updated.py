@@ -383,6 +383,9 @@ class FinancialCalculator:
                         # Reduce assets by the wedding cost (for milestone year only)
                         assets_yearly[milestone_year] -= wedding_cost
                         
+                        # Also reduce savings_value_yearly to ensure it's reflected in chart
+                        savings_value_yearly[milestone_year] -= wedding_cost
+                        
                         # Also reduce cash flow by the wedding cost for this year
                         cash_flow_yearly[milestone_year] -= wedding_cost
                         
@@ -572,6 +575,9 @@ class FinancialCalculator:
                         # Reduce assets by the down payment amount (for milestone year only)
                         assets_yearly[milestone_year] -= home_down_payment
                         
+                        # Also reduce savings_value_yearly to ensure it's reflected in chart
+                        savings_value_yearly[milestone_year] -= home_down_payment
+                        
                         # Also reduce cash flow by the down payment amount for this year
                         cash_flow_yearly[milestone_year] -= home_down_payment
                         
@@ -724,6 +730,9 @@ class FinancialCalculator:
                         
                         # Reduce assets by the down payment amount (for milestone year only)
                         assets_yearly[milestone_year] -= car_down_payment
+                        
+                        # Also reduce savings_value_yearly to ensure it's reflected in chart
+                        savings_value_yearly[milestone_year] -= car_down_payment
                         
                         # Also reduce cash flow by the down payment amount for this year
                         cash_flow_yearly[milestone_year] -= car_down_payment

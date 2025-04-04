@@ -23,6 +23,7 @@ export interface ProjectionData {
   carValue?: number[];
   carLoan?: number[];
   studentLoan?: number[];
+  savingsValue?: number[];
   // Expense categories
   housing?: number[];
   transportation?: number[];
