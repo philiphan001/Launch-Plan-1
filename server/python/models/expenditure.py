@@ -209,6 +209,15 @@ class Living(Expenditure):
         super().__init__(name, annual_amount, inflation_rate)
         self.lifestyle_factor = lifestyle_factor
         self.lifestyle_changes = {}  # Track changes in lifestyle over time
+        
+        # Special case for healthcare expenses - ensure exact inflation calculation
+        self.is_healthcare = 'health' in name.lower() or 'medical' in name.lower()
+        
+        # Debug healthcare expenses
+        if self.is_healthcare:
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"[FIXED] Created healthcare expense: {name}, annual_amount={annual_amount}, inflation={inflation_rate}\n")
+                f.write(f"Annual amount directly from location data: {annual_amount}, monthly: {annual_amount/12}\n")
     
     def _calculate_expense(self, previous_expense: float, year: int) -> float:
         """
@@ -221,6 +230,25 @@ class Living(Expenditure):
         Returns:
             Calculated expense amount
         """
+        # For healthcare expenses, use a more precise calculation
+        if self.is_healthcare:
+            # Calculate the exact value for the current year using the initial amount
+            year_0_amount = self.expense_history[0]
+            
+            # Calculate with cumulative inflation over the years
+            # For year 1, multiply by (1 + inflation_rate)
+            # For year 2, multiply by (1 + inflation_rate)^2, etc.
+            exact_expense = year_0_amount * ((1 + self.inflation_rate) ** year)
+            
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"[FIXED] Healthcare exact calculation for year {year}:\n")
+                f.write(f"   Initial amount (year 0): {year_0_amount}\n")
+                f.write(f"   Inflation rate: {self.inflation_rate}\n")
+                f.write(f"   Calculation: {year_0_amount} * (1 + {self.inflation_rate})^{year} = {exact_expense}\n")
+                
+            return exact_expense
+        
+        # For non-healthcare expenses, use the standard calculation
         # Apply standard inflation first
         base_expense = previous_expense * (1 + self.inflation_rate)
         

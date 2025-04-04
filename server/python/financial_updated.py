@@ -257,12 +257,26 @@ class FinancialCalculator:
                 # Categorize expenses by type
                 expense_name = expense.name.lower()
                 
+                # First check if it's a healthcare expense - this needs to be checked before
+                # other categories to avoid double counting
+                is_healthcare = 'health' in expense_name or 'medical' in expense_name
+                
                 # Debug this expense
                 with open('healthcare_debug.log', 'a') as f:
                     f.write(f"Processing expense: name={expense.name}, type={type(expense).__name__}, amount={expense_amount}\n")
+                    if is_healthcare:
+                        f.write(f"IDENTIFIED as healthcare based on name: {expense_name}\n")
                 
                 # Base cost of living categories
-                if isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
+                if is_healthcare:
+                    # Healthcare expenses must be identified first
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"[FIXED] Found healthcare expense: {expense.name}, amount: {expense_amount}\n")
+                        f.write(f"Type: {type(expense).__name__}, dict: {expense.__dict__}\n")
+                    year_healthcare += expense_amount
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Updated year_healthcare total: {year_healthcare}\n")
+                elif isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
                     year_housing += expense_amount
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"Categorized as housing, adding to year_housing: {year_housing}\n")
@@ -274,14 +288,6 @@ class FinancialCalculator:
                     year_food += expense_amount
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"Categorized as food, adding to year_food: {year_food}\n")
-                elif 'health' in expense_name or 'medical' in expense_name:
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"EXPENSE CLASSIFICATION - Found healthcare expense: {expense.name} (lower: {expense_name}), amount: {expense_amount}\n")
-                        f.write(f"Type check: 'health' in name? {'health' in expense_name}, 'medical' in name? {'medical' in expense_name}\n")
-                        f.write(f"Object type: {type(expense).__name__}, dict: {expense.__dict__}\n")
-                    year_healthcare += expense_amount
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Updated year_healthcare total: {year_healthcare}\n")
                 elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
                     year_personal_insurance += expense_amount
                 elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
@@ -411,21 +417,24 @@ class FinancialCalculator:
                                     # Categorize expenses by type
                                     expense_name = expense.name.lower()
                                     
+                                    # First check if it's a healthcare expense - check before other categories
+                                    is_healthcare = 'health' in expense_name or 'medical' in expense_name
+                                    
                                     # Base cost of living categories
-                                    if isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
+                                    if is_healthcare:
+                                        # Healthcare expenses must be identified first to avoid double counting
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"[FIXED-MARRIAGE] Found healthcare expense: {expense.name}, amount: {expense_amount}\n")
+                                            f.write(f"Type: {type(expense).__name__}, dict: {expense.__dict__}\n")
+                                        year_healthcare += expense_amount
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"Marriage milestone: Updated year_healthcare total: {year_healthcare}\n")
+                                    elif isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
                                         year_housing += expense_amount
                                     elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0 or expense_name.find('car') >= 0:
                                         year_transportation += expense_amount
                                     elif expense_name.find('food') >= 0:
                                         year_food += expense_amount
-                                    elif 'health' in expense_name or 'medical' in expense_name:
-                                        with open('healthcare_debug.log', 'a') as f:
-                                            f.write(f"MARRIAGE MILESTONE - Found healthcare expense: {expense.name} (lower: {expense_name}), amount: {expense_amount}\n")
-                                            f.write(f"Type check: 'health' in name? {'health' in expense_name}, 'medical' in name? {'medical' in expense_name}\n")
-                                            f.write(f"Object type: {type(expense).__name__}, dict: {expense.__dict__}\n")
-                                        year_healthcare += expense_amount
-                                        with open('healthcare_debug.log', 'a') as f:
-                                            f.write(f"Marriage milestone: Updated year_healthcare total: {year_healthcare}\n")
                                     elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
                                         year_personal_insurance += expense_amount
                                     elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
