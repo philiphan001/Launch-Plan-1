@@ -561,8 +561,10 @@ const FinancialProjections = () => {
               const downPayment = milestone.homeDownPayment || 0;
               mortgagePrincipal = homeValue - downPayment;
               
-              // Down payment reduces liquid assets but doesn't change net worth directly
+              // Down payment reduces liquid assets but shouldn't change net worth
               // since it transfers from cash to home equity
+              // We need to reduce the netWorth value because it's used to track liquid assets
+              // The total netWorth will be properly calculated from all assets and liabilities later
               netWorth -= downPayment;
               
               // Set monthly mortgage payment (annual)
@@ -580,6 +582,8 @@ const FinancialProjections = () => {
               
               // Reduce liquid assets by the down payment amount
               // The car asset value and loan will be tracked in specific arrays
+              // We need to reduce the netWorth value because it's used to track liquid assets
+              // The total netWorth will be properly calculated from all assets and liabilities later
               netWorth -= carDownPayment;
               
               // Set monthly car payment (annual)
@@ -603,7 +607,9 @@ const FinancialProjections = () => {
               hasEducationDebt = true;
               // Add education cost as debt
               educationDebt = milestone.educationCost || 0;
-              netWorth -= educationDebt / 5; // Assume 20% down payment or first year costs
+              // For the first year of education, we assume a 20% down payment
+              // We reduce netWorth to account for the immediate cash outflow
+              netWorth -= educationDebt * 0.2; // 20% of total cost paid upfront
               console.log(`Education milestone: Total cost $${educationDebt}`);
               break;
           }
