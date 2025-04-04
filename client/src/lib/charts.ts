@@ -263,12 +263,14 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
     const homeValue = data.homeValue && data.homeValue[index] ? data.homeValue[index] : 0;
     const carValue = data.carValue && data.carValue[index] ? data.carValue[index] : 0;
     
-    // Make sure we're looking at total assets properly
-    // When homeValue is present, we need to ensure we don't double-subtract
-    // since assets already has the correct values from our updated Python logic
-    const savingsValue = Math.max(0, assetValue - (homeValue > 0 ? homeValue : 0) - (carValue > 0 ? carValue : 0));
+    // Check if we have direct savings values from Python
+    const pythonSavings = data.savingsValue?.[index];
     
-    console.log(`Year ${index+1} Assets: ${assetValue}, Home: ${homeValue}, Car: ${carValue}, Savings: ${savingsValue}`);
+    // If we have direct savings data from Python, use it
+    // Otherwise, use the asset value directly (which should already represent savings)
+    const savingsValue = pythonSavings !== undefined ? pythonSavings : assetValue;
+    
+    console.log(`Year ${index+1} Assets: ${assetValue}, Home: ${homeValue}, Car: ${carValue}, Python Savings: ${pythonSavings}, Used Savings: ${savingsValue}`);
     return savingsValue;
   }) || [];
 

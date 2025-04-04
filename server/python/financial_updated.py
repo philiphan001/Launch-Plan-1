@@ -149,6 +149,7 @@ class FinancialCalculator:
         # Track specific assets and liabilities
         home_value_yearly = [0] * (self.years_to_project + 1)
         car_value_yearly = [0] * (self.years_to_project + 1)
+        savings_value_yearly = [0] * (self.years_to_project + 1)  # Track savings values separately
         mortgage_yearly = [0] * (self.years_to_project + 1)
         car_loan_yearly = [0] * (self.years_to_project + 1)
         student_loan_yearly = [0] * (self.years_to_project + 1)
@@ -185,6 +186,9 @@ class FinancialCalculator:
                 home_value_yearly[0] += asset_value
             elif isinstance(asset, DepreciableAsset) and (asset.name.lower().find('car') >= 0 or asset.name.lower().find('vehicle') >= 0):
                 car_value_yearly[0] += asset_value
+            elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
+                # Track savings specifically
+                savings_value_yearly[0] += asset_value
         
         # Sum all liability balances for year 0
         for liability in self.liabilities:
@@ -217,6 +221,9 @@ class FinancialCalculator:
                     home_value_yearly[i] += asset_value
                 elif isinstance(asset, DepreciableAsset) and (asset.name.lower().find('car') >= 0 or asset.name.lower().find('vehicle') >= 0):
                     car_value_yearly[i] += asset_value
+                elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
+                    # Track savings specifically
+                    savings_value_yearly[i] += asset_value
             
             # Calculate liability balances for this year
             for liability in self.liabilities:
@@ -901,6 +908,7 @@ class FinancialCalculator:
             # Asset breakdown
             'homeValue': home_value_yearly,
             'carValue': car_value_yearly,
+            'savingsValue': savings_value_yearly,  # Add explicit savings tracking
             
             # Liability breakdown
             'mortgage': mortgage_yearly,

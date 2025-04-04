@@ -78,6 +78,7 @@ export interface FinancialProjectionData {
   carValue: number[];
   carLoan: number[];
   studentLoan: number[];
+  savingsValue?: number[]; // Direct savings value array from Python
   
   // Milestone data
   milestones?: any[];
@@ -337,6 +338,21 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
     const expensesArray = result.expenses || [];
     const yearsToProject = expensesArray.length || 10;
     
+    // Debug data coming from Python
+    console.log("RAW PYTHON DATA:", result);
+    
+    // Log details about specific asset categories
+    console.log("ASSET DATA DEBUG:", {
+      totalAssets: result.assets,
+      homeValue: result.homeValue,
+      savingsValue: result.savingsValue || null,
+      year30: { 
+        totalAssets: result.assets?.[3], 
+        homeValue: result.homeValue?.[3],
+        savingsValue: result.savingsValue?.[3]
+      }
+    });
+      
     // Format the result into the expected format for our components
     const projectionData: FinancialProjectionData = {
       netWorth: result.netWorth || [],
@@ -347,6 +363,9 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       liabilities: result.liabilities || [],
       ages: result.ages || [],
       cashFlow: result.cashFlow || [],
+      
+      // If Python model sends us specific savings value array, use it
+      savingsValue: result.savingsValue || [],
       
       // Use expense category breakdowns directly from Python backend
       // These are calculated in the backend based on the real data
