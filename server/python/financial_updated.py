@@ -737,7 +737,8 @@ class FinancialCalculator:
                             
                             # CRITICAL FIX: Also update the savings_value_yearly array to match the asset
                             # This ensures both tracking systems are in sync
-                            savings_value_yearly[milestone_year] = int(new_value)
+                            for yr in range(milestone_year, self.years_to_project + 1):
+                                savings_value_yearly[yr] = int(savings_asset.get_value(yr))
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Updated savings asset value: ${new_value}\n")
@@ -983,7 +984,8 @@ class FinancialCalculator:
                             
                             # CRITICAL FIX: Also update the savings_value_yearly array to match the asset
                             # This ensures both tracking systems are in sync for car purchases
-                            savings_value_yearly[milestone_year] = int(new_value)
+                            for yr in range(milestone_year, self.years_to_project + 1):
+                                savings_value_yearly[yr] = int(savings_asset.get_value(yr))
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Updated savings asset value: ${new_value}\n") 
@@ -1127,12 +1129,31 @@ class FinancialCalculator:
                 
                 # Sync all values from the savings asset to the array
                 for yr in range(0, self.years_to_project + 1):
-                    savings_value_yearly[yr] = int(savings_asset.get_value(yr))
+                    asset_value = savings_asset.get_value(yr)
+                    savings_value_yearly[yr] = int(asset_value)
+                    
+                    # Also update the calculated assets total for this year to ensure consistency
+                    # This is critical because assets_yearly needs to match the sum of all assets
+                    # Find all assets for this year except savings, then add back the updated savings value
+                    assets_without_savings = 0
+                    for a in self.assets:
+                        if a != savings_asset:
+                            assets_without_savings += a.get_value(yr)
+                    
+                    # Update assets_yearly with correct total including synchronized savings
+                    assets_yearly[yr] = int(assets_without_savings + asset_value)
+                    
+                    # Recalculate net worth with updated assets
+                    net_worth[yr] = assets_yearly[yr] - (liabilities_yearly[yr] + all_personal_loans[yr])
                 
                 # Log the updated values
                 f.write("\nUpdated values after sync:\n")
                 for yr in range(0, self.years_to_project + 1):
                     f.write(f"Year {yr}: Array=${savings_value_yearly[yr]}, Asset=${savings_asset.get_value(yr)}\n")
+                
+                f.write("\nUpdated assets and net worth:\n")
+                for yr in range(0, self.years_to_project + 1):
+                    f.write(f"Year {yr}: Assets=${assets_yearly[yr]}, NetWorth=${net_worth[yr]}\n")
         
         # Debug healthcare expenses before adding to results
         with open('healthcare_debug.log', 'a') as f:
