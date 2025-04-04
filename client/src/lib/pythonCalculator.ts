@@ -147,22 +147,14 @@ export const generatePythonCalculatorInput = (
     
     // Transportation expenses
     if (locationCostData.transportation) {
-      // Check if there are any car purchase milestones
-      const hasCarMilestones = milestones.some(m => 
-        m.type === 'automobile' || 
-        m.type === 'car' || 
-        (m.type === 'purchase' && (
-          (m.title?.toLowerCase().includes('car') || m.title?.toLowerCase().includes('vehicle'))
-        ))
-      );
-      
+      // Always disable auto-replacement to prevent unpredictable jumps in year 7
+      // This ensures transportation costs grow at a predictable rate
       expenditures.push({
         type: "transportation", 
         name: "Transportation",
         annualAmount: locationCostData.transportation * 12,
-        inflationRate: 0.02,
-        // Disable auto-replacement if car milestones exist
-        auto_replace: !hasCarMilestones
+        inflationRate: 0.03, // Use the TRANSPORTATION_INFLATION_RATE from Python
+        auto_replace: false // Never auto-replace cars, we'll handle this explicitly via milestones
       });
     }
     
