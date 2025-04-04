@@ -174,7 +174,7 @@ class FinancialCalculator:
         # Sum all asset values for year 0
         for asset in self.assets:
             asset_value = asset.get_value(0)
-            assets_yearly[0] += asset_value
+            assets_yearly[0] += int(asset_value)
             
             # Categorize assets
             if isinstance(asset, Investment) and (asset.name.lower().find('home') >= 0 or asset.name.lower().find('house') >= 0):
@@ -578,8 +578,10 @@ class FinancialCalculator:
                                 with open('healthcare_debug.log', 'a') as f:
                                     f.write(f"No housing expenses to reduce in year {i}\n")
                             
-                            # Update expenses for proper tracking
-                            expenses_yearly[i] = expenses_yearly[i] - old_housing_expense + housing_expenses_yearly[i]
+                            # New approach: We've already modified housing_expenses_yearly[i] by subtracting housing_expense_reduction
+                            # So we just need to update total expenses to match this reduction
+                            if housing_expenses_yearly[i] > 0:  # Only adjust expenses if we modified housing expenses
+                                expenses_yearly[i] = expenses_yearly[i] - housing_expense_reduction
                             
                             # 2. Add mortgage payment to housing expenses
                             housing_expenses_yearly[i] += home_annual_payment
