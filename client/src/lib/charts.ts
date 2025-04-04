@@ -448,6 +448,14 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
     services: data.services?.[0],
     other: data.other?.[0]
   });
+  
+  // Additional logging specifically for healthcare
+  console.log("Healthcare data debugging:");
+  console.log("- healthcare exists:", !!data.healthcare);
+  console.log("- healthcare array:", data.healthcare);
+  console.log("- healthcare first year:", data.healthcare?.[0]);
+  console.log("- healthcare second year:", data.healthcare?.[1]);
+  console.log("- healthcare type:", typeof data.healthcare);
 
   // Define expense categories and their colors
   const expenseCategories = [

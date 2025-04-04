@@ -257,15 +257,31 @@ class FinancialCalculator:
                 # Categorize expenses by type
                 expense_name = expense.name.lower()
                 
+                # Debug this expense
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Processing expense: name={expense.name}, type={type(expense).__name__}, amount={expense_amount}\n")
+                
                 # Base cost of living categories
                 if isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
                     year_housing += expense_amount
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Categorized as housing, adding to year_housing: {year_housing}\n")
                 elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0 or expense_name.find('car') >= 0:
                     year_transportation += expense_amount
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Categorized as transportation, adding to year_transportation: {year_transportation}\n")
                 elif expense_name.find('food') >= 0:
                     year_food += expense_amount
-                elif expense_name.find('health') >= 0 or expense_name.find('medical') >= 0:
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Categorized as food, adding to year_food: {year_food}\n")
+                elif 'health' in expense_name or 'medical' in expense_name:
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"EXPENSE CLASSIFICATION - Found healthcare expense: {expense.name} (lower: {expense_name}), amount: {expense_amount}\n")
+                        f.write(f"Type check: 'health' in name? {'health' in expense_name}, 'medical' in name? {'medical' in expense_name}\n")
+                        f.write(f"Object type: {type(expense).__name__}, dict: {expense.__dict__}\n")
                     year_healthcare += expense_amount
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Updated year_healthcare total: {year_healthcare}\n")
                 elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
                     year_personal_insurance += expense_amount
                 elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
@@ -402,8 +418,14 @@ class FinancialCalculator:
                                         year_transportation += expense_amount
                                     elif expense_name.find('food') >= 0:
                                         year_food += expense_amount
-                                    elif expense_name.find('health') >= 0 or expense_name.find('medical') >= 0:
+                                    elif 'health' in expense_name or 'medical' in expense_name:
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"MARRIAGE MILESTONE - Found healthcare expense: {expense.name} (lower: {expense_name}), amount: {expense_amount}\n")
+                                            f.write(f"Type check: 'health' in name? {'health' in expense_name}, 'medical' in name? {'medical' in expense_name}\n")
+                                            f.write(f"Object type: {type(expense).__name__}, dict: {expense.__dict__}\n")
                                         year_healthcare += expense_amount
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"Marriage milestone: Updated year_healthcare total: {year_healthcare}\n")
                                     elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
                                         year_personal_insurance += expense_amount
                                     elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
@@ -452,6 +474,40 @@ class FinancialCalculator:
                         # This section would be similar to the original code
                         pass
         
+        # Debug healthcare expenses before adding to results
+        with open('healthcare_debug.log', 'a') as f:
+            f.write(f"\nBefore adding to results:\n")
+            f.write(f"- All healthcare expenses by year: {healthcare_expenses_yearly}\n")
+            f.write(f"- Individual expense values in year 1:\n")
+            
+            # For each expense, check if it's healthcare and log year 1 value
+            for expense in self.expenditures:
+                expense_name = expense.name.lower()
+                if 'health' in expense_name or 'medical' in expense_name:
+                    try:
+                        year1_expense = expense.get_expense(1) 
+                        f.write(f"  * {expense.name}: {year1_expense}\n")
+                        f.write(f"  * Type: {type(expense).__name__}, dict: {expense.__dict__}\n")
+                        f.write(f"  * Expense name lowercase: '{expense_name}'\n")
+                        f.write(f"  * In year 1, healthcare_expenses_yearly should include {year1_expense}\n")
+                    except Exception as e:
+                        f.write(f"  * ERROR getting expense for {expense.name}: {str(e)}\n")
+            
+            # Directly overwrite the healthcare expenses with the actual calculated values
+            # This is a temporary fix to ensure healthcare expenses are properly reflected
+            if len(self.expenditures) > 0:
+                for i in range(1, self.years_to_project + 1):
+                    for expense in self.expenditures:
+                        expense_name = expense.name.lower()
+                        if 'health' in expense_name or 'medical' in expense_name:
+                            try:
+                                healthcare_expenses_yearly[i] = int(expense.get_expense(i))
+                                f.write(f"Manually set healthcare_expenses_yearly[{i}] = {healthcare_expenses_yearly[i]}\n")
+                            except Exception as e:
+                                f.write(f"ERROR manually setting healthcare_expenses_yearly[{i}]: {str(e)}\n")
+                                
+            f.write(f"After manual correction: {healthcare_expenses_yearly}\n")
+            
         # Compile results
         self.results = {
             'ages': ages,
@@ -570,6 +626,10 @@ class FinancialCalculator:
             
             calculator.add_income(income)
         
+        # Debug empty the log file
+        with open('healthcare_debug.log', 'w') as f:
+            f.write("Starting financial calculation\n")
+            
         # Add expenditures
         for expenditure_data in input_data.get('expenditures', []):
             expenditure_type = expenditure_data.get('type', 'living')
@@ -577,8 +637,15 @@ class FinancialCalculator:
             annual_amount = expenditure_data.get('annualAmount', 0)
             inflation_rate = expenditure_data.get('inflationRate', 0.02)  # 2% annual inflation
             
+            # Debug healthcare expenses
+            is_healthcare = ('health' in name.lower() or 'medical' in name.lower())
+            if is_healthcare:
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Processing healthcare expenditure: {name}\n")
+                    f.write(f"Type: {expenditure_type}, Annual Amount: {annual_amount}, Inflation: {inflation_rate}\n")
+            
             if expenditure_type == 'housing':
-                is_rent = name.lower().find('rent') >= 0
+                is_rent = 'rent' in name.lower()
                 expenditure = Housing(name, annual_amount, inflation_rate, is_rent)
             elif expenditure_type == 'transportation':
                 car_replacement_years = expenditure_data.get('car_replacement_years', 7)
@@ -592,8 +659,28 @@ class FinancialCalculator:
             else:  # Default to living expenses
                 lifestyle_factor = expenditure_data.get('lifestyle_factor', 1.0)
                 expenditure = Living(name, annual_amount, inflation_rate, lifestyle_factor)
+                
+                # Special debug for healthcare expenses
+                if is_healthcare:
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Created Living expense for healthcare: {name}, annual_amount={annual_amount}\n")
+                        f.write(f"Expense type={type(expenditure).__name__}, expense={expenditure.annual_amount}\n")
+                        f.write(f"Debugging object: {expenditure.__dict__}\n")
             
             calculator.add_expenditure(expenditure)
+            
+            # Check after adding expense
+            if is_healthcare:
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Added healthcare expense to calculator, count={len(calculator.expenditures)}\n")
+                    for i, exp in enumerate(calculator.expenditures):
+                        f.write(f"Expense {i}: name={exp.name}, amount={exp.annual_amount}, type={type(exp).__name__}\n")
+                        
+                    # Try getting expenses for a few years
+                    f.write("\nTesting healthcare expense calculations:\n")
+                    for year in range(1, 4):
+                        expense_amount = expenditure.get_expense(year)
+                        f.write(f"Year {year} expense = {expense_amount}\n")
         
         # Add milestones
         for milestone_data in input_data.get('milestones', []):

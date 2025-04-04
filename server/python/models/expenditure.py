@@ -34,17 +34,34 @@ class Expenditure:
         Returns:
             Expense amount
         """
+        # Debug for healthcare expenses
+        is_healthcare = self.name.lower().find('health') >= 0 or self.name.lower().find('medical') >= 0
+        if is_healthcare:
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"Expenditure.get_expense called: {self.name}, year={year}, annual_amount={self.annual_amount}\n")
+        
         if year in self.expense_history:
-            return self.expense_history[year]
+            expense = self.expense_history[year]
+            if is_healthcare:
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Using cached expense for year {year}: {expense}\n")
+            return expense
             
         # If year not in history, calculate from previous year
         prev_year = max(k for k in self.expense_history.keys() if k < year)
         expense = self.expense_history[prev_year]
         
+        if is_healthcare:
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"Starting calculation from previous year {prev_year}, expense={expense}\n")
+        
         # Calculate for each year between prev_year and year
         for y in range(prev_year + 1, year + 1):
             expense = self._calculate_expense(expense, y)
             self.expense_history[y] = expense
+            if is_healthcare:
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Calculated for year {y}, expense={expense}\n")
         
         return expense
     
