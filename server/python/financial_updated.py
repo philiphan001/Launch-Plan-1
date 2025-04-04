@@ -499,36 +499,12 @@ class FinancialCalculator:
                         # Get home purchase rent reduction factor from imported assumptions
                         home_rent_reduction = HOME_PURCHASE_RENT_REDUCTION
                         
-                        # ======= Important fix: Before processing home purchase, ensure there's a rent expense to reduce ======
-                        # Check if we have any housing expenditures that are rent
-                        rent_expense_exists = False
-                        for expense in self.expenditures:
-                            if isinstance(expense, Housing) and expense.is_rent:
-                                rent_expense_exists = True
-                                break
-                            
-                        # If no rent expense exists, create one based on income and add it
-                        if not rent_expense_exists:
-                            # Calculate reasonable rent based on income
-                            total_income = 0
-                            for income in self.incomes:
-                                total_income += income.get_income(1)  # Use year 1 income
-                            
-                            # Default to 30% of income for rent (standard budgeting rule)
-                            annual_rent = total_income * 0.30
-                            rent_expense = Housing("Monthly Rent", annual_rent, inflation_rate=0.03, is_rent=True)
-                            
-                            # Add this new rent expense to our calculator
-                            self.add_expenditure(rent_expense)
-                            
-                            # Set the housing expenses for all years before the home purchase
-                            for year in range(1, milestone_year):
-                                expense_for_year = rent_expense.get_expense(year)
-                                housing_expenses_yearly[year] += int(expense_for_year)
-                            
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Created and added a new rent expense: ${annual_rent}/year\n")
-                                f.write(f"Updated housing_expenses_yearly array: {[housing_expenses_yearly[y] for y in range(1, milestone_year)]}\n")
+                        # No need to create artificial rent expense - we'll work with whatever housing expenses already exist
+                        # Simply log the current housing expenses for debugging
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nCurrent housing expenses before home purchase:\n")
+                            for i in range(1, self.years_to_project + 1):
+                                f.write(f"Year {i}: ${housing_expenses_yearly[i]}\n")
                         
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"\nProcessing home purchase milestone in year {milestone_year}:\n")
