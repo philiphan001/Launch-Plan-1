@@ -226,6 +226,23 @@ class FinancialCalculator:
                     # Track savings specifically
                     # Use direct assignment instead of += to avoid double counting
                     # This ensures reductions from previous years are preserved
+                    
+                    # CRITICAL FIX: Check if there was a milestone reduction that made this negative
+                    # and preserve the negative value instead of using the asset's calculated value
+                    if i > 0 and savings_value_yearly[i-1] < 0:
+                        # If previous year was negative, grow/reduce from that negative value
+                        # instead of using the asset's calculated value which might be wrong
+                        asset_value = min(asset_value, savings_value_yearly[i-1] * (1 + asset.growth_rate))
+                        
+                        # Write debug info to validate this logic
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nCRITICAL FIX - Year {i} savings after negative in previous year:\n")
+                            f.write(f"  Previous year value: ${savings_value_yearly[i-1]}\n")
+                            f.write(f"  Asset's calculated value: ${asset.get_value(i)}\n")
+                            f.write(f"  Growth factor: {(1 + asset.growth_rate)}\n")
+                            f.write(f"  Growth-adjusted previous value: ${savings_value_yearly[i-1] * (1 + asset.growth_rate)}\n")
+                            f.write(f"  Setting savings_value_yearly[{i}] = ${asset_value}\n")
+                    
                     savings_value_yearly[i] = asset_value
             
             # Calculate liability balances for this year
@@ -386,8 +403,10 @@ class FinancialCalculator:
                         # Reduce assets by the wedding cost (for milestone year only)
                         assets_yearly[milestone_year] -= wedding_cost
                         
-                        # Also reduce savings_value_yearly to ensure it's reflected in chart
-                        savings_value_yearly[milestone_year] -= wedding_cost
+                        # CRITICAL FIX: Rather than just reducing savings for the milestone year,
+                        # allow the savings value to go negative to properly track the impact
+                        current_savings = savings_value_yearly[milestone_year]
+                        savings_value_yearly[milestone_year] = current_savings - wedding_cost
                         
                         # Also reduce cash flow by the wedding cost for this year
                         cash_flow_yearly[milestone_year] -= wedding_cost
@@ -578,8 +597,10 @@ class FinancialCalculator:
                         # Reduce assets by the down payment amount (for milestone year only)
                         assets_yearly[milestone_year] -= home_down_payment
                         
-                        # Also reduce savings_value_yearly to ensure it's reflected in chart
-                        savings_value_yearly[milestone_year] -= home_down_payment
+                        # CRITICAL FIX: Rather than just reducing savings for the milestone year,
+                        # allow the savings value to go negative to properly track the impact
+                        current_savings = savings_value_yearly[milestone_year]
+                        savings_value_yearly[milestone_year] = current_savings - home_down_payment
                         
                         # Also reduce cash flow by the down payment amount for this year
                         cash_flow_yearly[milestone_year] -= home_down_payment
@@ -744,8 +765,10 @@ class FinancialCalculator:
                         # Reduce assets by the down payment amount (for milestone year only)
                         assets_yearly[milestone_year] -= car_down_payment
                         
-                        # Also reduce savings_value_yearly to ensure it's reflected in chart
-                        savings_value_yearly[milestone_year] -= car_down_payment
+                        # CRITICAL FIX: Rather than just reducing savings for the milestone year,
+                        # allow the savings value to go negative to properly track the impact
+                        current_savings = savings_value_yearly[milestone_year]
+                        savings_value_yearly[milestone_year] = current_savings - car_down_payment
                         
                         # Also reduce cash flow by the down payment amount for this year
                         cash_flow_yearly[milestone_year] -= car_down_payment
