@@ -37,23 +37,6 @@ const ExpenseBreakdownChart: React.FC<ExpenseBreakdownProps> = ({
           chartInstance.current.destroy();
         }
         
-        // Log the raw incoming expense data for debugging
-        console.log(`Expense Breakdown Chart - Raw incoming data for year ${projectionYear}:`, {
-          housing: currentExpenses.housing,
-          transportation: currentExpenses.transportation,
-          food: currentExpenses.food,
-          healthcare: currentExpenses.healthcare,
-          education: currentExpenses.education,
-          debt: currentExpenses.debt,
-          childcare: currentExpenses.childcare,
-          discretionary: currentExpenses.discretionary,
-          personalInsurance: currentExpenses.personalInsurance,
-          entertainment: currentExpenses.entertainment,
-          apparel: currentExpenses.apparel,
-          services: currentExpenses.services,
-          other: currentExpenses.other
-        });
-        
         // Make sure all expense values are positive numbers
         const sanitizedExpenses = {
           housing: Math.max(0, Number(currentExpenses.housing) || 0),
@@ -72,19 +55,11 @@ const ExpenseBreakdownChart: React.FC<ExpenseBreakdownProps> = ({
           other: Math.max(0, Number(currentExpenses.other) || 0)
         };
         
-        // Special healthcare debug
-        console.log("Healthcare expense details:", {
-          raw: currentExpenses.healthcare,
-          parsed: Number(currentExpenses.healthcare),
-          sanitized: sanitizedExpenses.healthcare,
-          type: typeof currentExpenses.healthcare
-        });
-        
         // Create new chart with sanitized data
         chartInstance.current = createExpenseBreakdownChart(ctx, sanitizedExpenses);
         
         // Log the data being used to create the chart for debugging
-        console.log("Creating expense breakdown chart with sanitized data:", sanitizedExpenses);
+        console.log("Creating expense breakdown chart with data:", sanitizedExpenses);
       }
     }
     
