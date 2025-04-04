@@ -183,29 +183,29 @@ class FinancialCalculator:
             
             # Categorize assets
             if isinstance(asset, Investment) and (asset.name.lower().find('home') >= 0 or asset.name.lower().find('house') >= 0):
-                home_value_yearly[0] += asset_value
+                home_value_yearly[0] += int(asset_value)
             elif isinstance(asset, DepreciableAsset) and (asset.name.lower().find('car') >= 0 or asset.name.lower().find('vehicle') >= 0):
-                car_value_yearly[0] += asset_value
+                car_value_yearly[0] += int(asset_value)
             elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
                 # Track savings specifically
                 # Use direct assignment for year 0 just like we do for later years
-                savings_value_yearly[0] = asset_value
+                savings_value_yearly[0] = int(asset_value)
         
         # Sum all liability balances for year 0
         for liability in self.liabilities:
             liability_balance = liability.get_balance(0)
-            liabilities_yearly[0] += liability_balance
+            liabilities_yearly[0] += int(liability_balance)
             
             # Categorize liabilities
             if isinstance(liability, Mortgage):
-                mortgage_yearly[0] += liability_balance
+                mortgage_yearly[0] += int(liability_balance)
             elif isinstance(liability, AutoLoan):
-                car_loan_yearly[0] += liability_balance
+                car_loan_yearly[0] += int(liability_balance)
             elif isinstance(liability, StudentLoan):
-                student_loan_yearly[0] += liability_balance
+                student_loan_yearly[0] += int(liability_balance)
         
         # Calculate initial net worth
-        net_worth[0] = assets_yearly[0] - liabilities_yearly[0]
+        net_worth[0] = int(assets_yearly[0] - liabilities_yearly[0])
         
         # Project for each year
         for i in range(1, self.years_to_project + 1):
@@ -215,13 +215,13 @@ class FinancialCalculator:
             # Calculate asset values for this year
             for asset in self.assets:
                 asset_value = asset.get_value(i)
-                assets_yearly[i] += asset_value
+                assets_yearly[i] += int(asset_value)
                 
                 # Categorize assets
                 if isinstance(asset, Investment) and (asset.name.lower().find('home') >= 0 or asset.name.lower().find('house') >= 0):
-                    home_value_yearly[i] += asset_value
+                    home_value_yearly[i] += int(asset_value)
                 elif isinstance(asset, DepreciableAsset) and (asset.name.lower().find('car') >= 0 or asset.name.lower().find('vehicle') >= 0):
-                    car_value_yearly[i] += asset_value
+                    car_value_yearly[i] += int(asset_value)
                 elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
                     # Track savings specifically
                     # Use direct assignment instead of += to avoid double counting
@@ -243,30 +243,30 @@ class FinancialCalculator:
                             f.write(f"  Growth-adjusted previous value: ${savings_value_yearly[i-1] * (1 + asset.growth_rate)}\n")
                             f.write(f"  Setting savings_value_yearly[{i}] = ${asset_value}\n")
                     
-                    savings_value_yearly[i] = asset_value
+                    savings_value_yearly[i] = int(asset_value)
             
             # Calculate liability balances for this year
             for liability in self.liabilities:
                 liability_balance = liability.get_balance(i)
-                liabilities_yearly[i] += liability_balance
+                liabilities_yearly[i] += int(liability_balance)
                 
                 # Categorize liabilities
                 if isinstance(liability, Mortgage):
-                    mortgage_yearly[i] += liability_balance
+                    mortgage_yearly[i] += int(liability_balance)
                 elif isinstance(liability, AutoLoan):
-                    car_loan_yearly[i] += liability_balance
+                    car_loan_yearly[i] += int(liability_balance)
                 elif isinstance(liability, StudentLoan):
-                    student_loan_yearly[i] += liability_balance
+                    student_loan_yearly[i] += int(liability_balance)
             
             # Calculate income for this year
             for income in self.incomes:
                 income_amount = income.get_income(i)
-                income_yearly[i] += income_amount
+                income_yearly[i] += int(income_amount)
             
             # Calculate expenses for this year
             for expense in self.expenditures:
                 expense_amount = expense.get_expense(i)
-                expenses_yearly[i] += expense_amount
+                expenses_yearly[i] += int(expense_amount)
             
             # Calculate cash flow for this year
             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
@@ -658,9 +658,14 @@ class FinancialCalculator:
                             # Update the value for this year and all future years will be based on this reduced amount
                             savings_asset.update_value(milestone_year, new_value)
                             
+                            # CRITICAL FIX: Also update the savings_value_yearly array to match the asset
+                            # This ensures both tracking systems are in sync
+                            savings_value_yearly[milestone_year] = int(new_value)
+                            
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Updated savings asset value: ${new_value}\n")
                                 f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                                f.write(f"Updated savings_value_yearly[{milestone_year}] = {savings_value_yearly[milestone_year]}\n")
                                 
                                 # Debug - show updated projected values for all years
                                 f.write("\nSavings values after home purchase:\n")
@@ -836,9 +841,14 @@ class FinancialCalculator:
                             # Update the value for this year and all future years will be based on this reduced amount
                             savings_asset.update_value(milestone_year, new_value)
                             
+                            # CRITICAL FIX: Also update the savings_value_yearly array to match the asset
+                            # This ensures both tracking systems are in sync for car purchases
+                            savings_value_yearly[milestone_year] = int(new_value)
+                            
                             with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Updated savings asset value: ${new_value}\n")
+                                f.write(f"Updated savings asset value: ${new_value}\n") 
                                 f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                                f.write(f"Updated savings_value_yearly[{milestone_year}] = {savings_value_yearly[milestone_year]}\n")
                                 
                                 # Debug - show updated projected values for all years
                                 f.write("\nSavings values after car purchase:\n")
