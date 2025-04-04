@@ -259,23 +259,33 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
   
   // Use savingsValue directly from the Python backend
   // If not available, fall back to zero - we should never calculate this in the frontend
-  const savings = data.savingsValue || Array(data.ages.length).fill(0);
+  const savingsRaw = data.savingsValue || Array(data.ages.length).fill(0);
+  
+  // Log the raw savings data for debugging
+  console.log("Raw savings values from Python:", savingsRaw);
+  
+  // We'll use a different approach for savings visualization
+  // Instead of stacking, which doesn't handle negative values well,
+  // we'll use a regular bar chart approach for the savings values
+  const datasets = [];
+  
+  // Create a single dataset for savings that shows positive and negative values directly
+  datasets.push({
+    label: 'Savings & Investments',
+    data: savingsRaw,
+    backgroundColor: (context: any) => {
+      const value = context.raw as number;
+      return value >= 0 ? 'rgba(63, 81, 181, 0.7)' : 'rgba(244, 67, 54, 0.7)';
+    },
+    borderRadius: 4,
+    // Not using stack for savings so we can see the negative values clearly
+  });
   
   // Debug output
   console.log("Asset Breakdown Chart Data:");
   for (let i = 0; i < data.ages.length; i++) {
-    console.log(`Year ${i} (Age ${data.ages[i]}): Savings=${data.savingsValue?.[i] || 0}, Home=${data.homeValue?.[i] || 0}, Car=${data.carValue?.[i] || 0}, Total Assets=${data.assets?.[i] || 0}`);
+    console.log(`Year ${i} (Age ${data.ages[i]}): Savings Raw=${savingsRaw[i]}, Home=${data.homeValue?.[i] || 0}, Total Assets=${data.assets?.[i] || 0}`);
   }
-
-  const datasets = [
-    {
-      label: 'Savings & Investments',
-      data: savings,
-      backgroundColor: 'rgba(63, 81, 181, 0.7)',
-      borderRadius: 4,
-      stack: 'assets'
-    }
-  ];
 
   // Add home value dataset if it exists and has positive values
   if (data.homeValue && data.homeValue.some(value => value > 0)) {
@@ -315,26 +325,52 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
         tooltip: {
           callbacks: {
             label: function(context: any) {
-              return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
+              const value = context.raw;
+              const formattedValue = Math.abs(Number(value)).toLocaleString();
+              // Show negative values with the minus sign
+              if (value < 0) {
+                return `${context.dataset.label}: -$${formattedValue}`;
+              }
+              return `${context.dataset.label}: $${formattedValue}`;
             },
             footer: function(tooltipItems: any) {
-              let total = 0;
+              let totalPositive = 0;
+              let totalNegative = 0;
+              
               tooltipItems.forEach(function(tooltipItem: any) {
-                total += tooltipItem.parsed.y;
+                const value = tooltipItem.parsed.y;
+                if (value < 0) {
+                  totalNegative += Math.abs(value);
+                } else {
+                  totalPositive += value;
+                }
               });
-              return `Total Assets: $${total.toLocaleString()}`;
+              
+              // Calculate net total (positive minus negative)
+              const netTotal = totalPositive - totalNegative;
+              
+              // Show the totals
+              return [
+                `Total Positive: $${totalPositive.toLocaleString()}`,
+                totalNegative > 0 ? `Total Negative: -$${totalNegative.toLocaleString()}` : null,
+                `Net Total: ${netTotal >= 0 ? '$' : '-$'}${Math.abs(netTotal).toLocaleString()}`
+              ].filter(Boolean).join('\n');
             }
           }
         }
       },
       scales: {
         x: {
-          stacked: true
+          stacked: false // Don't stack on x-axis for savings which can be negative
         },
         y: {
-          stacked: true,
+          stacked: false, // Don't stack on y-axis so negatives show properly
           ticks: {
             callback: function(value: any) {
+              // Format value with $ sign, preserving negative values
+              if (value < 0) {
+                return '-$' + Math.abs(Number(value)).toLocaleString();
+              }
               return '$' + Number(value).toLocaleString();
             }
           }
@@ -652,6 +688,8 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   });
 }
 
+// Import the specialized chart for negative values at the top of the file
+
 export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: ProjectionData, type: string = 'netWorth'): Chart {
   const labels = data.ages.map(age => age.toString());
   let chartData;
@@ -677,7 +715,8 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
       return createStackedExpenseChart(ctx, data);
       break;
     case 'assets':
-      // For assets, we'll use the detailed breakdown if available
+      // For assets, we'll temporarily use the standard stacked asset chart
+      // until we fix the import issues
       if ((data.homeValue && data.homeValue.some(value => value > 0)) || 
           (data.carValue && data.carValue.some(value => value > 0))) {
         // Use stacked chart for assets with home value and car value breakdown
@@ -749,11 +788,22 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
         tooltip: {
           callbacks: {
             label: function(context: any) {
+              // Handle negative values with proper formatting
+              const value = context.raw;
+              const formattedValue = Math.abs(Number(value)).toLocaleString();
+              
               // Show dataset label if it's a stacked chart
               if (type === 'income' && data.spouseIncome && data.spouseIncome.length > 0) {
-                return `${context.dataset.label}: $${Number(context.raw).toLocaleString()}`;
+                return value < 0 
+                  ? `${context.dataset.label}: -$${formattedValue}`
+                  : `${context.dataset.label}: $${formattedValue}`;
               }
-              return `${chartLabel}: $${Number(context.raw).toLocaleString()}`;
+              
+              // For negative values, show with a minus sign
+              if (value < 0) {
+                return `${chartLabel}: -$${formattedValue}`;
+              }
+              return `${chartLabel}: $${formattedValue}`;
             }
           }
         }
@@ -762,6 +812,10 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
         y: {
           ticks: {
             callback: function(value: any) {
+              // Format values with $ sign, properly handling negative values
+              if (value < 0) {
+                return '-$' + Math.abs(Number(value)).toLocaleString();
+              }
               return '$' + Number(value).toLocaleString();
             }
           }
