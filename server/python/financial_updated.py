@@ -550,26 +550,36 @@ class FinancialCalculator:
                                 # Add car payment to debt expenses category
                                 debt_expenses_yearly[i] += car_annual_payment
                             
-                            # Apply transportation expense reduction when car is purchased
+                            # Apply transportation expense reduction while the car is owned
                             # This reduces other transport costs like public transit
-                            if i == milestone_year:
-                                # First, find any transportation expenses
-                                for expenditure in self.expenditures:
-                                    if (isinstance(expenditure, Transportation) or 
-                                        expenditure.name.lower().find('transport') >= 0 or 
-                                        expenditure.name.lower().find('transit') >= 0):
-                                        # Get current value for this year
-                                        current_transport = expenditure.get_expense(i)
-                                        # Apply reduction
-                                        reduced_transport = current_transport * (1.0 - car_transportation_reduction)
-                                        # Update expense for this year and future years
-                                        with open('healthcare_debug.log', 'a') as f:
-                                            f.write(f"Reducing transportation expense '{expenditure.name}' from ${current_transport} to ${reduced_transport}\n")
-                                        
-                                        # We can't directly modify the expense amount in the expenditure object
-                                        # So instead, we'll adjust the transportation_expenses_yearly array
-                                        # Convert to int since we're storing integers
-                                        transportation_expenses_yearly[i] = int(transportation_expenses_yearly[i] * (1.0 - car_transportation_reduction))
+                            # For all years that the user owns a car (from milestone_year onward)
+                            if i >= milestone_year:
+                                # First, check if we've already applied a reduction for this year
+                                # (in case of multiple cars)
+                                reduction_already_applied = False
+                                # TODO: In the future, we could track which years have reductions applied
+                                
+                                if not reduction_already_applied:
+                                    # Find any transportation expenses and apply the reduction
+                                    for expenditure in self.expenditures:
+                                        if (isinstance(expenditure, Transportation) or 
+                                            expenditure.name.lower().find('transport') >= 0 or 
+                                            expenditure.name.lower().find('transit') >= 0):
+                                            # Get current value for this year
+                                            current_transport = expenditure.get_expense(i)
+                                            # Apply reduction
+                                            reduced_transport = current_transport * (1.0 - car_transportation_reduction)
+                                            
+                                            # Update expense for this year in our tracking array
+                                            with open('healthcare_debug.log', 'a') as f:
+                                                if i == milestone_year:  # Only log the first year to avoid excessive logging
+                                                    f.write(f"Reducing transportation expense '{expenditure.name}' from ${current_transport} to ${reduced_transport}\n")
+                                                    f.write(f"This reduction will apply for all future years while the car is owned\n")
+                                            
+                                            # We can't directly modify the expense amount in the expenditure object
+                                            # So instead, we'll adjust the transportation_expenses_yearly array
+                                            # Convert to int since we're storing integers
+                                            transportation_expenses_yearly[i] = int(transportation_expenses_yearly[i] * (1.0 - car_transportation_reduction))
                                         
                             # Update net worth (assets - liabilities)
                             net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
