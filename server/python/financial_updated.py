@@ -599,6 +599,11 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Found savings asset: {savings_asset.name}\n")
                                 f.write(f"Original value at year {milestone_year}: ${savings_asset.get_value(milestone_year)}\n")
+                                
+                                # Debug - show current projected values for all years
+                                f.write("\nSavings values before home purchase:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                             
                             # Get current value and reduce by down payment
                             current_value = savings_asset.get_value(milestone_year)
@@ -610,6 +615,11 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Updated savings asset value: ${new_value}\n")
                                 f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                                
+                                # Debug - show updated projected values for all years
+                                f.write("\nSavings values after home purchase:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                         else:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"WARNING: Could not find a savings asset to update for home down payment!\n")
@@ -755,6 +765,11 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Found savings asset: {savings_asset.name}\n")
                                 f.write(f"Original value at year {milestone_year}: ${savings_asset.get_value(milestone_year)}\n")
+                                
+                                # Debug - show current projected values for all years
+                                f.write("\nSavings values before car purchase:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                             
                             # Get current value and reduce by down payment
                             current_value = savings_asset.get_value(milestone_year)
@@ -766,6 +781,11 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Updated savings asset value: ${new_value}\n")
                                 f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
+                                
+                                # Debug - show updated projected values for all years
+                                f.write("\nSavings values after car purchase:\n")
+                                for yr in range(milestone_year, self.years_to_project + 1):
+                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
                         else:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"WARNING: Could not find a savings asset to update for car down payment!\n")

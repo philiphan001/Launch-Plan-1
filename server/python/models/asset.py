@@ -68,6 +68,12 @@ class Asset:
             new_value: New value to set
         """
         self.value_history[year] = new_value
+        
+        # Clear future calculations so they'll be recalculated based on this new value
+        # This ensures significant changes like home purchases affect future projections
+        future_years = [y for y in self.value_history.keys() if y > year]
+        for y in future_years:
+            del self.value_history[y]
 
 
 class DepreciableAsset(Asset):
