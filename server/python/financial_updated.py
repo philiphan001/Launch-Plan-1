@@ -381,9 +381,40 @@ class FinancialCalculator:
             # Store combined tax amount for visualization
             tax_expenses_yearly[i] = total_taxes
             
-            # Add tax expenses to the total expenses
-            expenses_yearly[i] += total_taxes
-            expenses_yearly[i] += retirement_contribution
+            # IMPORTANT: Instead of adding taxes to expenses, we will include them in the calculation
+            # by explicitly including tax_expenses_yearly[i] in each expenses_yearly calculation
+            # This keeps tax handling consistent across the entire calculation
+            # This fixes the issue of taxes not affecting cash flow
+            
+            # Initialize the expenses array for this year - including all expense categories and taxes
+            expenses_yearly[i] = (
+                housing_expenses_yearly[i] +
+                transportation_expenses_yearly[i] +
+                food_expenses_yearly[i] +
+                healthcare_expenses_yearly[i] +
+                personal_insurance_expenses_yearly[i] +
+                apparel_expenses_yearly[i] +
+                services_expenses_yearly[i] +
+                entertainment_expenses_yearly[i] +
+                other_expenses_yearly[i] +
+                education_expenses_yearly[i] +
+                child_expenses_yearly[i] +
+                debt_expenses_yearly[i] +
+                discretionary_expenses_yearly[i] +
+                tax_expenses_yearly[i] +
+                retirement_contribution
+            )
+            
+            # Log the expense calculation for debugging
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"\n[EXPENSE CALCULATION] Year {i} expense components:\n")
+                f.write(f"  Housing: ${housing_expenses_yearly[i]}\n")
+                f.write(f"  Transportation: ${transportation_expenses_yearly[i]}\n")
+                f.write(f"  Food: ${food_expenses_yearly[i]}\n")
+                f.write(f"  Healthcare: ${healthcare_expenses_yearly[i]}\n")
+                f.write(f"  Taxes: ${tax_expenses_yearly[i]}\n")
+                f.write(f"  Retirement: ${retirement_contribution}\n")
+                f.write(f"  Total expenses: ${expenses_yearly[i]}\n")
             
             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
             
@@ -1325,8 +1356,20 @@ class FinancialCalculator:
                                 tax_expenses_yearly[i]
                             )
                             
+                            # Debug tax and cash flow information
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[CASH FLOW DEBUG] Year {i} cash flow calculation:\n")
+                                f.write(f"  total_income_yearly[{i}]: ${total_income_yearly[i]}\n")
+                                f.write(f"  expenses_yearly[{i}]: ${expenses_yearly[i]}\n")
+                                f.write(f"  tax_expenses_yearly[{i}]: ${tax_expenses_yearly[i]}\n")
+                                f.write(f"  Tax breakdown: Federal=${federal_tax_expenses_yearly[i]}, State=${state_tax_expenses_yearly[i]}, Payroll=${payroll_tax_expenses_yearly[i]}\n")
+                                
                             # Update cash flow using total income (personal + spouse)
                             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
+                            
+                            # Log the resulting cash flow
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"  Resulting cash_flow_yearly[{i}]: ${cash_flow_yearly[i]}\n")
                             
                             # CRITICAL FIX: Apply positive cash flow to savings
                             # This ensures that when people earn more than they spend,
