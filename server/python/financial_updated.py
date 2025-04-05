@@ -463,11 +463,32 @@ class FinancialCalculator:
                     # Add the new loan to the calculator's liabilities
                     self.add_liability(cash_flow_loan)
                     
-                    # Update personal loans tracker for this year
-                    all_personal_loans[i] += int(negative_amount)
+                    # DEBUG: Write the loan creation to log
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"\nCreated personal loan for negative cash flow in year {i}:\n")
+                        f.write(f"  Loan amount: ${negative_amount}\n")
                     
-                    # Also update total liabilities for this year immediately
-                    liabilities_yearly[i] += int(negative_amount)
+                    # Update personal loans tracker for this year and ALL FUTURE YEARS
+                    # This is critical since the loan will continue to affect net worth in future years
+                    for future_year in range(i, self.years_to_project + 1):
+                        # Calculate the projected balance for this future year
+                        projected_balance = cash_flow_loan.get_balance(future_year - i)
+                        
+                        # Update our tracking arrays
+                        if future_year == i:
+                            # For the current year, just add the full loan amount
+                            all_personal_loans[future_year] += int(negative_amount)
+                            # For current year, manually update liabilities to ensure correct display
+                            liabilities_yearly[future_year] += int(negative_amount)
+                        else:
+                            # For future years, add the calculated balance
+                            # Note: we don't add to liabilities_yearly here because that gets calculated
+                            # separately from the liability objects themselves
+                            all_personal_loans[future_year] += int(projected_balance)
+                            
+                        # DEBUG: Log the projected impact on each year
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"  Year {future_year} projected balance: ${projected_balance}\n")
                     
                     # Log the creation of the personal loan
                     with open('healthcare_debug.log', 'a') as f:
@@ -524,9 +545,19 @@ class FinancialCalculator:
                         f.write(f"  Updated total assets: ${assets_yearly[i]}\n")
             
             # Calculate net worth for this year
-            # Note: Don't add all_personal_loans[i] here since they are already included in liabilities_yearly[i]
-            # when we add the loan via self.add_liability() earlier
+            # IMPORTANT CHANGE: We need to make sure that all personal loans are properly accounted for
+            # The all_personal_loans array contains correctly calculated balances for each year
+            # While we do add the loan via self.add_liability(), this might not fully update liabilities_yearly
+            # for future years until a full recalculation happens
             net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+            
+            # Add extra debug to help understand net worth calculation
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"\n[NET WORTH CALCULATION] Year {i}:\n")
+                f.write(f"  Assets: ${assets_yearly[i]}\n")
+                f.write(f"  Liabilities: ${liabilities_yearly[i]}\n")
+                f.write(f"  Personal Loans tracked: ${all_personal_loans[i]}\n")
+                f.write(f"  Net Worth: ${net_worth[i]}\n")
             
             # Calculate expense categories for this year
             # Base cost of living categories
@@ -850,7 +881,17 @@ class FinancialCalculator:
                             liabilities_yearly[i] += reduced_liability
                             
                             # Calculate net worth with updated assets and liabilities
-                            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
+                            # FIXED: We don't need to add all_personal_loans[i] since they're already in liabilities_yearly
+                            # This was causing double-counting of personal loans
+                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            
+                            # Add extra debug to help understand net worth calculation
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[MILESTONE NET WORTH CALCULATION] Year {i}:\n")
+                                f.write(f"  Assets: ${assets_yearly[i]}\n")
+                                f.write(f"  Liabilities: ${liabilities_yearly[i]}\n")
+                                f.write(f"  Personal Loans tracked: ${all_personal_loans[i]}\n")
+                                f.write(f"  Net Worth: ${net_worth[i]}\n")
                             
                             # Increase general expenses due to marriage
                             # Apply to expenses starting from the marriage year to align with income changes
@@ -1232,7 +1273,18 @@ class FinancialCalculator:
                             )
                             
                             # Update net worth and cash flow
-                            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
+                            # FIXED: We don't need to add all_personal_loans[i] since they're already in liabilities_yearly
+                            # This was causing double-counting of personal loans 
+                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            
+                            # Add extra debug to help understand net worth calculation
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[NET WORTH CALCULATION - HOME MILESTONE] Year {i}:\n")
+                                f.write(f"  Assets: ${assets_yearly[i]}\n")
+                                f.write(f"  Liabilities: ${liabilities_yearly[i]}\n")
+                                f.write(f"  Personal Loans tracked: ${all_personal_loans[i]}\n")
+                                f.write(f"  Net Worth: ${net_worth[i]}\n")
+                                
                             # Use total income (personal + spouse) for cash flow calculation
                             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
                     
@@ -1484,7 +1536,17 @@ class FinancialCalculator:
                                             transportation_expenses_yearly[i] = int(transportation_expenses_yearly[i] * (1.0 - car_transportation_reduction))
                                         
                             # Update net worth (assets - liabilities)
-                            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
+                            # FIXED: We don't need to add all_personal_loans[i] since they're already in liabilities_yearly
+                            # This was causing double-counting of personal loans 
+                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
+                            
+                            # Add extra debug to help understand net worth calculation
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[NET WORTH CALCULATION - AFTER CAR TRANSPORT] Year {i}:\n")
+                                f.write(f"  Assets: ${assets_yearly[i]}\n")
+                                f.write(f"  Liabilities: ${liabilities_yearly[i]}\n")
+                                f.write(f"  Personal Loans tracked: ${all_personal_loans[i]}\n")
+                                f.write(f"  Net Worth: ${net_worth[i]}\n")
                             
                             # Recalculate total expenses for the year with all components
                             expenses_yearly[i] = (
@@ -1639,10 +1701,13 @@ class FinancialCalculator:
                         debug_f.write(f"  Home value: ${home_value_yearly[yr]}\n")
                         debug_f.write(f"  Car value: ${car_value_yearly[yr]}\n")
                         debug_f.write(f"  TOTAL ASSETS: ${total_asset_value}\n")
-                        debug_f.write(f"  Total liabilities: ${liabilities_yearly[yr] + all_personal_loans[yr]}\n")
+                        debug_f.write(f"  Total liabilities: ${liabilities_yearly[yr]}\n")
+                        debug_f.write(f"  Personal loans (included in liabilities): ${all_personal_loans[yr]}\n")
                     
                     # Step 6: Recalculate net worth with complete assets
-                    net_worth[yr] = assets_yearly[yr] - (liabilities_yearly[yr] + all_personal_loans[yr])
+                    # FIXED: We don't need to add all_personal_loans[yr] since they're already in liabilities_yearly
+                    # This was causing double-counting of personal loans
+                    net_worth[yr] = assets_yearly[yr] - liabilities_yearly[yr]
                     
                     # CRITICAL FIX: Log detailed net worth calculation
                     with open('healthcare_debug.log', 'a') as networth_f:
@@ -1650,7 +1715,9 @@ class FinancialCalculator:
                         networth_f.write(f"  Assets: ${assets_yearly[yr]}\n")
                         networth_f.write(f"  Liabilities: ${liabilities_yearly[yr]}\n")
                         networth_f.write(f"  Personal Loans: ${all_personal_loans[yr]}\n")
-                        networth_f.write(f"  Net Worth = ${assets_yearly[yr]} - (${liabilities_yearly[yr]} + ${all_personal_loans[yr]}) = ${net_worth[yr]}\n")
+                        # Log the calculation using the formula we actually use now
+                        networth_f.write(f"  Net Worth = ${assets_yearly[yr]} - ${liabilities_yearly[yr]} = ${net_worth[yr]}\n")
+                        networth_f.write(f"  Note: personal loans (${all_personal_loans[yr]}) are already included in liabilities\n")
                         
                         # Add cash flow info
                         if yr > 0:
