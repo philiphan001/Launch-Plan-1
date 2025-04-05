@@ -353,7 +353,7 @@ const FinancialProjections = () => {
   const [spouseAssetGrowth, setSpouseAssetGrowth] = useState<number>(3.0); // Default: 3.0% annual growth
   
   // Define variables for new configurable parameters
-  const [emergencyFundMonths, setEmergencyFundMonths] = useState<number>(3); // Default: 3 months
+  const [emergencyFundAmount, setEmergencyFundAmount] = useState<number>(10000); // Default: $10,000
   const [personalLoanTermYears, setPersonalLoanTermYears] = useState<number>(5); // Default: 5 years
   const [personalLoanInterestRate, setPersonalLoanInterestRate] = useState<number>(8.0); // Default: 8.0% annual interest
   
@@ -1113,7 +1113,7 @@ const FinancialProjections = () => {
           formattedMilestones,
           costOfLivingFactor,
           locationCostData, // Pass the location data directly
-          emergencyFundMonths, // New parameter: months of expenses for emergency fund
+          emergencyFundAmount, // New parameter: fixed amount for emergency fund
           personalLoanTermYears, // New parameter: term length for personal loans
           personalLoanInterestRate // New parameter: interest rate for personal loans
         );
@@ -1154,7 +1154,7 @@ const FinancialProjections = () => {
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
       spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
-      emergencyFundMonths, personalLoanTermYears, personalLoanInterestRate]); // Include all configurable parameters to ensure recalculation when any of them change
+      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate]); // Include all configurable parameters to ensure recalculation when any of them change
   
   // Generate financial advice based on current financial state
   useEffect(() => {
@@ -1330,16 +1330,18 @@ const FinancialProjections = () => {
                 <h4 className="text-md font-semibold mb-2">Advanced Settings</h4>
                 
                 <div className="mb-3">
-                  <Label>Emergency Fund (Months of Expenses): {emergencyFundMonths}</Label>
-                  <Slider
-                    value={[emergencyFundMonths]}
-                    onValueChange={(value) => setEmergencyFundMonths(value[0])}
-                    min={1}
-                    max={12}
-                    step={1}
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Recommended: 3-6 months</p>
+                  <Label>Emergency Fund Amount: {formatCurrency(emergencyFundAmount)}</Label>
+                  <div className="flex space-x-2 items-center mt-2">
+                    <Input
+                      type="number"
+                      value={emergencyFundAmount}
+                      onChange={(e) => setEmergencyFundAmount(Number(e.target.value))}
+                      min={1000}
+                      step={1000}
+                      className="w-full"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Recommended: $10,000 minimum</p>
                 </div>
                 
                 <div className="mb-3">
@@ -1404,7 +1406,7 @@ const FinancialProjections = () => {
                         locationCostData.income_adjustment_factor || 1.0 : null,
                       incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                       // Save the configurable parameters
-                      emergencyFundMonths: emergencyFundMonths,
+                      emergencyFundAmount: emergencyFundAmount,
                       personalLoanTermYears: personalLoanTermYears,
                       personalLoanInterestRate: personalLoanInterestRate,
                     }),

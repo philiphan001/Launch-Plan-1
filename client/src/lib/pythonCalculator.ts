@@ -9,7 +9,7 @@ export interface CalculatorInputData {
   yearsToProject: number;
   pathType: string;
   costOfLivingFactor?: number; // Location-based adjustment factor (1.0 is average)
-  emergencyFundMonths?: number; // Number of months of expenses to maintain as emergency fund
+  emergencyFundAmount?: number; // Fixed amount to maintain as emergency fund
   personalLoanTermYears?: number; // Term length in years for personal loans
   personalLoanInterestRate?: number; // Annual interest rate for personal loans (decimal format)
   assets: Array<{
@@ -108,7 +108,7 @@ export const generatePythonCalculatorInput = (
   milestones: Milestone[] = [],
   costOfLivingFactor: number = 1.0,
   locationCostData: any = null,
-  emergencyFundMonths: number = 3,
+  emergencyFundAmount: number = 10000,
   personalLoanTermYears: number = 5,
   personalLoanInterestRate: number = 0.08
 ): CalculatorInputData => {
@@ -258,7 +258,7 @@ export const generatePythonCalculatorInput = (
     costOfLivingFactor: costOfLivingFactor, // Explicitly pass the cost of living factor to Python
     
     // User-configurable parameters with the values from the function parameters
-    emergencyFundMonths: emergencyFundMonths,
+    emergencyFundAmount: emergencyFundAmount,
     personalLoanTermYears: personalLoanTermYears,
     personalLoanInterestRate: personalLoanInterestRate,
     
