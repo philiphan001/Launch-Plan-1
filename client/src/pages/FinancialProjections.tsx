@@ -467,7 +467,7 @@ const FinancialProjections = () => {
     const assetsData = [startingSavings]; // Initial assets (savings only)
     const liabilitiesData = [studentLoanDebt]; // Initial liabilities (student loan only)
     const savingsValueData = [startingSavings]; // Track liquid savings separately
-    const retirementValueData = [0]; // Track retirement accounts separately
+    // We're not tracking retirement accounts separately for now
     
     // Track expense categories for detailed breakdown with initial values as percentages of base expenses
     // Initialize with empty arrays, the backend will provide the proper data
@@ -668,24 +668,19 @@ const FinancialProjections = () => {
         studentLoanPaymentForYear +
         educationLoanPaymentForYear;
       
-      // Calculate annual surplus or deficit
+      // Calculate annual surplus or deficit - this is the cash flow for the year
       const annualSurplus = totalIncome - totalExpenses;
       
-      // Calculate retirement contribution (10% of income if positive cash flow)
-      const retirementContribution = annualSurplus > 0 ? Math.min(totalIncome * 0.1, annualSurplus * 0.4) : 0;
+      // Log the cash flow for debugging
+      console.log(`Year ${i} Cash Flow: $${annualSurplus.toFixed(2)} (Income $${totalIncome.toFixed(2)} - Expenses $${totalExpenses.toFixed(2)})`);
       
-      // Calculate amount returned to liquid savings (remaining surplus after retirement)
-      const returnToSavings = annualSurplus - retirementContribution;
-      
-      // Track retirement and savings values separately
-      const previousRetirementValue = retirementValueData[i-1] || 0;
-      retirementValueData.push(previousRetirementValue + retirementContribution);
-      
-      const previousSavingsValue = savingsValueData[i-1] || 0;
-      savingsValueData.push(Math.max(0, previousSavingsValue + returnToSavings));
-      
-      // Update net worth with all of the surplus
+      // Update net worth with the annual surplus (cash flow)
+      // This adds cash flow from this year to the net worth calculation
       netWorth += annualSurplus;
+      
+      // Track liquid savings separately, updating with this year's cash flow
+      const previousSavingsValue = savingsValueData[i-1] || 0;
+      savingsValueData.push(Math.max(0, previousSavingsValue + annualSurplus));
       
       // Apply student loan payments (simplified - 10 year repayment)
       let studentLoanPayment = 0;
@@ -1030,7 +1025,7 @@ const FinancialProjections = () => {
       carLoan: carLoanData, // Track car loan separately
       studentLoan: studentLoanData, // Track student loan separately
       savingsValue: savingsValueData, // Track liquid savings separately
-      retirementValue: retirementValueData, // Track retirement savings separately
+      // We're not tracking retirement values separately for now
       ages: ages,
       // Add expense categories
       housingExpenses: housingExpensesData,
@@ -1449,9 +1444,7 @@ const FinancialProjections = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
-                        ${projectionData?.retirementValue?.length > 0 
-                          ? projectionData.retirementValue[projectionData.retirementValue.length - 1].toLocaleString() 
-                          : "0"}
+                        Not tracked separately
                       </p>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
