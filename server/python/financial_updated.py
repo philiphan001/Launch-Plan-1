@@ -1046,7 +1046,9 @@ class FinancialCalculator:
                                 education_expenses_yearly[i] +
                                 child_expenses_yearly[i] +
                                 debt_expenses_yearly[i] +
-                                discretionary_expenses_yearly[i]
+                                discretionary_expenses_yearly[i] +
+                                # Include tax expenses in total expenses calculation
+                                tax_expenses_yearly[i]
                             )
                             
                             # Update net worth and cash flow
@@ -1318,7 +1320,9 @@ class FinancialCalculator:
                                 education_expenses_yearly[i] +
                                 child_expenses_yearly[i] +
                                 debt_expenses_yearly[i] +
-                                discretionary_expenses_yearly[i]
+                                discretionary_expenses_yearly[i] +
+                                # Include tax expenses in total expenses calculation
+                                tax_expenses_yearly[i]
                             )
                             
                             # Update cash flow using total income (personal + spouse)
