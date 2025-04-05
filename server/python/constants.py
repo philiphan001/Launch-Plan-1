@@ -49,7 +49,7 @@ DEFAULT_EXPENSE_ALLOCATIONS = {
 }
 
 # Emergency fund and personal loan assumptions
-DEFAULT_EMERGENCY_FUND_MONTHS = 3  # Number of months of expenses to keep as emergency fund
+DEFAULT_EMERGENCY_FUND_AMOUNT = 10000  # Default emergency fund amount in dollars
 DEFAULT_PERSONAL_LOAN_TERM_YEARS = 5  # 5-year standard term for personal loans
 DEFAULT_PERSONAL_LOAN_INTEREST_RATE = 0.08  # 8% interest rate for personal loans
 
