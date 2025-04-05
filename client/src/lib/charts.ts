@@ -690,6 +690,120 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
 
 // Import the specialized chart for negative values at the top of the file
 
+// Function to create a combined income and expense chart that also shows net cash flow
+export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  const labels = data.ages.map(age => age.toString());
+  
+  // Get income data
+  const income = data.income || Array(labels.length).fill(0);
+  const spouseIncome = data.spouseIncome || Array(labels.length).fill(0);
+  
+  // Get expense data
+  const expenses = data.expenses || Array(labels.length).fill(0);
+  
+  // Calculate net cash flow (income - expenses)
+  const netCashFlow = income.map((value, index) => {
+    // Add spouse income if available
+    const totalIncome = value + (spouseIncome[index] || 0);
+    // Subtract expenses
+    return totalIncome - (expenses[index] || 0);
+  });
+  
+  // Create datasets
+  const datasets = [
+    {
+      type: 'bar' as const,
+      label: 'Income',
+      data: income.map((value, index) => value + (spouseIncome[index] || 0)),
+      backgroundColor: 'rgba(38, 166, 154, 0.7)', // Green for income
+      borderRadius: 4,
+      order: 2
+    },
+    {
+      type: 'bar' as const,
+      label: 'Expenses',
+      data: expenses,
+      backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for expenses
+      borderRadius: 4,
+      order: 3
+    },
+    {
+      type: 'line' as const,
+      label: 'Net Cash Flow',
+      data: netCashFlow,
+      borderColor: 'rgba(25, 118, 210, 0.9)', // Blue for net cash flow
+      backgroundColor: 'rgba(25, 118, 210, 0.1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: netCashFlow.map(value => value >= 0 ? 'rgba(38, 166, 154, 1)' : 'rgba(244, 67, 54, 1)'),
+      pointRadius: 4,
+      order: 1
+    }
+  ];
+  
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context: any) {
+              const value = context.raw;
+              const formattedValue = Math.abs(Number(value)).toLocaleString();
+              if (value < 0) {
+                return `${context.dataset.label}: -$${formattedValue}`;
+              }
+              return `${context.dataset.label}: $${formattedValue}`;
+            },
+            footer: function(tooltipItems: any) {
+              // Only calculate savings rate for years with positive net cash flow
+              const incomeItem = tooltipItems.find((item: any) => item.dataset.label === 'Income');
+              const expensesItem = tooltipItems.find((item: any) => item.dataset.label === 'Expenses');
+              const netCashFlowItem = tooltipItems.find((item: any) => item.dataset.label === 'Net Cash Flow');
+              
+              if (incomeItem && expensesItem && netCashFlowItem) {
+                const income = incomeItem.parsed.y;
+                const expenses = expensesItem.parsed.y;
+                const netCashFlow = netCashFlowItem.parsed.y;
+                
+                // Calculate savings rate as a percentage of income
+                const savingsRate = income > 0 ? ((income - expenses) / income * 100).toFixed(1) : '0';
+                
+                return `Savings Rate: ${savingsRate}%`;
+              }
+              return '';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: function(value: any) {
+              // Format values with $ sign, properly handling negative values
+              if (value < 0) {
+                return '-$' + Math.abs(Number(value)).toLocaleString();
+              }
+              return '$' + Number(value).toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: ProjectionData, type: string = 'netWorth'): Chart {
   const labels = data.ages.map(age => age.toString());
   let chartData;
@@ -697,6 +811,9 @@ export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: P
   let chartColor;
   
   switch(type) {
+    case 'cashFlow':
+      // Use the new combined cash flow chart that shows income, expenses, and net cash flow
+      return createCombinedCashFlowChart(ctx, data);
     case 'income':
       chartLabel = 'Income';
       chartColor = 'rgba(38, 166, 154, 0.7)';

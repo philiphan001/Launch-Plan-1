@@ -36,7 +36,7 @@ import {
   FinancialProjectionData
 } from "@/lib/pythonCalculator";
 
-type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities";
+type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities" | "cashFlow";
 
 // Interfaces for API responses
 interface User {
@@ -1324,6 +1324,12 @@ const FinancialProjections = () => {
                 onClick={() => setActiveTab('liabilities')}
               >
                 Liabilities
+              </button>
+              <button 
+                className={`mr-2 mb-2 px-4 py-2 ${activeTab === 'cashFlow' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} rounded-full text-sm`}
+                onClick={() => setActiveTab('cashFlow')}
+              >
+                Cash Flow
               </button>
             </div>
             
