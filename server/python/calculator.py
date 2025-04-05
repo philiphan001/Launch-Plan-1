@@ -500,6 +500,17 @@ def main() -> None:
             'discretionary': 0.04
         }
         
+        # Write some debug info to healthcare_debug.log
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\n[CALCULATOR] Processing expense categories for frontend visualization...\n")
+            f.write(f"  Result keys: {sorted(result.keys())}\n")
+            if 'expenses' in result:
+                f.write(f"  Total expenses first few years: {result['expenses'][:5]}\n")
+            if 'housing' in result:
+                f.write(f"  Housing expenses first few years: {result['housing'][:5]}\n")
+            if 'healthcare' in result:
+                f.write(f"  Healthcare expenses first few years: {result['healthcare'][:5]}\n")
+        
         # First, explicitly convert to camelCase for frontend compatibility
         if 'personal_insurance' in result:
             result['personalInsurance'] = result.pop('personal_insurance')
@@ -528,6 +539,10 @@ def main() -> None:
                         expense_value = float(year_expense) * default_percentage
                         # Add the calculated value to the list
                         result[frontend_key].append(expense_value)
+                        
+                    # Log what we generated
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"  [GENERATED] {frontend_key} expenses first few years (generated from total): {result[frontend_key][:3]}\n")
         
         print(json.dumps(result))
     

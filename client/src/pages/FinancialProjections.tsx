@@ -999,7 +999,14 @@ const FinancialProjections = () => {
       debt: debtExpensesData.length > 0 ? debtExpensesData[0] : 0,
       childcare: childcareExpensesData.length > 0 ? childcareExpensesData[0] : 0,
       discretionary: discretionaryExpensesData.length > 0 ? discretionaryExpensesData[0] : 0,
-      taxes: taxesData.length > 0 ? taxesData[0] : 0
+      // Make sure taxes are properly included with a significant non-zero value
+      taxes: taxesData.length > 0 ? taxesData[0] : (incomeData[0] || income) * 0.2, // Use 20% default if needed
+      // Add additional expense categories to match the ExpenseBreakdownChart interface
+      personalInsurance: 0, // Will be populated from Python data when available
+      entertainment: 0,     // Will be populated from Python data when available
+      apparel: 0,           // Will be populated from Python data when available
+      services: 0,          // Will be populated from Python data when available
+      other: 0              // Will be populated from Python data when available
     };
 
     return {
@@ -1675,8 +1682,9 @@ const FinancialProjections = () => {
             <div className="mt-4">
               <p className="text-sm text-gray-600">
                 <span className="font-medium">Understanding your expenses:</span> This breakdown shows where your 
-                money is going. Housing (30%), transportation (15%), food (15%), healthcare (10%), and discretionary spending (30%)
-                form your basic expenses, with additional categories for education, debt, and childcare when applicable.
+                money is going. Housing (30%), transportation (15%), food (15%), healthcare (10%), taxes (typically 15-25%), 
+                and discretionary spending (30%) form your basic expenses, with additional categories for education, debt, and 
+                childcare when applicable.
               </p>
             </div>
           </CardContent>
