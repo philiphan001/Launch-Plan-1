@@ -1053,8 +1053,24 @@ const FinancialProjections = () => {
         const result = await calculateFinancialProjection(pythonInput);
         console.log("Received projection data from Python calculator:", result);
         
+        // Add milestones to the projection data (with properly transformed years)
+        const resultWithMilestones = {
+          ...result,
+          milestones: formattedMilestones.map(m => ({
+            ...m,
+            // Ensure yearsAway is a number relative to the start age
+            yearsAway: m.yearsAway !== null ? m.yearsAway : 
+              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25)))
+          }))
+        };
+        
+        console.log("Adding milestones to projection data:", {
+          milestonesCount: formattedMilestones.length,
+          resultWithMilestones: resultWithMilestones
+        });
+        
         // Update the projection data state
-        setProjectionData(result);
+        setProjectionData(resultWithMilestones);
       } catch (error) {
         console.error("Error calculating projections:", error);
         // Fall back to the JavaScript calculator on error

@@ -701,22 +701,69 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
   // Get expense data
   const expenses = data.expenses || Array(labels.length).fill(0);
   
-  // Debug expense data
+  // Get milestone expense data - include downpayments and large one-time expenses
+  const homeDownPayments = Array(labels.length).fill(0);
+  const carDownPayments = Array(labels.length).fill(0);
+  const educationPayments = Array(labels.length).fill(0);
+  
+  // Define a simple milestone interface for type safety
+  interface ChartMilestone {
+    yearsAway?: number;
+    type?: string;
+    homeDownPayment?: number;
+    carDownPayment?: number;
+    educationCost?: number;
+  }
+  
+  // Extract milestone data if available
+  if (data.milestones && data.milestones.length > 0) {
+    data.milestones.forEach((milestone: ChartMilestone) => {
+      if (!milestone || typeof milestone !== 'object') return;
+      
+      // Only process if we have a milestone with a defined year
+      if (!milestone.yearsAway || milestone.yearsAway < 0 || milestone.yearsAway >= labels.length) return;
+      
+      const milestoneIndex = milestone.yearsAway;
+      
+      // Process home down payment
+      if (milestone.type === 'home' && milestone.homeDownPayment) {
+        homeDownPayments[milestoneIndex] = milestone.homeDownPayment;
+      }
+      
+      // Process car down payment
+      if (milestone.type === 'car' && milestone.carDownPayment) {
+        carDownPayments[milestoneIndex] = milestone.carDownPayment;
+      }
+      
+      // Process education payment (assume 20% paid upfront)
+      if (milestone.type === 'education' && milestone.educationCost) {
+        educationPayments[milestoneIndex] = milestone.educationCost * 0.2;
+      }
+    });
+  }
+  
+  // Debug data
   console.log("Cash flow chart data:", {
     income: income.slice(0, 3),
     spouseIncome: spouseIncome.slice(0, 3),
     expenses: expenses.slice(0, 3),
-    housing: data.housing?.slice(0, 3),
-    food: data.food?.slice(0, 3),
-    transportation: data.transportation?.slice(0, 3)
+    milestones: data.milestones?.length || 0,
+    homeDownPayments: homeDownPayments.filter(v => v > 0),
+    carDownPayments: carDownPayments.filter(v => v > 0),
+    educationPayments: educationPayments.filter(v => v > 0)
   });
   
-  // Calculate net cash flow (income - expenses)
+  // Calculate one-time expenses for each year
+  const oneTimeExpenses = homeDownPayments.map((value, index) => 
+    value + carDownPayments[index] + educationPayments[index]
+  );
+  
+  // Calculate net cash flow (income - regular expenses - one-time expenses)
   const netCashFlow = income.map((value, index) => {
     // Add spouse income if available
     const totalIncome = value + (spouseIncome[index] || 0);
-    // Subtract expenses
-    return totalIncome - (expenses[index] || 0);
+    // Subtract both regular and one-time expenses
+    return totalIncome - (expenses[index] || 0) - oneTimeExpenses[index];
   });
   
   // Create datasets
@@ -727,15 +774,23 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
       data: income.map((value, index) => value + (spouseIncome[index] || 0)),
       backgroundColor: 'rgba(38, 166, 154, 0.7)', // Green for income
       borderRadius: 4,
-      order: 2
+      order: 3
     },
     {
       type: 'bar' as const,
-      label: 'Expenses',
+      label: 'Regular Expenses',
       data: expenses,
-      backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for expenses
+      backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for regular expenses
       borderRadius: 4,
-      order: 3
+      order: 4
+    },
+    {
+      type: 'bar' as const,
+      label: 'One-Time Expenses',
+      data: oneTimeExpenses,
+      backgroundColor: 'rgba(233, 30, 99, 0.7)', // Pink for one-time expenses
+      borderRadius: 4,
+      order: 2
     },
     {
       type: 'line' as const,
@@ -777,20 +832,29 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
               return `${context.dataset.label}: $${formattedValue}`;
             },
             footer: function(tooltipItems: any) {
-              // Only calculate savings rate for years with positive net cash flow
+              // Calculate savings rate considering both regular and one-time expenses
               const incomeItem = tooltipItems.find((item: any) => item.dataset.label === 'Income');
-              const expensesItem = tooltipItems.find((item: any) => item.dataset.label === 'Expenses');
+              const regularExpensesItem = tooltipItems.find((item: any) => item.dataset.label === 'Regular Expenses');
+              const oneTimeExpensesItem = tooltipItems.find((item: any) => item.dataset.label === 'One-Time Expenses');
               const netCashFlowItem = tooltipItems.find((item: any) => item.dataset.label === 'Net Cash Flow');
               
-              if (incomeItem && expensesItem && netCashFlowItem) {
+              if (incomeItem) {
                 const income = incomeItem.parsed.y;
-                const expenses = expensesItem.parsed.y;
-                const netCashFlow = netCashFlowItem.parsed.y;
+                const regularExpenses = regularExpensesItem ? regularExpensesItem.parsed.y : 0;
+                const oneTimeExpenses = oneTimeExpensesItem ? oneTimeExpensesItem.parsed.y : 0;
+                const totalExpenses = regularExpenses + oneTimeExpenses;
                 
                 // Calculate savings rate as a percentage of income
-                const savingsRate = income > 0 ? ((income - expenses) / income * 100).toFixed(1) : '0';
+                const savingsRate = income > 0 ? ((income - totalExpenses) / income * 100).toFixed(1) : '0';
                 
-                return `Savings Rate: ${savingsRate}%`;
+                // If there are one-time expenses in this year, show them in the tooltip
+                let message = `Savings Rate: ${savingsRate}%`;
+                if (oneTimeExpenses > 0) {
+                  const formattedOneTime = Math.abs(Number(oneTimeExpenses)).toLocaleString();
+                  message += `\nOne-Time Expenses: $${formattedOneTime}`;
+                }
+                
+                return message;
               }
               return '';
             }
