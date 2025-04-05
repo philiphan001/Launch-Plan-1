@@ -568,6 +568,20 @@ class FinancialCalculator:
                         # Also reduce cash flow by the wedding cost for this year
                         cash_flow_yearly[milestone_year] -= wedding_cost
                         
+                        # IMPORTANT FIX: Ensure tax expenses are properly included in cash flow for all years
+                        # This ensures that years before the marriage milestone have correct cash flow
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nFixing pre-marriage years' cash flow calculations to include taxes:\n")
+                        
+                        for pre_year in range(1, milestone_year):
+                            # Recalculate cash flow to ensure taxes are included
+                            old_cash_flow = cash_flow_yearly[pre_year]
+                            cash_flow_yearly[pre_year] = total_income_yearly[pre_year] - expenses_yearly[pre_year]
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Year {pre_year}: Cash flow updated from ${old_cash_flow} to ${cash_flow_yearly[pre_year]}\n")
+                                f.write(f"  Income: ${total_income_yearly[pre_year]}, Expenses: ${expenses_yearly[pre_year]}, Taxes: ${tax_expenses_yearly[pre_year]}\n")
+                        
                         # CRITICAL FIX: Update the investment asset value in our asset collection
                         # This ensures the reduction in savings persists to future years
                         savings_asset = None
