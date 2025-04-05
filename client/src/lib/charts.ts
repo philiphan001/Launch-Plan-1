@@ -701,6 +701,16 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
   // Get expense data
   const expenses = data.expenses || Array(labels.length).fill(0);
   
+  // Debug expense data
+  console.log("Cash flow chart data:", {
+    income: income.slice(0, 3),
+    spouseIncome: spouseIncome.slice(0, 3),
+    expenses: expenses.slice(0, 3),
+    housing: data.housing?.slice(0, 3),
+    food: data.food?.slice(0, 3),
+    transportation: data.transportation?.slice(0, 3)
+  });
+  
   // Calculate net cash flow (income - expenses)
   const netCashFlow = income.map((value, index) => {
     // Add spouse income if available
