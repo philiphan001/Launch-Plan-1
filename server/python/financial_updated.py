@@ -148,6 +148,7 @@ class FinancialCalculator:
         with open('healthcare_debug.log', 'a') as f:
             f.write(f"\nStarting calculate_projection method\n")
         income_yearly = [0] * (self.years_to_project + 1)
+        spouse_income_yearly = [0] * (self.years_to_project + 1)  # Track spouse income separately
         expenses_yearly = [0] * (self.years_to_project + 1)
         cash_flow_yearly = [0] * (self.years_to_project + 1)
         
@@ -482,6 +483,8 @@ class FinancialCalculator:
                             # Apply annual growth to spouse income (using same rate as primary income)
                             spouse_income_for_year = int(spouse_income * (1.03 ** (i - milestone_year)))  # Convert to int to fix type error
                             income_yearly[i] += spouse_income_for_year
+                            # Also track spouse income separately for visualization
+                            spouse_income_yearly[i] = spouse_income_for_year
                         
                         # Add spouse assets and liabilities to net worth
                         for i in range(milestone_year, self.years_to_project + 1):
@@ -1300,6 +1303,7 @@ class FinancialCalculator:
             'ages': ages,
             'netWorth': net_worth,
             'income': income_yearly,
+            'spouseIncome': spouse_income_yearly,  # Add spouse income array for frontend visualization
             'expenses': expenses_yearly,
             'assets': assets_yearly,
             'liabilities': liabilities_yearly,
