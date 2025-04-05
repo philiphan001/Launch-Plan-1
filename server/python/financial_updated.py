@@ -216,6 +216,7 @@ class FinancialCalculator:
         home_value_yearly = [0] * (self.years_to_project + 1)
         car_value_yearly = [0] * (self.years_to_project + 1)
         savings_value_yearly = [0] * (self.years_to_project + 1)  # Track savings values separately
+        retirement_value_yearly = [0] * (self.years_to_project + 1)  # Track retirement values separately
         mortgage_yearly = [0] * (self.years_to_project + 1)
         car_loan_yearly = [0] * (self.years_to_project + 1)
         student_loan_yearly = [0] * (self.years_to_project + 1)
@@ -264,6 +265,9 @@ class FinancialCalculator:
                 home_value_yearly[0] += int(asset_value)
             elif isinstance(asset, DepreciableAsset) and (asset.name.lower().find('car') >= 0 or asset.name.lower().find('vehicle') >= 0):
                 car_value_yearly[0] += int(asset_value)
+            elif isinstance(asset, Investment) and asset.name.lower().find('retirement') >= 0:
+                # Track retirement assets specifically
+                retirement_value_yearly[0] += int(asset_value)
             elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
                 # Track savings specifically
                 # Use direct assignment for year 0 just like we do for later years
@@ -304,6 +308,9 @@ class FinancialCalculator:
                     home_value_yearly[i] += int(asset_value)
                 elif isinstance(asset, DepreciableAsset) and (asset.name.lower().find('car') >= 0 or asset.name.lower().find('vehicle') >= 0):
                     car_value_yearly[i] += int(asset_value)
+                elif isinstance(asset, Investment) and asset.name.lower().find('retirement') >= 0:
+                    # Track retirement assets specifically
+                    retirement_value_yearly[i] += int(asset_value)
                 elif isinstance(asset, Investment) and asset.name.lower().find('savings') >= 0:
                     # Track savings specifically
                     # Use direct assignment instead of += to avoid double counting
@@ -417,6 +424,38 @@ class FinancialCalculator:
                 f.write(f"  Total expenses: ${expenses_yearly[i]}\n")
             
             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
+            
+            # Update savings asset with cash flow from this year
+            # This ensures that positive cash flow increases savings/net worth
+            if cash_flow_yearly[i] > 0:
+                # Find the savings asset to update
+                savings_asset = None
+                for asset in self.assets:
+                    if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                        savings_asset = asset
+                        break
+                
+                # If we found a savings asset, add the positive cash flow as a contribution
+                if savings_asset:
+                    # Add cash flow to savings
+                    savings_asset.add_contribution(cash_flow_yearly[i], i)
+                    
+                    # Update the savings tracking array
+                    savings_value_yearly[i] = int(round(savings_asset.get_value(i)))
+                    
+                    # Update total assets to include the new savings amount
+                    assets_yearly[i] = (
+                        home_value_yearly[i] +
+                        car_value_yearly[i] +
+                        retirement_value_yearly[i] +
+                        savings_value_yearly[i]
+                    )
+                    
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"\n[UPDATING ASSETS WITH CASH FLOW] Year {i}:\n")
+                        f.write(f"  Positive cash flow: ${cash_flow_yearly[i]}\n")
+                        f.write(f"  Updated savings value: ${savings_value_yearly[i]}\n")
+                        f.write(f"  Updated total assets: ${assets_yearly[i]}\n")
             
             # Calculate net worth for this year including any personal loans
             # Add personal loan value from tracking array to net worth calculation
@@ -1631,6 +1670,7 @@ class FinancialCalculator:
             'homeValue': home_value_yearly,
             'carValue': car_value_yearly,
             'savingsValue': savings_value_yearly,  # Add explicit savings tracking
+            'retirementValue': retirement_value_yearly,  # Add retirement tracking
             
             # Liability breakdown
             'mortgage': mortgage_yearly,

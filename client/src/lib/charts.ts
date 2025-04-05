@@ -263,21 +263,23 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
 export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
-  // Use savingsValue directly from the Python backend
+  // Use savingsValue and retirementValue directly from the backend
   // If not available, fall back to zero - we should never calculate this in the frontend
   const savingsRaw = data.savingsValue || Array(data.ages.length).fill(0);
+  const retirementRaw = data.retirementValue || Array(data.ages.length).fill(0);
   
   // Log the raw savings data for debugging
   console.log("Raw savings values from Python:", savingsRaw);
+  console.log("Raw retirement values from Python:", retirementRaw);
   
   // We'll use a different approach for savings visualization
   // Instead of stacking, which doesn't handle negative values well,
-  // we'll use a regular bar chart approach for the savings values
+  // we'll use a regular bar chart approach for the liquid savings values
   const datasets = [];
   
-  // Create a single dataset for savings that shows positive and negative values directly
+  // Create a dataset for liquid savings that shows positive and negative values directly
   datasets.push({
-    label: 'Savings & Investments',
+    label: 'Liquid Savings',
     data: savingsRaw,
     backgroundColor: (context: any) => {
       const value = context.raw as number;
@@ -287,10 +289,21 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
     // Not using stack for savings so we can see the negative values clearly
   });
   
+  // Add retirement savings if it exists and has positive values
+  if (retirementRaw && retirementRaw.some(value => value > 0)) {
+    datasets.push({
+      label: 'Retirement Accounts',
+      data: retirementRaw,
+      backgroundColor: 'rgba(76, 175, 80, 0.7)', // Green color for retirement
+      borderRadius: 4,
+      stack: 'stack1' // Use a separate stack group so they don't combine with home/car
+    });
+  }
+  
   // Debug output
   console.log("Asset Breakdown Chart Data:");
   for (let i = 0; i < data.ages.length; i++) {
-    console.log(`Year ${i} (Age ${data.ages[i]}): Savings Raw=${savingsRaw[i]}, Home=${data.homeValue?.[i] || 0}, Total Assets=${data.assets?.[i] || 0}`);
+    console.log(`Year ${i} (Age ${data.ages[i]}): Liquid Savings=${savingsRaw[i]}, Retirement=${retirementRaw[i]}, Home=${data.homeValue?.[i] || 0}, Total Assets=${data.assets?.[i] || 0}`);
   }
 
   // Add home value dataset if it exists and has positive values
