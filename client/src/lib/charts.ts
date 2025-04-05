@@ -820,11 +820,27 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
     // This fixes the bug where we were double-counting expenses by summing them again in the frontend
     const totalExpenses = expenses[index] || 0;
     
-    // Log the cash flow calculation for debugging
-    console.log(`Cash flow year ${index}: Income ${totalIncome}, Expenses ${totalExpenses}, One-time ${oneTimeExpenses[index]}`);
+    // Calculate the one-time expense for this year
+    const oneTimeExpense = oneTimeExpenses[index] || 0;
     
-    // Subtract both regular and one-time expenses
-    return totalIncome - totalExpenses - oneTimeExpenses[index];
+    // Calculate net cash flow (income minus expenses)
+    const netCashAmount = totalIncome - totalExpenses - oneTimeExpense;
+    
+    // Log the cash flow calculation for debugging
+    console.log(`Cash flow year ${index}: Age ${data.ages[index]}, Income ${totalIncome}, Expenses ${totalExpenses}, One-time ${oneTimeExpense}, Net ${netCashAmount}`);
+    
+    // For the first year (age 27), ensure we're returning the actual net cash flow, not the stacked height
+    // This fixes the issue where the first year showed an incorrect net cash flow
+    return netCashAmount;
+  });
+  
+  console.log("Cash flow chart data:", {
+    ages: data.ages,
+    income: income,
+    spouseIncome: spouseIncome,
+    expenses: expenses,
+    oneTimeExpenses: oneTimeExpenses,
+    netCashFlow: netCashFlow
   });
   
   // Create datasets
