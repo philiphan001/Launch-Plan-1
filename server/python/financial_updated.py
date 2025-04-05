@@ -574,13 +574,37 @@ class FinancialCalculator:
                             f.write(f"\nFixing pre-marriage years' cash flow calculations to include taxes:\n")
                         
                         for pre_year in range(1, milestone_year):
-                            # Recalculate cash flow to ensure taxes are included
+                            # CRITICAL FIX: Update the expenses array to include taxes for pre-marriage years
+                            # This ensures that tax expenses are properly included in the total expenses for cash flow calculations
+                            old_expenses = expenses_yearly[pre_year]
+                            
+                            # Make sure taxes are included in the expenses calculation
+                            # This mirrors the expenses calculation logic used elsewhere in the code
+                            expenses_yearly[pre_year] = (
+                                housing_expenses_yearly[pre_year] +
+                                transportation_expenses_yearly[pre_year] +
+                                food_expenses_yearly[pre_year] +
+                                healthcare_expenses_yearly[pre_year] +
+                                personal_insurance_expenses_yearly[pre_year] +
+                                apparel_expenses_yearly[pre_year] +
+                                services_expenses_yearly[pre_year] +
+                                entertainment_expenses_yearly[pre_year] +
+                                other_expenses_yearly[pre_year] +
+                                education_expenses_yearly[pre_year] +
+                                child_expenses_yearly[pre_year] +
+                                debt_expenses_yearly[pre_year] +
+                                discretionary_expenses_yearly[pre_year] +
+                                tax_expenses_yearly[pre_year] +
+                                retirement_contribution_yearly[pre_year]
+                            )
+                            
+                            # Recalculate cash flow with updated expenses that include taxes
                             old_cash_flow = cash_flow_yearly[pre_year]
                             cash_flow_yearly[pre_year] = total_income_yearly[pre_year] - expenses_yearly[pre_year]
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Year {pre_year}: Cash flow updated from ${old_cash_flow} to ${cash_flow_yearly[pre_year]}\n")
-                                f.write(f"  Income: ${total_income_yearly[pre_year]}, Expenses: ${expenses_yearly[pre_year]}, Taxes: ${tax_expenses_yearly[pre_year]}\n")
+                                f.write(f"  Income: ${total_income_yearly[pre_year]}, Expenses updated from ${old_expenses} to ${expenses_yearly[pre_year]}, Taxes: ${tax_expenses_yearly[pre_year]}\n")
                         
                         # CRITICAL FIX: Update the investment asset value in our asset collection
                         # This ensures the reduction in savings persists to future years
