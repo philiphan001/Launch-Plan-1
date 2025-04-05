@@ -800,10 +800,17 @@ class FinancialCalculator:
                             assets_yearly[i] += appreciated_value  
                             liabilities_yearly[i] += remaining_principal
                             
-                            # CRITICAL FIX: Calculate net worth properly for home purchases
-                            # Net worth = assets - liabilities, including personal loans
-                            # This should remain stable as we're just converting cash to home equity
-                            # A home purchase shouldn't drastically reduce net worth
+                            # CRITICAL FIX: Log home purchase impact on net worth
+                            # This will help us diagnose negative net worth issues
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[HOME PURCHASE IMPACT] Year {i}:\n")
+                                f.write(f"  Home value added to assets: ${appreciated_value}\n")
+                                f.write(f"  Mortgage added to liabilities: ${remaining_principal}\n")
+                                f.write(f"  Net home impact on net worth: ${appreciated_value - remaining_principal}\n")
+                                f.write(f"  Total assets: ${assets_yearly[i]}\n")
+                                f.write(f"  Total liabilities: ${liabilities_yearly[i]}\n")
+                                f.write(f"  Personal loans: ${all_personal_loans[i]}\n")
+                                f.write(f"  Net worth calculation: ${assets_yearly[i]} - (${liabilities_yearly[i]} + ${all_personal_loans[i]}) = ${assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])}\n")
                             
                             # FIXED HOME PURCHASE IMPACT ON EXPENSES - NO DOUBLE COUNTING
                             
@@ -1054,6 +1061,18 @@ class FinancialCalculator:
                             # Update total assets and liabilities
                             assets_yearly[i] += current_car_value
                             liabilities_yearly[i] += current_car_loan
+                            
+                            # CRITICAL FIX: Car transactions should not cause net worth to go negative
+                            # Log the current net worth calculation details
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[CAR PURCHASE IMPACT] Year {i}:\n")
+                                f.write(f"  Car value added to assets: ${current_car_value}\n")
+                                f.write(f"  Car loan added to liabilities: ${current_car_loan}\n")
+                                f.write(f"  Net car impact on net worth: ${current_car_value - current_car_loan}\n")
+                                f.write(f"  Total assets: ${assets_yearly[i]}\n")
+                                f.write(f"  Total liabilities: ${liabilities_yearly[i]}\n")
+                                f.write(f"  Personal loans: ${all_personal_loans[i]}\n")
+                                f.write(f"  Net worth calculation: ${assets_yearly[i]} - (${liabilities_yearly[i]} + ${all_personal_loans[i]}) = ${assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])}\n")
                             
                             # Add car payment to debt expenses category (don't modify expenses_yearly directly)
                             if loan_years_passed < loan_term:
