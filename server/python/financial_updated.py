@@ -423,7 +423,7 @@ class FinancialCalculator:
             # Calculate cash flow for this year
             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
             
-            # CRITICAL FIX: Update savings value based on cash flow
+            # CRITICAL FIX: Update savings value based on cash flow and create personal loans for negative cash flow
             # This ensures that savings and net worth are updated correctly based on yearly cash flow
             if i > 0:  # Skip year 0 (starting year)
                 # Find the savings investment to update
@@ -444,27 +444,45 @@ class FinancialCalculator:
                     else:
                         f.write(f"  No savings asset found\n")
                 
-                # If we found a savings asset, update its value based on cash flow and retirement
+                # IMPLEMENT NEW SOLUTION: Convert negative cash flow to personal loans instead of reducing savings
+                if cash_flow_yearly[i] < 0:
+                    # Create a personal loan for the negative cash flow amount
+                    negative_amount = abs(cash_flow_yearly[i])  # Get positive amount for loan
+                    loan_name = f"Cash Flow Deficit Loan Year {i}"
+                    
+                    # Create a new personal loan with 5-year term and 8% interest as specified
+                    cash_flow_loan = PersonalLoan(
+                        name=loan_name,
+                        initial_balance=negative_amount,
+                        interest_rate=0.08,  # 8% interest
+                        term_years=5,        # 5-year term
+                        milestone_year=i,    # Current year
+                        milestone_month=6    # Mid-year (arbitrary)
+                    )
+                    
+                    # Add the new loan to the calculator's liabilities
+                    self.add_liability(cash_flow_loan)
+                    
+                    # Update personal loans tracker for this year
+                    all_personal_loans[i] += int(negative_amount)
+                    
+                    # Also update total liabilities for this year immediately
+                    liabilities_yearly[i] += int(negative_amount)
+                    
+                    # Log the creation of the personal loan
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"\n[CASH FLOW DEFICIT HANDLING] Year {i}:\n")
+                        f.write(f"  Created personal loan for negative cash flow: ${negative_amount}\n")
+                        f.write(f"  Loan name: {loan_name}\n")
+                        f.write(f"  Loan terms: 5-year term, 8% interest\n")
+                
+                # If we found a savings asset, update for retirement contributions
+                # (We don't reduce savings anymore for negative cash flow - that's handled by personal loans)
                 if savings_asset:
-                    # Get the current value before cash flow adjustment
+                    # Get the current value before adjustment
                     current_value = savings_value_yearly[i]
                     
-                    # CRITICAL FIX: Only apply cash flow if it's negative
-                    # Positive cash flow is already being added separately during the cash flow update section
-                    # This avoids double-counting positive cash flows
-                    if cash_flow_yearly[i] < 0:
-                        # If cash flow is negative, decrease savings
-                        updated_value = current_value + cash_flow_yearly[i]  # Adding negative value = subtraction
-                        updated_value = max(0, updated_value)  # Ensure savings doesn't go negative
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"  Applied negative cash flow (${cash_flow_yearly[i]}) to savings\n")
-                    else:
-                        # For positive cash flow, keep current value and log that we're not applying it here
-                        updated_value = current_value
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"  Positive cash flow (${cash_flow_yearly[i]}) will be handled separately\n")
-                    
-                    # Add retirement contribution to the savings - this is a key fix
+                    # Add retirement contribution to the savings
                     # Note: We don't add this to cash_flow directly because retirement is already 
                     # counted as an expense, but we want it to go back into savings as if it was
                     # deposited in a 401k or IRA
@@ -476,20 +494,21 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"  Added retirement contribution: ${retirement_contribution_yearly[i]}\n")
                         else:
-                            # Fallback if method doesn't exist
-                            updated_value += retirement_contribution_yearly[i]
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"  Added retirement contribution manually: ${retirement_contribution_yearly[i]}\n")
+                            # Fallback if method doesn't exist - update the value history directly
+                            if hasattr(savings_asset, 'update_value'):
+                                new_value = current_value + retirement_contribution_yearly[i]
+                                savings_asset.update_value(i, new_value)
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"  Added retirement contribution manually: ${retirement_contribution_yearly[i]}\n")
                     
-                    # Update the savings value
-                    savings_value_yearly[i] = updated_value
+                    # Get updated value from the asset after all changes
+                    updated_value = savings_asset.get_value(i)
                     
-                    # Update the asset value in our collection
-                    savings_asset.update_value(i, updated_value)
+                    # Update the savings value in our tracking array
+                    savings_value_yearly[i] = int(updated_value)
                     
                     # Recalculate total assets with updated savings
                     # Note: Only include home, car, and savings values
-                    # Removed reference to retirement_value_yearly which was undefined
                     assets_yearly[i] = (
                         home_value_yearly[i] +
                         car_value_yearly[i] +
@@ -504,9 +523,10 @@ class FinancialCalculator:
                         f.write(f"  Savings value after adjustment: ${updated_value}\n")
                         f.write(f"  Updated total assets: ${assets_yearly[i]}\n")
             
-            # Calculate net worth for this year including any personal loans
-            # Add personal loan value from tracking array to net worth calculation
-            net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
+            # Calculate net worth for this year
+            # Note: Don't add all_personal_loans[i] here since they are already included in liabilities_yearly[i]
+            # when we add the loan via self.add_liability() earlier
+            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
             
             # Calculate expense categories for this year
             # Base cost of living categories
