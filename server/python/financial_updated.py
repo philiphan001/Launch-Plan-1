@@ -120,6 +120,8 @@ class FinancialCalculator:
         self.expenditures: List[Expenditure] = []
         self.milestones: List[Dict[str, Any]] = []
         self.results: Dict[str, Any] = {}
+        # Track tax filing status, which can change with marriage milestone
+        self.tax_filing_status = "single"
         
     def set_start_age(self, start_age: int) -> None:
         """
@@ -347,9 +349,9 @@ class FinancialCalculator:
                 expense_amount = expense.get_expense(i)
                 expenses_yearly[i] += int(expense_amount)
             
-            # Calculate tax for this year (before applying spouse income)
-            # Initial tax calculation on personal income
-            current_year_taxes = self._calculate_taxes(income_yearly[i], i, "single")
+            # Calculate tax for this year using current filing status
+            # This will be "single" by default or "married" if marriage milestone occurred
+            current_year_taxes = self._calculate_taxes(income_yearly[i], i, self.tax_filing_status)
             
             # Store tax expenses for this year
             payroll_tax_expenses_yearly[i] = int(current_year_taxes["fica_tax"])
@@ -498,7 +500,16 @@ class FinancialCalculator:
                 
                 for milestone in milestone_years[year]:
                     if milestone.get('type') == 'marriage':
-                        # Marriage affects income, expenses, and potentially assets/liabilities
+                        # Marriage affects income, expenses, tax filing status, and potentially assets/liabilities
+                        
+                        # Update tax filing status from single to married
+                        # This will affect all future tax calculations
+                        self.tax_filing_status = "married"
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nUpdating tax filing status to 'married' in year {milestone_year}\n")
+                            f.write(f"This will affect tax calculations for this year and all future years\n")
+                        
                         spouse_income = int(milestone.get('spouse_income', milestone.get('spouseIncome', 0)))
                         spouse_assets = int(milestone.get('spouse_assets', milestone.get('spouseAssets', 0)))
                         spouse_liabilities = int(milestone.get('spouse_liabilities', milestone.get('spouseLiabilities', 0)))
@@ -598,6 +609,31 @@ class FinancialCalculator:
                             # Log the income split for debugging
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Year {i} personal income: ${income_yearly[i]}, spouse income: ${spouse_income_yearly[i]}, total: ${total_income_yearly[i]}\n")
+                            
+                            # Recalculate taxes using the combined income and married filing status
+                            # This ensures that taxes are calculated correctly after marriage
+                            if i >= milestone_year:
+                                combined_taxes = self._calculate_taxes(total_income_yearly[i], i, "married")
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"Recalculating taxes for year {i} with marriage milestone effects\n")
+                                    f.write(f"  Using combined income: ${total_income_yearly[i]}\n")
+                                    f.write(f"  Using filing status: married\n")
+                                    f.write(f"  Previous tax amounts: FICA=${payroll_tax_expenses_yearly[i]}, Federal=${federal_tax_expenses_yearly[i]}, State=${state_tax_expenses_yearly[i]}\n")
+                                
+                                # Update the tax amounts with the recalculated values
+                                payroll_tax_expenses_yearly[i] = int(combined_taxes["fica_tax"])
+                                federal_tax_expenses_yearly[i] = int(combined_taxes["federal_tax"])
+                                state_tax_expenses_yearly[i] = int(combined_taxes["state_tax"])
+                                
+                                # Update the tax rates for visualization
+                                effective_tax_rate_yearly[i] = float(combined_taxes["effective_tax_rate"])
+                                marginal_tax_rate_yearly[i] = float(combined_taxes["federal_marginal_rate"])
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"  Updated tax amounts: FICA=${payroll_tax_expenses_yearly[i]}, Federal=${federal_tax_expenses_yearly[i]}, State=${state_tax_expenses_yearly[i]}\n")
+                                    f.write(f"  Updated effective tax rate: {effective_tax_rate_yearly[i] * 100:.2f}%\n")
+                                    f.write(f"  Updated marginal tax rate: {marginal_tax_rate_yearly[i] * 100:.2f}%\n")
                         
                         # Add spouse assets and liabilities to net worth
                         for i in range(milestone_year, self.years_to_project + 1):
