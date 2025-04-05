@@ -1356,25 +1356,54 @@ const FinancialProjections = () => {
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-500 uppercase">Net Worth at {projectionData?.ages?.length > 0 ? projectionData.ages[projectionData.ages.length - 1] : age}</p>
-                <p className="text-2xl font-mono font-medium text-gray-800">
-                  ${projectionData?.netWorth?.length > 0 ? projectionData.netWorth[projectionData.netWorth.length - 1].toLocaleString() : startingSavings.toLocaleString()}
-                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
+                        ${projectionData?.netWorth?.length > 0 ? projectionData.netWorth[projectionData.netWorth.length - 1].toLocaleString() : startingSavings.toLocaleString()}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Includes all assets (like home and car value) minus all liabilities (like mortgages and loans).</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               
               <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="text-sm text-gray-500 uppercase">Total Savings</p>
-                <p className="text-2xl font-mono font-medium text-gray-800">
-                  ${projectionData?.netWorth?.length > 0 ? (projectionData.netWorth[projectionData.netWorth.length - 1] - startingSavings).toLocaleString() : '0'}
-                </p>
+                <p className="text-sm text-gray-500 uppercase">Total Savings & Investments</p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
+                        ${projectionData?.savingsValue?.length > 0 
+                          ? projectionData.savingsValue[projectionData.savingsValue.length - 1].toLocaleString() 
+                          : startingSavings.toLocaleString()}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Represents only liquid savings and investments. Does not include the value of physical assets like homes and cars.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-500 uppercase">Annual Savings Rate</p>
-                <p className="text-2xl font-mono font-medium text-gray-800">
-                  {projectionData?.income?.length > 0 && projectionData?.expenses?.length > 0 ? 
-                    Math.round((projectionData.income[0] - projectionData.expenses[0]) / projectionData.income[0] * 100) : 
-                    Math.round((income - expenses) / income * 100)}%
-                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
+                        {projectionData?.income?.length > 0 && projectionData?.expenses?.length > 0 ? 
+                          Math.round((projectionData.income[0] - projectionData.expenses[0]) / projectionData.income[0] * 100) : 
+                          Math.round((income - expenses) / income * 100)}%
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Percentage of income saved each year. Higher rates lead to faster wealth accumulation.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </CardContent>
