@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
+import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
@@ -1760,6 +1761,33 @@ const FinancialProjections = () => {
                 money is going. Housing (30%), transportation (15%), food (15%), healthcare (10%), taxes (typically 15-25%), 
                 and discretionary spending (30%) form your basic expenses, with additional categories for education, debt, and 
                 childcare when applicable.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Asset Breakdown Chart */}
+      {projectionData?.assets && projectionData?.savingsValue && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Asset Breakdown</h3>
+            </div>
+            <AssetBreakdownChart 
+              assetData={{
+                savings: projectionData.savingsValue[0] || 0,
+                retirement: projectionData.retirementContribution ? projectionData.retirementContribution[0] * 5 || 0 : 0, // Estimating accumulated retirement based on contributions
+                homeValue: projectionData.homeValue[0] || 0,
+                carValue: projectionData.carValue[0] || 0,
+                otherAssets: 0, // Set to 0 for now, may customize in the future
+              }} 
+            />
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Understanding your assets:</span> This breakdown shows where your 
+                wealth is currently allocated. Having a diverse mix of assets (savings, retirement accounts, property, etc.) 
+                helps create a strong financial foundation and reduces risk through diversification.
               </p>
             </div>
           </CardContent>
