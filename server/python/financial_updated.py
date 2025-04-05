@@ -1306,8 +1306,17 @@ class FinancialCalculator:
         """
         Create a calculator from input data.
         
+        This method supports location-based adjustments via the 'costOfLivingFactor' parameter.
+        When provided, this factor (typically in the range of 0.7-1.3) affects:
+        1. Income amounts - adjusted directly in this method (higher factor = higher income)
+        2. Expense amounts - should be pre-adjusted by the frontend before sending to this calculator
+        
+        The factor represents the relative cost of living in the user's location:
+        - Values > 1.0 indicate higher-cost areas (e.g., 1.2 = 20% higher than average)
+        - Values < 1.0 indicate lower-cost areas (e.g., 0.8 = 20% lower than average)
+        
         Args:
-            input_data: Dictionary with financial inputs
+            input_data: Dictionary with financial inputs including 'costOfLivingFactor' if available
             
         Returns:
             Configured calculator instance
@@ -1315,6 +1324,14 @@ class FinancialCalculator:
         start_age = input_data.get('startAge', 25)
         years_to_project = input_data.get('yearsToProject', 10)
         calculator = cls(start_age, years_to_project)
+        
+        # Extract cost of living factor if present 
+        # This factor adjusts income based on location data from the frontend
+        cost_of_living_factor = input_data.get('costOfLivingFactor', 1.0)
+        
+        # Log the cost of living factor for debugging
+        with open('healthcare_debug.log', 'w') as f:
+            f.write(f"Starting financial calculation with costOfLivingFactor: {cost_of_living_factor}\n")
         
         # Add assets
         for asset_data in input_data.get('assets', []):
@@ -1359,24 +1376,38 @@ class FinancialCalculator:
             income_type = income_data.get('type', 'salary')
             name = income_data.get('name', f'Income {income_type}')
             annual_amount = income_data.get('annualAmount', 0)
+            
+            # Apply the cost of living factor to income amount
+            # This adjusts income based on location
+            # Higher factor (>1.0) for expensive areas means higher income
+            # Lower factor (<1.0) for less expensive areas means lower income
+            location_adjusted_amount = annual_amount * cost_of_living_factor
+            
+            # Log the adjustment for debugging
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"Income adjustment: {name} - original: ${annual_amount} → adjusted: ${location_adjusted_amount:.2f} (factor: {cost_of_living_factor})\n")
+            
             growth_rate = income_data.get('growthRate', 0.03)  # 3% annual growth
             start_year = income_data.get('startYear', 0)
             end_year = income_data.get('endYear', None)
             
             if income_type == 'salary':
                 bonus_percent = income_data.get('bonus_percent', 0)
-                income = SalaryIncome(name, annual_amount, growth_rate, start_year, end_year, bonus_percent)
+                # Use location-adjusted amount instead of original annual_amount
+                income = SalaryIncome(name, location_adjusted_amount, growth_rate, start_year, end_year, bonus_percent)
             elif income_type == 'spouse':
                 # Note: Spouse income is typically handled through milestones instead
-                income = SpouseIncome(name, annual_amount, growth_rate, start_year, end_year)
+                # Use location-adjusted amount instead of original annual_amount
+                income = SpouseIncome(name, location_adjusted_amount, growth_rate, start_year, end_year)
             else:  # Default to generic income
-                income = Income(name, annual_amount, growth_rate, start_year, end_year)
+                # Use location-adjusted amount instead of original annual_amount
+                income = Income(name, location_adjusted_amount, growth_rate, start_year, end_year)
             
             calculator.add_income(income)
         
-        # Debug empty the log file
-        with open('healthcare_debug.log', 'w') as f:
-            f.write("Starting financial calculation\n")
+        # Add more detailed income adjustments to the log
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\nAdding expenditures after income adjustments...\n")
             
         # Add expenditures
         for expenditure_data in input_data.get('expenditures', []):

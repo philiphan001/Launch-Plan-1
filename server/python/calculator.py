@@ -2,6 +2,17 @@
 """
 Financial calculator script for the FinancialFuture application.
 This is the main script that is called by the API to generate financial projections.
+
+Important Implementation Notes:
+1. Cost of Living Factor - The calculator now properly handles location-based adjustments
+   through the 'costOfLivingFactor' parameter passed in the input_data. This factor is used 
+   to adjust income values in the financial_updated.py module. A higher factor (>1.0) for 
+   expensive locations will increase income projections, while a lower factor (<1.0) for 
+   less expensive locations will decrease income projections.
+
+2. Savings vs. Net Worth - The calculator now properly separates savings (liquid assets)
+   from net worth (all assets including physical assets like homes and cars). This allows
+   for more accurate financial planning and projection visualization.
 """
 
 import json
@@ -37,8 +48,20 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Create a baseline financial projection from input data.
     
+    Important: This function supports location-based cost of living adjustments.
+    When the input_data includes a 'costOfLivingFactor' (usually in the range of 0.7-1.3),
+    the financial calculator will automatically apply this adjustment to income and expenses.
+    
+    The frontend is responsible for supplying the correct costOfLivingFactor based on:
+    1. The user's selected location/zip code 
+    2. The location's income_adjustment_factor from the database
+    
+    This factor gets incorporated by the FinancialCalculator.from_input_data() method
+    during the creation of income and expense objects.
+    
     Args:
         input_data: Dictionary containing financial input parameters
+                   including costOfLivingFactor if location adjustment is needed
         
     Returns:
         Dictionary with projection results

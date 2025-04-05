@@ -619,6 +619,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/calculate/financial-projection", (req: Request, res: Response) => {
     try {
       const inputData = req.body;
+      // Note: inputData should include costOfLivingFactor or locationCostData to ensure
+      // location-specific adjustments are applied to income and expenses
+      // The Python calculator will use this to adjust calculations based on location
+      
       // Use path.resolve and the current directory for ESM compatibility
       const pythonScriptPath = path.resolve("server/python/calculator.py");
       

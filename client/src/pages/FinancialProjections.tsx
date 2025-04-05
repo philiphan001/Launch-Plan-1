@@ -394,7 +394,11 @@ const FinancialProjections = () => {
   // Determine years based on timeframe
   const years = timeframe === "5 Years" ? 5 : timeframe === "20 Years" ? 20 : 10;
   
-  // Get cost of living adjustment factor if available
+  // Get cost of living adjustment factor from location data
+  // This factor is critical for properly adjusting income based on location:
+  // - Values > 1.0 indicate high-cost areas (e.g., 1.2 = 20% higher than average)
+  // - Values < 1.0 indicate low-cost areas (e.g., 0.8 = 20% lower than average)
+  // When the user changes their location/zip code, this factor updates and triggers recalculation
   const costOfLivingFactor = locationCostData?.income_adjustment_factor || 1.0;
   
   // Generate projection data based on inputs
@@ -434,7 +438,10 @@ const FinancialProjections = () => {
     // Calculate initial net worth properly (total assets minus total liabilities)
     let netWorth = totalAssets - totalLiabilities;
     
-    // Properly adjust income based on cost of living - correctly apply the factor
+    // Properly adjust income based on cost of living factor
+    // For high-cost areas (factor > 1), this increases income to reflect higher wages
+    // For low-cost areas (factor < 1), this decreases income to reflect lower wages
+    // This adjustment is critical for all projection calculations to be location-aware
     let currentIncome = income * costOfLivingFactor;
     
     // Use the expenses input as-is because we already adjusted it in the useEffect
@@ -1082,7 +1089,7 @@ const FinancialProjections = () => {
     // Execute the async function
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
-      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData]); // Include location data in dependency array
+      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData]); // Include both costOfLivingFactor and locationCostData in the dependency array to ensure recalculation when location changes
   
   // Generate financial advice based on current financial state
   useEffect(() => {

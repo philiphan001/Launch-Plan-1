@@ -8,6 +8,7 @@ export interface CalculatorInputData {
   startAge: number;
   yearsToProject: number;
   pathType: string;
+  costOfLivingFactor?: number; // Location-based adjustment factor (1.0 is average)
   assets: Array<{
     type: string;
     name: string;
@@ -103,8 +104,12 @@ export const generatePythonCalculatorInput = (
     return aYears - bYears;
   }) : [];
   
-  // Adjust income based on cost of living
-  const adjustedIncome = income * costOfLivingFactor;
+  // NOTE: We used to adjust income here based on the cost of living factor
+  // Now we pass both the original income and costOfLivingFactor to the Python backend
+  // The costOfLivingFactor represents how much more/less expensive a location is
+  // For expensive areas, incomes are typically higher (costOfLivingFactor > 1)
+  // For less expensive areas, incomes are typically lower (costOfLivingFactor < 1)
+  // The adjustment is now performed in the Python calculator
   
   // Format milestones for the Python calculator
   const formattedMilestones = sortedMilestones.map(milestone => {
@@ -235,6 +240,7 @@ export const generatePythonCalculatorInput = (
     startAge: age,
     yearsToProject: years,
     pathType: "baseline", // Using the default baseline projection type
+    costOfLivingFactor: costOfLivingFactor, // Explicitly pass the cost of living factor to Python
     
     // Assets
     assets: [
@@ -262,7 +268,7 @@ export const generatePythonCalculatorInput = (
       {
         type: "salary",
         name: "Primary Income",
-        annualAmount: adjustedIncome,
+        annualAmount: income, // Send original income amount (Python will apply the adjustment)
         growthRate: incomeGrowth / 100, // Convert percentage to decimal
         startYear: 0
       }
