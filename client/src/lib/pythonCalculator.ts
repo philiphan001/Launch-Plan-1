@@ -81,6 +81,14 @@ export interface FinancialProjectionData {
   studentLoan: number[];
   savingsValue?: number[]; // Direct savings value array from Python
   
+  // Tax breakdown
+  payrollTax?: number[];
+  federalTax?: number[];
+  stateTax?: number[];
+  retirementContribution?: number[];
+  effectiveTaxRate?: number[];
+  marginalTaxRate?: number[];
+  
   // Milestone data
   milestones?: any[];
 }
@@ -398,6 +406,14 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       carLoan: result.carLoan || Array(result.liabilities?.length || 0).fill(0),
       studentLoan: result.studentLoan || Array(result.liabilities?.length || 0).fill(0),
       
+      // Tax breakdown
+      payrollTax: result.payrollTax || [],
+      federalTax: result.federalTax || [],
+      stateTax: result.stateTax || [],
+      retirementContribution: result.retirementContribution || [],
+      effectiveTaxRate: result.effectiveTaxRate || [],
+      marginalTaxRate: result.marginalTaxRate || [],
+      
       // Add milestone data if available
       milestones: result.milestones || []
     };
@@ -448,7 +464,15 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       mortgage: [0],
       carValue: [0],
       carLoan: [0],
-      studentLoan: [0]
+      studentLoan: [0],
+      
+      // Tax breakdown
+      payrollTax: [calculatePercentage(baseExpense, 0.07)],
+      federalTax: [calculatePercentage(baseExpense, 0.10)],
+      stateTax: [calculatePercentage(baseExpense, 0.05)],
+      retirementContribution: [calculatePercentage(baseExpense, 0.05)],
+      effectiveTaxRate: [0.22],
+      marginalTaxRate: [0.24]
     };
   }
 };

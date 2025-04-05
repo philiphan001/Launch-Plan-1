@@ -100,7 +100,7 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
               },
               ticks: {
                 callback: function (value) {
-                  return formatCurrency(value as number, 0);
+                  return formatCurrency(value as number);
                 },
               },
             },
