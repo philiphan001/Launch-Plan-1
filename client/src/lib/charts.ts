@@ -725,8 +725,29 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
   const income = data.income || Array(labels.length).fill(0);
   const spouseIncome = data.spouseIncome || Array(labels.length).fill(0);
   
-  // Get expense data
+  // Get expense data by category
+  const housing = data.housing || Array(labels.length).fill(0);
+  const transportation = data.transportation || Array(labels.length).fill(0);
+  const food = data.food || Array(labels.length).fill(0);
+  const healthcare = data.healthcare || Array(labels.length).fill(0);
+  const personalInsurance = data.personalInsurance || Array(labels.length).fill(0);
+  const apparel = data.apparel || Array(labels.length).fill(0);
+  const services = data.services || Array(labels.length).fill(0);
+  const entertainment = data.entertainment || Array(labels.length).fill(0);
+  const other = data.other || Array(labels.length).fill(0);
+  const education = data.education || Array(labels.length).fill(0);
+  const childcare = data.childcare || Array(labels.length).fill(0);
+  const debt = data.debt || Array(labels.length).fill(0);
+  const discretionary = data.discretionary || Array(labels.length).fill(0);
+  const taxes = data.taxes || Array(labels.length).fill(0);
+  
+  // Fallback to total expenses if detailed categories aren't available
   const expenses = data.expenses || Array(labels.length).fill(0);
+  
+  // Check if we have detailed expense data
+  const hasDetailedExpenses = housing.some(v => v > 0) || 
+                             transportation.some(v => v > 0) || 
+                             food.some(v => v > 0);
   
   // Get milestone expense data - include downpayments and large one-time expenses
   const homeDownPayments = Array(labels.length).fill(0);
@@ -773,7 +794,12 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
   console.log("Cash flow chart data:", {
     income: income.slice(0, 3),
     spouseIncome: spouseIncome.slice(0, 3),
-    expenses: expenses.slice(0, 3),
+    housing: housing.slice(0, 3),
+    transportation: transportation.slice(0, 3),
+    food: food.slice(0, 3),
+    healthcare: healthcare.slice(0, 3),
+    totalExpenses: expenses.slice(0, 3),
+    hasDetailedExpenses,
     milestones: data.milestones?.length || 0,
     homeDownPayments: homeDownPayments.filter(v => v > 0),
     carDownPayments: carDownPayments.filter(v => v > 0),
@@ -785,12 +811,27 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
     value + carDownPayments[index] + educationPayments[index]
   );
   
-  // Calculate net cash flow (income - regular expenses - one-time expenses)
+  // Calculate net cash flow (income - all expenses - one-time expenses)
   const netCashFlow = income.map((value, index) => {
     // Add spouse income if available
     const totalIncome = value + (spouseIncome[index] || 0);
+    
+    // Calculate total expenses for this year
+    let totalExpenses = 0;
+    if (hasDetailedExpenses) {
+      // Sum all expense categories
+      totalExpenses = housing[index] + transportation[index] + food[index] + 
+                     healthcare[index] + personalInsurance[index] + apparel[index] + 
+                     services[index] + entertainment[index] + other[index] + 
+                     education[index] + childcare[index] + debt[index] + 
+                     discretionary[index] + taxes[index];
+    } else {
+      // Use total expenses from data
+      totalExpenses = expenses[index] || 0;
+    }
+    
     // Subtract both regular and one-time expenses
-    return totalIncome - (expenses[index] || 0) - oneTimeExpenses[index];
+    return totalIncome - totalExpenses - oneTimeExpenses[index];
   });
   
   // Create datasets
@@ -802,15 +843,167 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
       backgroundColor: 'rgba(38, 166, 154, 0.7)', // Green for income
       borderRadius: 4,
       order: 3
-    },
-    {
+    }
+  ];
+  
+  // If we have detailed expense data, create stacked bars for expense categories
+  if (hasDetailedExpenses) {
+    // Add expense datasets by category in stacked order
+    datasets.push(
+      {
+        type: 'bar' as const,
+        label: 'Housing',
+        data: housing,
+        backgroundColor: 'rgba(33, 150, 243, 0.7)', // Blue
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Transportation',
+        data: transportation,
+        backgroundColor: 'rgba(156, 39, 176, 0.7)', // Purple
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Food',
+        data: food,
+        backgroundColor: 'rgba(255, 193, 7, 0.7)', // Yellow
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Healthcare',
+        data: healthcare,
+        backgroundColor: 'rgba(233, 30, 99, 0.7)', // Pink
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Insurance',
+        data: personalInsurance,
+        backgroundColor: 'rgba(121, 85, 72, 0.7)', // Brown
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Apparel',
+        data: apparel,
+        backgroundColor: 'rgba(158, 158, 158, 0.7)', // Grey
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Services',
+        data: services,
+        backgroundColor: 'rgba(0, 188, 212, 0.7)', // Cyan
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Entertainment',
+        data: entertainment,
+        backgroundColor: 'rgba(76, 175, 80, 0.7)', // Green
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Other',
+        data: other,
+        backgroundColor: 'rgba(189, 189, 189, 0.7)', // Light grey
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      },
+      {
+        type: 'bar' as const,
+        label: 'Taxes',
+        data: taxes,
+        backgroundColor: 'rgba(244, 67, 54, 0.7)', // Red
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      }
+    );
+    
+    // Add optional expense categories only if they have values
+    if (education.some(v => v > 0)) {
+      datasets.push({
+        type: 'bar' as const,
+        label: 'Education',
+        data: education,
+        backgroundColor: 'rgba(255, 87, 34, 0.7)', // Deep orange
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      });
+    }
+    
+    if (childcare.some(v => v > 0)) {
+      datasets.push({
+        type: 'bar' as const,
+        label: 'Childcare',
+        data: childcare,
+        backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      });
+    }
+    
+    if (debt.some(v => v > 0)) {
+      datasets.push({
+        type: 'bar' as const,
+        label: 'Debt Payments',
+        data: debt,
+        backgroundColor: 'rgba(96, 125, 139, 0.7)', // Blue grey
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      });
+    }
+    
+    if (discretionary.some(v => v > 0)) {
+      datasets.push({
+        type: 'bar' as const,
+        label: 'Discretionary',
+        data: discretionary,
+        backgroundColor: 'rgba(126, 87, 194, 0.7)', // Deep purple
+        borderRadius: 4,
+        stack: 'expenses',
+        order: 4
+      });
+    }
+  } else {
+    // Fallback to showing total expenses as a single bar if detailed breakdown is unavailable
+    datasets.push({
       type: 'bar' as const,
-      label: 'Regular Expenses',
+      label: 'Expenses',
       data: expenses,
-      backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for regular expenses
+      backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for expenses
       borderRadius: 4,
       order: 4
-    },
+    });
+  }
+  
+  // Add one-time expenses and net cash flow
+  datasets.push(
     {
       type: 'bar' as const,
       label: 'One-Time Expenses',
@@ -832,7 +1025,7 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
       pointRadius: 4,
       order: 1
     }
-  ];
+  );
   
   return new Chart(ctx, {
     type: 'bar',
@@ -859,26 +1052,57 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
               return `${context.dataset.label}: $${formattedValue}`;
             },
             footer: function(tooltipItems: any) {
-              // Calculate savings rate considering both regular and one-time expenses
+              // Find income and expense items
               const incomeItem = tooltipItems.find((item: any) => item.dataset.label === 'Income');
-              const regularExpensesItem = tooltipItems.find((item: any) => item.dataset.label === 'Regular Expenses');
               const oneTimeExpensesItem = tooltipItems.find((item: any) => item.dataset.label === 'One-Time Expenses');
               const netCashFlowItem = tooltipItems.find((item: any) => item.dataset.label === 'Net Cash Flow');
               
+              // Calculate total expenses from all expense categories that are in the stack
+              const expenseCategories = [
+                'Housing', 'Transportation', 'Food', 'Healthcare', 
+                'Insurance', 'Apparel', 'Services', 'Entertainment', 
+                'Other', 'Taxes', 'Education', 'Childcare', 
+                'Debt Payments', 'Discretionary'
+              ];
+              
+              // Also look for the fallback 'Expenses' category if no detailed expenses
+              const regularExpenseItems = tooltipItems.filter((item: any) => 
+                expenseCategories.includes(item.dataset.label) || 
+                item.dataset.label === 'Expenses' || 
+                item.dataset.label === 'Regular Expenses'
+              );
+              
               if (incomeItem) {
                 const income = incomeItem.parsed.y;
-                const regularExpenses = regularExpensesItem ? regularExpensesItem.parsed.y : 0;
+                
+                // Sum all regular expense items
+                const regularExpenses = regularExpenseItems.reduce((sum: number, item: any) => 
+                  sum + item.parsed.y, 0);
+                
                 const oneTimeExpenses = oneTimeExpensesItem ? oneTimeExpensesItem.parsed.y : 0;
                 const totalExpenses = regularExpenses + oneTimeExpenses;
                 
                 // Calculate savings rate as a percentage of income
                 const savingsRate = income > 0 ? ((income - totalExpenses) / income * 100).toFixed(1) : '0';
                 
-                // If there are one-time expenses in this year, show them in the tooltip
+                // Build detailed message
                 let message = `Savings Rate: ${savingsRate}%`;
+                
+                // Add total expenses summary
+                const formattedTotalExpenses = Math.abs(Number(totalExpenses)).toLocaleString();
+                message += `\nTotal Expenses: $${formattedTotalExpenses}`;
+                
+                // If there are one-time expenses in this year, show them separately
                 if (oneTimeExpenses > 0) {
                   const formattedOneTime = Math.abs(Number(oneTimeExpenses)).toLocaleString();
                   message += `\nOne-Time Expenses: $${formattedOneTime}`;
+                }
+                
+                // Add net cash flow if available
+                if (netCashFlowItem) {
+                  const netCashFlow = netCashFlowItem.parsed.y;
+                  const formattedNetCashFlow = Math.abs(Number(netCashFlow)).toLocaleString();
+                  message += `\nNet Cash Flow: ${netCashFlow >= 0 ? '+' : '-'}$${formattedNetCashFlow}`;
                 }
                 
                 return message;
