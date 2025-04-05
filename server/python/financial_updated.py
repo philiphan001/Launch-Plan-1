@@ -474,16 +474,15 @@ class FinancialCalculator:
                         # Calculate the projected balance for this future year
                         projected_balance = cash_flow_loan.get_balance(future_year - i)
                         
-                        # Update our tracking arrays
+                        # FIXED: Don't update liabilities_yearly directly as they will be calculated 
+                        # later when we iterate through self.liabilities. Only track in all_personal_loans array.
                         if future_year == i:
-                            # For the current year, just add the full loan amount
+                            # For the current year, just add the full loan amount to tracking array
                             all_personal_loans[future_year] += int(negative_amount)
-                            # For current year, manually update liabilities to ensure correct display
-                            liabilities_yearly[future_year] += int(negative_amount)
+                            # No need to manually update liabilities_yearly since we added the loan to self.liabilities
+                            # and it will be counted when we calculate liabilities_yearly from liability objects
                         else:
-                            # For future years, add the calculated balance
-                            # Note: we don't add to liabilities_yearly here because that gets calculated
-                            # separately from the liability objects themselves
+                            # For future years, add the calculated balance to tracking array
                             all_personal_loans[future_year] += int(projected_balance)
                             
                         # DEBUG: Log the projected impact on each year
@@ -1099,7 +1098,10 @@ class FinancialCalculator:
                                 # Get the loan balance for this year
                                 loan_balance = personal_loan.get_balance(year)
                                 
-                                # Add to all_personal_loans array for net worth calculation
+                                # Add to all_personal_loans tracking array
+                                # Note: We don't need to add this to liabilities_yearly directly
+                                # since the loan was added with self.add_liability and will be counted
+                                # when we calculate liabilities from all liability objects
                                 loan_balance_int = int(loan_balance)
                                 all_personal_loans[year] += loan_balance_int
                                 
@@ -1218,8 +1220,9 @@ class FinancialCalculator:
                                 f.write(f"  Net home impact on net worth: ${appreciated_value - remaining_principal}\n")
                                 f.write(f"  Total assets: ${assets_yearly[i]}\n")
                                 f.write(f"  Total liabilities: ${liabilities_yearly[i]}\n")
-                                f.write(f"  Personal loans: ${all_personal_loans[i]}\n")
-                                f.write(f"  Net worth calculation: ${assets_yearly[i]} - (${liabilities_yearly[i]} + ${all_personal_loans[i]}) = ${assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])}\n")
+                                f.write(f"  Personal loans (included in liabilities): ${all_personal_loans[i]}\n")
+                                # FIXED: Don't double count personal loans - they're already in liabilities_yearly
+                                f.write(f"  Net worth calculation: ${assets_yearly[i]} - ${liabilities_yearly[i]} = ${assets_yearly[i] - liabilities_yearly[i]}\n")
                             
                             # FIXED HOME PURCHASE IMPACT ON EXPENSES - NO DOUBLE COUNTING
                             
@@ -1377,7 +1380,10 @@ class FinancialCalculator:
                                 # Get the loan balance for this year
                                 loan_balance = personal_loan.get_balance(year)
                                 
-                                # Add to all_personal_loans array for net worth calculation
+                                # Add to all_personal_loans tracking array
+                                # Note: We don't need to add this to liabilities_yearly directly
+                                # since the loan was added with self.add_liability and will be counted
+                                # when we calculate liabilities from all liability objects
                                 all_personal_loans[year] += int(loan_balance)
                                 
                                 # Add the loan payment to debt expenses
@@ -1494,8 +1500,9 @@ class FinancialCalculator:
                                 f.write(f"  Net car impact on net worth: ${current_car_value - current_car_loan}\n")
                                 f.write(f"  Total assets: ${assets_yearly[i]}\n")
                                 f.write(f"  Total liabilities: ${liabilities_yearly[i]}\n")
-                                f.write(f"  Personal loans: ${all_personal_loans[i]}\n")
-                                f.write(f"  Net worth calculation: ${assets_yearly[i]} - (${liabilities_yearly[i]} + ${all_personal_loans[i]}) = ${assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])}\n")
+                                f.write(f"  Personal loans (included in liabilities): ${all_personal_loans[i]}\n")
+                                # FIXED: Don't double count personal loans - they're already in liabilities_yearly
+                                f.write(f"  Net worth calculation: ${assets_yearly[i]} - ${liabilities_yearly[i]} = ${assets_yearly[i] - liabilities_yearly[i]}\n")
                             
                             # Add car payment to debt expenses category (don't modify expenses_yearly directly)
                             if loan_years_passed < loan_term:
