@@ -116,16 +116,19 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
   apparel?: number;
   services?: number;
   other?: number;
+  taxes?: number;  // Added taxes as a category
 }): Chart {
   const { 
     housing, transportation, food, healthcare, 
     education, debt, childcare, discretionary,
-    personalInsurance = 0, entertainment = 0, apparel = 0, services = 0, other = 0
+    personalInsurance = 0, entertainment = 0, apparel = 0, services = 0, other = 0,
+    taxes = 0  // Default to 0 if not provided
   } = data;
   
   const total = housing + transportation + food + healthcare + 
                 education + debt + childcare + discretionary + 
-                personalInsurance + entertainment + apparel + services + other;
+                personalInsurance + entertainment + apparel + services + other +
+                taxes;  // Include taxes in total
   
   // Skip empty data
   if (total === 0) {
@@ -179,6 +182,7 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
     `Apparel (${calculatePercentage(apparel)}%)`,
     `Services (${calculatePercentage(services)}%)`,
     `Other (${calculatePercentage(other)}%)`,
+    `Taxes (${calculatePercentage(taxes)}%)`,  // Added taxes label
   ];
   
   const colors = [
@@ -195,12 +199,14 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
     'rgba(103, 58, 183, 0.8)',  // Deep purple for apparel
     'rgba(3, 169, 244, 0.8)',   // Light blue for services
     'rgba(158, 158, 158, 0.8)', // Grey for other
+    'rgba(21, 101, 192, 0.8)',  // Dark blue for taxes
   ];
   
   const chartData = [
     housing, transportation, food, healthcare, 
     education, debt, childcare, discretionary,
-    personalInsurance, entertainment, apparel, services, other
+    personalInsurance, entertainment, apparel, services, other,
+    taxes  // Added taxes to chart data
   ];
   
   // Filter out zero values to avoid cluttering the chart
@@ -510,6 +516,7 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
     { key: 'entertainment', label: 'Entertainment', color: 'rgba(63, 81, 181, 0.7)' }, // Indigo
     { key: 'apparel', label: 'Apparel', color: 'rgba(103, 58, 183, 0.7)' },        // Deep purple
     { key: 'services', label: 'Services', color: 'rgba(3, 169, 244, 0.7)' },       // Light blue
+    { key: 'taxes', label: 'Taxes', color: 'rgba(21, 101, 192, 0.7)' },            // Dark blue for taxes
     { key: 'other', label: 'Other', color: 'rgba(158, 158, 158, 0.7)' }            // Grey
   ];
   

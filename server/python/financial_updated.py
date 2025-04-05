@@ -237,6 +237,8 @@ class FinancialCalculator:
         payroll_tax_expenses_yearly = [0] * (self.years_to_project + 1)
         federal_tax_expenses_yearly = [0] * (self.years_to_project + 1)
         state_tax_expenses_yearly = [0] * (self.years_to_project + 1)
+        # Combined tax category for expense breakdown visualization
+        tax_expenses_yearly = [0] * (self.years_to_project + 1)
         retirement_contribution_yearly = [0] * (self.years_to_project + 1)
         # Arrays to track tax rates for visualization
         effective_tax_rate_yearly = [0.0] * (self.years_to_project + 1)
@@ -375,6 +377,9 @@ class FinancialCalculator:
             total_taxes = (payroll_tax_expenses_yearly[i] + 
                          federal_tax_expenses_yearly[i] + 
                          state_tax_expenses_yearly[i])
+            
+            # Store combined tax amount for visualization
+            tax_expenses_yearly[i] = total_taxes
             
             # Add tax expenses to the total expenses
             expenses_yearly[i] += total_taxes
@@ -625,6 +630,12 @@ class FinancialCalculator:
                                 payroll_tax_expenses_yearly[i] = int(combined_taxes["fica_tax"])
                                 federal_tax_expenses_yearly[i] = int(combined_taxes["federal_tax"])
                                 state_tax_expenses_yearly[i] = int(combined_taxes["state_tax"])
+                                
+                                # Update the combined tax amount for visualization
+                                total_recalculated_taxes = (payroll_tax_expenses_yearly[i] + 
+                                                           federal_tax_expenses_yearly[i] + 
+                                                           state_tax_expenses_yearly[i])
+                                tax_expenses_yearly[i] = total_recalculated_taxes
                                 
                                 # Update the tax rates for visualization
                                 effective_tax_rate_yearly[i] = float(combined_taxes["effective_tax_rate"])
@@ -1516,6 +1527,7 @@ class FinancialCalculator:
             'payrollTax': payroll_tax_expenses_yearly,
             'federalTax': federal_tax_expenses_yearly,
             'stateTax': state_tax_expenses_yearly,
+            'taxes': tax_expenses_yearly,  # Combined tax expenses for visualization
             'retirementContribution': retirement_contribution_yearly,
             'effectiveTaxRate': [float(rate) for rate in effective_tax_rate_yearly],  # Convert to float for JSON serialization
             'marginalTaxRate': [float(rate) for rate in marginal_tax_rate_yearly],  # Convert to float for JSON serialization

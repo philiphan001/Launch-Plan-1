@@ -471,6 +471,7 @@ const FinancialProjections = () => {
     const debtExpensesData = [0]; // Other debt payments
     const discretionaryExpensesData = [0]; // Will be populated with backend data
     const childcareExpensesData = [0]; // Child-related expenses
+    const taxesData = [currentIncome * 0.25]; // Estimate initial taxes at 25% of income
     
     // Specific asset and liability tracking
     const homeValueData = [0]; // Track home value as an asset
@@ -970,7 +971,8 @@ const FinancialProjections = () => {
       education: educationExpensesData.length > 0 ? educationExpensesData[0] : 0,
       debt: debtExpensesData.length > 0 ? debtExpensesData[0] : 0,
       childcare: childcareExpensesData.length > 0 ? childcareExpensesData[0] : 0,
-      discretionary: discretionaryExpensesData.length > 0 ? discretionaryExpensesData[0] : 0
+      discretionary: discretionaryExpensesData.length > 0 ? discretionaryExpensesData[0] : 0,
+      taxes: taxesData.length > 0 ? taxesData[0] : 0
     };
 
     return {
@@ -995,6 +997,7 @@ const FinancialProjections = () => {
       debtExpenses: debtExpensesData,
       childcareExpenses: childcareExpensesData,
       discretionaryExpenses: discretionaryExpensesData,
+      taxes: taxesData, // Include tax expenses for visualization
       // Current expense breakdown for the pie chart
       currentExpenses: currentExpenseCategories
     };

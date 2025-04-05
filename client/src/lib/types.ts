@@ -42,6 +42,7 @@ export interface ProjectionData {
   payrollTax?: number[];
   federalTax?: number[];
   stateTax?: number[];
+  taxes?: number[];  // Combined tax expenses for visualization
   retirementContribution?: number[];
   effectiveTaxRate?: number[];
   marginalTaxRate?: number[];

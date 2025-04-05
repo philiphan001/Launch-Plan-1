@@ -17,6 +17,7 @@ interface ExpenseBreakdownProps {
     apparel?: number;
     services?: number;
     other?: number;
+    taxes?: number;  // Added taxes to the interface
   };
   projectionYear?: number;
 }
@@ -52,6 +53,7 @@ const ExpenseBreakdownChart: React.FC<ExpenseBreakdownProps> = ({
           entertainment: Math.max(0, Number(currentExpenses.entertainment) || 0),
           apparel: Math.max(0, Number(currentExpenses.apparel) || 0),
           services: Math.max(0, Number(currentExpenses.services) || 0),
+          taxes: Math.max(0, Number(currentExpenses.taxes) || 0),  // Added taxes to sanitized expenses
           other: Math.max(0, Number(currentExpenses.other) || 0)
         };
         
