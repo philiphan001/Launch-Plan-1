@@ -10,16 +10,37 @@ try:
     from server.python.models.asset import Investment
     from server.python.models.income import Income
     
-    # Create a basic financial calculation to check for errors
+    # Create a basic financial calculation to check for errors with custom emergency fund and loan settings
     calculator = FinancialCalculator(
         start_age=27,
-        years_to_project=10
+        years_to_project=10,
+        emergency_fund_months=6,  # Set to 6 months (higher than default)
+        personal_loan_term_years=5,  # Set to 5 years
+        personal_loan_interest_rate=0.07  # Set to 7%
     )
     
-    # Add assets, incomes, and other components
+    # Add assets, incomes, and other components - much lower income to ensure negative cash flow
     savings_asset = Investment(name="Savings", initial_value=10000, growth_rate=0.03)
     calculator.add_asset(savings_asset)
-    calculator.add_income(Income(name="Salary", annual_amount=50000, growth_rate=0.03))
+    # ULTRA low income - practically nothing
+    calculator.add_income(Income(name="Salary", annual_amount=100, growth_rate=0.02))
+    
+    # Add a large expense to create a negative cash flow situation
+    from server.python.models.expenditure import Expenditure, Housing, Transportation, Living
+    
+    # Create enough expenses to generate negative cash flow
+    calculator.add_expenditure(Housing(name="Housing", annual_amount=30000, inflation_rate=0.03))
+    calculator.add_expenditure(Transportation(name="Transportation", annual_amount=15000, inflation_rate=0.03))
+    calculator.add_expenditure(Living(name="Food", annual_amount=15000, inflation_rate=0.02))
+    calculator.add_expenditure(Living(name="Healthcare", annual_amount=10000, inflation_rate=0.04))
+    calculator.add_expenditure(Living(name="Personal Insurance", annual_amount=5000, inflation_rate=0.02))
+    calculator.add_expenditure(Living(name="Apparel", annual_amount=3000, inflation_rate=0.02))
+    calculator.add_expenditure(Living(name="Services", annual_amount=7000, inflation_rate=0.02))
+    calculator.add_expenditure(Living(name="Entertainment", annual_amount=8000, inflation_rate=0.02))
+    calculator.add_expenditure(Living(name="Other", annual_amount=5000, inflation_rate=0.02))
+    
+    # Add education expenses
+    calculator.add_expenditure(Living(name="Education", annual_amount=4000, inflation_rate=0.04))
     
     # Debug the savings asset initial state
     print("Initial savings asset state:")

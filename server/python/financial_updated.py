@@ -518,7 +518,10 @@ class FinancialCalculator:
                         
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"  Negative cash flow: ${negative_amount}\n")
+                            f.write(f"  Emergency fund months: {self.emergency_fund_months}\n")
+                            f.write(f"  Emergency threshold: ${emergency_fund_threshold}\n")
                             f.write(f"  Available savings (above emergency threshold): ${available_savings}\n")
+                            f.write(f"  Personal loan settings: {self.personal_loan_term_years}-year term, {self.personal_loan_interest_rate*100:.1f}% interest\n")
                             
                         # Only reduce savings if we're using some of it and the savings asset has the right method
                         if amount_from_savings > 0 and hasattr(savings_asset, 'add_contribution'):
@@ -534,6 +537,12 @@ class FinancialCalculator:
                         # Only create a loan if we still have a negative balance after using savings
                         if remaining_negative_amount > 0:
                             created_loan = True  # Set flag that we created a loan
+                            
+                            # Set the loan name based on the year
+                            loan_name = f"Cash Flow Deficit {i}"
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"  Creating loan: {loan_name} for ${remaining_negative_amount}\n")
                             
                             # Create a new personal loan with user-configurable parameters
                             cash_flow_loan = PersonalLoan(
