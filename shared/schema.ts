@@ -1,15 +1,6 @@
 import { pgTable, text, serial, integer, boolean, jsonb, timestamp, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { 
-  taxYears, taxStates, federalTaxBrackets, stateTaxBrackets, 
-  payrollTaxRates, taxCredits, userTaxSettings,
-  type TaxYear, type TaxState, type FederalTaxBracket,
-  type StateTaxBracket, type PayrollTaxRate, type TaxCredit,
-  type UserTaxSettings, type InsertTaxYear, type InsertTaxState,
-  type InsertFederalTaxBracket, type InsertStateTaxBracket,
-  type InsertPayrollTaxRate, type InsertTaxCredit, type InsertUserTaxSettings
-} from "./tax-schema";
 
 // Users table
 export const users = pgTable("users", {

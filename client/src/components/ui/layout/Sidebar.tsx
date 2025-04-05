@@ -13,7 +13,6 @@ const navItems: NavItem[] = [
   { path: "/career-builder", label: "Career Builder", icon: "insights" },
   { path: "/colleges", label: "College Discovery", icon: "school" },
   { path: "/calculator", label: "Net Price Calculator", icon: "calculate" },
-  { path: "/taxes", label: "Tax Calculator", icon: "payments" },
   { path: "/pathways", label: "Pathways", icon: "alt_route" },
   { path: "/assumptions", label: "Launch Plan Assumptions", icon: "settings" },
   { path: "/profile", label: "Profile", icon: "account_circle" },

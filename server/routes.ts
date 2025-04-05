@@ -8,7 +8,6 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { generateCareerInsights, generateCareerTimeline } from "./openai";
-import { registerTaxRoutes } from "./routes/tax-routes";
 
 // Get the directory name in ESM context
 const __filename = fileURLToPath(import.meta.url);
@@ -1267,9 +1266,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to initialize default assumptions", error: String(error) });
     }
   });
-
-  // Register tax calculation routes
-  await registerTaxRoutes(app);
 
   return httpServer;
 }

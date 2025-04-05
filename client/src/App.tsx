@@ -9,7 +9,6 @@ import Pathways from "@/pages/Pathways";
 import Assumptions from "@/pages/Assumptions";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
-import TaxCalculator from "@/pages/TaxCalculator";
 import NotFound from "@/pages/not-found";
 import AppShell from "@/components/ui/layout/AppShell";
 
@@ -27,7 +26,6 @@ function App() {
         <Route path="/assumptions" component={Assumptions} />
         <Route path="/profile" component={Profile} />
         <Route path="/settings" component={Settings} />
-        <Route path="/taxes" component={TaxCalculator} />
         <Route component={NotFound} />
       </Switch>
     </AppShell>
