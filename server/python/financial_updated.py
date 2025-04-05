@@ -444,93 +444,120 @@ class FinancialCalculator:
                     else:
                         f.write(f"  No savings asset found\n")
                 
-                # IMPROVED SOLUTION: Use savings first, then create loans only for remaining negative cash flow
-                if cash_flow_yearly[i] < 0:
-                    negative_amount = abs(cash_flow_yearly[i])  # Get positive amount
-                    remaining_negative_amount = negative_amount
-                    loan_name = f"Cash Flow Deficit Loan Year {i}"  # Define here for broader scope
-                    created_loan = False  # Flag to track if we created a loan
+                # IMPROVED SOLUTION: Handle all cash flow scenarios in a single place for consistency
+                # Initialize variables outside conditionals to avoid LSP issues
+                negative_amount = 0
+                remaining_negative_amount = 0
+                amount_from_savings = 0
+                loan_name = f"Cash Flow Deficit Loan Year {i}"  # Define here for broader scope
+                created_loan = False  # Flag to track if we created a loan
+                
+                if savings_asset and hasattr(savings_asset, 'get_value'):
+                    current_savings = savings_asset.get_value(i)
                     
-                    # First check if we can cover this with savings
-                    if savings_asset and hasattr(savings_asset, 'get_value'):
-                        current_savings = savings_asset.get_value(i)
-                        
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"\nHandling negative cash flow in year {i}:\n")
-                            f.write(f"  Negative cash flow: ${negative_amount}\n")
-                            f.write(f"  Current savings: ${current_savings}\n")
-                        
-                        # Use savings to cover the deficit if possible
-                        if current_savings > 0:
-                            amount_from_savings = min(current_savings, negative_amount)
-                            remaining_negative_amount = negative_amount - amount_from_savings
-                            
-                            # Only reduce savings if we're using some of it and the savings asset has the right method
-                            # This check helps avoid type errors with the Asset base class
-                            if amount_from_savings > 0 and hasattr(savings_asset, 'add_contribution'):
-                                # Use getattr to get the method to avoid LSP issues
-                                contribution_method = getattr(savings_asset, 'add_contribution')
-                                # Call the method to add a negative contribution (withdrawal)
-                                contribution_method(i, -amount_from_savings)
-                                
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"  Using ${amount_from_savings} from savings\n")
-                                    f.write(f"  Remaining negative amount: ${remaining_negative_amount}\n")
+                    # Define emergency fund threshold - 3 months of expenses is standard financial advice
+                    # Use monthly expenses * 3 as the minimum emergency fund
+                    monthly_expenses = expenses_yearly[i] / 12
+                    emergency_fund_threshold = monthly_expenses * 3
                     
-                    # Only create a loan if we still have a negative balance after using savings
-                    if remaining_negative_amount > 0:
-                        created_loan = True  # Set flag that we created a loan
-                        
-                        # Create a new personal loan with 5-year term and 8% interest as specified
-                        cash_flow_loan = PersonalLoan(
-                            name=loan_name,
-                            initial_balance=remaining_negative_amount,  # Only borrow what's needed
-                            interest_rate=0.08,  # 8% interest
-                            term_years=5,        # 5-year term
-                            milestone_year=i,    # Current year
-                            milestone_month=6    # Mid-year (arbitrary)
-                        )
-                        
-                        # Add the new loan to the calculator's liabilities
-                        self.add_liability(cash_flow_loan)
-                        
-                        # DEBUG: Write the loan creation to log
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"  Created personal loan for remaining negative cash flow:\n")
-                            f.write(f"    Loan amount: ${remaining_negative_amount}\n")
-                        
-                        # Update personal loans tracker for this year and ALL FUTURE YEARS
-                        # This is critical since the loan will continue to affect net worth in future years
-                        for future_year in range(i, self.years_to_project + 1):
-                            # Calculate the projected balance for this future year
-                            projected_balance = cash_flow_loan.get_balance(future_year - i)
-                            
-                            # FIXED: Don't update liabilities_yearly directly as they will be calculated 
-                            # later when we iterate through self.liabilities. Only track in all_personal_loans array.
-                            if future_year == i:
-                                # For the current year, just add the loan amount to tracking array
-                                # Important: Use remaining_negative_amount, not the full negative_amount
-                                all_personal_loans[future_year] += int(remaining_negative_amount)
-                                # No need to manually update liabilities_yearly since we added the loan to self.liabilities
-                                # and it will be counted when we calculate liabilities_yearly from liability objects
-                            else:
-                                # For future years, add the calculated balance to tracking array
-                                all_personal_loans[future_year] += int(projected_balance)
-                                
-                            # DEBUG: Log the projected impact on each year
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"  Year {future_year} projected balance: ${projected_balance}\n")
-                    
-                    # Log the handling of negative cash flow
                     with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"\n[CASH FLOW DEFICIT HANDLING] Year {i}:\n")
-                        f.write(f"  Negative cash flow amount: ${negative_amount}\n")
-                        if created_loan:
-                            f.write(f"  Created personal loan: {loan_name}\n")
-                            f.write(f"  Loan amount: ${remaining_negative_amount}\n")
-                            f.write(f"  Loan terms: 5-year term, 8% interest\n")
-                        else:
-                            f.write(f"  Covered entirely from savings, no loan needed\n")
+                        f.write(f"\n[CASH FLOW HANDLING] Year {i}:\n")
+                        f.write(f"  Cash flow: ${cash_flow_yearly[i]}\n")
+                        f.write(f"  Current savings: ${current_savings}\n")
+                        f.write(f"  Emergency fund threshold: ${emergency_fund_threshold}\n")
+                    
+                    if cash_flow_yearly[i] < 0:
+                        # Handle negative cash flow
+                        negative_amount = abs(cash_flow_yearly[i])  # Get positive amount
+                        
+                        # Calculate how much we can safely take from savings
+                        # This is the amount of savings above the emergency threshold
+                        available_savings = max(0, current_savings - emergency_fund_threshold)
+                        amount_from_savings = min(available_savings, negative_amount)
+                        remaining_negative_amount = negative_amount - amount_from_savings
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"  Negative cash flow: ${negative_amount}\n")
+                            f.write(f"  Available savings (above emergency threshold): ${available_savings}\n")
+                            
+                        # Only reduce savings if we're using some of it and the savings asset has the right method
+                        if amount_from_savings > 0 and hasattr(savings_asset, 'add_contribution'):
+                            # Use getattr to get the method to avoid LSP issues
+                            contribution_method = getattr(savings_asset, 'add_contribution')
+                            # Call the method to add a negative contribution (withdrawal)
+                            contribution_method(i, -amount_from_savings)
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"  Using ${amount_from_savings} from savings\n")
+                                f.write(f"  Remaining negative amount: ${remaining_negative_amount}\n")
+                        
+                        # Only create a loan if we still have a negative balance after using savings
+                        if remaining_negative_amount > 0:
+                            created_loan = True  # Set flag that we created a loan
+                            
+                            # Create a new personal loan with 5-year term and 8% interest as specified
+                            cash_flow_loan = PersonalLoan(
+                                name=loan_name,
+                                initial_balance=remaining_negative_amount,  # Only borrow what's needed
+                                interest_rate=0.08,  # 8% interest
+                                term_years=5,        # 5-year term
+                                milestone_year=i,    # Current year
+                                milestone_month=6    # Mid-year (arbitrary)
+                            )
+                            
+                            # Add the new loan to the calculator's liabilities
+                            self.add_liability(cash_flow_loan)
+                            
+                            # DEBUG: Write the loan creation to log
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"  Created personal loan for remaining negative cash flow:\n")
+                                f.write(f"    Loan amount: ${remaining_negative_amount}\n")
+                            
+                            # Update personal loans tracker for this year and ALL FUTURE YEARS
+                            # This is critical since the loan will continue to affect net worth in future years
+                            for future_year in range(i, self.years_to_project + 1):
+                                # Calculate the projected balance for this future year
+                                projected_balance = cash_flow_loan.get_balance(future_year - i)
+                                
+                                # FIXED: Don't update liabilities_yearly directly as they will be calculated 
+                                # later when we iterate through self.liabilities. Only track in all_personal_loans array.
+                                if future_year == i:
+                                    # For the current year, just add the loan amount to tracking array
+                                    # Important: Use remaining_negative_amount, not the full negative_amount
+                                    all_personal_loans[future_year] += int(remaining_negative_amount)
+                                    # No need to manually update liabilities_yearly since we added the loan to self.liabilities
+                                    # and it will be counted when we calculate liabilities_yearly from liability objects
+                                else:
+                                    # For future years, add the calculated balance to tracking array
+                                    all_personal_loans[future_year] += int(projected_balance)
+                                    
+                                # DEBUG: Log the projected impact on each year
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"  Year {future_year} projected balance: ${projected_balance}\n")
+                        
+                        # Log the handling of negative cash flow
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\n[CASH FLOW DEFICIT HANDLING] Year {i}:\n")
+                            f.write(f"  Negative cash flow amount: ${negative_amount}\n")
+                            if created_loan:
+                                f.write(f"  Created personal loan: {loan_name}\n")
+                                f.write(f"  Loan amount: ${remaining_negative_amount}\n")
+                                f.write(f"  Loan terms: 5-year term, 8% interest\n")
+                            else:
+                                f.write(f"  Covered entirely from savings, no loan needed\n")
+                    
+                    elif cash_flow_yearly[i] > 0:
+                        # Handle positive cash flow - add to savings
+                        if hasattr(savings_asset, 'add_contribution'):
+                            # Use getattr to get the method to avoid LSP issues
+                            contribution_method = getattr(savings_asset, 'add_contribution')
+                            # Call the method to add a positive contribution
+                            contribution_method(i, cash_flow_yearly[i])
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"  Positive cash flow: ${cash_flow_yearly[i]}\n")
+                                f.write(f"  Added to savings\n")
+                                f.write(f"  New savings value: ${savings_asset.get_value(i)}\n")
                 
                 # If we found a savings asset, update for retirement contributions
                 # (We don't reduce savings anymore for negative cash flow - that's handled by personal loans)
@@ -1625,58 +1652,10 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"  Resulting cash_flow_yearly[{i}]: ${cash_flow_yearly[i]}\n")
                             
-                            # CRITICAL FIX: Apply positive cash flow to savings
-                            # This ensures that when people earn more than they spend,
-                            # the excess money goes into their savings
-                            if i > 0 and cash_flow_yearly[i] > 0:
-                                # Find the savings asset to update with positive cash flow
-                                # Convert iterator to list for direct indexing
-                                assets_list = list(self.assets)
-                                
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"\n[SAVINGS UPDATE FROM CASH FLOW] Year {i}:\n")
-                                    
-                                # First try to find a savings-named investment asset
-                                savings_asset = None
-                                for asset in assets_list:
-                                    if isinstance(asset, Investment) and 'savings' in asset.name.lower():
-                                        savings_asset = asset
-                                        with open('healthcare_debug.log', 'a') as f:
-                                            f.write(f"  Found savings asset by name: '{asset.name}'\n")
-                                        break
-                                
-                                # If not found, use the first investment asset
-                                if not savings_asset and len(assets_list) > 0:
-                                    for asset in assets_list:
-                                        if isinstance(asset, Investment):
-                                            savings_asset = asset
-                                            with open('healthcare_debug.log', 'a') as f:
-                                                f.write(f"  Using first investment asset: '{asset.name}'\n")
-                                            break
-                                        
-                                if savings_asset:
-                                    with open('healthcare_debug.log', 'a') as f:
-                                        f.write(f"  Current savings value: ${savings_asset.get_value(i)}\n")
-                                        f.write(f"  Positive cash flow: ${cash_flow_yearly[i]}\n")
-                                    
-                                    # Add positive cash flow as a contribution to savings
-                                    # Use hasattr/getattr for LSP compatibility
-                                    if hasattr(savings_asset, 'add_contribution'):
-                                        getattr(savings_asset, 'add_contribution')(cash_flow_yearly[i], i)
-                                    else:
-                                        # Fallback if method doesn't exist
-                                        savings_asset.update_value(i, savings_asset.get_value(i) + cash_flow_yearly[i])
-                                    
-                                    # Update the savings value array to match
-                                    savings_value_yearly[i] = int(round(savings_asset.get_value(i)))
-                                    
-                                    with open('healthcare_debug.log', 'a') as f:
-                                        f.write(f"  Updated savings value: ${savings_asset.get_value(i)}\n")
-                                        f.write(f"  Updated savings_value_yearly[{i}] = {savings_value_yearly[i]}\n")
-                                        f.write(f"  Contributions dictionary: {savings_asset.contributions}\n")
-                                else:
-                                    with open('healthcare_debug.log', 'a') as f:
-                                        f.write(f"  No suitable savings asset found to apply cash flow.\n")
+                            # Cash flow handling is now centralized in the main calculation loop above
+                            # This redundant section has been removed to avoid double-counting cash flow contributions
+                            # Both positive and negative cash flow are now consistently handled in a single location
+                            pass
         
         # CRITICAL FIX FOR MILESTONE SAVINGS TRACKING
         # After all milestones are processed, ensure that the savings values are properly synced
@@ -1918,36 +1897,22 @@ class FinancialCalculator:
             if savings_asset:
                 f.write("Applying positive cash flow to savings asset:\n")
                 
-                # Process contributions for all years, both positive and negative cash flow
+                # IMPORTANT: We no longer update the investment based on cash flow here
+                # This update is now handled in the main yearly processing loop above.
+                # This prevents double-counting of cash flow contributions to savings
+                f.write(f"  NOTE: Cash flow contributions to savings are now handled during the yearly calculation loop\n")
+                f.write(f"  and should no longer be applied here to avoid double-counting.\n")
+                
+                # Just check to make sure the savings asset values match our expectations
                 for i in range(1, self.years_to_project + 1):
-                    old_value = savings_asset.get_value(i)
+                    asset_value = savings_asset.get_value(i)
+                    array_value = savings_value_yearly[i]
                     
-                    # Apply the cash flow to the savings asset
-                    # For positive flow: add to savings 
-                    # For negative flow: subtract from savings (to represent spending savings)
-                    # Check by type name instead of using isinstance due to LSP errors
-                    asset_type = type(savings_asset).__name__
-                    if asset_type == 'Investment':
-                        # Call add_contribution directly - it's a method on the Investment class
-                        if hasattr(savings_asset, 'add_contribution'):
-                            # Just use the method directly since we already verified it exists with hasattr
-                            # No need for type checking - the runtime check with hasattr is sufficient
-                            getattr(savings_asset, 'add_contribution')(cash_flow_yearly[i], i)
-                                
-                            new_value = savings_asset.get_value(i)
-                            
-                            # Log the contribution
-                            if cash_flow_yearly[i] > 0:
-                                f.write(f"  Year {i}: Added positive cash flow ${cash_flow_yearly[i]}\n")
-                            else:
-                                f.write(f"  Year {i}: Applied negative cash flow ${cash_flow_yearly[i]}\n")
-                                
-                            f.write(f"    Before: ${old_value}, After: ${new_value}\n")
-                            f.write(f"    Difference: ${new_value - old_value}\n")
-                        else:
-                            f.write(f"  Year {i}: Asset is missing add_contribution method\n")
+                    # Log any discrepancies between the asset value and array value
+                    if abs(asset_value - array_value) > 1:  # Allow for small rounding differences
+                        f.write(f"  Year {i}: DISCREPANCY - Asset value=${asset_value}, Array value=${array_value}\n")
                     else:
-                        f.write(f"  Year {i}: Cannot apply cash flow, asset is of type {asset_type}, not Investment\n")
+                        f.write(f"  Year {i}: Values match - Asset value=${asset_value}, Array value=${array_value}\n")
                 
                 # Log the overall contributions state if available
                 if hasattr(savings_asset, 'contributions'):
