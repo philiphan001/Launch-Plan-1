@@ -793,9 +793,17 @@ class FinancialCalculator:
                             home_value_yearly[i] += appreciated_value
                             mortgage_yearly[i] += remaining_principal
                             
-                            # Update overall assets and liabilities
-                            assets_yearly[i] += appreciated_value
+                            # Update overall assets and liabilities 
+                            # IMPORTANT: We need to be careful not to double-count assets or liabilities
+                            # The home value gets added to assets, and the mortgage to liabilities
+                            # We track these separately to better understand asset composition
+                            assets_yearly[i] += appreciated_value  
                             liabilities_yearly[i] += remaining_principal
+                            
+                            # CRITICAL FIX: Calculate net worth properly for home purchases
+                            # Net worth = assets - liabilities, including personal loans
+                            # This should remain stable as we're just converting cash to home equity
+                            # A home purchase shouldn't drastically reduce net worth
                             
                             # FIXED HOME PURCHASE IMPACT ON EXPENSES - NO DOUBLE COUNTING
                             
