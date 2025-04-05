@@ -538,8 +538,9 @@ class FinancialCalculator:
                             net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
                             
                             # Increase general expenses due to marriage
-                            # Only apply to expenses after the wedding year (to avoid double counting wedding costs)
-                            if i > milestone_year:
+                            # Apply to expenses starting from the marriage year to align with income changes
+                            # This ensures both income and expense changes happen simultaneously
+                            if i >= milestone_year:
                                 # Find non-housing, non-transportation expenses and increase them by specified percentage
                                 for expense in self.expenditures:
                                     if not isinstance(expense, Housing) and not isinstance(expense, Transportation):
