@@ -1153,7 +1153,8 @@ const FinancialProjections = () => {
     // Execute the async function
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
-      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData]); // Include both costOfLivingFactor and locationCostData in the dependency array to ensure recalculation when location changes
+      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
+      emergencyFundMonths, personalLoanTermYears, personalLoanInterestRate]); // Include all configurable parameters to ensure recalculation when any of them change
   
   // Generate financial advice based on current financial state
   useEffect(() => {
@@ -1402,6 +1403,10 @@ const FinancialProjections = () => {
                       costOfLivingIndex: locationCostData ? 
                         locationCostData.income_adjustment_factor || 1.0 : null,
                       incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                      // Save the configurable parameters
+                      emergencyFundMonths: emergencyFundMonths,
+                      personalLoanTermYears: personalLoanTermYears,
+                      personalLoanInterestRate: personalLoanInterestRate,
                     }),
                   });
                   
