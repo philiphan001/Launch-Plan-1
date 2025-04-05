@@ -1022,7 +1022,7 @@ const FinancialProjections = () => {
       carLoan: carLoanData, // Track car loan separately
       studentLoan: studentLoanData, // Track student loan separately
       ages: ages,
-      // Add expense categories
+      // Add expense categories with proper naming for the charts
       housingExpenses: housingExpensesData,
       transportationExpenses: transportationExpensesData,
       foodExpenses: foodExpensesData,
@@ -1032,6 +1032,22 @@ const FinancialProjections = () => {
       childcareExpenses: childcareExpensesData,
       discretionaryExpenses: discretionaryExpensesData,
       taxes: taxesData, // Include tax expenses for visualization
+      
+      // Add aliases with the exact property names expected by the charts in charts.ts
+      housing: housingExpensesData,
+      transportation: transportationExpensesData,
+      food: foodExpensesData,
+      healthcare: healthcareExpensesData,
+      education: educationExpensesData,
+      debt: debtExpensesData,
+      childcare: childcareExpensesData,
+      discretionary: discretionaryExpensesData,
+      personalInsurance: [], // Add empty arrays to avoid undefined errors
+      entertainment: [],
+      apparel: [],
+      services: [],
+      other: [],
+      
       // Current expense breakdown for the pie chart
       currentExpenses: currentExpenseCategories
     };
