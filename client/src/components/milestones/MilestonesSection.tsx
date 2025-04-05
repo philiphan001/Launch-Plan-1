@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent 
@@ -107,7 +107,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   });
   
   // Get financial profile for the user to show available savings
-  const { data: financialProfile } = useQuery({
+  const { data: financialProfile, refetch: refetchFinancialProfile } = useQuery({
     queryKey: ['/api/financial-profiles/user', userId],
     queryFn: async () => {
       const response = await fetch(`/api/financial-profiles/user/${userId}`);
@@ -121,11 +121,15 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       }
       
       return response.json();
-    }
+    },
+    // Ensure we have the latest financial profile data when the dialog opens
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    staleTime: 0 // Always consider data stale to force a refetch
   });
   
   // Get future savings projection for the milestone year
-  const { data: futureSavings, isLoading: isLoadingFutureSavings } = useQuery({
+  const { data: futureSavings, isLoading: isLoadingFutureSavings, refetch: refetchFutureSavings } = useQuery({
     queryKey: ['/api/calculate/future-savings', userId, yearsAway],
     queryFn: async () => {
       const currentYear = new Date().getFullYear();
@@ -148,6 +152,15 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
     },
     enabled: !!userId && yearsAway > 0 && dialogOpen, // Only fetch when dialog is open and we have valid inputs
   });
+  
+  // Effect to refetch future savings whenever dialog opens or years away changes
+  useEffect(() => {
+    if (dialogOpen && userId && yearsAway > 0) {
+      // Refetch financial profile and future savings to ensure they're up-to-date
+      refetchFinancialProfile();
+      refetchFutureSavings();
+    }
+  }, [dialogOpen, yearsAway, userId, refetchFinancialProfile, refetchFutureSavings]);
   
   // Get existing milestones for the user
   const { data: milestones, isLoading: isLoadingMilestones } = useQuery({
@@ -227,6 +240,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const openMilestoneDialog = (type: MilestoneType, milestoneToEdit?: Milestone) => {
     setCurrentMilestone(type);
     setDialogOpen(true);
+    
+    // Always refresh financial profile when opening dialog to get latest savings amount
+    refetchFinancialProfile();
     
     if (milestoneToEdit) {
       // This is an edit operation
