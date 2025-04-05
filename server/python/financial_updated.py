@@ -1800,16 +1800,9 @@ class FinancialCalculator:
                     if asset_type == 'Investment':
                         # Call add_contribution directly - it's a method on the Investment class
                         if hasattr(savings_asset, 'add_contribution'):
-                            # Type assertion for LSP - fix the TypeError with proper casting
-                            from server.python.models.asset import Investment
-                            # This is just for type checking, the actual runtime check is done via hasattr
-                            if isinstance(savings_asset, Investment):
-                                investment_asset = savings_asset
-                                investment_asset.add_contribution(cash_flow_yearly[i], i)
-                            else:
-                                # Fallback for LSP - but this branch won't be taken in practice
-                                # since we already checked with hasattr
-                                getattr(savings_asset, 'add_contribution')(cash_flow_yearly[i], i)
+                            # Just use the method directly since we already verified it exists with hasattr
+                            # No need for type checking - the runtime check with hasattr is sufficient
+                            getattr(savings_asset, 'add_contribution')(cash_flow_yearly[i], i)
                                 
                             new_value = savings_asset.get_value(i)
                             
@@ -1828,15 +1821,9 @@ class FinancialCalculator:
                 
                 # Log the overall contributions state if available
                 if hasattr(savings_asset, 'contributions'):
-                    # Type assertion for LSP - fix the TypeError
-                    from server.python.models.asset import Investment
-                    # This is just for type checking, the actual runtime check is done via hasattr
-                    if isinstance(savings_asset, Investment):
-                        investment_asset = savings_asset
-                        f.write(f"Final contributions dictionary: {investment_asset.contributions}\n")
-                    else:
-                        # Fallback for LSP - but this branch won't be taken in practice
-                        f.write(f"Final contributions dictionary: {getattr(savings_asset, 'contributions')}\n")
+                    # Just use getattr since we already verified the attribute exists with hasattr
+                    contributions = getattr(savings_asset, 'contributions')
+                    f.write(f"Final contributions dictionary: {contributions}\n")
                 else:
                     f.write(f"Asset does not have contributions tracking\n")
             else:
