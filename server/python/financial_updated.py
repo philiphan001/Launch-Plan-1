@@ -1159,18 +1159,36 @@ class FinancialCalculator:
                     asset_value = savings_asset.get_value(yr)
                     savings_value_yearly[yr] = int(asset_value)
                     
-                    # Also update the calculated assets total for this year to ensure consistency
-                    # This is critical because assets_yearly needs to match the sum of all assets
-                    # Find all assets for this year except savings, then add back the updated savings value
-                    assets_without_savings = 0
+                    # COMPLETELY REDONE ASSET AND NET WORTH CALCULATION
+                    # This is the critical fix to ensure all assets (including home/car) are included
+                    
+                    # Step 1: Get all standard asset values from asset objects
+                    standard_assets_value = 0
                     for a in self.assets:
                         if a != savings_asset:
-                            assets_without_savings += a.get_value(yr)
+                            standard_assets_value += a.get_value(yr)
                     
-                    # Update assets_yearly with correct total including synchronized savings
-                    assets_yearly[yr] = int(assets_without_savings + asset_value)
+                    # Step 2: Add properly synchronized savings value
+                    standard_assets_value += asset_value
                     
-                    # Recalculate net worth with updated assets
+                    # Step 3: Add home and car values explicitly
+                    # Note: These values were calculated and stored in their respective arrays
+                    # during the milestone processing
+                    total_asset_value = standard_assets_value + home_value_yearly[yr] + car_value_yearly[yr]
+                    
+                    # Step 4: Update assets_yearly with COMPLETE asset value
+                    assets_yearly[yr] = int(total_asset_value)
+                    
+                    # Step 5: Log the components for debugging
+                    with open('healthcare_debug.log', 'a') as debug_f:
+                        debug_f.write(f"\nYear {yr} ASSET COMPOSITION:\n")
+                        debug_f.write(f"  Standard assets: ${standard_assets_value}\n")
+                        debug_f.write(f"  Home value: ${home_value_yearly[yr]}\n")
+                        debug_f.write(f"  Car value: ${car_value_yearly[yr]}\n")
+                        debug_f.write(f"  TOTAL ASSETS: ${total_asset_value}\n")
+                        debug_f.write(f"  Total liabilities: ${liabilities_yearly[yr] + all_personal_loans[yr]}\n")
+                    
+                    # Step 6: Recalculate net worth with complete assets
                     net_worth[yr] = assets_yearly[yr] - (liabilities_yearly[yr] + all_personal_loans[yr])
                 
                 # Log the updated values
