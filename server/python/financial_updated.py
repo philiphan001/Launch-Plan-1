@@ -1134,6 +1134,33 @@ class FinancialCalculator:
                             
                             # Update cash flow
                             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+                            
+                            # CRITICAL FIX: Apply positive cash flow to savings
+                            # This ensures that when people earn more than they spend,
+                            # the excess money goes into their savings
+                            if i > 0 and cash_flow_yearly[i] > 0:
+                                # Find the savings asset to update with positive cash flow
+                                savings_asset = None
+                                for asset in self.assets:
+                                    if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                                        savings_asset = asset
+                                        break
+                                        
+                                if savings_asset:
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"\n[SAVINGS UPDATE FROM CASH FLOW] Year {i}:\n")
+                                        f.write(f"  Current savings value: ${savings_asset.get_value(i)}\n")
+                                        f.write(f"  Positive cash flow: ${cash_flow_yearly[i]}\n")
+                                    
+                                    # Add positive cash flow as a contribution to savings
+                                    savings_asset.add_contribution(cash_flow_yearly[i], i)
+                                    
+                                    # Update the savings value array to match
+                                    savings_value_yearly[i] = int(round(savings_asset.get_value(i)))
+                                    
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"  Updated savings value: ${savings_asset.get_value(i)}\n")
+                                        f.write(f"  Updated savings_value_yearly[{i}] = {savings_value_yearly[i]}\n")
         
         # CRITICAL FIX FOR MILESTONE SAVINGS TRACKING
         # After all milestones are processed, ensure that the savings values are properly synced
@@ -1157,7 +1184,7 @@ class FinancialCalculator:
                 # Sync all values from the savings asset to the array
                 for yr in range(0, self.years_to_project + 1):
                     asset_value = savings_asset.get_value(yr)
-                    savings_value_yearly[yr] = int(asset_value)
+                    savings_value_yearly[yr] = int(round(asset_value))
                     
                     # COMPLETELY REDONE ASSET AND NET WORTH CALCULATION
                     # This is the critical fix to ensure all assets (including home/car) are included
@@ -1190,6 +1217,20 @@ class FinancialCalculator:
                     
                     # Step 6: Recalculate net worth with complete assets
                     net_worth[yr] = assets_yearly[yr] - (liabilities_yearly[yr] + all_personal_loans[yr])
+                    
+                    # CRITICAL FIX: Log detailed net worth calculation
+                    with open('healthcare_debug.log', 'a') as networth_f:
+                        networth_f.write(f"\n[DETAILED NET WORTH] Year {yr}:\n")
+                        networth_f.write(f"  Assets: ${assets_yearly[yr]}\n")
+                        networth_f.write(f"  Liabilities: ${liabilities_yearly[yr]}\n")
+                        networth_f.write(f"  Personal Loans: ${all_personal_loans[yr]}\n")
+                        networth_f.write(f"  Net Worth = ${assets_yearly[yr]} - (${liabilities_yearly[yr]} + ${all_personal_loans[yr]}) = ${net_worth[yr]}\n")
+                        
+                        # Add cash flow info
+                        if yr > 0:
+                            networth_f.write(f"  Cash Flow (year {yr}): ${cash_flow_yearly[yr]}\n")
+                            networth_f.write(f"  Previous Net Worth (year {yr-1}): ${net_worth[yr-1]}\n")
+                            networth_f.write(f"  Net Worth Increase/Decrease: ${net_worth[yr] - net_worth[yr-1]}\n")
                 
                 # Log the updated values
                 f.write("\nUpdated values after sync:\n")
