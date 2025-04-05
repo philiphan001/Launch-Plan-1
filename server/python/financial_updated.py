@@ -16,14 +16,19 @@ try:
     from models.liability import Liability, Mortgage, StudentLoan, AutoLoan, PersonalLoan
     from models.income import Income, SalaryIncome, SpouseIncome
     from models.expenditure import Expenditure, Housing, Transportation, Living, Tax
-    from launch_plan_assumptions import (
-        HOME_PURCHASE_RENT_REDUCTION, CAR_PURCHASE_TRANSPORTATION_REDUCTION,
-        MARRIAGE_EXPENSE_INCREASE, GRADUATE_SCHOOL_INCOME_INCREASE,
-        CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
-        HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
+    from models.tax import TaxCalculator
+    from constants import (
+        HOME_PURCHASE_RENT_REDUCTION, MARRIAGE_EXPENSE_INCREASE,
+        MORTGAGE_TERM_YEARS, MORTGAGE_INTEREST_RATE,
+        CAR_LOAN_TERM_YEARS, CAR_LOAN_INTEREST_RATE, CAR_DEPRECIATION_RATE,
+        CHILD_ANNUAL_EXPENSE, CHILD_EXPENSE_INCREASE_RATE,
+        EDUCATION_LOAN_TERM_YEARS, EDUCATION_LOAN_INTEREST_RATE,
+        DEFAULT_TAX_FILING_STATUS, DEFAULT_TAX_STANDARD_DEDUCTION_SINGLE,
+        DEFAULT_TAX_STANDARD_DEDUCTION_MARRIED, DEFAULT_TAX_ADDITIONAL_DEDUCTIONS,
+        DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE,
         CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
-        CAR_LOAN_TERM, CAR_LOAN_INTEREST_RATE,
-        MORTGAGE_TERM_YEARS, MORTGAGE_INTEREST_RATE
+        HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
+        CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM
     )
 except ImportError:
     # Fallback to full imports (these will work when executed from parent directory)
@@ -31,21 +36,73 @@ except ImportError:
     from server.python.models.liability import Liability, Mortgage, StudentLoan, AutoLoan, PersonalLoan
     from server.python.models.income import Income, SalaryIncome, SpouseIncome
     from server.python.models.expenditure import Expenditure, Housing, Transportation, Living, Tax
-    from server.python.launch_plan_assumptions import (
-        HOME_PURCHASE_RENT_REDUCTION,
-        MORTGAGE_TERM_YEARS,
-        MORTGAGE_INTEREST_RATE,
-        CAR_PURCHASE_TRANSPORTATION_REDUCTION,
-        MARRIAGE_EXPENSE_INCREASE, GRADUATE_SCHOOL_INCOME_INCREASE,
-        CHILD_EXPENSE_PER_YEAR, CHILD_INITIAL_EXPENSE, DEFAULT_EXPENSE_ALLOCATIONS,
-        HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
+    from server.python.models.tax import TaxCalculator
+    from server.python.constants import (
+        HOME_PURCHASE_RENT_REDUCTION, MARRIAGE_EXPENSE_INCREASE,
+        MORTGAGE_TERM_YEARS, MORTGAGE_INTEREST_RATE,
+        CAR_LOAN_TERM_YEARS, CAR_LOAN_INTEREST_RATE, CAR_DEPRECIATION_RATE,
+        CHILD_ANNUAL_EXPENSE, CHILD_EXPENSE_INCREASE_RATE,
+        EDUCATION_LOAN_TERM_YEARS, EDUCATION_LOAN_INTEREST_RATE,
+        DEFAULT_TAX_FILING_STATUS, DEFAULT_TAX_STANDARD_DEDUCTION_SINGLE,
+        DEFAULT_TAX_STANDARD_DEDUCTION_MARRIED, DEFAULT_TAX_ADDITIONAL_DEDUCTIONS,
+        DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE,
         CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
-        CAR_LOAN_TERM, CAR_LOAN_INTEREST_RATE
+        HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
+        CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM
     )
 
 
 class FinancialCalculator:
     """Financial calculator for generating projections."""
+    
+    def _calculate_taxes(self, income: float, year: int, filing_status: str = "single") -> Dict[str, float]:
+        """
+        Calculate taxes for a given income and year.
+        
+        Args:
+            income: Gross income for the year
+            year: Year of projection (used for state lookup)
+            filing_status: Tax filing status (single, married, etc.)
+            
+        Returns:
+            Dictionary with tax breakdown and rates
+        """
+        # Create tax calculator with appropriate parameters
+        # Set defaults for standard deduction, credits, etc.
+        standard_deduction = DEFAULT_TAX_STANDARD_DEDUCTION_SINGLE
+        if filing_status.lower() == "married":
+            standard_deduction = DEFAULT_TAX_STANDARD_DEDUCTION_MARRIED
+        
+        tax_calculator = TaxCalculator(
+            income=income,
+            filing_status=filing_status
+        )
+        
+        # Calculate all taxes (FICA, federal, state)
+        tax_results = tax_calculator.calculate_all_taxes(
+            standard_deduction=standard_deduction,
+            additional_deductions=DEFAULT_TAX_ADDITIONAL_DEDUCTIONS,
+            tax_credits=DEFAULT_TAX_CREDITS
+        )
+        
+        # Add effective tax rate for visualization
+        if income > 0:
+            total_tax = tax_results["federal_tax"] + tax_results["fica_tax"] + tax_results["state_tax"]
+            tax_results["effective_tax_rate"] = total_tax / income
+        else:
+            tax_results["effective_tax_rate"] = 0
+            
+        # Log tax calculations for debugging
+        with open('healthcare_debug.log', 'a') as f:
+            f.write(f"\nYear {year} Tax Calculation (income: ${income}):\n")
+            f.write(f"  Filing status: {filing_status}\n")
+            f.write(f"  Federal tax: ${tax_results['federal_tax']}\n")
+            f.write(f"  FICA tax: ${tax_results['fica_tax']}\n")
+            f.write(f"  State tax: ${tax_results['state_tax']}\n")
+            f.write(f"  Effective tax rate: {tax_results['effective_tax_rate'] * 100:.2f}%\n")
+            f.write(f"  Marginal tax rate: {tax_results['federal_marginal_rate'] * 100:.2f}%\n")
+        
+        return tax_results
     
     def __init__(self, start_age: int = 25, years_to_project: int = 10):
         """
@@ -174,6 +231,15 @@ class FinancialCalculator:
         entertainment_expenses_yearly = [0] * (self.years_to_project + 1)
         other_expenses_yearly = [0] * (self.years_to_project + 1)
         
+        # Tax-related categories
+        payroll_tax_expenses_yearly = [0] * (self.years_to_project + 1)
+        federal_tax_expenses_yearly = [0] * (self.years_to_project + 1)
+        state_tax_expenses_yearly = [0] * (self.years_to_project + 1)
+        retirement_contribution_yearly = [0] * (self.years_to_project + 1)
+        # Arrays to track tax rates for visualization
+        effective_tax_rate_yearly = [0.0] * (self.years_to_project + 1)
+        marginal_tax_rate_yearly = [0.0] * (self.years_to_project + 1)
+        
         # Milestone-driven categories
         education_expenses_yearly = [0] * (self.years_to_project + 1)
         child_expenses_yearly = [0] * (self.years_to_project + 1)
@@ -281,10 +347,37 @@ class FinancialCalculator:
                 expense_amount = expense.get_expense(i)
                 expenses_yearly[i] += int(expense_amount)
             
+            # Calculate tax for this year (before applying spouse income)
+            # Initial tax calculation on personal income
+            current_year_taxes = self._calculate_taxes(income_yearly[i], i, "single")
+            
+            # Store tax expenses for this year
+            payroll_tax_expenses_yearly[i] = int(current_year_taxes["fica_tax"])
+            federal_tax_expenses_yearly[i] = int(current_year_taxes["federal_tax"])
+            state_tax_expenses_yearly[i] = int(current_year_taxes["state_tax"])
+            
+            # Store tax rates for visualization
+            effective_tax_rate_yearly[i] = float(current_year_taxes["effective_tax_rate"])
+            marginal_tax_rate_yearly[i] = float(current_year_taxes["federal_marginal_rate"])
+            
+            # Calculate retirement contribution
+            retirement_contribution = int(income_yearly[i] * DEFAULT_RETIREMENT_CONTRIBUTION_RATE)
+            retirement_contribution_yearly[i] = retirement_contribution
+            
             # Calculate cash flow for this year
             # Initialize total_income_yearly for this year to match personal income
             # (spouse income will be added later if there's a marriage milestone)
             total_income_yearly[i] = income_yearly[i]
+            
+            # Adjust expenses to include taxes and retirement contributions
+            total_taxes = (payroll_tax_expenses_yearly[i] + 
+                         federal_tax_expenses_yearly[i] + 
+                         state_tax_expenses_yearly[i])
+            
+            # Add tax expenses to the total expenses
+            expenses_yearly[i] += total_taxes
+            expenses_yearly[i] += retirement_contribution
+            
             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
             
             # Calculate net worth for this year including any personal loans
@@ -1382,6 +1475,14 @@ class FinancialCalculator:
             'childcare': child_expenses_yearly,
             'debt': debt_expenses_yearly,
             'discretionary': discretionary_expenses_yearly,
+            
+            # Tax breakdown
+            'payrollTax': payroll_tax_expenses_yearly,
+            'federalTax': federal_tax_expenses_yearly,
+            'stateTax': state_tax_expenses_yearly,
+            'retirementContribution': retirement_contribution_yearly,
+            'effectiveTaxRate': [float(rate) for rate in effective_tax_rate_yearly],  # Convert to float for JSON serialization
+            'marginalTaxRate': [float(rate) for rate in marginal_tax_rate_yearly],  # Convert to float for JSON serialization
             
             'milestones': self.milestones
         }

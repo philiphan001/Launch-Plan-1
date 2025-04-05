@@ -38,6 +38,13 @@ export interface ProjectionData {
   services?: number[];
   entertainment?: number[];
   other?: number[];
+  // Tax breakdowns
+  payrollTax?: number[];
+  federalTax?: number[];
+  stateTax?: number[];
+  retirementContribution?: number[];
+  effectiveTaxRate?: number[];
+  marginalTaxRate?: number[];
   ages: number[];
   
   // Allow indexing with string keys

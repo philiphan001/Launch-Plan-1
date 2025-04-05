@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
+import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1646,6 +1647,25 @@ const FinancialProjections = () => {
                 <span className="font-medium">Understanding your expenses:</span> This breakdown shows where your 
                 money is going. Housing (30%), transportation (15%), food (15%), healthcare (10%), and discretionary spending (30%)
                 form your basic expenses, with additional categories for education, debt, and childcare when applicable.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tax Breakdown Chart */}
+      {projectionData?.payrollTax && projectionData?.federalTax && projectionData?.stateTax && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Tax Breakdown</h3>
+            </div>
+            <TaxBreakdownChart projectionData={projectionData} isLoading={isLoading} />
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Understanding your taxes:</span> This breakdown shows the different types of taxes 
+                you'll pay based on your income projections. This includes federal income tax, state income tax, and payroll taxes 
+                (Social Security and Medicare). Your effective tax rate represents the percentage of your total income paid in taxes.
               </p>
             </div>
           </CardContent>
