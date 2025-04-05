@@ -389,11 +389,80 @@ class FinancialCalculator:
             # Calculate expenses for this year
             # We don't add to expenses_yearly here because we comprehensively calculate 
             # it later with all expense categories including taxes
+            
+            # Initialize expense category totals for this year
+            year_housing = 0
+            year_transportation = 0
+            year_food = 0
+            year_healthcare = 0
+            year_personal_insurance = 0
+            year_apparel = 0
+            year_services = 0
+            year_entertainment = 0
+            year_other = 0
+            year_education = 0
+            year_childcare = 0
+            year_debt = 0
+            year_discretionary = 0
+            
+            # Process each expense and categorize it
             for expense in self.expenditures:
                 expense_amount = expense.get_expense(i)
                 
-                # Instead of adding to the aggregate expenses_yearly array here,
-                # we'll just categorize each expense into its appropriate category array
+                # Categorize expenses by type based on name and class
+                expense_name = expense.name.lower()
+                
+                # First check if it's a healthcare expense - check before other categories
+                is_healthcare = 'health' in expense_name or 'medical' in expense_name
+                
+                # Base cost of living categories
+                if is_healthcare:
+                    # Healthcare expenses must be identified first to avoid double counting
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Found healthcare expense: {expense.name}, amount: {expense_amount}\n")
+                    year_healthcare += expense_amount
+                elif isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
+                    year_housing += expense_amount
+                elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0 or expense_name.find('car') >= 0:
+                    year_transportation += expense_amount
+                elif expense_name.find('food') >= 0:
+                    year_food += expense_amount
+                elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
+                    year_personal_insurance += expense_amount
+                elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
+                    year_apparel += expense_amount
+                elif expense_name.find('service') >= 0 or expense_name.find('utilities') >= 0:
+                    year_services += expense_amount
+                elif expense_name.find('entertainment') >= 0 or expense_name.find('recreation') >= 0:
+                    year_entertainment += expense_amount
+                
+                # Milestone-driven categories
+                elif expense_name.find('education') >= 0 or expense_name.find('college') >= 0 or expense_name.find('school') >= 0:
+                    year_education += expense_amount
+                elif expense_name.find('child') >= 0 or expense_name.find('daycare') >= 0:
+                    year_childcare += expense_amount
+                elif expense_name.find('debt') >= 0 or expense_name.find('loan') >= 0:
+                    year_debt += expense_amount
+                elif expense_name.find('discretionary') >= 0 or expense_name.find('leisure') >= 0:
+                    year_discretionary += expense_amount
+                else:
+                    # Default to other expenses for anything not specifically categorized
+                    year_other += expense_amount
+            
+            # Update expense category arrays
+            housing_expenses_yearly[i] = int(year_housing)
+            transportation_expenses_yearly[i] = int(year_transportation)
+            food_expenses_yearly[i] = int(year_food)
+            healthcare_expenses_yearly[i] = int(year_healthcare)
+            personal_insurance_expenses_yearly[i] = int(year_personal_insurance)
+            apparel_expenses_yearly[i] = int(year_apparel)
+            services_expenses_yearly[i] = int(year_services)
+            entertainment_expenses_yearly[i] = int(year_entertainment)
+            other_expenses_yearly[i] = int(year_other)
+            education_expenses_yearly[i] = int(year_education)
+            child_expenses_yearly[i] = int(year_childcare)
+            debt_expenses_yearly[i] = int(year_debt)
+            discretionary_expenses_yearly[i] = int(year_discretionary)
             
             # Calculate tax for this year using current filing status
             # This will be "single" by default or "married" if marriage milestone occurred
@@ -1018,10 +1087,15 @@ class FinancialCalculator:
                                         # Increase general expenses according to marriage assumption
                                         expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 + MARRIAGE_EXPENSE_INCREASE)
                                 
-                                # Recalculate total expenses and categories for this year
-                                year_expenses = 0
+                                # Update the expense amounts for each expense but don't recategorize
+                                # Expense categorization is already done outside of the milestone processing
+                                for expense in self.expenditures:
+                                    if not isinstance(expense, Housing) and not isinstance(expense, Transportation):
+                                        # Increase general expenses according to marriage assumption
+                                        expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 + MARRIAGE_EXPENSE_INCREASE)
                                 
-                                # Base cost of living categories
+                                # Reset all expense category totals for this year (to avoid double counting)
+                                year_expenses = 0
                                 year_housing = 0
                                 year_transportation = 0
                                 year_food = 0
@@ -1031,13 +1105,12 @@ class FinancialCalculator:
                                 year_services = 0
                                 year_entertainment = 0
                                 year_other = 0
-                                
-                                # Milestone-driven categories
                                 year_education = 0
                                 year_childcare = 0
                                 year_debt = 0
                                 year_discretionary = 0
                                 
+                                # Recategorize all expenses with the updated values
                                 for expense in self.expenditures:
                                     expense_amount = int(expense.get_expense(i))
                                     year_expenses += expense_amount
@@ -1053,10 +1126,7 @@ class FinancialCalculator:
                                         # Healthcare expenses must be identified first to avoid double counting
                                         with open('healthcare_debug.log', 'a') as f:
                                             f.write(f"[FIXED-MARRIAGE] Found healthcare expense: {expense.name}, amount: {expense_amount}\n")
-                                            f.write(f"Type: {type(expense).__name__}, dict: {expense.__dict__}\n")
                                         year_healthcare += expense_amount
-                                        with open('healthcare_debug.log', 'a') as f:
-                                            f.write(f"Marriage milestone: Updated year_healthcare total: {year_healthcare}\n")
                                     elif isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
                                         year_housing += expense_amount
                                     elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0 or expense_name.find('car') >= 0:
@@ -1084,8 +1154,8 @@ class FinancialCalculator:
                                     else:
                                         # Default to other expenses for anything not specifically categorized
                                         year_other += expense_amount
-                                    
-                                # Include all expense categories in expenses (not just year_expenses which is not being updated)
+                                
+                                # Update expenses with recalculated values including taxes and retirement
                                 expenses_yearly[i] = (
                                     year_housing +
                                     year_transportation +
@@ -1104,22 +1174,20 @@ class FinancialCalculator:
                                     retirement_contribution_yearly[i]
                                 )
                                 
-                                # Base cost of living categories
-                                housing_expenses_yearly[i] = year_housing
-                                transportation_expenses_yearly[i] = year_transportation
-                                food_expenses_yearly[i] = year_food
-                                healthcare_expenses_yearly[i] = year_healthcare
-                                personal_insurance_expenses_yearly[i] = year_personal_insurance
-                                apparel_expenses_yearly[i] = year_apparel
-                                services_expenses_yearly[i] = year_services
-                                entertainment_expenses_yearly[i] = year_entertainment
-                                other_expenses_yearly[i] = year_other
-                                
-                                # Milestone-driven categories
-                                education_expenses_yearly[i] = year_education
-                                child_expenses_yearly[i] = year_childcare
-                                debt_expenses_yearly[i] = year_debt
-                                discretionary_expenses_yearly[i] = year_discretionary
+                                # Update all expense category tracking arrays
+                                housing_expenses_yearly[i] = int(year_housing)
+                                transportation_expenses_yearly[i] = int(year_transportation)
+                                food_expenses_yearly[i] = int(year_food)
+                                healthcare_expenses_yearly[i] = int(year_healthcare)
+                                personal_insurance_expenses_yearly[i] = int(year_personal_insurance)
+                                apparel_expenses_yearly[i] = int(year_apparel)
+                                services_expenses_yearly[i] = int(year_services)
+                                entertainment_expenses_yearly[i] = int(year_entertainment)
+                                other_expenses_yearly[i] = int(year_other)
+                                education_expenses_yearly[i] = int(year_education)
+                                child_expenses_yearly[i] = int(year_childcare)
+                                debt_expenses_yearly[i] = int(year_debt)
+                                discretionary_expenses_yearly[i] = int(year_discretionary)
                                 
                                 # Use total income (personal + spouse) for cash flow calculation
                                 cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
