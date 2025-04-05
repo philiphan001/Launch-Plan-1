@@ -18,6 +18,7 @@ Important Implementation Notes:
 import json
 import sys
 import os
+from typing import Dict, List, Any, Union
 from typing import Dict, Any, List, Optional
 
 # Set the current directory to our path so we can use relative imports
@@ -514,12 +515,18 @@ def main() -> None:
             if frontend_key not in result or not result[frontend_key] or len(result[frontend_key]) == 0:
                 # Create default expense breakdown based on total expenses
                 if 'expenses' in result and result['expenses']:
+                    # Initialize the category with an empty list
+                    # Tell the type checker this is a Dict that accepts various types
+                    result: Dict[str, Any] = result
+                    
                     if frontend_key not in result:
+                        # Initialize the category with an empty list
                         result[frontend_key] = []
                     
                     # Apply percentage to each year's expenses
                     for year_expense in result['expenses']:
                         expense_value = float(year_expense) * default_percentage
+                        # Add the calculated value to the list
                         result[frontend_key].append(expense_value)
         
         print(json.dumps(result))

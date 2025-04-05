@@ -149,6 +149,7 @@ class FinancialCalculator:
             f.write(f"\nStarting calculate_projection method\n")
         income_yearly = [0] * (self.years_to_project + 1)
         spouse_income_yearly = [0] * (self.years_to_project + 1)  # Track spouse income separately
+        total_income_yearly = [0] * (self.years_to_project + 1)  # Total income (personal + spouse)
         expenses_yearly = [0] * (self.years_to_project + 1)
         cash_flow_yearly = [0] * (self.years_to_project + 1)
         
@@ -281,7 +282,10 @@ class FinancialCalculator:
                 expenses_yearly[i] += int(expense_amount)
             
             # Calculate cash flow for this year
-            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+            # Initialize total_income_yearly for this year to match personal income
+            # (spouse income will be added later if there's a marriage milestone)
+            total_income_yearly[i] = income_yearly[i]
+            cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
             
             # Calculate net worth for this year including any personal loans
             # Add personal loan value from tracking array to net worth calculation
@@ -478,13 +482,29 @@ class FinancialCalculator:
                             f.write(f"Assets after wedding cost: ${assets_yearly[milestone_year]}\n")
                             f.write(f"Cash flow reduced by wedding cost: ${cash_flow_yearly[milestone_year]}\n")
                         
-                        # Add spouse income to our income projection
+                        # Add spouse income to our income projection but store separately
                         for i in range(milestone_year, self.years_to_project + 1):
                             # Apply annual growth to spouse income (using same rate as primary income)
                             spouse_income_for_year = int(spouse_income * (1.03 ** (i - milestone_year)))  # Convert to int to fix type error
-                            income_yearly[i] += spouse_income_for_year
-                            # Also track spouse income separately for visualization
+                            
+                            # FIXED: We don't add spouse income to income_yearly anymore because it's 
+                            # already being tracked separately in spouse_income_yearly and the frontend
+                            # combines them for display purposes to avoid double counting.
+                            # Updated on April 5th, 2025 based on user feedback.
+                            
+                            # Previous code (removed to fix double counting):
+                            # income_yearly[i] += spouse_income_for_year
+                            
+                            # Only store spouse income separately for visualization
                             spouse_income_yearly[i] = spouse_income_for_year
+                            
+                            # To keep cash flow and net worth calculations accurate, update total income
+                            # This is separate from the visualization data
+                            total_income_yearly[i] = income_yearly[i] + spouse_income_yearly[i]
+                            
+                            # Log the income split for debugging
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Year {i} personal income: ${income_yearly[i]}, spouse income: ${spouse_income_yearly[i]}, total: ${total_income_yearly[i]}\n")
                         
                         # Add spouse assets and liabilities to net worth
                         for i in range(milestone_year, self.years_to_project + 1):
@@ -612,7 +632,8 @@ class FinancialCalculator:
                                 debt_expenses_yearly[i] = year_debt
                                 discretionary_expenses_yearly[i] = year_discretionary
                                 
-                                cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+                                # Use total income (personal + spouse) for cash flow calculation
+                                cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
                 
                     elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
                         # Process home purchase milestone
@@ -889,7 +910,8 @@ class FinancialCalculator:
                             
                             # Update net worth and cash flow
                             net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
-                            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+                            # Use total income (personal + spouse) for cash flow calculation
+                            cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
                     
                     elif milestone.get('type') == 'car':
                         # Process car purchase milestone
@@ -1158,8 +1180,8 @@ class FinancialCalculator:
                                 discretionary_expenses_yearly[i]
                             )
                             
-                            # Update cash flow
-                            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+                            # Update cash flow using total income (personal + spouse)
+                            cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
                             
                             # CRITICAL FIX: Apply positive cash flow to savings
                             # This ensures that when people earn more than they spend,

@@ -45,15 +45,39 @@ export interface ProjectionData {
 }
 
 // Milestone types
-export type MilestoneType = "school" | "work" | "home" | "other";
+export type MilestoneType = "marriage" | "children" | "home" | "car" | "education" | "school" | "work" | "other";
 
 export interface Milestone {
-  id: string;
-  type: MilestoneType;
+  id: string | number;
+  type: MilestoneType | string;
   title: string;
-  date: string;
-  yearsAway: number;
+  date?: string;
+  yearsAway?: number;
   color?: string;
+  financialImpact?: number;
+  // Marriage-specific properties
+  spouseOccupation?: string;
+  spouseIncome?: number;
+  spouseAssets?: number;
+  spouseLiabilities?: number;
+  // Home-specific properties
+  homeValue?: number;
+  homeDownPayment?: number;
+  homeMonthlyPayment?: number;
+  // Car-specific properties
+  carValue?: number;
+  carDownPayment?: number;
+  carMonthlyPayment?: number;
+  // Children-specific properties
+  childrenCount?: number;
+  childrenExpensePerYear?: number;
+  // Education-specific properties
+  educationCost?: number;
+  // Status properties
+  active?: boolean;
+  completed?: boolean;
+  details?: Record<string, any>;
+  createdAt?: string | null;
 }
 
 // Career related types
