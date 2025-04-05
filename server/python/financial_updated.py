@@ -488,10 +488,33 @@ class FinancialCalculator:
                         
                         # Add spouse assets and liabilities to net worth
                         for i in range(milestone_year, self.years_to_project + 1):
+                            # Add spouse assets safely
                             assets_yearly[i] += int(spouse_assets)
-                            # Calculate liability reduction and convert to int
-                            reduced_liability = int(spouse_liabilities * max(0, 1 - (i - milestone_year) * 0.1))
-                            liabilities_yearly[i] += reduced_liability  # Simple reduction of liabilities over time
+                            
+                            # Add spouse liabilities with safety checks to avoid calculation errors
+                            reduced_liability = 0  # Default to zero in case of errors
+                            
+                            # Only calculate reduction if spouse has liabilities
+                            if spouse_liabilities > 0:
+                                try:
+                                    # Calculate liability reduction factor (0.1 = 10% reduction per year)
+                                    reduction_factor = max(0, 1 - (i - milestone_year) * 0.1)
+                                    reduced_liability = int(spouse_liabilities * reduction_factor)
+                                    
+                                    # Debug logging
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Year {i} spouse liability: ${spouse_liabilities} * {reduction_factor} = ${reduced_liability}\n")
+                                        
+                                except Exception as e:
+                                    # Log any errors that occur during calculation
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"ERROR calculating spouse liability for year {i}: {str(e)}\n")
+                                        f.write(f"Using zero instead of calculated value\n")
+                            
+                            # Safely add the reduced liability to the yearly total
+                            liabilities_yearly[i] += reduced_liability
+                            
+                            # Calculate net worth with updated assets and liabilities
                             net_worth[i] = assets_yearly[i] - (liabilities_yearly[i] + all_personal_loans[i])
                             
                             # Increase general expenses due to marriage
