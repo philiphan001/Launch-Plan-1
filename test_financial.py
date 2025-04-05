@@ -66,6 +66,52 @@ try:
     else:
         print("Cash flow not found in result")
         
+    # Check expense components
+    print("\nExpense Components:")
+    expense_components = [
+        'housing', 'transportation', 'food', 'healthcare', 
+        'personalInsurance', 'apparel', 'services', 'entertainment', 
+        'other', 'education', 'child', 'debt', 'discretionary'
+    ]
+    
+    for component in expense_components:
+        if component in result:
+            print(f"{component} expenses: {result[component]}")
+        else:
+            print(f"{component} expenses not found")
+            
+    # Check total expenses
+    if 'expenses' in result:
+        print(f"Total expenses yearly: {result['expenses']}")
+        
+        # Calculate and print the sum of all expense components to verify
+        if 'housing' in result and 'transportation' in result:
+            expense_sum = []
+            for i in range(len(result['expenses'])):
+                if i < len(result['housing']):
+                    year_sum = 0
+                    # Add all expense components for this year
+                    for component in expense_components:
+                        if component in result and i < len(result[component]):
+                            year_sum += result[component][i]
+                    expense_sum.append(year_sum)
+            
+            print(f"Sum of expense components yearly: {expense_sum}")
+            # Calculate the difference between expenses array and sum of components
+            diff = []
+            for i in range(len(result['expenses'])):
+                if i < len(expense_sum):
+                    diff.append(result['expenses'][i] - expense_sum[i])
+            print(f"Difference (expenses - sum): {diff}")
+    else:
+        print("Total expenses not found in result")
+        
+    # Check total income
+    if 'income' in result:
+        print(f"Total income yearly: {result['income']}")
+    else:
+        print("Total income not found in result")
+        
     # Check for assets breakdown
     if 'savingsValue' in result:
         print(f"Savings value: {result['savingsValue']}")

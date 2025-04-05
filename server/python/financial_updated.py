@@ -387,9 +387,13 @@ class FinancialCalculator:
                 income_yearly[i] += int(income_amount)
             
             # Calculate expenses for this year
+            # We don't add to expenses_yearly here because we comprehensively calculate 
+            # it later with all expense categories including taxes
             for expense in self.expenditures:
                 expense_amount = expense.get_expense(i)
-                expenses_yearly[i] += int(expense_amount)
+                
+                # Instead of adding to the aggregate expenses_yearly array here,
+                # we'll just categorize each expense into its appropriate category array
             
             # Calculate tax for this year using current filing status
             # This will be "single" by default or "married" if marriage milestone occurred
@@ -446,7 +450,7 @@ class FinancialCalculator:
                 debt_expenses_yearly[i] +
                 discretionary_expenses_yearly[i] +
                 tax_expenses_yearly[i] +
-                retirement_contribution
+                retirement_contribution_yearly[i]
             )
             
             # Log the expense calculation for debugging
@@ -1081,9 +1085,21 @@ class FinancialCalculator:
                                         # Default to other expenses for anything not specifically categorized
                                         year_other += expense_amount
                                     
-                                # Include taxes and retirement in expenses (not just the individual expense items)
+                                # Include all expense categories in expenses (not just year_expenses which is not being updated)
                                 expenses_yearly[i] = (
-                                    year_expenses +
+                                    year_housing +
+                                    year_transportation +
+                                    year_food +
+                                    year_healthcare +
+                                    year_personal_insurance +
+                                    year_apparel +
+                                    year_services +
+                                    year_entertainment +
+                                    year_other +
+                                    year_education +
+                                    year_childcare +
+                                    year_debt +
+                                    year_discretionary +
                                     tax_expenses_yearly[i] +
                                     retirement_contribution_yearly[i]
                                 )
@@ -1384,7 +1400,9 @@ class FinancialCalculator:
                                 debt_expenses_yearly[i] +
                                 discretionary_expenses_yearly[i] +
                                 # Include tax expenses in total expenses calculation
-                                tax_expenses_yearly[i]
+                                tax_expenses_yearly[i] +
+                                # Include retirement contributions
+                                retirement_contribution_yearly[i]
                             )
                             
                             # Update net worth and cash flow
@@ -1683,7 +1701,9 @@ class FinancialCalculator:
                                 debt_expenses_yearly[i] +
                                 discretionary_expenses_yearly[i] +
                                 # Include tax expenses in total expenses calculation
-                                tax_expenses_yearly[i]
+                                tax_expenses_yearly[i] +
+                                # Include retirement contributions 
+                                retirement_contribution_yearly[i]
                             )
                             
                             # Debug tax and cash flow information

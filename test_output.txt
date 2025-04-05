@@ -1,0 +1,78 @@
+Initial savings asset state:
+  Name: Savings
+  Initial value: 10000
+  Growth rate: 0.03
+  Value history: {0: 10000}
+  Contributions: {}
+
+Financial calculation completed successfully
+Result keys: ['ages', 'netWorth', 'income', 'spouseIncome', 'expenses', 'assets', 'liabilities', 'cashFlow', 'homeValue', 'carValue', 'savingsValue', 'mortgage', 'carLoan', 'studentLoan', 'personalLoans', 'housing', 'transportation', 'food', 'healthcare', 'personalInsurance', 'apparel', 'services', 'entertainment', 'other', 'education', 'childcare', 'debt', 'discretionary', 'payrollTax', 'federalTax', 'stateTax', 'taxes', 'retirementContribution', 'effectiveTaxRate', 'marginalTaxRate', 'milestones']
+Net worth yearly: [10000, 10305, 10619, 10942, 11276, 11619, 11972, 12337, 12712, 13099, 13498]
+Cash flow yearly: [0, 87, 88, 90, 92, 94, 96, 99, 100, 100, 103]
+
+Expense Components:
+housing expenses: [0, 30900, 32290, 33259, 34755, 35798, 37409, 38531, 40265, 41473, 43339]
+transportation expenses: [0, 15450, 15913, 16390, 16882, 17389, 17910, 18448, 19001, 19571, 20158]
+food expenses: [0, 15300, 15606, 15918, 16236, 16561, 16892, 17230, 17574, 17926, 18284]
+healthcare expenses: [0, 10400, 10816, 11248, 11698, 12166, 12653, 13159, 13685, 14233, 14802]
+personalInsurance expenses: [0, 5100, 5202, 5306, 5412, 5520, 5630, 5743, 5858, 5975, 6094]
+apparel expenses: [0, 3060, 3121, 3183, 3247, 3312, 3378, 3446, 3514, 3585, 3656]
+services expenses: [0, 7140, 7282, 7428, 7577, 7728, 7883, 8040, 8201, 8365, 8532]
+entertainment expenses: [0, 8160, 8323, 8489, 8659, 8832, 9009, 9189, 9373, 9560, 9751]
+other expenses: [0, 5100, 5202, 5306, 5412, 5520, 5630, 5743, 5858, 5975, 6094]
+education expenses: [0, 4160, 4326, 4499, 4679, 4866, 5061, 5263, 5474, 5693, 5920]
+child expenses not found
+debt expenses: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+discretionary expenses: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+Total expenses yearly: [0, 17, 18, 18, 18, 18, 18, 18, 19, 21, 21]
+Sum of expense components yearly: [0, 104770, 108081, 111026, 114557, 117692, 121455, 124792, 128803, 132356, 136630]
+Difference (expenses - sum): [0, -104753, -108063, -111008, -114539, -117674, -121437, -124774, -128784, -132335, -136609]
+Total income yearly: [0, 104, 106, 108, 110, 112, 114, 117, 119, 121, 124]
+Savings value: [10000, 10305, 10619, 10943, 11276, 11619, 11973, 12337, 12712, 13100, 13499]
+
+Final savings asset state:
+  Value history: {0: 10000, 1: 10305.0, 2: 10619.15, 3: 10942.7245, 4: 11276.006235, 5: 11619.286422050001, 6: 11972.865014711502, 7: 12337.050965152848, 8: 12712.162494107433, 9: 13099.527368930656, 10: 13498.513189998575}
+  Contributions: {87: 1, 1: 5, 88: 2, 2: 5, 90: 3, 3: 5, 92: 4, 4: 5, 94: 5, 5: 5, 96: 6, 6: 5, 99: 7, 7: 5, 100: 17, 8: 5, 9: 6, 103: 10, 10: 6}
+
+Directly checking savings values:
+  Year 0: $10000
+  Year 1: $10305.0
+  Year 2: $10619.15
+  Year 3: $10942.7245
+  Year 4: $11276.006235
+  Year 5: $11619.286422050001
+  Year 6: $11972.865014711502
+  Year 7: $12337.050965152848
+  Year 8: $12712.162494107433
+  Year 9: $13099.527368930656
+  Year 10: $13498.513189998575
+
+Testing cash flow contributions:
+  Before: Year 3 value = $10942.7245
+  Adding cash flow of $90
+  After: Year 3 value = $11032.7245
+  Difference: $90.0
+  Cash flow: $90
+
+Contents of healthcare_debug.log:
+  ...showing last 20 of 6059 lines...
+  Year 9: Values match - Asset value=$13099.527368930656, Array value=$13099
+    Year 10: Values match - Asset value=$13498.513189998575, Array value=$13498
+  Final contributions dictionary: {87: 1, 1: 5, 88: 2, 2: 5, 90: 3, 3: 5, 92: 4, 4: 5, 94: 5, 5: 5, 96: 6, 6: 5, 99: 7, 7: 5, 100: 17, 8: 5, 9: 6, 103: 10, 10: 6}
+  
+  === UPDATING SAVINGS VALUES FROM ASSET ===
+  Available assets:
+    Asset 0: name='Savings', type=Investment, value=10000
+  Using asset: 'Savings' for savings values
+  Updating savings_value_yearly array from asset.
+    Year 0: Updated from $0 to $10000
+    Year 1: Updated from $10305 to $10305
+    Year 2: Updated from $10619 to $10619
+    Year 3: Updated from $10942 to $10943
+    Year 4: Updated from $11276 to $11276
+    Year 5: Updated from $11619 to $11619
+    Year 6: Updated from $11972 to $11973
+    Year 7: Updated from $12337 to $12337
+    Year 8: Updated from $12712 to $12712
+    Year 9: Updated from $13099 to $13100
+    Year 10: Updated from $13498 to $13499
