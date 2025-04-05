@@ -416,7 +416,51 @@ class FinancialCalculator:
                 f.write(f"  Retirement: ${retirement_contribution}\n")
                 f.write(f"  Total expenses: ${expenses_yearly[i]}\n")
             
+            # Calculate cash flow for this year
             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
+            
+            # CRITICAL FIX: Update savings value based on cash flow
+            # This ensures that savings and net worth are updated correctly based on yearly cash flow
+            if i > 0:  # Skip year 0 (starting year)
+                # Find the savings investment to update
+                savings_asset = None
+                for asset in self.assets:
+                    if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                        savings_asset = asset
+                        break
+                
+                # If we found a savings asset, update its value based on cash flow
+                if savings_asset:
+                    # Get the current value before cash flow adjustment
+                    current_value = savings_value_yearly[i]
+                    
+                    # Update savings value based on cash flow
+                    # If cash flow is negative, decrease savings
+                    # If cash flow is positive, increase savings
+                    updated_value = current_value + cash_flow_yearly[i]
+                    updated_value = max(0, updated_value)  # Ensure savings doesn't go negative
+                    
+                    # Update the savings value
+                    savings_value_yearly[i] = updated_value
+                    
+                    # Update the asset value in our collection
+                    savings_asset.update_value(i, updated_value)
+                    
+                    # Recalculate total assets with updated savings
+                    assets_yearly[i] = (
+                        home_value_yearly[i] +
+                        car_value_yearly[i] +
+                        retirement_value_yearly[i] +
+                        savings_value_yearly[i]
+                    )
+                    
+                    # Log the update for debugging
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"\n[NET WORTH UPDATE] Year {i}:\n")
+                        f.write(f"  Cash flow: ${cash_flow_yearly[i]}\n")
+                        f.write(f"  Savings value before adjustment: ${current_value}\n")
+                        f.write(f"  Savings value after adjustment: ${updated_value}\n")
+                        f.write(f"  Updated total assets: ${assets_yearly[i]}\n")
             
             # Calculate net worth for this year including any personal loans
             # Add personal loan value from tracking array to net worth calculation
