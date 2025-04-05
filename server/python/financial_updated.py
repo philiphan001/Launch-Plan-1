@@ -605,6 +605,52 @@ class FinancialCalculator:
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"Year {pre_year}: Cash flow updated from ${old_cash_flow} to ${cash_flow_yearly[pre_year]}\n")
                                 f.write(f"  Income: ${total_income_yearly[pre_year]}, Expenses updated from ${old_expenses} to ${expenses_yearly[pre_year]}, Taxes: ${tax_expenses_yearly[pre_year]}\n")
+                            
+                            # CRITICAL FIX: Update savings and net worth based on recalculated cash flow
+                            # This ensures that assets and net worth stay in sync with cash flow changes
+                            old_net_worth = net_worth[pre_year]
+                            
+                            # Find the savings asset to update with the new cash flow
+                            savings_asset = None
+                            for asset in self.assets:
+                                if isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                                    savings_asset = asset
+                                    break
+                                    
+                            if savings_asset:
+                                # Get the old savings value before updating
+                                old_savings_value = savings_asset.get_value(pre_year)
+                                
+                                # If cash flow is positive, add it to savings
+                                # If negative, potentially reduce savings (though this could be refined further)
+                                if cash_flow_yearly[pre_year] != old_cash_flow:
+                                    # Remove the old contribution based on the old cash flow
+                                    if old_cash_flow > 0:
+                                        # If we had a positive contribution before, remove it
+                                        if pre_year in savings_asset.contributions:
+                                            savings_asset.contributions[pre_year] -= old_cash_flow
+                                    
+                                    # Add the new contribution based on the new cash flow
+                                    if cash_flow_yearly[pre_year] > 0:
+                                        savings_asset.add_contribution(cash_flow_yearly[pre_year], pre_year)
+                                    
+                                    # Update the savings value array to reflect the new contribution
+                                    savings_value_yearly[pre_year] = int(round(savings_asset.get_value(pre_year)))
+                                    
+                                    # Update total assets
+                                    assets_yearly[pre_year] = (
+                                        home_value_yearly[pre_year] +
+                                        car_value_yearly[pre_year] +
+                                        retirement_value_yearly[pre_year] +
+                                        savings_value_yearly[pre_year]
+                                    )
+                                    
+                                    # Recalculate net worth with the updated assets
+                                    net_worth[pre_year] = assets_yearly[pre_year] - (liabilities_yearly[pre_year] + all_personal_loans[pre_year])
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"  Savings value updated from ${old_savings_value} to ${savings_asset.get_value(pre_year)}\n")
+                                    f.write(f"  Net worth updated from ${old_net_worth} to ${net_worth[pre_year]}\n")
                         
                         # CRITICAL FIX: Update the investment asset value in our asset collection
                         # This ensures the reduction in savings persists to future years
