@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
+import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
+import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import { Button } from "@/components/ui/button";
@@ -1721,6 +1723,12 @@ const FinancialProjections = () => {
                 you'll pay based on your income projections. This includes federal income tax, state income tax, and payroll taxes 
                 (Social Security and Medicare). Your effective tax rate represents the percentage of your total income paid in taxes.
               </p>
+            </div>
+            
+            {/* Debug component to see raw expense data (can be removed in production) */}
+            <div className="mt-6 border-t pt-4">
+              <h4 className="text-md font-medium mb-2">Expense Data Debugging</h4>
+              <ExpenseDebugComponent projectionData={projectionData} />
             </div>
           </CardContent>
         </Card>

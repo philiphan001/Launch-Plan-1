@@ -1,72 +1,62 @@
 import React from 'react';
 
-interface ExpenseDebugHelperProps {
-  housing: number[];
-  transportation: number[];
-  food: number[];
-  healthcare: number[];
-  discretionary: number[];
+interface ExpenseDebugProps {
+  projectionData: any;
 }
 
-const ExpenseDebugHelper = ({
-  housing,
-  transportation,
-  food,
-  healthcare,
-  discretionary,
-}: ExpenseDebugHelperProps) => {
+const ExpenseDebugHelper: React.FC<ExpenseDebugProps> = ({ projectionData }) => {
+  // This is a more detailed debug helper that shows the raw data structure
   return (
-    <div className="bg-gray-100 p-4 rounded-lg mt-4 mb-4">
-      <h3 className="text-md font-medium mb-2">Expense Debug Info</h3>
-      <div className="text-sm space-y-2">
-        <div>
-          <strong>Housing expenses length:</strong> {housing?.length || 0}
-          <br />
-          <strong>Housing values:</strong>{" "}
-          {housing?.map((val, i) => 
-            <span key={i} className="mr-1">
-              Year {i}: ${val?.toLocaleString() || 0}{i < (housing?.length || 0) - 1 ? "," : ""}
-            </span>
-          )}
+    <div className="bg-white p-4 rounded-lg shadow-md overflow-auto max-h-[500px]">
+      <h3 className="text-lg font-semibold mb-4">Expense Data Structure</h3>
+      
+      {/* Show the property names and types */}
+      <div className="mb-4">
+        <h4 className="text-md font-medium mb-2">Properties and Types</h4>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {Object.entries(projectionData).map(([key, value]) => (
+            <div key={key} className="border p-2 rounded">
+              <span className="font-semibold">{key}</span>: {Array.isArray(value) 
+                ? `Array[${(value as any[]).length}]` 
+                : typeof value}
+            </div>
+          ))}
         </div>
-        <div>
-          <strong>Transportation expenses length:</strong> {transportation?.length || 0}
-          <br />
-          <strong>First 3 values:</strong>{" "}
-          {transportation?.slice(0, 3).map((val, i) => 
-            <span key={i} className="mr-1">
-              Year {i}: ${val?.toLocaleString() || 0}{i < Math.min(3, (transportation?.length || 0)) - 1 ? "," : ""}
-            </span>
-          )}
+      </div>
+      
+      {/* Show the first year values for expense categories */}
+      <div className="mb-4">
+        <h4 className="text-md font-medium mb-2">First Year Values</h4>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {Object.entries(projectionData)
+            .filter(([key, value]) => Array.isArray(value) && (
+              key.includes('expense') || 
+              ['housing', 'transportation', 'food', 'healthcare', 'personalInsurance', 
+               'apparel', 'services', 'entertainment', 'other', 'education', 
+               'childcare', 'debt', 'discretionary', 'taxes'].includes(key)
+            ))
+            .map(([key, value]) => (
+              <div key={key} className="border p-2 rounded">
+                <span className="font-semibold">{key}</span>: {(value as any[])[0]?.toLocaleString 
+                  ? `$${(value as any[])[0]?.toLocaleString()}`
+                  : (value as any[])[0]}
+              </div>
+            ))
+          }
         </div>
-        <div>
-          <strong>Food expenses length:</strong> {food?.length || 0}
-          <br />
-          <strong>First 3 values:</strong>{" "}
-          {food?.slice(0, 3).map((val, i) => 
-            <span key={i} className="mr-1">
-              Year {i}: ${val?.toLocaleString() || 0}{i < Math.min(3, (food?.length || 0)) - 1 ? "," : ""}
-            </span>
-          )}
-        </div>
-        <div>
-          <strong>Healthcare expenses length:</strong> {healthcare?.length || 0}
-          <br />
-          <strong>First 3 values:</strong>{" "}
-          {healthcare?.slice(0, 3).map((val, i) => 
-            <span key={i} className="mr-1">
-              Year {i}: ${val?.toLocaleString() || 0}{i < Math.min(3, (healthcare?.length || 0)) - 1 ? "," : ""}
-            </span>
-          )}
-        </div>
-        <div>
-          <strong>Discretionary expenses length:</strong> {discretionary?.length || 0}
-          <br />
-          <strong>First 3 values:</strong>{" "}
-          {discretionary?.slice(0, 3).map((val, i) => 
-            <span key={i} className="mr-1">
-              Year {i}: ${val?.toLocaleString() || 0}{i < Math.min(3, (discretionary?.length || 0)) - 1 ? "," : ""}
-            </span>
+      </div>
+      
+      {/* Raw JSON for detailed inspection */}
+      <div>
+        <h4 className="text-md font-medium mb-2">Raw Data (First Year Only)</h4>
+        <div className="bg-gray-100 p-2 rounded-md text-xs font-mono whitespace-pre overflow-x-auto">
+          {JSON.stringify(
+            Object.fromEntries(
+              Object.entries(projectionData)
+                .filter(([key, value]) => Array.isArray(value))
+                .map(([key, value]) => [key, (value as any[])[0]])
+            ), 
+            null, 2
           )}
         </div>
       </div>

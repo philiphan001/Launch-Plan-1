@@ -478,6 +478,26 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
   
   // Debug the input data to see what categories are available
   console.log("Creating stacked expense chart with data keys:", Object.keys(data));
+  
+  // Add more detailed debugging to identify property naming issues
+  console.log("DETAILED EXPENSE DATA DEBUG:");
+  console.log("- expenses:", data.expenses);
+  console.log("- housingExpenses:", data.housingExpenses);
+  console.log("- housing:", data.housing);
+  console.log("- transportationExpenses:", data.transportationExpenses);
+  console.log("- transportation:", data.transportation);
+  console.log("- foodExpenses:", data.foodExpenses);
+  console.log("- food:", data.food);
+  console.log("- healthcareExpenses:", data.healthcareExpenses);
+  console.log("- healthcare:", data.healthcare);
+  console.log("- taxes:", data.taxes);
+  
+  // Add a direct dump of every property to see exact data structure
+  console.log("FULL DATA DUMP:");
+  for (const key of Object.keys(data)) {
+    console.log(`${key}:`, data[key]);
+  }
+  
   console.log("Expense data sample:", {
     housing: data.housing?.[0],
     transportation: data.transportation?.[0],
@@ -485,7 +505,7 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
     healthcare: data.healthcare?.[0],
     education: data.education?.[0],
     debt: data.debt?.[0],
-    childcare: data.childcare?.[0],
+    childcare: data.childcare?.[0], 
     discretionary: data.discretionary?.[0],
     personalInsurance: data.personalInsurance?.[0],
     entertainment: data.entertainment?.[0],
@@ -522,8 +542,8 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
   
   // Add datasets for each expense category if data exists
   expenseCategories.forEach(category => {
-    // Check if this category exists in our data and has non-zero values
-    const categoryData = data[category.key];
+    // Check both naming conventions (with and without "Expenses" suffix)
+    let categoryData = data[category.key] || data[category.key + 'Expenses'];
     const hasValues = categoryData && categoryData.some((value: number) => value > 0);
     
     console.log(`Category ${category.key}: exists=${!!categoryData}, hasValues=${hasValues}, sample=${categoryData?.[0]}`);
