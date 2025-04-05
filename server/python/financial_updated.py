@@ -1549,6 +1549,48 @@ class FinancialCalculator:
                     f.write(f"Year {i}: ${savings_asset.get_value(i)}\n")
             else:
                 f.write("\nNo savings asset found to compare against savings_value_yearly array\n")
+                
+        # CRITICAL FIX: Final recalculation of cash flow for all years
+        # This ensures that all cash flow values are accurate regardless of milestone timing
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\n=== FINAL CASH FLOW RECALCULATION ===\n")
+            f.write("This ensures accurate cash flow values for all years\n")
+            
+            for i in range(1, self.years_to_project + 1):
+                old_cash_flow = cash_flow_yearly[i]
+                
+                # The correct cash flow calculation: income minus expenses
+                # Make sure to include tax expenses which are tracked separately
+                cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
+                
+                # For milestone years with one-time expenses (like wedding costs or down payments),
+                # we need to handle them specially by checking if there's a milestone at this year
+                
+                # Check for milestones in this year to adjust cash flow if needed
+                for milestone in self.milestones:
+                    milestone_year = milestone.get('year', 0) - self.start_age + 1
+                    if milestone_year == i:
+                        milestone_type = milestone.get('type')
+                        
+                        # Handle wedding cost
+                        if milestone_type == 'marriage':
+                            wedding_cost = int(milestone.get('wedding_cost', milestone.get('weddingCost', 10000)))
+                            cash_flow_yearly[i] -= wedding_cost
+                            f.write(f"  Milestone year {i} (marriage): Subtracting wedding cost ${wedding_cost} from cash flow\n")
+                            
+                        # Handle home/car purchase down payments
+                        elif milestone_type == 'home_purchase':
+                            savings_portion = int(milestone.get('down_payment', milestone.get('downPayment', 20000)))
+                            cash_flow_yearly[i] -= savings_portion
+                            f.write(f"  Milestone year {i} (home purchase): Subtracting down payment ${savings_portion} from cash flow\n")
+                            
+                        elif milestone_type == 'car_purchase':
+                            savings_portion = int(milestone.get('down_payment', milestone.get('downPayment', 5000)))
+                            cash_flow_yearly[i] -= savings_portion
+                            f.write(f"  Milestone year {i} (car purchase): Subtracting down payment ${savings_portion} from cash flow\n")
+                
+                f.write(f"Year {i}: Cash flow updated from ${old_cash_flow} to ${cash_flow_yearly[i]}\n")
+                f.write(f"  Income: ${total_income_yearly[i]}, Expenses: ${expenses_yearly[i]}, Taxes: ${tax_expenses_yearly[i]}\n")
 
         # Compile results
         self.results = {
