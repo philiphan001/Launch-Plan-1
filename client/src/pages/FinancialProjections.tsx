@@ -101,6 +101,12 @@ interface Milestone {
   childrenExpensePerYear?: number;
   // Education specific fields
   educationCost?: number;
+  // Additional properties used in the app but not in the database
+  financialImpact?: number;
+  active?: boolean;
+  completed?: boolean;
+  details?: Record<string, any>;
+  createdAt?: Date | null;
 }
 
 interface FinancialProfile {
@@ -650,7 +656,7 @@ const FinancialProjections = () => {
       }
       
       // Track personal and spouse income separately
-      const totalIncome = currentIncome + (hasSpouse ? spouseIncome : 0);
+      let totalIncome = currentIncome + (hasSpouse ? spouseIncome : 0);
       
       // Add all expenses together, including loan payments
       const totalExpenses = currentExpenses + 
@@ -959,6 +965,27 @@ const FinancialProjections = () => {
       let discretionaryExpense = currentExpenses * 0.3;
       discretionaryExpensesData.push(discretionaryExpense);
       
+      // Taxes: Calculated as percentage of income
+      // For simplicity, we'll use a progressive-like structure
+      // Income under 50k: 15%, 50k-100k: 20%, 100k+: 25%
+      let taxRate;
+      // Use the already declared totalIncome from above
+      if (totalIncome < 50000) {
+        taxRate = 0.15; // 15% for lower income
+      } else if (totalIncome < 100000) {
+        taxRate = 0.20; // 20% for middle income
+      } else {
+        taxRate = 0.25; // 25% for higher income
+      }
+      
+      // Apply filing status adjustment (married filing jointly pays less than single)
+      if (hasSpouse) {
+        taxRate = taxRate * 0.85; // Simplified married discount
+      }
+      
+      let taxAmount = totalIncome * taxRate;
+      taxesData.push(taxAmount);
+      
       ages.push(age + i);
     }
     
@@ -1042,7 +1069,7 @@ const FinancialProjections = () => {
           active: m.active !== undefined ? m.active : true,
           completed: m.completed !== undefined ? m.completed : false,
           details: m.details || {},
-          createdAt: m.createdAt || null
+          createdAt: m.createdAt ? new Date(m.createdAt) : null
         })) || [];
         
         // Pass location data directly to the Python calculator

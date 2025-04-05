@@ -85,6 +85,7 @@ export interface FinancialProjectionData {
   payrollTax?: number[];
   federalTax?: number[];
   stateTax?: number[];
+  taxes?: number[];  // Combined tax expenses for visualization
   retirementContribution?: number[];
   effectiveTaxRate?: number[];
   marginalTaxRate?: number[];
@@ -414,6 +415,12 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       effectiveTaxRate: result.effectiveTaxRate || [],
       marginalTaxRate: result.marginalTaxRate || [],
       
+      // Combined taxes (sum of payroll, federal, and state taxes)
+      taxes: result.taxes || (result.payrollTax && result.federalTax && result.stateTax 
+        ? result.payrollTax.map((p: number, i: number) => 
+            (p || 0) + (result.federalTax?.[i] || 0) + (result.stateTax?.[i] || 0))
+        : []),
+      
       // Add milestone data if available
       milestones: result.milestones || []
     };
@@ -472,7 +479,9 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       stateTax: [calculatePercentage(baseExpense, 0.05)],
       retirementContribution: [calculatePercentage(baseExpense, 0.05)],
       effectiveTaxRate: [0.22],
-      marginalTaxRate: [0.24]
+      marginalTaxRate: [0.24],
+      // Combined taxes
+      taxes: [calculatePercentage(baseExpense, 0.22)]
     };
   }
 };
