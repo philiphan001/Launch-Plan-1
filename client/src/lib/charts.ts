@@ -816,19 +816,12 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
     // Add spouse income if available
     const totalIncome = value + (spouseIncome[index] || 0);
     
-    // Calculate total expenses for this year
-    let totalExpenses = 0;
-    if (hasDetailedExpenses) {
-      // Sum all expense categories
-      totalExpenses = housing[index] + transportation[index] + food[index] + 
-                     healthcare[index] + personalInsurance[index] + apparel[index] + 
-                     services[index] + entertainment[index] + other[index] + 
-                     education[index] + childcare[index] + debt[index] + 
-                     discretionary[index] + taxes[index];
-    } else {
-      // Use total expenses from data
-      totalExpenses = expenses[index] || 0;
-    }
+    // IMPORTANT: Always use the pre-calculated expenses from the backend
+    // This fixes the bug where we were double-counting expenses by summing them again in the frontend
+    const totalExpenses = expenses[index] || 0;
+    
+    // Log the cash flow calculation for debugging
+    console.log(`Cash flow year ${index}: Income ${totalIncome}, Expenses ${totalExpenses}, One-time ${oneTimeExpenses[index]}`);
     
     // Subtract both regular and one-time expenses
     return totalIncome - totalExpenses - oneTimeExpenses[index];
@@ -839,12 +832,26 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
     {
       type: 'bar' as const,
       label: 'Income',
-      data: income.map((value, index) => value + (spouseIncome[index] || 0)),
+      data: income,
       backgroundColor: 'rgba(38, 166, 154, 0.7)', // Green for income
       borderRadius: 4,
+      stack: 'income',
       order: 3
     }
   ];
+
+  // Add spouse income as a separate bar
+  if (spouseIncome.some(value => value > 0)) {
+    datasets.push({
+      type: 'bar' as const,
+      label: 'Spouse Income',
+      data: spouseIncome,
+      backgroundColor: 'rgba(77, 208, 191, 0.7)', // Lighter green for spouse income
+      borderRadius: 4,
+      stack: 'income',
+      order: 3
+    });
+  }
   
   // If we have detailed expense data, create stacked bars for expense categories
   if (hasDetailedExpenses) {
@@ -998,34 +1005,37 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
       data: expenses,
       backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for expenses
       borderRadius: 4,
+      stack: 'expenses', // Add stack property to fix LSP error
       order: 4
     });
   }
   
-  // Add one-time expenses and net cash flow
-  datasets.push(
-    {
-      type: 'bar' as const,
-      label: 'One-Time Expenses',
-      data: oneTimeExpenses,
-      backgroundColor: 'rgba(233, 30, 99, 0.7)', // Pink for one-time expenses
-      borderRadius: 4,
-      order: 2
-    },
-    {
-      type: 'line' as const,
-      label: 'Net Cash Flow',
-      data: netCashFlow,
-      borderColor: 'rgba(25, 118, 210, 0.9)', // Blue for net cash flow
-      backgroundColor: 'rgba(25, 118, 210, 0.1)',
-      borderWidth: 2,
-      fill: true,
-      tension: 0.4,
-      pointBackgroundColor: netCashFlow.map(value => value >= 0 ? 'rgba(38, 166, 154, 1)' : 'rgba(244, 67, 54, 1)'),
-      pointRadius: 4,
-      order: 1
-    }
-  );
+  // Add one-time expenses as separate stack to prevent adding to regular expenses
+  datasets.push({
+    type: 'bar' as const,
+    label: 'One-Time Expenses',
+    data: oneTimeExpenses,
+    backgroundColor: 'rgba(233, 30, 99, 0.7)', // Pink for one-time expenses
+    borderRadius: 4,
+    stack: 'one-time', // Separate stack for one-time expenses
+    order: 2
+  });
+  
+  // Add the net cash flow line chart directly to the datasets array
+  // Line chart doesn't need a stack property
+  datasets.push({
+    type: 'line' as const,  // Explicitly set type as line
+    label: 'Net Cash Flow',
+    data: netCashFlow,
+    borderColor: 'rgba(25, 118, 210, 0.9)', // Blue for net cash flow
+    backgroundColor: 'rgba(25, 118, 210, 0.1)',
+    borderWidth: 2,
+    fill: true,
+    tension: 0.4,
+    pointBackgroundColor: netCashFlow.map(value => value >= 0 ? 'rgba(38, 166, 154, 1)' : 'rgba(244, 67, 54, 1)'),
+    pointRadius: 4,
+    order: 1
+  });
   
   return new Chart(ctx, {
     type: 'bar',
