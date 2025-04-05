@@ -785,7 +785,12 @@ class FinancialCalculator:
                                         # Default to other expenses for anything not specifically categorized
                                         year_other += expense_amount
                                     
-                                expenses_yearly[i] = year_expenses
+                                # Include taxes and retirement in expenses (not just the individual expense items)
+                                expenses_yearly[i] = (
+                                    year_expenses +
+                                    tax_expenses_yearly[i] +
+                                    retirement_contribution_yearly[i]
+                                )
                                 
                                 # Base cost of living categories
                                 housing_expenses_yearly[i] = year_housing
