@@ -449,11 +449,20 @@ class FinancialCalculator:
                     # Get the current value before cash flow adjustment
                     current_value = savings_value_yearly[i]
                     
-                    # Update savings value based on cash flow
-                    # If cash flow is negative, decrease savings
-                    # If cash flow is positive, increase savings
-                    updated_value = current_value + cash_flow_yearly[i]
-                    updated_value = max(0, updated_value)  # Ensure savings doesn't go negative
+                    # CRITICAL FIX: Only apply cash flow if it's negative
+                    # Positive cash flow is already being added separately during the cash flow update section
+                    # This avoids double-counting positive cash flows
+                    if cash_flow_yearly[i] < 0:
+                        # If cash flow is negative, decrease savings
+                        updated_value = current_value + cash_flow_yearly[i]  # Adding negative value = subtraction
+                        updated_value = max(0, updated_value)  # Ensure savings doesn't go negative
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"  Applied negative cash flow (${cash_flow_yearly[i]}) to savings\n")
+                    else:
+                        # For positive cash flow, keep current value and log that we're not applying it here
+                        updated_value = current_value
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"  Positive cash flow (${cash_flow_yearly[i]}) will be handled separately\n")
                     
                     # Add retirement contribution to the savings - this is a key fix
                     # Note: We don't add this to cash_flow directly because retirement is already 
@@ -1791,7 +1800,17 @@ class FinancialCalculator:
                     if asset_type == 'Investment':
                         # Call add_contribution directly - it's a method on the Investment class
                         if hasattr(savings_asset, 'add_contribution'):
-                            savings_asset.add_contribution(cash_flow_yearly[i], i)
+                            # Type assertion for LSP - fix the TypeError with proper casting
+                            from server.python.models.asset import Investment
+                            # This is just for type checking, the actual runtime check is done via hasattr
+                            if isinstance(savings_asset, Investment):
+                                investment_asset = savings_asset
+                                investment_asset.add_contribution(cash_flow_yearly[i], i)
+                            else:
+                                # Fallback for LSP - but this branch won't be taken in practice
+                                # since we already checked with hasattr
+                                getattr(savings_asset, 'add_contribution')(cash_flow_yearly[i], i)
+                                
                             new_value = savings_asset.get_value(i)
                             
                             # Log the contribution
@@ -1809,7 +1828,15 @@ class FinancialCalculator:
                 
                 # Log the overall contributions state if available
                 if hasattr(savings_asset, 'contributions'):
-                    f.write(f"Final contributions dictionary: {savings_asset.contributions}\n")
+                    # Type assertion for LSP - fix the TypeError
+                    from server.python.models.asset import Investment
+                    # This is just for type checking, the actual runtime check is done via hasattr
+                    if isinstance(savings_asset, Investment):
+                        investment_asset = savings_asset
+                        f.write(f"Final contributions dictionary: {investment_asset.contributions}\n")
+                    else:
+                        # Fallback for LSP - but this branch won't be taken in practice
+                        f.write(f"Final contributions dictionary: {getattr(savings_asset, 'contributions')}\n")
                 else:
                     f.write(f"Asset does not have contributions tracking\n")
             else:
