@@ -9,6 +9,9 @@ export interface CalculatorInputData {
   yearsToProject: number;
   pathType: string;
   costOfLivingFactor?: number; // Location-based adjustment factor (1.0 is average)
+  emergencyFundMonths?: number; // Number of months of expenses to maintain as emergency fund
+  personalLoanTermYears?: number; // Term length in years for personal loans
+  personalLoanInterestRate?: number; // Annual interest rate for personal loans (decimal format)
   assets: Array<{
     type: string;
     name: string;
@@ -104,7 +107,10 @@ export const generatePythonCalculatorInput = (
   studentLoanDebt: number,
   milestones: Milestone[] = [],
   costOfLivingFactor: number = 1.0,
-  locationCostData: any = null
+  locationCostData: any = null,
+  emergencyFundMonths: number = 3,
+  personalLoanTermYears: number = 5,
+  personalLoanInterestRate: number = 0.08
 ): CalculatorInputData => {
   // Sort milestones by yearsAway 
   const sortedMilestones = milestones ? [...milestones].sort((a, b) => {
@@ -250,6 +256,11 @@ export const generatePythonCalculatorInput = (
     yearsToProject: years,
     pathType: "baseline", // Using the default baseline projection type
     costOfLivingFactor: costOfLivingFactor, // Explicitly pass the cost of living factor to Python
+    
+    // User-configurable parameters with the values from the function parameters
+    emergencyFundMonths: emergencyFundMonths,
+    personalLoanTermYears: personalLoanTermYears,
+    personalLoanInterestRate: personalLoanInterestRate,
     
     // Assets
     assets: [

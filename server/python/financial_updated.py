@@ -28,7 +28,9 @@ try:
         DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE,
         CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
-        CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM
+        CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM,
+        DEFAULT_EMERGENCY_FUND_MONTHS, DEFAULT_PERSONAL_LOAN_TERM_YEARS,
+        DEFAULT_PERSONAL_LOAN_INTEREST_RATE
     )
 except ImportError:
     # Fallback to full imports (these will work when executed from parent directory)
@@ -48,7 +50,9 @@ except ImportError:
         DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE,
         CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
-        CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM
+        CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM,
+        DEFAULT_EMERGENCY_FUND_MONTHS, DEFAULT_PERSONAL_LOAN_TERM_YEARS,
+        DEFAULT_PERSONAL_LOAN_INTEREST_RATE
     )
 
 
@@ -104,16 +108,25 @@ class FinancialCalculator:
         
         return tax_results
     
-    def __init__(self, start_age: int = 25, years_to_project: int = 10):
+    def __init__(self, start_age: int = 25, years_to_project: int = 10, 
+                 emergency_fund_months: int = DEFAULT_EMERGENCY_FUND_MONTHS,
+                 personal_loan_term_years: int = DEFAULT_PERSONAL_LOAN_TERM_YEARS,
+                 personal_loan_interest_rate: float = DEFAULT_PERSONAL_LOAN_INTEREST_RATE):
         """
         Initialize a financial calculator.
         
         Args:
             start_age: Starting age for projections
             years_to_project: Number of years to project forward
+            emergency_fund_months: Number of months of expenses to maintain as emergency fund
+            personal_loan_term_years: Term length in years for personal loans
+            personal_loan_interest_rate: Annual interest rate for personal loans (e.g., 0.08 for 8%)
         """
         self.start_age = start_age
         self.years_to_project = years_to_project
+        self.emergency_fund_months = emergency_fund_months
+        self.personal_loan_term_years = personal_loan_term_years
+        self.personal_loan_interest_rate = personal_loan_interest_rate
         self.assets: List[Asset] = []
         self.liabilities: List[Liability] = []
         self.incomes: List[Income] = []
@@ -140,6 +153,33 @@ class FinancialCalculator:
             years: Number of years
         """
         self.years_to_project = years
+        
+    def set_emergency_fund_months(self, months: int) -> None:
+        """
+        Set the number of months of expenses to maintain as emergency fund.
+        
+        Args:
+            months: Number of months
+        """
+        self.emergency_fund_months = months
+        
+    def set_personal_loan_term_years(self, years: int) -> None:
+        """
+        Set the term length in years for personal loans.
+        
+        Args:
+            years: Term length in years
+        """
+        self.personal_loan_term_years = years
+        
+    def set_personal_loan_interest_rate(self, rate: float) -> None:
+        """
+        Set the annual interest rate for personal loans.
+        
+        Args:
+            rate: Annual interest rate (e.g., 0.08 for 8%)
+        """
+        self.personal_loan_interest_rate = rate
     
     def add_asset(self, asset: Asset) -> None:
         """
@@ -455,10 +495,10 @@ class FinancialCalculator:
                 if savings_asset and hasattr(savings_asset, 'get_value'):
                     current_savings = savings_asset.get_value(i)
                     
-                    # Define emergency fund threshold - 3 months of expenses is standard financial advice
-                    # Use monthly expenses * 3 as the minimum emergency fund
+                    # Define emergency fund threshold based on user-configurable parameter
+                    # Use monthly expenses * emergency_fund_months as the minimum emergency fund
                     monthly_expenses = expenses_yearly[i] / 12
-                    emergency_fund_threshold = monthly_expenses * 3
+                    emergency_fund_threshold = monthly_expenses * self.emergency_fund_months
                     
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"\n[CASH FLOW HANDLING] Year {i}:\n")
@@ -495,12 +535,12 @@ class FinancialCalculator:
                         if remaining_negative_amount > 0:
                             created_loan = True  # Set flag that we created a loan
                             
-                            # Create a new personal loan with 5-year term and 8% interest as specified
+                            # Create a new personal loan with user-configurable parameters
                             cash_flow_loan = PersonalLoan(
                                 name=loan_name,
                                 initial_balance=remaining_negative_amount,  # Only borrow what's needed
-                                interest_rate=0.08,  # 8% interest
-                                term_years=5,        # 5-year term
+                                interest_rate=self.personal_loan_interest_rate,  # User-configurable interest rate
+                                term_years=self.personal_loan_term_years,        # User-configurable term
                                 milestone_year=i,    # Current year
                                 milestone_month=6    # Mid-year (arbitrary)
                             )
@@ -542,7 +582,7 @@ class FinancialCalculator:
                             if created_loan:
                                 f.write(f"  Created personal loan: {loan_name}\n")
                                 f.write(f"  Loan amount: ${remaining_negative_amount}\n")
-                                f.write(f"  Loan terms: 5-year term, 8% interest\n")
+                                f.write(f"  Loan terms: {self.personal_loan_term_years}-year term, {self.personal_loan_interest_rate*100:.1f}% interest\n")
                             else:
                                 f.write(f"  Covered entirely from savings, no loan needed\n")
                     
@@ -2028,15 +2068,32 @@ class FinancialCalculator:
         """
         start_age = input_data.get('startAge', 25)
         years_to_project = input_data.get('yearsToProject', 10)
-        calculator = cls(start_age, years_to_project)
+        
+        # Get user-configurable parameters with defaults from constants
+        emergency_fund_months = input_data.get('emergencyFundMonths', DEFAULT_EMERGENCY_FUND_MONTHS)
+        personal_loan_term_years = input_data.get('personalLoanTermYears', DEFAULT_PERSONAL_LOAN_TERM_YEARS)
+        personal_loan_interest_rate = input_data.get('personalLoanInterestRate', DEFAULT_PERSONAL_LOAN_INTEREST_RATE)
+        
+        # Create calculator with all parameters
+        calculator = cls(
+            start_age, 
+            years_to_project,
+            emergency_fund_months,
+            personal_loan_term_years,
+            personal_loan_interest_rate
+        )
         
         # Extract cost of living factor if present 
         # This factor adjusts income based on location data from the frontend
         cost_of_living_factor = input_data.get('costOfLivingFactor', 1.0)
         
-        # Log the cost of living factor for debugging
+        # Log the cost of living factor and user-configurable parameters for debugging
         with open('healthcare_debug.log', 'w') as f:
-            f.write(f"Starting financial calculation with costOfLivingFactor: {cost_of_living_factor}\n")
+            f.write(f"Starting financial calculation with:\n")
+            f.write(f"  Cost of Living Factor: {cost_of_living_factor}\n")
+            f.write(f"  Emergency Fund Threshold: {emergency_fund_months} months\n")
+            f.write(f"  Personal Loan Term: {personal_loan_term_years} years\n")
+            f.write(f"  Personal Loan Interest Rate: {personal_loan_interest_rate*100:.1f}%\n")
         
         # Add assets
         for asset_data in input_data.get('assets', []):

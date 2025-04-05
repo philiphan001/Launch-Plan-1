@@ -352,6 +352,11 @@ const FinancialProjections = () => {
   const [spouseLoanRate, setSpouseLoanRate] = useState<number>(5.0); // Default: 5.0% annual interest
   const [spouseAssetGrowth, setSpouseAssetGrowth] = useState<number>(3.0); // Default: 3.0% annual growth
   
+  // Define variables for new configurable parameters
+  const [emergencyFundMonths, setEmergencyFundMonths] = useState<number>(3); // Default: 3 months
+  const [personalLoanTermYears, setPersonalLoanTermYears] = useState<number>(5); // Default: 5 years
+  const [personalLoanInterestRate, setPersonalLoanInterestRate] = useState<number>(8.0); // Default: 8.0% annual interest
+  
   // Process assumptions for financial calculations
   useEffect(() => {
     if (assumptions && assumptions.length > 0) {
@@ -1097,7 +1102,7 @@ const FinancialProjections = () => {
           createdAt: m.createdAt ? new Date(m.createdAt) : null
         })) || [];
         
-        // Pass location data directly to the Python calculator
+        // Pass location data and configurable parameters to the Python calculator
         const pythonInput = generatePythonCalculatorInput(
           age,
           years,
@@ -1107,7 +1112,10 @@ const FinancialProjections = () => {
           studentLoanDebt,
           formattedMilestones,
           costOfLivingFactor,
-          locationCostData // Pass the location data directly
+          locationCostData, // Pass the location data directly
+          emergencyFundMonths, // New parameter: months of expenses for emergency fund
+          personalLoanTermYears, // New parameter: term length for personal loans
+          personalLoanInterestRate // New parameter: interest rate for personal loans
         );
         
         console.log("Sending data to Python calculator:", pythonInput);
@@ -1315,6 +1323,48 @@ const FinancialProjections = () => {
                   step={0.5}
                   className="mt-2"
                 />
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <h4 className="text-md font-semibold mb-2">Advanced Settings</h4>
+                
+                <div className="mb-3">
+                  <Label>Emergency Fund (Months of Expenses): {emergencyFundMonths}</Label>
+                  <Slider
+                    value={[emergencyFundMonths]}
+                    onValueChange={(value) => setEmergencyFundMonths(value[0])}
+                    min={1}
+                    max={12}
+                    step={1}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Recommended: 3-6 months</p>
+                </div>
+                
+                <div className="mb-3">
+                  <Label>Personal Loan Term (Years): {personalLoanTermYears}</Label>
+                  <Slider
+                    value={[personalLoanTermYears]}
+                    onValueChange={(value) => setPersonalLoanTermYears(value[0])}
+                    min={1}
+                    max={10}
+                    step={1}
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Personal Loan Interest Rate: {personalLoanInterestRate}%</Label>
+                  <Slider
+                    value={[personalLoanInterestRate]}
+                    onValueChange={(value) => setPersonalLoanInterestRate(value[0])}
+                    min={3}
+                    max={20}
+                    step={0.5}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Applied to negative cash flow scenarios</p>
+                </div>
               </div>
             </div>
             
