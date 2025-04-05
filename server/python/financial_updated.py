@@ -444,57 +444,93 @@ class FinancialCalculator:
                     else:
                         f.write(f"  No savings asset found\n")
                 
-                # IMPLEMENT NEW SOLUTION: Convert negative cash flow to personal loans instead of reducing savings
+                # IMPROVED SOLUTION: Use savings first, then create loans only for remaining negative cash flow
                 if cash_flow_yearly[i] < 0:
-                    # Create a personal loan for the negative cash flow amount
-                    negative_amount = abs(cash_flow_yearly[i])  # Get positive amount for loan
-                    loan_name = f"Cash Flow Deficit Loan Year {i}"
+                    negative_amount = abs(cash_flow_yearly[i])  # Get positive amount
+                    remaining_negative_amount = negative_amount
+                    loan_name = f"Cash Flow Deficit Loan Year {i}"  # Define here for broader scope
+                    created_loan = False  # Flag to track if we created a loan
                     
-                    # Create a new personal loan with 5-year term and 8% interest as specified
-                    cash_flow_loan = PersonalLoan(
-                        name=loan_name,
-                        initial_balance=negative_amount,
-                        interest_rate=0.08,  # 8% interest
-                        term_years=5,        # 5-year term
-                        milestone_year=i,    # Current year
-                        milestone_month=6    # Mid-year (arbitrary)
-                    )
-                    
-                    # Add the new loan to the calculator's liabilities
-                    self.add_liability(cash_flow_loan)
-                    
-                    # DEBUG: Write the loan creation to log
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"\nCreated personal loan for negative cash flow in year {i}:\n")
-                        f.write(f"  Loan amount: ${negative_amount}\n")
-                    
-                    # Update personal loans tracker for this year and ALL FUTURE YEARS
-                    # This is critical since the loan will continue to affect net worth in future years
-                    for future_year in range(i, self.years_to_project + 1):
-                        # Calculate the projected balance for this future year
-                        projected_balance = cash_flow_loan.get_balance(future_year - i)
+                    # First check if we can cover this with savings
+                    if savings_asset and hasattr(savings_asset, 'get_value'):
+                        current_savings = savings_asset.get_value(i)
                         
-                        # FIXED: Don't update liabilities_yearly directly as they will be calculated 
-                        # later when we iterate through self.liabilities. Only track in all_personal_loans array.
-                        if future_year == i:
-                            # For the current year, just add the full loan amount to tracking array
-                            all_personal_loans[future_year] += int(negative_amount)
-                            # No need to manually update liabilities_yearly since we added the loan to self.liabilities
-                            # and it will be counted when we calculate liabilities_yearly from liability objects
-                        else:
-                            # For future years, add the calculated balance to tracking array
-                            all_personal_loans[future_year] += int(projected_balance)
-                            
-                        # DEBUG: Log the projected impact on each year
                         with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"  Year {future_year} projected balance: ${projected_balance}\n")
+                            f.write(f"\nHandling negative cash flow in year {i}:\n")
+                            f.write(f"  Negative cash flow: ${negative_amount}\n")
+                            f.write(f"  Current savings: ${current_savings}\n")
+                        
+                        # Use savings to cover the deficit if possible
+                        if current_savings > 0:
+                            amount_from_savings = min(current_savings, negative_amount)
+                            remaining_negative_amount = negative_amount - amount_from_savings
+                            
+                            # Only reduce savings if we're using some of it and the savings asset has the right method
+                            # This check helps avoid type errors with the Asset base class
+                            if amount_from_savings > 0 and hasattr(savings_asset, 'add_contribution'):
+                                # Use getattr to get the method to avoid LSP issues
+                                contribution_method = getattr(savings_asset, 'add_contribution')
+                                # Call the method to add a negative contribution (withdrawal)
+                                contribution_method(i, -amount_from_savings)
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"  Using ${amount_from_savings} from savings\n")
+                                    f.write(f"  Remaining negative amount: ${remaining_negative_amount}\n")
                     
-                    # Log the creation of the personal loan
+                    # Only create a loan if we still have a negative balance after using savings
+                    if remaining_negative_amount > 0:
+                        created_loan = True  # Set flag that we created a loan
+                        
+                        # Create a new personal loan with 5-year term and 8% interest as specified
+                        cash_flow_loan = PersonalLoan(
+                            name=loan_name,
+                            initial_balance=remaining_negative_amount,  # Only borrow what's needed
+                            interest_rate=0.08,  # 8% interest
+                            term_years=5,        # 5-year term
+                            milestone_year=i,    # Current year
+                            milestone_month=6    # Mid-year (arbitrary)
+                        )
+                        
+                        # Add the new loan to the calculator's liabilities
+                        self.add_liability(cash_flow_loan)
+                        
+                        # DEBUG: Write the loan creation to log
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"  Created personal loan for remaining negative cash flow:\n")
+                            f.write(f"    Loan amount: ${remaining_negative_amount}\n")
+                        
+                        # Update personal loans tracker for this year and ALL FUTURE YEARS
+                        # This is critical since the loan will continue to affect net worth in future years
+                        for future_year in range(i, self.years_to_project + 1):
+                            # Calculate the projected balance for this future year
+                            projected_balance = cash_flow_loan.get_balance(future_year - i)
+                            
+                            # FIXED: Don't update liabilities_yearly directly as they will be calculated 
+                            # later when we iterate through self.liabilities. Only track in all_personal_loans array.
+                            if future_year == i:
+                                # For the current year, just add the loan amount to tracking array
+                                # Important: Use remaining_negative_amount, not the full negative_amount
+                                all_personal_loans[future_year] += int(remaining_negative_amount)
+                                # No need to manually update liabilities_yearly since we added the loan to self.liabilities
+                                # and it will be counted when we calculate liabilities_yearly from liability objects
+                            else:
+                                # For future years, add the calculated balance to tracking array
+                                all_personal_loans[future_year] += int(projected_balance)
+                                
+                            # DEBUG: Log the projected impact on each year
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"  Year {future_year} projected balance: ${projected_balance}\n")
+                    
+                    # Log the handling of negative cash flow
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"\n[CASH FLOW DEFICIT HANDLING] Year {i}:\n")
-                        f.write(f"  Created personal loan for negative cash flow: ${negative_amount}\n")
-                        f.write(f"  Loan name: {loan_name}\n")
-                        f.write(f"  Loan terms: 5-year term, 8% interest\n")
+                        f.write(f"  Negative cash flow amount: ${negative_amount}\n")
+                        if created_loan:
+                            f.write(f"  Created personal loan: {loan_name}\n")
+                            f.write(f"  Loan amount: ${remaining_negative_amount}\n")
+                            f.write(f"  Loan terms: 5-year term, 8% interest\n")
+                        else:
+                            f.write(f"  Covered entirely from savings, no loan needed\n")
                 
                 # If we found a savings asset, update for retirement contributions
                 # (We don't reduce savings anymore for negative cash flow - that's handled by personal loans)
