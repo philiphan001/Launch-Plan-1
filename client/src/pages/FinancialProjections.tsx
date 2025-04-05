@@ -466,8 +466,6 @@ const FinancialProjections = () => {
     // Initialize separate arrays for assets and liabilities
     const assetsData = [startingSavings]; // Initial assets (savings only)
     const liabilitiesData = [studentLoanDebt]; // Initial liabilities (student loan only)
-    const savingsValueData = [startingSavings]; // Track liquid savings separately
-    // We're not tracking retirement accounts separately for now
     
     // Track expense categories for detailed breakdown with initial values as percentages of base expenses
     // Initialize with empty arrays, the backend will provide the proper data
@@ -668,19 +666,11 @@ const FinancialProjections = () => {
         studentLoanPaymentForYear +
         educationLoanPaymentForYear;
       
-      // Calculate annual surplus or deficit - this is the cash flow for the year
+      // Calculate annual surplus or deficit
       const annualSurplus = totalIncome - totalExpenses;
       
-      // Log the cash flow for debugging
-      console.log(`Year ${i} Cash Flow: $${annualSurplus.toFixed(2)} (Income $${totalIncome.toFixed(2)} - Expenses $${totalExpenses.toFixed(2)})`);
-      
-      // Update net worth with the annual surplus (cash flow)
-      // This adds cash flow from this year to the net worth calculation
+      // Update net worth
       netWorth += annualSurplus;
-      
-      // Track liquid savings separately, updating with this year's cash flow
-      const previousSavingsValue = savingsValueData[i-1] || 0;
-      savingsValueData.push(Math.max(0, previousSavingsValue + annualSurplus));
       
       // Apply student loan payments (simplified - 10 year repayment)
       let studentLoanPayment = 0;
@@ -1024,8 +1014,6 @@ const FinancialProjections = () => {
       carValue: carValueData, // Track car value separately
       carLoan: carLoanData, // Track car loan separately
       studentLoan: studentLoanData, // Track student loan separately
-      savingsValue: savingsValueData, // Track liquid savings separately
-      // We're not tracking retirement values separately for now
       ages: ages,
       // Add expense categories
       housingExpenses: housingExpensesData,
@@ -1433,22 +1421,6 @@ const FinancialProjections = () => {
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p>Represents only liquid savings and investments. Does not include the value of physical assets like homes and cars.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="text-sm text-gray-500 uppercase">Retirement Savings</p>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
-                        Not tracked separately
-                      </p>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p>Represents retirement-specific savings like 401(k)s, IRAs, and other retirement accounts.</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
