@@ -88,7 +88,7 @@ const defaultAssumptions = [
 const AssumptionsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<AssumptionCategory>("marriage");
+  const [activeTab, setActiveTab] = useState<AssumptionCategory>("general");
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [localAssumptions, setLocalAssumptions] = useState<Assumption[]>([]);
 
