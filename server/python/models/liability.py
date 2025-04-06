@@ -223,7 +223,8 @@ class StudentLoan(Liability):
     
     def __init__(self, name: str, initial_balance: float, 
                  interest_rate: float = 0.05, term_years: int = 10,
-                 deferment_years: int = 0, subsidized: bool = False):
+                 deferment_years: int = 0, subsidized: bool = False,
+                 is_graduate_loan: bool = False):
         """
         Initialize a student loan.
         
@@ -234,10 +235,12 @@ class StudentLoan(Liability):
             term_years: Term length in years
             deferment_years: Number of years payment is deferred
             subsidized: Whether interest is subsidized during deferment
+            is_graduate_loan: Whether this is a graduate school loan (affects interest rate and terms)
         """
         super().__init__(name, initial_balance, interest_rate, term_years)
         self.deferment_years = deferment_years
         self.subsidized = subsidized
+        self.is_graduate_loan = is_graduate_loan
     
     def _calculate_balance(self, previous_balance: float, year: int) -> float:
         """

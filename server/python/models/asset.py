@@ -74,6 +74,17 @@ class Asset:
         future_years = [y for y in self.value_history.keys() if y > year]
         for y in future_years:
             del self.value_history[y]
+            
+    def get_type(self) -> str:
+        """
+        Get the type of asset.
+        
+        Returns:
+            String indicating the asset type
+        """
+        # Base implementation returns a generic type
+        # Subclasses can override this to return specific types
+        return "asset"
 
 
 class DepreciableAsset(Asset):
@@ -104,6 +115,21 @@ class DepreciableAsset(Asset):
             Depreciated value
         """
         return previous_value * (1 - self.depreciation_rate)
+        
+    def get_type(self) -> str:
+        """
+        Get the type of asset.
+        
+        Returns:
+            String indicating the asset type is depreciable
+        """
+        # For depreciable assets, check name to determine specific type
+        if 'car' in self.name.lower() or 'vehicle' in self.name.lower():
+            return "vehicle"
+        elif 'home' in self.name.lower() or 'house' in self.name.lower():
+            return "real_estate"  
+        else:
+            return "depreciable"
 
 
 class Investment(Asset):
@@ -182,3 +208,18 @@ class Investment(Asset):
             self.value_history[year] = current_value - withdrawal
         
         return withdrawal
+        
+    def get_type(self) -> str:
+        """
+        Get the type of asset.
+        
+        Returns:
+            String indicating the asset type is an investment
+        """
+        # For investments, check name to determine if it's a savings account
+        if 'savings' in self.name.lower():
+            return "savings"
+        elif 'retirement' in self.name.lower():
+            return "retirement"
+        else:
+            return "investment"

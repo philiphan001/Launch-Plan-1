@@ -748,41 +748,25 @@ const FinancialProjections = () => {
         remainingStudentLoanDebt = Math.max(0, remainingStudentLoanDebt - principalReduction);
       }
       
-      // Apply education debt payments (amortized - 5 year repayment) for graduate school
+      // The education loans (both undergraduate and graduate) are now handled by the Python backend
+      // The loan data is passed back to us as arrays: educationLoans and graduateSchoolLoans
+      // We no longer need to re-calculate the loans here, which ensures consistency
+      
       let educationLoanPayment = 0;
-      if (hasEducationDebt && i > 1 && i <= 6) { // Start payments after first year
-        // Simple amortization for education loans - 5 year term with 6% interest rate
-        const educationLoanInterestRate = 0.06; // 6% annual interest rate
-        const educationLoanTerm = 5; // 5 year term
+      
+      // If we have data from the Python backend (projectionData), use it
+      if (projectionData?.educationLoans && projectionData.educationLoans[i-1] !== undefined) {
+        // We're using the data directly from the Python calculator
+        // The payment handling is done in the backend
+        const undergraduateLoans = projectionData.educationLoans[i-1] || 0;
+        const graduateLoans = projectionData.graduateSchoolLoans?.[i-1] || 0;
         
-        // Calculate interest for this year
-        const annualInterestPaid = educationDebt * educationLoanInterestRate;
-        
-        // Find the education milestone to get the initial education cost
-        const educationMilestone = sortedMilestones.find((m: { type: string }) => m.type === 'education');
-        const initialEducationCost = educationMilestone?.educationCost || 0;
-        
-        // Calculate total annual payment (level payment amortization)
-        const r = educationLoanInterestRate;
-        const n = educationLoanTerm;
-        const amortizedAnnualPayment = (initialEducationCost * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-        educationLoanPayment = amortizedAnnualPayment;
-        
-        // Principal reduction is annual payment minus interest
-        const principalReduction = Math.min(
-          amortizedAnnualPayment - annualInterestPaid,
-          educationDebt // Can't reduce more than remaining principal
-        );
-        
-        // Track education loan payment in the education expenses category
-        educationExpensesData[i-1] = (educationExpensesData[i-1] || 0) + amortizedAnnualPayment;
-        
-        console.log(`Education loan payment for year ${i}: $${amortizedAnnualPayment.toFixed(2)} (interest: $${annualInterestPaid.toFixed(2)}, principal: $${principalReduction.toFixed(2)})`);
-        console.log(`Education loan balance: $${educationDebt.toFixed(2)} → $${(educationDebt - principalReduction).toFixed(2)}`);
-        
-        // Update education debt for this year
-        educationDebt = Math.max(0, educationDebt - principalReduction);
+        // For debugging purposes
+        if (undergraduateLoans > 0 || graduateLoans > 0) {
+          console.log(`Education loans for year ${i}: Undergraduate $${undergraduateLoans}, Graduate $${graduateLoans}`);
+        }
       }
+      // Note: We don't need to calculate the payment or update the debt anymore as that's handled by the backend
       
       // Update mortgage principal for this year (amortization calculation)
       if (hasHome) {
@@ -948,12 +932,18 @@ const FinancialProjections = () => {
                           (hasCar ? carValue : 0) + 
                           (hasSpouse ? spouseAssets : 0);
                           
-      // For liabilities, we track all debts separately
+      // For liabilities, we track all debts separately 
       // Student loan debt is tracked separately as a dedicated liability
+      // Now using graduate and undergraduate education loans from the Python calculator
+      // instead of the local educationDebt variable which is redundant
+      const graduateSchoolDebt = projectionData?.graduateSchoolLoans?.[i-1] || 0;
+      const undergraduateSchoolDebt = projectionData?.educationLoans?.[i-1] || 0;
+      
       const totalLiabilities = mortgagePrincipal + 
                               carLoanPrincipal + 
                               remainingStudentLoanDebt + 
-                              educationDebt + 
+                              graduateSchoolDebt + 
+                              undergraduateSchoolDebt + 
                               (hasSpouse ? spouseLiabilities : 0);
       
       // Calculate proper net worth as total assets minus total liabilities

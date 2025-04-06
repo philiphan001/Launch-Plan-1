@@ -1644,14 +1644,29 @@ class FinancialCalculator:
                             education_loan_interest_rate = EDUCATION_LOAN_INTEREST_RATE
                             education_loan_term_years = EDUCATION_LOAN_TERM_YEARS
                             
-                            # Create a new student loan using the Student Loan class
+                            # Determine if this is a graduate or undergraduate loan
+                            is_graduate_loan = education_type.lower() in ['masters', 'graduate', 'phd', 'doctorate', 'mba']
+                            
+                            # Different default parameters for graduate vs undergraduate loans
+                            loan_interest_rate = 0.06 if is_graduate_loan else 0.045  # 6% for grad, 4.5% for undergrad
+                            loan_term_years = 20 if is_graduate_loan else 10  # 20 years for grad, 10 for undergrad
+                            
+                            # Use provided values if specified
+                            if education_loan_interest_rate is not None:
+                                loan_interest_rate = education_loan_interest_rate
+                                
+                            if education_loan_term_years is not None:
+                                loan_term_years = education_loan_term_years
+                            
+                            # Create a new student loan using the Student Loan class with proper loan type
                             education_loan = StudentLoan(
                                 name=f"Education Loan for {education_type.capitalize()}",
                                 initial_balance=total_education_loan,
-                                interest_rate=education_loan_interest_rate,
-                                term_years=education_loan_term_years,
+                                interest_rate=loan_interest_rate,
+                                term_years=loan_term_years,
                                 deferment_years=education_years,  # Defer payments until after graduation
-                                subsidized=False  # Not subsidized by default
+                                subsidized=False,  # Not subsidized by default
+                                is_graduate_loan=is_graduate_loan  # Set the loan type
                             )
                             
                             # Add the education loan to liabilities
@@ -1661,16 +1676,14 @@ class FinancialCalculator:
                                 f.write(f"Created education loan with balance: ${total_education_loan}\n")
                                 f.write(f"Monthly payment: ${education_loan.monthly_payment:.2f}\n")
                                 f.write(f"Annual payment: ${education_loan.monthly_payment * 12:.2f}\n")
-                                f.write(f"Term: {education_loan_term_years} years at {education_loan_interest_rate*100:.2f}% APR\n")
+                                f.write(f"Term: {loan_term_years} years at {loan_interest_rate*100:.2f}% APR\n")
                                 f.write(f"Deferment: {education_years} years\n")
+                                f.write(f"Loan type: {'Graduate' if is_graduate_loan else 'Undergraduate'}\n")
                             
                             # Track education loan balances in our student loan tracking arrays
                             for year in range(milestone_year, self.years_to_project + 1):
                                 # Get the loan balance for this year
                                 loan_balance = education_loan.get_balance(year - milestone_year)
-                                
-                                # Determine if this is a graduate or undergraduate loan
-                                is_graduate_loan = education_type.lower() in ['masters', 'graduate', 'phd', 'doctorate', 'mba']
                                 
                                 # Track in the appropriate category
                                 if is_graduate_loan:
