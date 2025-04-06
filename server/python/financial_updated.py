@@ -280,7 +280,7 @@ class FinancialCalculator:
         car_loan_yearly = [0] * (self.years_to_project + 1)
         student_loan_yearly = [0] * (self.years_to_project + 1)
         all_personal_loans = [0] * (self.years_to_project + 1)  # New array to track all personal loans
-        all_student_loans = [0] * (self.years_to_project + 1)  # New array to track all student loans from milestones
+        undergraduate_loans = [0] * (self.years_to_project + 1)  # Array for tracking undergraduate loans only
         graduate_school_loans = [0] * (self.years_to_project + 1)  # Separate array specifically for graduate school loans
         
         # Track expense categories
@@ -1669,14 +1669,18 @@ class FinancialCalculator:
                                 # Get the loan balance for this year
                                 loan_balance = education_loan.get_balance(year - milestone_year)
                                 
-                                # Add to all_student_loans tracking array
-                                all_student_loans[year] += int(loan_balance)
+                                # Determine if this is a graduate or undergraduate loan
+                                is_graduate_loan = education_type.lower() in ['masters', 'graduate', 'phd', 'doctorate', 'mba']
                                 
-                                # Also track graduate school loans separately if this is a graduate degree
-                                if education_type.lower() in ['masters', 'graduate', 'phd', 'doctorate', 'mba']:
+                                # Track in the appropriate category
+                                if is_graduate_loan:
                                     graduate_school_loans[year] += int(loan_balance)
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"Year {year}: Adding ${int(loan_balance)} to graduate_school_loans as {education_type}\n")
+                                else:
+                                    undergraduate_loans[year] += int(loan_balance)
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Year {year}: Adding ${int(loan_balance)} to undergraduate_loans as {education_type}\n")
                                 
                                 # Add the loan payment to debt expenses after deferment period
                                 if year >= (milestone_year + education_years):
@@ -2523,7 +2527,7 @@ class FinancialCalculator:
             f.write("\n\n=== STUDENT LOANS DATA (FINAL VALUES) ===\n")
             # Log all the student loan values
             for i in range(self.years_to_project + 1):
-                f.write(f"Year {i}: Student Loans: ${all_student_loans[i]}, Graduate School Loans: ${graduate_school_loans[i]}\n")
+                f.write(f"Year {i}: Undergraduate Loans: ${undergraduate_loans[i]}, Graduate School Loans: ${graduate_school_loans[i]}\n")
             
             # Check if we have any StudentLoan instances
             student_loan_count = 0
@@ -2566,8 +2570,8 @@ class FinancialCalculator:
             'mortgage': mortgage_yearly,
             'carLoan': car_loan_yearly,
             'studentLoan': student_loan_yearly,
-            'educationLoans': all_student_loans,  # Track education milestone student loans separately
-            'graduateSchoolLoans': graduate_school_loans,  # Specifically track graduate school loans
+            'educationLoans': undergraduate_loans,  # Track undergraduate loans separately
+            'graduateSchoolLoans': graduate_school_loans,  # Track graduate school loans separately
             'personalLoans': all_personal_loans,  # Verify this is being passed correctly
             
             # Base cost of living categories
