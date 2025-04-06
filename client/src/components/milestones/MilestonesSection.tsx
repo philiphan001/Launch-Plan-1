@@ -932,9 +932,18 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         onChange={(e) => {
                           const newValue = Number(e.target.value);
                           setHomeValue(newValue);
-                          // Update downpayment to maintain the same percentage
-                          const currentPercent = homeDownPayment / homeValue;
-                          setHomeDownPayment(Math.round(newValue * currentPercent));
+                          
+                          // Only update down payment if home value is valid
+                          if (newValue > 0 && homeValue > 0) {
+                            // Update downpayment to maintain the same percentage
+                            const currentPercent = homeDownPayment / homeValue;
+                            setHomeDownPayment(Math.round(newValue * currentPercent));
+                          } else if (newValue > 0) {
+                            // If previous value was invalid but new value is valid, 
+                            // set a default 20% down payment
+                            setHomeDownPayment(Math.round(newValue * 0.2));
+                          }
+                          // If new value is invalid (0 or negative), we don't change the down payment
                         }}
                       />
                     </div>
@@ -943,14 +952,20 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                   <div>
                     <Label htmlFor="home-down-payment">Down Payment Percentage</Label>
                     <div className="flex items-center mt-2">
-                      <span className="mr-4 text-sm w-8">{Math.round((homeDownPayment / homeValue) * 100)}%</span>
+                      <span className="mr-4 text-sm w-8">
+                        {homeValue > 0 ? Math.round((homeDownPayment / homeValue) * 100) : 20}%
+                      </span>
                       <Slider
                         id="home-down-payment"
                         min={5}
                         max={50}
                         step={1}
-                        value={[Math.round((homeDownPayment / homeValue) * 100)]}
-                        onValueChange={(value) => setHomeDownPayment(Math.round(homeValue * (value[0] / 100)))}
+                        value={[homeValue > 0 ? Math.round((homeDownPayment / homeValue) * 100) : 20]}
+                        onValueChange={(value) => {
+                          if (homeValue > 0) {
+                            setHomeDownPayment(Math.round(homeValue * (value[0] / 100)));
+                          }
+                        }}
                         className="flex-1"
                       />
                       <span className="ml-4 text-sm w-8">${homeDownPayment.toLocaleString()}</span>
@@ -979,6 +994,18 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                       size="sm" 
                       className="mt-2" 
                       onClick={() => {
+                        // Validate inputs before calculation
+                        if (homeValue <= 0) {
+                          alert("Please enter a valid home value greater than zero.");
+                          return;
+                        }
+                        
+                        // Ensure down payment is not higher than home value
+                        if (homeDownPayment >= homeValue) {
+                          alert("Down payment must be less than the home value.");
+                          return;
+                        }
+                        
                         // Calculate estimated monthly payment (30-year loan at 6% interest rate)
                         const loanAmount = homeValue - homeDownPayment;
                         const monthlyInterestRate = 0.06 / 12;
@@ -994,8 +1021,11 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         const insurance = (homeValue * 0.005) / 12;
                         const maintenance = (homeValue * 0.01) / 12;
                         
-                        // Total monthly payment
-                        const total = Math.round(mortgagePayment + propertyTax + insurance + maintenance);
+                        // Total monthly payment - validate for NaN or Infinity
+                        const calculatedTotal = mortgagePayment + propertyTax + insurance + maintenance;
+                        const total = !isNaN(calculatedTotal) && isFinite(calculatedTotal) 
+                          ? Math.round(calculatedTotal)
+                          : 1500; // Fallback to default if calculation fails
                         
                         setHomeMonthlyPayment(total);
                       }}
@@ -1070,7 +1100,21 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         type="number"
                         id="car-value"
                         value={carValue}
-                        onChange={(e) => setCarValue(Number(e.target.value))}
+                        onChange={(e) => {
+                          const newValue = Number(e.target.value);
+                          setCarValue(newValue);
+                          
+                          // Only update down payment if car value is valid
+                          if (newValue > 0 && carValue > 0) {
+                            // Update downpayment to maintain the same percentage
+                            const currentPercent = carDownPayment / carValue;
+                            setCarDownPayment(Math.round(newValue * currentPercent));
+                          } else if (newValue > 0) {
+                            // If previous value was invalid but new value is valid, 
+                            // set a default 20% down payment
+                            setCarDownPayment(Math.round(newValue * 0.2));
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -1078,14 +1122,20 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                   <div>
                     <Label htmlFor="car-down-payment">Down Payment Percentage</Label>
                     <div className="flex items-center mt-2">
-                      <span className="mr-4 text-sm w-8">{Math.round((carDownPayment / carValue) * 100)}%</span>
+                      <span className="mr-4 text-sm w-8">
+                        {carValue > 0 ? Math.round((carDownPayment / carValue) * 100) : 20}%
+                      </span>
                       <Slider
                         id="car-down-payment"
                         min={0}
                         max={100}
                         step={5}
-                        value={[Math.round((carDownPayment / carValue) * 100)]}
-                        onValueChange={(value) => setCarDownPayment(Math.round(carValue * (value[0] / 100)))}
+                        value={[carValue > 0 ? Math.round((carDownPayment / carValue) * 100) : 20]}
+                        onValueChange={(value) => {
+                          if (carValue > 0) {
+                            setCarDownPayment(Math.round(carValue * (value[0] / 100)));
+                          }
+                        }}
                         className="flex-1"
                       />
                       <span className="ml-4 text-sm w-8">${carDownPayment.toLocaleString()}</span>
@@ -1114,6 +1164,18 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                       size="sm" 
                       className="mt-2" 
                       onClick={() => {
+                        // Validate inputs before calculation
+                        if (carValue <= 0) {
+                          alert("Please enter a valid car value greater than zero.");
+                          return;
+                        }
+                        
+                        // Ensure down payment is not higher than car value
+                        if (carDownPayment >= carValue) {
+                          alert("Down payment must be less than the car value.");
+                          return;
+                        }
+                        
                         // Calculate estimated monthly payment (5-year car loan at 7% interest rate)
                         const loanAmount = carValue - carDownPayment;
                         const monthlyInterestRate = 0.07 / 12;
@@ -1128,8 +1190,11 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         const insurance = 100;
                         const maintenance = 50;
                         
-                        // Total monthly payment
-                        const total = Math.round(loanPayment + insurance + maintenance);
+                        // Total monthly payment - validate for NaN or Infinity
+                        const calculatedTotal = loanPayment + insurance + maintenance;
+                        const total = !isNaN(calculatedTotal) && isFinite(calculatedTotal) 
+                          ? Math.round(calculatedTotal)
+                          : 350; // Fallback to default if calculation fails
                         
                         setCarMonthlyPayment(total);
                       }}
