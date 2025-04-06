@@ -1277,7 +1277,11 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                     <Label htmlFor="education-type">Program Type</Label>
                     <Select
                       value={educationType}
-                      onValueChange={setEducationType}
+                      onValueChange={(value) => {
+                        console.log(`Education Type Selected: ${value}`);
+                        console.log(`Is Graduate Program: ${['masters', 'phd', 'mba', 'jd', 'md'].includes(value)}`);
+                        setEducationType(value);
+                      }}
                     >
                       <SelectTrigger className="mt-1 w-full">
                         <SelectValue placeholder="Select program type" />

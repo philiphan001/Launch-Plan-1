@@ -1100,6 +1100,10 @@ const FinancialProjections = () => {
     const updateProjectionData = async () => {
       console.log("Inputs changed, calculating projection data using Python calculator");
       try {
+        // Add debugging for any existing milestones of type 'education'
+        const educationMilestones = milestones?.filter(m => m.type === 'education') || [];
+        console.log('Education milestones for calculator:', educationMilestones);
+        
         // Generate input data for the Python calculator
         // Format milestones to match expected format and required fields
         const formattedMilestones = milestones?.map(m => ({
@@ -1123,6 +1127,12 @@ const FinancialProjections = () => {
           childrenCount: m.childrenCount || null,
           childrenExpensePerYear: m.childrenExpensePerYear || null,
           educationCost: m.educationCost || null,
+          // Add education specific fields
+          educationType: m.educationType || null,
+          educationYears: m.educationYears || null,
+          educationAnnualCost: m.educationAnnualCost || null,
+          educationAnnualLoan: m.educationAnnualLoan || null,
+          targetOccupation: m.targetOccupation || null,
           active: m.active !== undefined ? m.active : true,
           completed: m.completed !== undefined ? m.completed : false,
           details: m.details || {},

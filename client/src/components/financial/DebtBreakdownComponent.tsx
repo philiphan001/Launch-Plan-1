@@ -117,6 +117,16 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
     console.warn('Has any personal loans with value > 0?', hasSomePersonalLoans);
     console.warn('Has any graduate school loans with value > 0?', hasGraduateLoans);
     
+    // Add detailed logging of any graduate school loans
+    if (hasGraduateLoans) {
+      console.warn('DETAILED BREAKDOWN OF GRADUATE LOANS:');
+      graduateSchoolLoansData.forEach((amount: number, index: number) => {
+        if (amount > 0) {
+          console.warn(`  Age ${ages[index]}: $${amount.toLocaleString()}`);
+        }
+      });
+    }
+    
     // Log the first few years data to an alert
     const alertSummary = 
       `DEBT DEBUG:
