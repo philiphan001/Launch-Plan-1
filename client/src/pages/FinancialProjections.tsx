@@ -360,8 +360,8 @@ const FinancialProjections = () => {
   const [personalLoanTermYears, setPersonalLoanTermYears] = useState<number>(5); // Default: 5 years
   const [personalLoanInterestRate, setPersonalLoanInterestRate] = useState<number>(8.0); // Default: 8.0% annual interest
   
-  // Get assumptions from useAssumptions custom hook
-  const { assumptions: assumptionsData } = useQuery({
+  // Get assumptions with a dedicated query for retirement calculations
+  const { data: assumptionsData } = useQuery({
     queryKey: ['/api/assumptions/user', userId],
     queryFn: async () => {
       try {
@@ -382,7 +382,7 @@ const FinancialProjections = () => {
   const getAssumptionValue = (category: string, key: string, defaultVal: number): number => {
     if (!assumptionsData || !Array.isArray(assumptionsData)) return defaultVal;
     
-    const assumption = assumptionsData.find(a => 
+    const assumption = assumptionsData.find((a: any) => 
       a.category === category && a.key === key && a.isEnabled
     );
     
@@ -391,23 +391,25 @@ const FinancialProjections = () => {
   
   // Process assumptions for financial calculations
   useEffect(() => {
-    if (assumptions && assumptions.length > 0) {
-      console.log("Processing assumptions for financial calculations:", assumptions);
+    if (assumptionsData && assumptionsData.length > 0) {
+      console.log("Processing assumptions for financial calculations:", assumptionsData);
+      
+      // Additional assumptions processing could be added here for retirement
       
       // Find spouse loan term assumption
-      const spouseLoanTermAssumption = assumptions.find(
+      const spouseLoanTermAssumption = assumptionsData.find(
         (a: { category: string; key: string; isEnabled: boolean }) => 
           a.category === "marriage" && a.key === "spouse-loan-term" && a.isEnabled
       );
       
       // Find spouse loan interest rate assumption
-      const spouseLoanRateAssumption = assumptions.find(
+      const spouseLoanRateAssumption = assumptionsData.find(
         (a: { category: string; key: string; isEnabled: boolean }) => 
           a.category === "marriage" && a.key === "spouse-loan-rate" && a.isEnabled
       );
       
       // Find spouse asset growth rate assumption
-      const spouseAssetGrowthAssumption = assumptions.find(
+      const spouseAssetGrowthAssumption = assumptionsData.find(
         (a: { category: string; key: string; isEnabled: boolean }) => 
           a.category === "marriage" && a.key === "spouse-asset-growth" && a.isEnabled
       );
@@ -432,7 +434,7 @@ const FinancialProjections = () => {
         setSpouseAssetGrowth(spouseAssetGrowthAssumption.value);
       }
     }
-  }, [assumptions]);
+  }, [assumptionsData]);
   
   // Check if data is being loaded
   const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData || isLoadingMilestones || isLoadingAssumptions;
