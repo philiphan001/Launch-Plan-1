@@ -97,6 +97,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [educationYears, setEducationYears] = useState(2);
   const [educationAnnualCost, setEducationAnnualCost] = useState(30000);
   const [educationAnnualLoan, setEducationAnnualLoan] = useState(20000);
+  const [targetOccupation, setTargetOccupation] = useState("");
   
   const queryClient = useQueryClient();
   
@@ -279,6 +280,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setEducationYears(milestoneToEdit.educationYears || 2);
         setEducationAnnualCost(milestoneToEdit.educationAnnualCost || 30000);
         setEducationAnnualLoan(milestoneToEdit.educationAnnualLoan || 20000);
+        setTargetOccupation(milestoneToEdit.targetOccupation || "");
       }
     } else {
       // This is a new milestone
@@ -312,6 +314,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setEducationYears(2);
         setEducationAnnualCost(30000);
         setEducationAnnualLoan(20000);
+        setTargetOccupation("");
       }
     }
   };
@@ -443,6 +446,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         educationYears,
         educationAnnualCost,
         educationAnnualLoan,
+        targetOccupation,
       };
       
       if (isEditing && editingMilestoneId) {
@@ -1377,6 +1381,88 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                             Your projected savings should cover the education costs not funded by loans.
                           </div>
                         )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="bg-white rounded-md p-3 border border-purple-100 mt-4">
+                    <h4 className="font-medium text-purple-700 mb-2">Career After Graduation</h4>
+                    <div>
+                      <Label htmlFor="target-occupation" className="text-purple-700 font-medium flex items-center">
+                        <span className="mr-2">💼</span> Target Occupation After Graduation
+                      </Label>
+                      <div className="mt-2 relative">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-full justify-between bg-white border-purple-200 hover:bg-purple-50 hover:text-purple-700 focus:ring-purple-500"
+                            >
+                              {targetOccupation 
+                                ? targetOccupation 
+                                : "Search for your target career..."}
+                              <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
+                            <Command>
+                              <div className="px-3 py-2 border-b border-purple-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+                                <p className="text-xs text-center font-medium text-purple-600">💼 What career do you want after graduating?</p>
+                              </div>
+                              <CommandInput placeholder="Type to search careers..." className="h-9 border-purple-100" />
+                              <CommandList className="max-h-[300px] overflow-auto">
+                                <CommandEmpty>No matching careers found</CommandEmpty>
+                                <CommandGroup>
+                                  {careers?.sort((a, b) => a.title.localeCompare(b.title)).map((career) => (
+                                    <CommandItem
+                                      key={career.id}
+                                      value={career.title}
+                                      onSelect={() => {
+                                        setTargetOccupation(career.title);
+                                      }}
+                                      className="flex items-center"
+                                    >
+                                      <span>{career.title}</span>
+                                      {career.salaryMedian && 
+                                        <span className="ml-auto text-xs text-green-600 font-semibold">
+                                          ${career.salaryMedian.toLocaleString()}
+                                        </span>
+                                      }
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+                    
+                    {targetOccupation && (
+                      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-lg border border-purple-100 mt-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <Label className="text-purple-700">Expected Yearly Salary 💰</Label>
+                            <div className="mt-1 font-medium text-lg text-green-600">
+                              ${careers?.find(c => c.title === targetOccupation)?.salaryMedian?.toLocaleString() || "???,???"}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Average salary for this job
+                            </div>
+                          </div>
+                          <div className="text-5xl">
+                            {
+                              (careers?.find(c => c.title === targetOccupation)?.salaryMedian || 0) > 100000 ? "🤑" :
+                              (careers?.find(c => c.title === targetOccupation)?.salaryMedian || 0) > 70000 ? "😎" :
+                              (careers?.find(c => c.title === targetOccupation)?.salaryMedian || 0) > 40000 ? "🙂" : "😅"
+                            }
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 text-xs text-gray-600 bg-white p-2 rounded border border-purple-100">
+                          <span className="font-medium">Pro tip:</span> Advanced degrees can open doors to higher-paying roles and specialized positions in your field!
+                        </div>
                       </div>
                     )}
                   </div>

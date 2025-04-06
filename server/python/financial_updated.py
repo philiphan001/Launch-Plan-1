@@ -1594,132 +1594,188 @@ class FinancialCalculator:
                             cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
                     
                     elif milestone.get('type') == 'education':
-                        # Process education milestone
-                        education_cost = int(milestone.get('education_cost', milestone.get('educationCost', 30000)))
+                        # Process education milestone with new fields
+                        education_type = milestone.get('educationType', 'masters')
+                        education_years = int(milestone.get('educationYears', 2))
+                        education_annual_cost = int(milestone.get('educationAnnualCost', 30000))
+                        education_annual_loan = int(milestone.get('educationAnnualLoan', 20000))
+                        total_education_cost = education_annual_cost * education_years
+                        total_education_loan = education_annual_loan * education_years
+                        target_occupation = milestone.get('targetOccupation', None)
                         
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"\nProcessing education milestone in year {milestone_year}\n")
-                            f.write(f"Total education cost: ${education_cost}\n")
+                            f.write(f"Education type: {education_type}\n")
+                            f.write(f"Education duration: {education_years} years\n")
+                            f.write(f"Annual cost: ${education_annual_cost}\n")
+                            f.write(f"Annual loan: ${education_annual_loan}\n")
+                            f.write(f"Total education cost: ${total_education_cost}\n")
+                            f.write(f"Total education loan: ${total_education_loan}\n")
+                            f.write(f"Target occupation after graduation: {target_occupation}\n")
                         
-                        # Calculate upfront payment and loan amount using constant from configuration
-                        upfront_payment_percent = EDUCATION_UPFRONT_PAYMENT_PERCENT
-                        upfront_payment = int(education_cost * upfront_payment_percent)
-                        education_loan_amount = education_cost - upfront_payment
-                        
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Upfront payment ({upfront_payment_percent*100}%): ${upfront_payment}\n")
-                            f.write(f"Education loan amount ({(1-upfront_payment_percent)*100}%): ${education_loan_amount}\n")
-                        
-                        # Apply the upfront payment as an immediate expense in this year
-                        # First, check if we have enough savings to cover the upfront payment
-                        current_savings = savings_value_yearly[milestone_year]
-                        available_savings = max(0, current_savings - self.emergency_fund_amount)
+                        # Calculate out-of-pocket cost (not covered by loans)
+                        annual_out_of_pocket = max(0, education_annual_cost - education_annual_loan)
+                        total_out_of_pocket = annual_out_of_pocket * education_years
                         
                         with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Current savings: ${current_savings}\n")
-                            f.write(f"Emergency fund amount: ${self.emergency_fund_amount}\n")
-                            f.write(f"Available savings: ${available_savings}\n")
+                            f.write(f"Annual out-of-pocket cost: ${annual_out_of_pocket}\n")
+                            f.write(f"Total out-of-pocket cost: ${total_out_of_pocket}\n")
                         
-                        # Calculate how much we can cover from savings and how much requires a personal loan
-                        savings_portion = min(available_savings, upfront_payment)
-                        loan_needed = max(0, upfront_payment - savings_portion)
+                        # Apply the out-of-pocket expenses over the duration of education
+                        for edu_year in range(education_years):
+                            year_index = milestone_year + edu_year
+                            if year_index <= self.years_to_project:
+                                # Add the annual education expense to education_expenses_yearly
+                                education_expenses_yearly[year_index] += annual_out_of_pocket
+                                
+                                # Add to total expenses
+                                expenses_yearly[year_index] += annual_out_of_pocket
+                                
+                                # Reduce cash flow for this year
+                                cash_flow_yearly[year_index] -= annual_out_of_pocket
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"Year {year_index}: Added ${annual_out_of_pocket} to education expenses\n")
                         
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Covering from savings: ${savings_portion}\n")
-                            f.write(f"Additional loan needed: ${loan_needed}\n")
-                        
-                        # Reduce assets and savings by the portion we can cover
-                        assets_yearly[milestone_year] -= savings_portion
-                        cash_flow_yearly[milestone_year] -= savings_portion
-                        savings_value_yearly[milestone_year] = current_savings - savings_portion
-                        
-                        # If we need an additional loan for the upfront payment, create it
-                        if loan_needed > 0:
-                            personal_loan_term = self.personal_loan_term_years
-                            personal_loan_rate = self.personal_loan_interest_rate
+                        # Check if we need to create student loans
+                        if total_education_loan > 0:
+                            # Get education loan parameters from constants
+                            education_loan_interest_rate = EDUCATION_LOAN_INTEREST_RATE
+                            education_loan_term_years = EDUCATION_LOAN_TERM_YEARS
                             
-                            # Create a personal loan for the upfront payment portion
-                            personal_loan = PersonalLoan(
-                                name="Education Upfront Payment Loan",
-                                initial_balance=loan_needed,
-                                interest_rate=personal_loan_rate,
-                                term_years=personal_loan_term,
-                                milestone_year=milestone_year,
-                                milestone_month=6  # Assume loan starts mid-year
+                            # Create a new student loan using the Student Loan class
+                            education_loan = StudentLoan(
+                                name=f"Education Loan for {education_type.capitalize()}",
+                                initial_balance=total_education_loan,
+                                interest_rate=education_loan_interest_rate,
+                                term_years=education_loan_term_years,
+                                deferment_years=education_years,  # Defer payments until after graduation
+                                subsidized=False  # Not subsidized by default
                             )
                             
-                            # Add the personal loan to the calculator's liabilities
-                            self.add_liability(personal_loan)
+                            # Add the education loan to liabilities
+                            self.add_liability(education_loan)
                             
                             with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Created personal loan for education upfront payment:\n")
-                                f.write(f"- Loan amount: ${loan_needed}\n")
-                                f.write(f"- Term: {personal_loan_term} years\n")
-                                f.write(f"- Rate: {personal_loan_rate * 100}%\n")
-                                f.write(f"- Monthly payment: ${personal_loan.monthly_payment:.2f}\n")
+                                f.write(f"Created education loan with balance: ${total_education_loan}\n")
+                                f.write(f"Monthly payment: ${education_loan.monthly_payment:.2f}\n")
+                                f.write(f"Annual payment: ${education_loan.monthly_payment * 12:.2f}\n")
+                                f.write(f"Term: {education_loan_term_years} years at {education_loan_interest_rate*100:.2f}% APR\n")
+                                f.write(f"Deferment: {education_years} years\n")
                             
-                            # Track personal loan balances in our yearly tracking arrays
+                            # Track education loan balances in our student loan tracking arrays
                             for year in range(milestone_year, self.years_to_project + 1):
                                 # Get the loan balance for this year
-                                loan_balance = personal_loan.get_balance(year)
+                                loan_balance = education_loan.get_balance(year - milestone_year)
                                 
-                                # Add to all_personal_loans tracking array
-                                all_personal_loans[year] += int(loan_balance)
+                                # Add to all_student_loans tracking array
+                                all_student_loans[year] += int(loan_balance)
                                 
-                                # Add the loan payment to debt expenses
-                                payment = personal_loan.get_payment(year)
-                                debt_expenses_yearly[year] += int(payment)
+                                # Add the loan payment to debt expenses after deferment period
+                                if year >= (milestone_year + education_years):
+                                    payment = education_loan.get_payment(year - milestone_year)
+                                    debt_expenses_yearly[year] += int(payment)
+                                    
+                                    # Split payment into principal and interest components
+                                    interest_payment = education_loan.get_interest_payment(year - milestone_year)
+                                    principal_payment = education_loan.get_principal_payment(year - milestone_year)
+                                    debt_interest_yearly[year] += int(interest_payment)
+                                    debt_principal_yearly[year] += int(principal_payment)
+                        
+                        # Apply income boost after education if a target occupation is specified
+                        graduation_year = milestone_year + education_years
+                        if target_occupation and graduation_year <= self.years_to_project:
+                            # Get target occupation data from self.input_data if available
+                            careers_data = getattr(self, 'input_data', {}).get('careersData', [])
+                            target_career = None
+                            target_salary = None
+                            
+                            # Look for the target occupation in careers data
+                            for career in careers_data:
+                                if career.get('title') == target_occupation:
+                                    target_career = career
+                                    break
+                            
+                            if target_career and 'salaryMedian' in target_career:
+                                # Use the actual salary from the selected career
+                                target_salary = int(target_career.get('salaryMedian', 0))
+                                # Apply location adjustment if needed
+                                cost_of_living_factor = getattr(self, 'input_data', {}).get('costOfLivingFactor', 1.0)
+                                target_salary = int(target_salary * cost_of_living_factor)
+                            else:
+                                # Fallback to multiplier if career data not found
+                                income_multiplier = 1.2  # Default 20% increase
+                                if education_type == 'bachelors':
+                                    income_multiplier = 1.3  # 30% increase
+                                elif education_type == 'masters':
+                                    income_multiplier = 1.5  # 50% increase
+                                elif education_type == 'doctorate':
+                                    income_multiplier = 1.8  # 80% increase
+                                elif education_type == 'professional':
+                                    income_multiplier = 2.0  # 100% increase (double)
                                 
-                                # Split payment into principal and interest components
-                                interest_payment = personal_loan.get_interest_payment(year)
-                                principal_payment = personal_loan.get_principal_payment(year)
-                                debt_interest_yearly[year] += int(interest_payment)
-                                debt_principal_yearly[year] += int(principal_payment)
-                        
-                        # Create an education loan for the remaining amount (education_loan_amount)
-                        # Get education loan parameters from constants
-                        education_loan_interest_rate = EDUCATION_LOAN_INTEREST_RATE
-                        education_loan_term_years = EDUCATION_LOAN_TERM_YEARS
-                        
-                        # Create a new student loan using the Student Loan class
-                        education_loan = StudentLoan(
-                            name="Education Milestone Loan",
-                            initial_balance=education_loan_amount,
-                            interest_rate=education_loan_interest_rate,
-                            term_years=education_loan_term_years,
-                            deferment_years=0,  # No deferment for now
-                            subsidized=False  # Not subsidized by default
-                        )
-                        
-                        # Add the education loan to liabilities
-                        self.add_liability(education_loan)
-                        
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Created education loan with balance: ${education_loan_amount}\n")
-                            f.write(f"Monthly payment: ${education_loan.monthly_payment:.2f}\n")
-                            f.write(f"Annual payment: ${education_loan.monthly_payment * 12:.2f}\n")
-                            f.write(f"Term: {education_loan_term_years} years at {education_loan_interest_rate*100:.2f}% APR\n")
+                                # Use current income as base and apply multiplier
+                                base_graduation_income = income_yearly[graduation_year]
+                                target_salary = int(base_graduation_income * income_multiplier)
                             
-                        # Track education loan balances in our student loan tracking arrays
-                        for year in range(milestone_year, self.years_to_project + 1):
-                            # Get the loan balance for this year
-                            loan_balance = education_loan.get_balance(year)
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Applying career change after graduation in year {graduation_year}\n")
+                                f.write(f"Target occupation: {target_occupation}\n")
+                                if target_career:
+                                    f.write(f"Target occupation salary: ${target_salary}\n")
+                                else:
+                                    # Get the income_multiplier based on education type for logging
+                                    log_multiplier = 1.2  # Default
+                                    if education_type == 'bachelors':
+                                        log_multiplier = 1.3
+                                    elif education_type == 'masters':
+                                        log_multiplier = 1.5
+                                    elif education_type == 'doctorate':
+                                        log_multiplier = 1.8
+                                    elif education_type == 'professional':
+                                        log_multiplier = 2.0
+                                        
+                                    f.write(f"Target occupation not found in careers data, applying multiplier instead\n")
+                                    f.write(f"Income multiplier for {education_type}: {log_multiplier}\n")
+                                f.write(f"Current income before change: ${income_yearly[graduation_year]}\n")
                             
-                            # Add to all_student_loans tracking array
-                            all_student_loans[year] += int(loan_balance)
-                            
-                            # Add the loan payment to debt expenses
-                            payment = education_loan.get_payment(year)
-                            debt_expenses_yearly[year] += int(payment)
-                            
-                            # Split payment into principal and interest components
-                            interest_payment = education_loan.get_interest_payment(year)
-                            principal_payment = education_loan.get_principal_payment(year)
-                            debt_interest_yearly[year] += int(interest_payment)
-                            debt_principal_yearly[year] += int(principal_payment)
-                        
-                        # Add income boost after education (optional, if you want to model income increases from education)
-                        # This could be implemented based on the type of education
+                            # Apply the income change for all years after graduation
+                            for year in range(graduation_year, self.years_to_project + 1):
+                                # Increment salary by 3% per year after graduation (for career growth)
+                                years_since_graduation = year - graduation_year
+                                career_growth_factor = 1.0 + (0.03 * years_since_graduation)
+                                
+                                # Calculate new income based on target salary with growth
+                                new_income = int(target_salary * career_growth_factor)
+                                
+                                # Update income for this year
+                                income_yearly[year] = new_income
+                                # Update total income as well
+                                total_income_yearly[year] = new_income + spouse_income_yearly[year]
+                                
+                                # Recalculate taxes with new income
+                                filing_status = "single"
+                                if any(m for m in self.milestones if m.get('type') == 'marriage' and 
+                                      int(m.get('yearsAway', 0)) + self.start_age <= self.start_age + year):
+                                    filing_status = "married"
+                                
+                                new_taxes = self._calculate_taxes(total_income_yearly[year], year, filing_status)
+                                payroll_tax_expenses_yearly[year] = int(new_taxes["fica_tax"])
+                                federal_tax_expenses_yearly[year] = int(new_taxes["federal_tax"])
+                                state_tax_expenses_yearly[year] = int(new_taxes["state_tax"])
+                                tax_expenses_yearly[year] = (payroll_tax_expenses_yearly[year] + 
+                                                            federal_tax_expenses_yearly[year] + 
+                                                            state_tax_expenses_yearly[year])
+                                
+                                # Update cash flow with new income and tax calculations
+                                cash_flow_yearly[year] = total_income_yearly[year] - expenses_yearly[year]
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    if year == graduation_year:  # Only log first year to avoid excessive logging
+                                        f.write(f"Updated income to ${new_income} after graduation\n")
+                                        f.write(f"New total income: ${total_income_yearly[year]}\n")
+                                        f.write(f"Recalculated taxes: ${tax_expenses_yearly[year]}\n")
+                                        f.write(f"Updated cash flow: ${cash_flow_yearly[year]}\n")
 
                     elif milestone.get('type') == 'children':
                         # Children affect expenses
