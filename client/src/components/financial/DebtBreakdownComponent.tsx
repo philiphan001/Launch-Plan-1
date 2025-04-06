@@ -79,6 +79,9 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   const [activeTab, setActiveTab] = useState('by-type');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
+  // Debug: Log the entire projection data to check its structure
+  console.log('Projection Data Keys:', Object.keys(projectionData));
+  
   // Extract necessary data
   const ages = projectionData.ages || [];
   const debtTotal = projectionData.debt || [];
@@ -88,6 +91,9 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   const studentLoanData = projectionData.studentLoan || [];
   const carLoanData = projectionData.carLoan || [];
   const personalLoansData = projectionData.personalLoans || [];
+  
+  // Debug: Log the personal loans data to see if it's coming through
+  console.log('Personal Loans Data:', personalLoansData);
 
   // Interest/principal data (if needed for comparison)
   const debtInterest = projectionData.debtInterest || [];
