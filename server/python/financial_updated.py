@@ -657,6 +657,16 @@ class FinancialCalculator:
                                 milestone_month=6    # Mid-year (arbitrary)
                             )
                             
+                            # Debug the personal loan creation
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n\n*** PERSONAL LOAN CREATED for negative cash flow ***\n")
+                                f.write(f"Year {i}: Created {loan_name} for ${remaining_negative_amount}\n")
+                                f.write(f"Interest rate: {self.personal_loan_interest_rate*100}%, Term: {self.personal_loan_term_years} years\n")
+                                # Write current values of all_personal_loans array
+                                f.write("Current all_personal_loans array values:\n")
+                                for yr in range(self.years_to_project + 1):
+                                    f.write(f"  Year {yr}: ${all_personal_loans[yr]}\n")
+                            
                             # Add the new loan to the calculator's liabilities
                             self.add_liability(cash_flow_loan)
                             

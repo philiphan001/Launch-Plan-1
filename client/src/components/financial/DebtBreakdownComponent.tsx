@@ -103,6 +103,27 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   console.log('Personal Loans Data (All Years):', personalLoansData);
   console.log('Total Liabilities:', projectionData.liabilities);
   
+  // Add a very clear debugging output as an alert
+  setTimeout(() => {
+    // Create a clearer message for debugging
+    const hasSomePersonalLoans = personalLoansData.some((amount: number) => amount > 0);
+    console.warn('Has any personal loans with value > 0?', hasSomePersonalLoans);
+    
+    // Log the first few years data to an alert
+    const alertSummary = 
+      `DEBT DEBUG:
+       First 3 years summary:
+       
+       Personal Loans: ${personalLoansData.slice(0, 3).join(', ')}
+       Mortgage: ${mortgageData.slice(0, 3).join(', ')}  
+       Car Loan: ${carLoanData.slice(0, 3).join(', ')}
+       Student Loan: ${studentLoanData.slice(0, 3).join(', ')}
+       Total Liabilities: ${projectionData.liabilities?.slice(0, 3).join(', ')}
+      `;
+    
+    console.warn(alertSummary);
+  }, 1000);
+  
   // Check for any mismatch between sum of loans and total liabilities
   const debugLiabilities = ages.map((age: number, index: number) => {
     const mortgage = mortgageData[index] || 0;
