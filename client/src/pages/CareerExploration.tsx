@@ -224,22 +224,20 @@ const CareerExploration = () => {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-display font-semibold text-gray-800">Career Exploration</h1>
-        {favoriteCareers.length > 0 && (
-          <Button className="flex items-center" variant="outline" asChild>
-            <a href="/career-builder">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              AI Career Builder
-            </a>
-          </Button>
-        )}
+        <Button className="flex items-center" variant="outline" asChild>
+          <a href="/career-builder">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            AI Career Builder
+          </a>
+        </Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
