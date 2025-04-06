@@ -1920,6 +1920,7 @@ const FinancialProjections = () => {
         carValue={projectionData.carValue}
         carLoan={projectionData.carLoan}
         studentLoan={projectionData.studentLoan}
+        personalLoans={projectionData.personalLoans}
       />
       
       {/* Card to display included college and career calculations */}
