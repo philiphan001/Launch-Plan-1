@@ -93,6 +93,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
 
   // Education milestone specific state
   const [educationCost, setEducationCost] = useState(30000);
+  const [educationType, setEducationType] = useState("masters");
+  const [educationYears, setEducationYears] = useState(2);
+  const [educationAnnualCost, setEducationAnnualCost] = useState(30000);
+  const [educationAnnualLoan, setEducationAnnualLoan] = useState(20000);
   
   const queryClient = useQueryClient();
   
@@ -271,6 +275,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setChildrenExpensePerYear(milestoneToEdit.childrenExpensePerYear || 12000);
       } else if (type === "education") {
         setEducationCost(milestoneToEdit.educationCost || 30000);
+        setEducationType(milestoneToEdit.educationType || "masters");
+        setEducationYears(milestoneToEdit.educationYears || 2);
+        setEducationAnnualCost(milestoneToEdit.educationAnnualCost || 30000);
+        setEducationAnnualLoan(milestoneToEdit.educationAnnualLoan || 20000);
       }
     } else {
       // This is a new milestone
@@ -300,6 +308,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setChildrenExpensePerYear(12000);
       } else if (type === "education") {
         setEducationCost(30000);
+        setEducationType("masters");
+        setEducationYears(2);
+        setEducationAnnualCost(30000);
+        setEducationAnnualLoan(20000);
       }
     }
   };
@@ -427,6 +439,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         date,
         yearsAway,
         educationCost,
+        educationType,
+        educationYears,
+        educationAnnualCost,
+        educationAnnualLoan,
       };
       
       if (isEditing && editingMilestoneId) {
@@ -1245,18 +1261,124 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
               
               {/* Education specific fields */}
               {currentMilestone === "education" && (
-                <div className="space-y-4">
+                <div className="space-y-4 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-200">
+                  <div className="flex justify-center mb-4">
+                    <div className="flex items-center space-x-2 bg-white py-2 px-4 rounded-full shadow-sm border border-purple-200">
+                      <GraduationCap className="h-5 w-5 text-purple-500" />
+                      <h3 className="text-lg font-medium bg-gradient-to-r from-purple-500 to-indigo-500 text-transparent bg-clip-text">Graduate School Planning</h3>
+                    </div>
+                  </div>
+                  
                   <div>
-                    <Label htmlFor="education-cost">Education Cost</Label>
+                    <Label htmlFor="education-type">Program Type</Label>
+                    <Select
+                      value={educationType}
+                      onValueChange={setEducationType}
+                    >
+                      <SelectTrigger className="mt-1 w-full">
+                        <SelectValue placeholder="Select program type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="masters">Master's Degree</SelectItem>
+                        <SelectItem value="phd">Ph.D. / Doctoral</SelectItem>
+                        <SelectItem value="mba">MBA</SelectItem>
+                        <SelectItem value="jd">Law School (JD)</SelectItem>
+                        <SelectItem value="md">Medical School (MD)</SelectItem>
+                        <SelectItem value="certificate">Professional Certificate</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="education-years">Program Duration (Years)</Label>
+                    <div className="flex items-center mt-2">
+                      <span className="mr-4 text-sm w-8">{educationYears}</span>
+                      <Slider
+                        id="education-years"
+                        min={1}
+                        max={8}
+                        step={1}
+                        value={[educationYears]}
+                        onValueChange={(value) => setEducationYears(value[0])}
+                        className="flex-1"
+                      />
+                      <span className="ml-4 text-sm w-8">{educationYears}</span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="education-annual-cost">Annual Program Cost</Label>
                     <div className="flex items-center mt-1">
                       <span className="mr-2">$</span>
                       <Input
                         type="number"
-                        id="education-cost"
-                        value={educationCost}
-                        onChange={(e) => setEducationCost(Number(e.target.value))}
+                        id="education-annual-cost"
+                        value={educationAnnualCost}
+                        onChange={(e) => {
+                          const cost = Number(e.target.value);
+                          setEducationAnnualCost(cost);
+                          setEducationCost(cost * educationYears);
+                        }}
                       />
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total program cost: ${(educationAnnualCost * educationYears).toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="education-annual-loan">Annual Loan Amount</Label>
+                    <div className="flex items-center mt-1">
+                      <span className="mr-2">$</span>
+                      <Input
+                        type="number"
+                        id="education-annual-loan"
+                        value={educationAnnualLoan}
+                        onChange={(e) => setEducationAnnualLoan(Number(e.target.value))}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total loans: ${(educationAnnualLoan * educationYears).toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white rounded-md p-3 border border-purple-100 mt-2">
+                    <h4 className="font-medium text-purple-700 mb-2">Funding Summary</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="text-gray-600">Total Program Cost:</div>
+                      <div className="font-medium text-right">${(educationAnnualCost * educationYears).toLocaleString()}</div>
+                      
+                      <div className="text-gray-600">Total Loans:</div>
+                      <div className="font-medium text-right">${(educationAnnualLoan * educationYears).toLocaleString()}</div>
+                      
+                      <div className="text-gray-600">From Savings:</div>
+                      <div className="font-medium text-right">${(educationAnnualCost * educationYears - educationAnnualLoan * educationYears).toLocaleString()}</div>
+                      
+                      <div className="text-gray-600 pt-2 border-t border-gray-100">Required Savings:</div>
+                      <div className="font-medium text-right pt-2 border-t border-gray-100 text-purple-700">
+                        ${Math.max(0, educationAnnualCost * educationYears - educationAnnualLoan * educationYears).toLocaleString()}
+                      </div>
+                    </div>
+                    
+                    {futureSavings && (
+                      <div className="mt-3 text-xs border-t border-purple-100 pt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">Projected savings in {yearsAway} years:</span>
+                          <span className="font-medium">${Math.round(futureSavings.projectedAmount).toLocaleString()}</span>
+                        </div>
+                        
+                        {futureSavings.projectedAmount < Math.max(0, educationAnnualCost * educationYears - educationAnnualLoan * educationYears) ? (
+                          <div className="mt-2 bg-red-50 text-red-700 p-2 rounded-md border border-red-100 flex items-start">
+                            <AlertTriangle className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
+                            <span>You may need to increase your savings rate or loan amount to cover the education costs.</span>
+                          </div>
+                        ) : (
+                          <div className="mt-2 bg-green-50 text-green-700 p-2 rounded-md border border-green-100">
+                            Your projected savings should cover the education costs not funded by loans.
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
