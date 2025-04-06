@@ -79,8 +79,15 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   const [activeTab, setActiveTab] = useState('by-type');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
-  // Debug: Log the entire projection data to check its structure
+  // Enhanced debugging to check the projection data structure and liability values
   console.log('Projection Data Keys:', Object.keys(projectionData));
+  console.log('Projection Data Sample:', {
+    liabilities: projectionData.liabilities?.slice(0, 3),
+    mortgage: projectionData.mortgage?.slice(0, 3),
+    carLoan: projectionData.carLoan?.slice(0, 3),
+    studentLoan: projectionData.studentLoan?.slice(0, 3),
+    personalLoans: projectionData.personalLoans?.slice(0, 3)
+  });
   
   // Extract necessary data
   const ages = projectionData.ages || [];
@@ -92,8 +99,34 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   const carLoanData = projectionData.carLoan || [];
   const personalLoansData = projectionData.personalLoans || [];
   
-  // Debug: Log the personal loans data to see if it's coming through
-  console.log('Personal Loans Data:', personalLoansData);
+  // Enhanced debugging for personal loans
+  console.log('Personal Loans Data (All Years):', personalLoansData);
+  console.log('Total Liabilities:', projectionData.liabilities);
+  
+  // Check for any mismatch between sum of loans and total liabilities
+  const debugLiabilities = ages.map((age: number, index: number) => {
+    const mortgage = mortgageData[index] || 0;
+    const studentLoan = studentLoanData[index] || 0;
+    const carLoan = carLoanData[index] || 0;
+    const personalLoans = personalLoansData[index] || 0;
+    const sumOfLoans = mortgage + studentLoan + carLoan + personalLoans;
+    const totalLiability = projectionData.liabilities[index] || 0;
+    const other = Math.max(0, totalLiability - sumOfLoans);
+    
+    return {
+      age,
+      mortgage,
+      studentLoan,
+      carLoan,
+      personalLoans,
+      sumOfLoans,
+      totalLiability,
+      other,
+      difference: totalLiability - sumOfLoans
+    };
+  });
+  
+  console.log('Liability Breakdown:', debugLiabilities);
 
   // Interest/principal data (if needed for comparison)
   const debtInterest = projectionData.debtInterest || [];

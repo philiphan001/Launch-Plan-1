@@ -2128,6 +2128,25 @@ class FinancialCalculator:
             else:
                 f.write("No assets found. Cannot update savings_value_yearly array.\n")
 
+        # Debug the personal loans before compiling results
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\n\n=== PERSONAL LOANS DATA (FINAL VALUES) ===\n")
+            # Log all the personal loan values
+            for i in range(self.years_to_project + 1):
+                f.write(f"Year {i}: Personal Loans: ${all_personal_loans[i]}\n")
+            
+            # Check if we have any PersonalLoan instances
+            personal_loan_count = 0
+            for liability in self.liabilities:
+                if isinstance(liability, PersonalLoan):
+                    personal_loan_count += 1
+                    f.write(f"Found PersonalLoan: '{liability.name}', initial_balance=${liability.initial_balance}\n")
+                    # Log balance for each year
+                    for i in range(self.years_to_project + 1):
+                        f.write(f"  Year {i} balance: ${liability.get_balance(i)}\n")
+            
+            f.write(f"Total PersonalLoan instances: {personal_loan_count}\n")
+        
         # Compile results
         self.results = {
             'ages': ages,
@@ -2148,7 +2167,7 @@ class FinancialCalculator:
             'mortgage': mortgage_yearly,
             'carLoan': car_loan_yearly,
             'studentLoan': student_loan_yearly,
-            'personalLoans': all_personal_loans,
+            'personalLoans': all_personal_loans,  # Verify this is being passed correctly
             
             # Base cost of living categories
             'housing': housing_expenses_yearly,
