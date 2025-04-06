@@ -61,3 +61,4 @@ DEFAULT_TAX_STANDARD_DEDUCTION_MARRIED = 27700  # 2024 standard deduction for ma
 DEFAULT_TAX_ADDITIONAL_DEDUCTIONS = 0  # Default additional deductions
 DEFAULT_TAX_CREDITS = 0  # Default tax credits
 DEFAULT_RETIREMENT_CONTRIBUTION_RATE = 0.05  # Default 401k/IRA contribution rate (5%)
+DEFAULT_RETIREMENT_GROWTH_RATE = 0.07  # Default retirement account growth rate (7%)

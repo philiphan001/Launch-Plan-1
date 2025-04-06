@@ -25,7 +25,7 @@ try:
         EDUCATION_LOAN_TERM_YEARS, EDUCATION_LOAN_INTEREST_RATE,
         DEFAULT_TAX_FILING_STATUS, DEFAULT_TAX_STANDARD_DEDUCTION_SINGLE,
         DEFAULT_TAX_STANDARD_DEDUCTION_MARRIED, DEFAULT_TAX_ADDITIONAL_DEDUCTIONS,
-        DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE,
+        DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE, DEFAULT_RETIREMENT_GROWTH_RATE,
         CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
         CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM,
@@ -47,7 +47,7 @@ except ImportError:
         EDUCATION_LOAN_TERM_YEARS, EDUCATION_LOAN_INTEREST_RATE,
         DEFAULT_TAX_FILING_STATUS, DEFAULT_TAX_STANDARD_DEDUCTION_SINGLE,
         DEFAULT_TAX_STANDARD_DEDUCTION_MARRIED, DEFAULT_TAX_ADDITIONAL_DEDUCTIONS,
-        DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE,
+        DEFAULT_TAX_CREDITS, DEFAULT_RETIREMENT_CONTRIBUTION_RATE, DEFAULT_RETIREMENT_GROWTH_RATE,
         CAR_REPLACEMENT_YEARS, CAR_REPLACEMENT_COST, CAR_AUTO_REPLACE,
         HEALTHCARE_INFLATION_RATE, TRANSPORTATION_INFLATION_RATE,
         CAR_PURCHASE_TRANSPORTATION_REDUCTION, CAR_LOAN_TERM,
@@ -127,6 +127,8 @@ class FinancialCalculator:
         self.emergency_fund_amount = emergency_fund_amount
         self.personal_loan_term_years = personal_loan_term_years
         self.personal_loan_interest_rate = personal_loan_interest_rate
+        self.retirement_contribution_rate = DEFAULT_RETIREMENT_CONTRIBUTION_RATE
+        self.retirement_growth_rate = DEFAULT_RETIREMENT_GROWTH_RATE
         self.assets: List[Asset] = []
         self.liabilities: List[Liability] = []
         self.incomes: List[Income] = []
@@ -180,6 +182,24 @@ class FinancialCalculator:
             rate: Annual interest rate (e.g., 0.08 for 8%)
         """
         self.personal_loan_interest_rate = rate
+        
+    def set_retirement_contribution_rate(self, rate: float) -> None:
+        """
+        Set the annual retirement contribution rate.
+        
+        Args:
+            rate: Annual contribution rate as a decimal (e.g., 0.10 for 10%)
+        """
+        self.retirement_contribution_rate = rate
+        
+    def set_retirement_growth_rate(self, rate: float) -> None:
+        """
+        Set the annual retirement account growth rate.
+        
+        Args:
+            rate: Annual growth rate as a decimal (e.g., 0.07 for 7%)
+        """
+        self.retirement_growth_rate = rate
     
     def add_asset(self, asset: Asset) -> None:
         """
@@ -477,8 +497,8 @@ class FinancialCalculator:
             effective_tax_rate_yearly[i] = float(current_year_taxes["effective_tax_rate"])
             marginal_tax_rate_yearly[i] = float(current_year_taxes["federal_marginal_rate"])
             
-            # Calculate retirement contribution
-            retirement_contribution = int(income_yearly[i] * DEFAULT_RETIREMENT_CONTRIBUTION_RATE)
+            # Calculate retirement contribution using user-configurable rate
+            retirement_contribution = int(income_yearly[i] * self.retirement_contribution_rate)
             retirement_contribution_yearly[i] = retirement_contribution
             
             # Calculate cash flow for this year
@@ -2169,6 +2189,8 @@ class FinancialCalculator:
         emergency_fund_amount = input_data.get('emergencyFundAmount', DEFAULT_EMERGENCY_FUND_AMOUNT)
         personal_loan_term_years = input_data.get('personalLoanTermYears', DEFAULT_PERSONAL_LOAN_TERM_YEARS)
         personal_loan_interest_rate = input_data.get('personalLoanInterestRate', DEFAULT_PERSONAL_LOAN_INTEREST_RATE)
+        retirement_contribution_rate = input_data.get('retirementContributionRate', DEFAULT_RETIREMENT_CONTRIBUTION_RATE)
+        retirement_growth_rate = input_data.get('retirementGrowthRate', DEFAULT_RETIREMENT_GROWTH_RATE)
         
         # Create calculator with all parameters
         calculator = cls(
@@ -2178,6 +2200,10 @@ class FinancialCalculator:
             personal_loan_term_years,
             personal_loan_interest_rate
         )
+        
+        # Set retirement-specific parameters
+        calculator.retirement_contribution_rate = retirement_contribution_rate
+        calculator.retirement_growth_rate = retirement_growth_rate
         
         # Extract cost of living factor if present 
         # This factor adjusts income based on location data from the frontend
@@ -2200,8 +2226,20 @@ class FinancialCalculator:
             if asset_type == 'depreciable' or asset_type == 'car':
                 depreciation_rate = asset_data.get('depreciationRate', 0.15)  # 15% annual depreciation
                 asset = DepreciableAsset(name, initial_value, depreciation_rate)
-            else:  # Default to investment asset
-                growth_rate = asset_data.get('growthRate', 0.03)  # 3% annual growth
+            else:  # Investment asset
+                # Check if this is a retirement account to use special growth rate
+                is_retirement = ('retirement' in name.lower() or '401k' in name.lower() or 'ira' in name.lower())
+                
+                if is_retirement:
+                    # Use the user-configured retirement growth rate
+                    growth_rate = retirement_growth_rate
+                    # Log the use of special retirement growth rate
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Using retirement growth rate {growth_rate*100:.1f}% for {name}\n")
+                else:
+                    # Use standard growth rate for non-retirement investments
+                    growth_rate = asset_data.get('growthRate', 0.03)  # 3% annual growth
+                
                 asset = Investment(name, initial_value, growth_rate)
             
             calculator.add_asset(asset)
