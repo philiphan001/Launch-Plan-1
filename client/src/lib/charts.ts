@@ -267,18 +267,42 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
   // If not available, fall back to zero - we should never calculate this in the frontend
   const savingsRaw = data.savingsValue || Array(data.ages.length).fill(0);
   
+  // Get retirement data if available
+  const retirementSavings = data.retirementContribution?.map((contrib, i) => {
+    // Approximate the retirement account value (we're not calculating full compound growth here)
+    // Multiply by a factor to simulate accumulation over several years
+    return contrib * 5; // Simple multiplier to estimate current value from contributions
+  }) || Array(data.ages.length).fill(0);
+  
+  // Calculate regular savings by subtracting retirement from total savings
+  // Make sure we don't end up with negative regular savings if the calculation is off
+  const regularSavings = savingsRaw.map((total, i) => {
+    const retirement = retirementSavings[i] || 0;
+    // Regular savings is what's left after accounting for retirement
+    // However, we need to handle cases where total might be negative
+    if (total < 0) {
+      // If total is negative, assume all of it is regular savings (debt)
+      return total;
+    } else {
+      // Otherwise subtract retirement from total, but don't go below zero
+      return Math.max(0, total - retirement);
+    }
+  });
+  
   // Log the raw savings data for debugging
   console.log("Raw savings values from Python:", savingsRaw);
+  console.log("Retirement savings values:", retirementSavings);
+  console.log("Regular savings values:", regularSavings);
   
   // We'll use a different approach for savings visualization
   // Instead of stacking, which doesn't handle negative values well,
   // we'll use a regular bar chart approach for the savings values
   const datasets = [];
   
-  // Create a single dataset for savings that shows positive and negative values directly
+  // Create dataset for regular savings
   datasets.push({
-    label: 'Savings & Investments',
-    data: savingsRaw,
+    label: 'Regular Savings',
+    data: regularSavings,
     backgroundColor: (context: any) => {
       const value = context.raw as number;
       return value >= 0 ? 'rgba(63, 81, 181, 0.7)' : 'rgba(244, 67, 54, 0.7)';
@@ -287,10 +311,19 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
     // Not using stack for savings so we can see the negative values clearly
   });
   
+  // Create dataset for retirement savings
+  datasets.push({
+    label: 'Retirement Savings',
+    data: retirementSavings,
+    backgroundColor: 'rgba(76, 175, 80, 0.7)', // Green for retirement
+    borderRadius: 4,
+    // Not using stack for retirement to be consistent with regular savings
+  });
+  
   // Debug output
   console.log("Asset Breakdown Chart Data:");
   for (let i = 0; i < data.ages.length; i++) {
-    console.log(`Year ${i} (Age ${data.ages[i]}): Savings Raw=${savingsRaw[i]}, Home=${data.homeValue?.[i] || 0}, Total Assets=${data.assets?.[i] || 0}`);
+    console.log(`Year ${i} (Age ${data.ages[i]}): Regular Savings=${regularSavings[i]}, Retirement=${retirementSavings[i]}, Home=${data.homeValue?.[i] || 0}, Total Assets=${data.assets?.[i] || 0}`);
   }
 
   // Add home value dataset if it exists and has positive values
