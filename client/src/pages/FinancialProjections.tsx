@@ -1859,6 +1859,15 @@ const FinancialProjections = () => {
         </Card>
       )}
 
+      {/* Debt Breakdown by Loan Type */}
+      {projectionData?.debt && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <DebtBreakdownComponent projectionData={projectionData} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Tax Breakdown Chart */}
       {projectionData?.payrollTax && projectionData?.federalTax && projectionData?.stateTax && (
         <Card className="mb-6">
