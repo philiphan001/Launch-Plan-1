@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { createMainProjectionChart } from "@/lib/charts";
+import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
 import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBreakdownChart";
@@ -1901,7 +1901,9 @@ const FinancialProjections = () => {
       )}
       
       {/* Detailed Cash Flow Table with collapsible container */}
+      {/* Apply the fixLiabilityCalculation function to ensure graduate school loans are properly counted */}
       <CashFlowTable 
+        {...fixLiabilityCalculation(projectionData)}
         ages={projectionData.ages}
         income={projectionData.income}
         spouseIncome={projectionData.spouseIncome}
@@ -1919,17 +1921,6 @@ const FinancialProjections = () => {
         childcareExpenses={projectionData.childcare} 
         debtExpenses={projectionData.debt}
         discretionaryExpenses={projectionData.discretionary}
-        assets={projectionData.assets}
-        liabilities={projectionData.liabilities}
-        netWorth={projectionData.netWorth}
-        homeValue={projectionData.homeValue}
-        mortgage={projectionData.mortgage}
-        carValue={projectionData.carValue}
-        carLoan={projectionData.carLoan}
-        studentLoan={projectionData.studentLoan}
-        educationLoans={projectionData.educationLoans}
-        graduateSchoolLoans={projectionData.graduateSchoolLoans}
-        personalLoans={projectionData.personalLoans}
       />
       
       {/* Card to display included college and career calculations */}
