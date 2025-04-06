@@ -281,6 +281,7 @@ class FinancialCalculator:
         student_loan_yearly = [0] * (self.years_to_project + 1)
         all_personal_loans = [0] * (self.years_to_project + 1)  # New array to track all personal loans
         all_student_loans = [0] * (self.years_to_project + 1)  # New array to track all student loans from milestones
+        graduate_school_loans = [0] * (self.years_to_project + 1)  # Separate array specifically for graduate school loans
         
         # Track expense categories
         # Base cost of living categories
@@ -1671,6 +1672,12 @@ class FinancialCalculator:
                                 # Add to all_student_loans tracking array
                                 all_student_loans[year] += int(loan_balance)
                                 
+                                # Also track graduate school loans separately if this is a graduate degree
+                                if education_type.lower() in ['masters', 'graduate', 'phd', 'doctorate', 'mba']:
+                                    graduate_school_loans[year] += int(loan_balance)
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Year {year}: Adding ${int(loan_balance)} to graduate_school_loans as {education_type}\n")
+                                
                                 # Add the loan payment to debt expenses after deferment period
                                 if year >= (milestone_year + education_years):
                                     payment = education_loan.get_payment(year - milestone_year)
@@ -2516,7 +2523,7 @@ class FinancialCalculator:
             f.write("\n\n=== STUDENT LOANS DATA (FINAL VALUES) ===\n")
             # Log all the student loan values
             for i in range(self.years_to_project + 1):
-                f.write(f"Year {i}: Student Loans: ${all_student_loans[i]}\n")
+                f.write(f"Year {i}: Student Loans: ${all_student_loans[i]}, Graduate School Loans: ${graduate_school_loans[i]}\n")
             
             # Check if we have any StudentLoan instances
             student_loan_count = 0
@@ -2560,7 +2567,7 @@ class FinancialCalculator:
             'carLoan': car_loan_yearly,
             'studentLoan': student_loan_yearly,
             'educationLoans': all_student_loans,  # Track education milestone student loans separately
-            'graduateSchoolLoans': all_student_loans,  # Add separate key for clarity in frontend
+            'graduateSchoolLoans': graduate_school_loans,  # Specifically track graduate school loans
             'personalLoans': all_personal_loans,  # Verify this is being passed correctly
             
             # Base cost of living categories
