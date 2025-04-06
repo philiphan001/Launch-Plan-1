@@ -268,11 +268,15 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
   const savingsRaw = data.savingsValue || Array(data.ages.length).fill(0);
   
   // Get retirement data if available
-  const retirementSavings = data.retirementContribution?.map((contrib, i) => {
-    // Approximate the retirement account value (we're not calculating full compound growth here)
-    // Multiply by a factor to simulate accumulation over several years
-    return contrib * 5; // Simple multiplier to estimate current value from contributions
-  }) || Array(data.ages.length).fill(0);
+  const retirementSavings = data.retirementContribution ? 
+    // Calculate cumulative retirement savings (with no growth for simplicity)
+    data.retirementContribution.map((_, index) => {
+      // Sum all contributions up to this point (cumulative total)
+      return data.retirementContribution
+        .slice(0, index + 1)
+        .reduce((sum, contribution) => sum + contribution, 0);
+    }) : 
+    Array(data.ages.length).fill(0);
   
   // Calculate regular savings by subtracting retirement from total savings
   // Make sure we don't end up with negative regular savings if the calculation is off
