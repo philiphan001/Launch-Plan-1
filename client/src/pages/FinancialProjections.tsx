@@ -4,6 +4,7 @@ import { createMainProjectionChart } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
 import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBreakdownChart";
+import RetirementGrowthWidget from "@/components/financial/RetirementGrowthWidget";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
@@ -1768,6 +1769,9 @@ const FinancialProjections = () => {
         </Card>
       )}
 
+      {/* Retirement Growth Rate Widget */}
+      <RetirementGrowthWidget />
+      
       {/* Asset Breakdown Chart */}
       {projectionData?.assets && projectionData?.savingsValue && (
         <Card className="mb-6">
