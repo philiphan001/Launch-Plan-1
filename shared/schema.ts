@@ -492,6 +492,19 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     isEnabled: true
   },
   {
+    category: "general",
+    key: "retirement-growth-rate",
+    label: "Retirement Account Growth Rate",
+    description: "Annual investment growth rate for retirement accounts",
+    value: 6.0,
+    defaultValue: 6.0,
+    minValue: 0.0,
+    maxValue: 12.0,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  },
+  {
     category: "marriage",
     key: "spouse-loan-term",
     label: "Spouse Loan Repayment Term",

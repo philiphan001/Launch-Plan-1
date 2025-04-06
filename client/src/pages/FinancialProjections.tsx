@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
+import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBreakdownChart";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
@@ -1774,14 +1775,18 @@ const FinancialProjections = () => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">Asset Breakdown</h3>
             </div>
-            <AssetBreakdownChart 
+            <EnhancedAssetBreakdownChart 
               assetData={{
                 savings: projectionData.savingsValue[0] || 0,
-                retirement: projectionData.retirementContribution ? projectionData.retirementContribution[0] * 5 || 0 : 0, // Estimating accumulated retirement based on contributions
+                retirement: projectionData.retirementContribution ? projectionData.retirementContribution[0] || 0 : 0,
                 homeValue: projectionData.homeValue[0] || 0,
                 carValue: projectionData.carValue[0] || 0,
                 otherAssets: 0, // Set to 0 for now, may customize in the future
-              }} 
+              }}
+              projectionData={{
+                ages: projectionData.ages,
+                retirementContribution: projectionData.retirementContribution
+              }}
             />
             <div className="mt-4">
               <p className="text-sm text-gray-600">
