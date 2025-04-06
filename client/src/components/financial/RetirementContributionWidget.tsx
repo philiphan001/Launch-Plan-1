@@ -12,6 +12,7 @@ import {
 import { useAssumptions } from '@/hooks/use-assumptions';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 const RetirementContributionWidget = () => {
   const { assumptions, getAssumptionValue } = useAssumptions();
@@ -72,9 +73,12 @@ const RetirementContributionWidget = () => {
   });
 
   const handleChange = (value: number[]) => {
-    const newRate = value[0];
-    setRate(newRate);
-    setHasChanged(newRate !== originalRate);
+    if (value && value.length > 0) {
+      const newRate = value[0];
+      setRate(newRate);
+      setHasChanged(newRate !== originalRate);
+      console.log("Retirement contribution changed to:", newRate);
+    }
   };
 
   const handleReset = () => {
@@ -123,6 +127,31 @@ const RetirementContributionWidget = () => {
               <span>Default: {retirementContributionAssumption.defaultValue}%</span>
               <span>{retirementContributionAssumption.maxValue}%</span>
             </div>
+          </div>
+          
+          <div className="flex items-center">
+            <div className="text-sm mr-4">Manual adjustment:</div>
+            <Input
+              type="number"
+              value={rate}
+              onChange={(e) => {
+                const newRate = parseFloat(e.target.value);
+                if (!isNaN(newRate)) {
+                  const clampedRate = Math.min(
+                    Math.max(newRate, retirementContributionAssumption.minValue),
+                    retirementContributionAssumption.maxValue
+                  );
+                  setRate(clampedRate);
+                  setHasChanged(clampedRate !== originalRate);
+                  console.log("Manual retirement contribution rate set to:", clampedRate);
+                }
+              }}
+              min={retirementContributionAssumption.minValue}
+              max={retirementContributionAssumption.maxValue}
+              step={retirementContributionAssumption.stepValue}
+              className="w-20 text-right"
+            />
+            <span className="ml-2">%</span>
           </div>
 
           <div className="flex justify-end space-x-2">
