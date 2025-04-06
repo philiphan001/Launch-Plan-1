@@ -26,6 +26,7 @@ const DEBT_COLORS = {
   mortgage: '#8884d8',
   studentLoan: '#82ca9d',
   educationLoans: '#a1e5c0', // Adding a new color for education loans
+  graduateSchoolLoans: '#6dc09a', // Darker green for graduate school loans
   carLoan: '#ffc658',
   personalLoans: '#ff8042',
   other: '#d0ed57'
@@ -88,6 +89,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
     carLoan: projectionData.carLoan?.slice(0, 3),
     studentLoan: projectionData.studentLoan?.slice(0, 3),
     educationLoans: projectionData.educationLoans?.slice(0, 3),
+    graduateSchoolLoans: projectionData.graduateSchoolLoans?.slice(0, 3),
     personalLoans: projectionData.personalLoans?.slice(0, 3)
   });
   
@@ -99,6 +101,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   const mortgageData = projectionData.mortgage || [];
   const studentLoanData = projectionData.studentLoan || [];
   const educationLoansData = projectionData.educationLoans || [];
+  const graduateSchoolLoansData = projectionData.graduateSchoolLoans || []; // Add graduate school loans
   const carLoanData = projectionData.carLoan || [];
   const personalLoansData = projectionData.personalLoans || [];
   
@@ -110,7 +113,9 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   setTimeout(() => {
     // Create a clearer message for debugging
     const hasSomePersonalLoans = personalLoansData.some((amount: number) => amount > 0);
+    const hasGraduateLoans = graduateSchoolLoansData.some((amount: number) => amount > 0);
     console.warn('Has any personal loans with value > 0?', hasSomePersonalLoans);
+    console.warn('Has any graduate school loans with value > 0?', hasGraduateLoans);
     
     // Log the first few years data to an alert
     const alertSummary = 
@@ -122,7 +127,13 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
        Car Loan: ${carLoanData.slice(0, 3).join(', ')}
        Student Loan: ${studentLoanData.slice(0, 3).join(', ')}
        Education Loans: ${educationLoansData.slice(0, 3).join(', ')}
+       Graduate School Loans: ${graduateSchoolLoansData.slice(0, 3).join(', ')}
        Total Liabilities: ${projectionData.liabilities?.slice(0, 3).join(', ')}
+       
+       Graduate School Loans Debug:
+       - Has graduate school loans: ${hasGraduateLoans}
+       - Graduate School Loans in projectionData: ${!!projectionData.graduateSchoolLoans}
+       - Length of graduate school loans array: ${projectionData.graduateSchoolLoans?.length || 0}
       `;
     
     console.warn(alertSummary);
@@ -133,9 +144,10 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
     const mortgage = mortgageData[index] || 0;
     const studentLoan = studentLoanData[index] || 0;
     const educationLoans = educationLoansData[index] || 0;
+    const graduateSchoolLoans = graduateSchoolLoansData[index] || 0; // Add graduate school loans
     const carLoan = carLoanData[index] || 0;
     const personalLoans = personalLoansData[index] || 0;
-    const sumOfLoans = mortgage + studentLoan + educationLoans + carLoan + personalLoans;
+    const sumOfLoans = mortgage + studentLoan + educationLoans + graduateSchoolLoans + carLoan + personalLoans;
     const totalLiability = projectionData.liabilities[index] || 0;
     const other = Math.max(0, totalLiability - sumOfLoans);
     
@@ -144,6 +156,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
       mortgage,
       studentLoan,
       educationLoans,
+      graduateSchoolLoans, // Include in the debug object
       carLoan,
       personalLoans,
       sumOfLoans,
@@ -164,12 +177,13 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
     const mortgage = mortgageData[index] || 0;
     const studentLoan = studentLoanData[index] || 0;
     const educationLoans = educationLoansData[index] || 0;
+    const graduateSchoolLoans = graduateSchoolLoansData[index] || 0; // Add graduate school loans
     const carLoan = carLoanData[index] || 0;
     const personalLoans = personalLoansData[index] || 0;
     
     // If there's a discrepancy between the sum of individual loans and total debt,
     // assign the difference to "Other"
-    const sumOfKnownLoans = mortgage + studentLoan + educationLoans + carLoan + personalLoans;
+    const sumOfKnownLoans = mortgage + studentLoan + educationLoans + graduateSchoolLoans + carLoan + personalLoans;
     const total = debtTotal[index] || 0;
     const other = Math.max(0, total - sumOfKnownLoans);
     
@@ -178,6 +192,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
       'Mortgage': mortgage,
       'Student Loan': studentLoan,
       'Education Loans': educationLoans,
+      'Graduate School Loans': graduateSchoolLoans, // Add to chart data
       'Car Loan': carLoan,
       'Personal Loans': personalLoans,
       'Other': other,
@@ -234,6 +249,8 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
       percent: ((studentLoanData[selectedYearIndex] || 0) / debtTotal[selectedYearIndex] * 100).toFixed(1) },
     { name: 'Education Loans', value: educationLoansData[selectedYearIndex] || 0, color: DEBT_COLORS.educationLoans,
       percent: ((educationLoansData[selectedYearIndex] || 0) / debtTotal[selectedYearIndex] * 100).toFixed(1) },
+    { name: 'Graduate School Loans', value: graduateSchoolLoansData[selectedYearIndex] || 0, color: DEBT_COLORS.graduateSchoolLoans,
+      percent: ((graduateSchoolLoansData[selectedYearIndex] || 0) / debtTotal[selectedYearIndex] * 100).toFixed(1) },
     { name: 'Car Loan', value: carLoanData[selectedYearIndex] || 0, color: DEBT_COLORS.carLoan,
       percent: ((carLoanData[selectedYearIndex] || 0) / debtTotal[selectedYearIndex] * 100).toFixed(1) },
     { name: 'Personal Loans', value: personalLoansData[selectedYearIndex] || 0, color: DEBT_COLORS.personalLoans,
@@ -246,6 +263,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
     mortgage: mortgageData[index] || 0,
     studentLoan: studentLoanData[index] || 0,
     educationLoans: educationLoansData[index] || 0,
+    graduateSchoolLoans: graduateSchoolLoansData[index] || 0, // Add graduate school loans
     carLoan: carLoanData[index] || 0,
     personalLoans: personalLoansData[index] || 0,
     total: debtTotal[index] || 0
@@ -285,6 +303,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
                     <Bar dataKey="Mortgage" stackId="a" fill={DEBT_COLORS.mortgage} />
                     <Bar dataKey="Student Loan" stackId="a" fill={DEBT_COLORS.studentLoan} />
                     <Bar dataKey="Education Loans" stackId="a" fill={DEBT_COLORS.educationLoans} />
+                    <Bar dataKey="Graduate School Loans" stackId="a" fill={DEBT_COLORS.graduateSchoolLoans} />
                     <Bar dataKey="Car Loan" stackId="a" fill={DEBT_COLORS.carLoan} />
                     <Bar dataKey="Personal Loans" stackId="a" fill={DEBT_COLORS.personalLoans} />
                     <Bar dataKey="Other" stackId="a" fill={DEBT_COLORS.other} />
@@ -363,6 +382,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mortgage</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Loan</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Education Loans</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Graduate School</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Car Loan</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Personal Loans</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Debt</th>
@@ -374,6 +394,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
                     mortgage: number;
                     studentLoan: number;
                     educationLoans: number;
+                    graduateSchoolLoans: number;
                     carLoan: number;
                     personalLoans: number;
                     total: number;
@@ -383,6 +404,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.mortgage.toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.studentLoan.toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.educationLoans.toLocaleString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.graduateSchoolLoans.toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.carLoan.toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.personalLoans.toLocaleString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row.total.toLocaleString()}</td>
