@@ -17,8 +17,9 @@ CHILD_EXPENSE_PER_YEAR = 17000  # Same as CHILD_ANNUAL_EXPENSE
 CHILD_INITIAL_EXPENSE = 10000  # Initial expense for child
 
 # Education assumptions
-EDUCATION_LOAN_TERM_YEARS = 10  # Standard education loan term
-EDUCATION_LOAN_INTEREST_RATE = 0.055  # 5.5% education loan interest rate
+EDUCATION_LOAN_TERM_YEARS = 5  # Standard education loan term (matching frontend implementation)
+EDUCATION_LOAN_INTEREST_RATE = 0.06  # 6.0% education loan interest rate (matching frontend implementation)
+EDUCATION_UPFRONT_PAYMENT_PERCENT = 0.2  # 20% of education cost paid upfront (matching frontend implementation)
 GRADUATE_SCHOOL_INCOME_INCREASE = 0.30  # 30% income increase after graduate school
 
 # Car assumptions

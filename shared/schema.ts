@@ -620,5 +620,44 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     stepValue: 0.25,
     unit: "%",
     isEnabled: true
+  },
+  {
+    category: "education",
+    key: "education-loan-term",
+    label: "Education Loan Term",
+    description: "Number of years to repay education loans",
+    value: 10,
+    defaultValue: 10,
+    minValue: 5,
+    maxValue: 30,
+    stepValue: 1,
+    unit: "years",
+    isEnabled: true
+  },
+  {
+    category: "student-loans",
+    key: "student-loan-rate",
+    label: "Student Loan Interest Rate",
+    description: "Annual interest rate for existing student loans",
+    value: 5.0,
+    defaultValue: 5.0,
+    minValue: 0,
+    maxValue: 12,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true
+  },
+  {
+    category: "student-loans",
+    key: "student-loan-term",
+    label: "Student Loan Term",
+    description: "Number of years to repay existing student loans",
+    value: 10,
+    defaultValue: 10,
+    minValue: 5,
+    maxValue: 30,
+    stepValue: 1,
+    unit: "years",
+    isEnabled: true
   }
 ];
