@@ -17,6 +17,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import LaunchPlanAssumptionsCard from "@/components/assumptions/LaunchPlanAssumptionsCard";
+import RetirementGrowthWidget from "@/components/financial/RetirementGrowthWidget";
+import RetirementContributionWidget from "@/components/financial/RetirementContributionWidget";
 
 // Hard-coding user ID for demo purposes
 const DEMO_USER_ID = 1;
@@ -316,38 +318,56 @@ const AssumptionsPage = () => {
                   {/* Tab content for different assumption categories */}
                   {["general", "marriage", "housing", "car", "children", "education"].map((category) => (
                     <TabsContent key={category} value={category} className="mt-0">
+                      {/* Special widgets for retirement in the general category */}
+                      {category === "general" && (
+                        <div className="mb-8">
+                          <h3 className="text-lg font-medium mb-4">Retirement Settings</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <RetirementContributionWidget />
+                            <RetirementGrowthWidget />
+                          </div>
+                          <div className="border-t my-6"></div>
+                        </div>
+                      )}
+                      
                       <div className="space-y-6">
                         {filteredAssumptions.length > 0 ? (
-                          filteredAssumptions.map((assumption) => (
-                            <div key={assumption.id} className="border-b pb-4 last:border-0">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center">
-                                  <h3 className="text-lg font-medium">{assumption.label}</h3>
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Info className="w-4 h-4 ml-2 text-gray-400" />
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p className="max-w-xs">{assumption.description}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                          filteredAssumptions
+                            // Filter out retirement-related assumptions as they're handled by the widgets
+                            .filter(assumption => 
+                              !(assumption.key === 'retirement-growth-rate' || 
+                                assumption.key === 'retirement-contribution-rate')
+                            )
+                            .map((assumption) => (
+                              <div key={assumption.id} className="border-b pb-4 last:border-0">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center">
+                                    <h3 className="text-lg font-medium">{assumption.label}</h3>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Info className="w-4 h-4 ml-2 text-gray-400" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="max-w-xs">{assumption.description}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                  <div className="flex items-center">
+                                    <Label htmlFor={`enable-${assumption.id}`} className="mr-2">
+                                      {assumption.isEnabled ? "Enabled" : "Disabled"}
+                                    </Label>
+                                    <Switch
+                                      id={`enable-${assumption.id}`}
+                                      checked={assumption.isEnabled}
+                                      onCheckedChange={() => toggleAssumptionEnabled(assumption.id)}
+                                    />
+                                  </div>
                                 </div>
-                                <div className="flex items-center">
-                                  <Label htmlFor={`enable-${assumption.id}`} className="mr-2">
-                                    {assumption.isEnabled ? "Enabled" : "Disabled"}
-                                  </Label>
-                                  <Switch
-                                    id={`enable-${assumption.id}`}
-                                    checked={assumption.isEnabled}
-                                    onCheckedChange={() => toggleAssumptionEnabled(assumption.id)}
-                                  />
-                                </div>
-                              </div>
-                              <p className="text-sm text-gray-500 mb-4">{assumption.description}</p>
-                              
-                              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
+                                <p className="text-sm text-gray-500 mb-4">{assumption.description}</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-center">
                                 <div className="md:col-span-4">
                                   <Slider
                                     value={[assumption.value]}

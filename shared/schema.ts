@@ -505,6 +505,19 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     isEnabled: true
   },
   {
+    category: "general",
+    key: "retirement-contribution-rate",
+    label: "Retirement Contribution Rate",
+    description: "Percentage of income contributed to retirement accounts annually",
+    value: 10.0,
+    defaultValue: 10.0,
+    minValue: 0.0,
+    maxValue: 25.0,
+    stepValue: 0.5,
+    unit: "%",
+    isEnabled: true
+  },
+  {
     category: "marriage",
     key: "spouse-loan-term",
     label: "Spouse Loan Repayment Term",

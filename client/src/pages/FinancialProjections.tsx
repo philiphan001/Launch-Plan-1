@@ -360,6 +360,35 @@ const FinancialProjections = () => {
   const [personalLoanTermYears, setPersonalLoanTermYears] = useState<number>(5); // Default: 5 years
   const [personalLoanInterestRate, setPersonalLoanInterestRate] = useState<number>(8.0); // Default: 8.0% annual interest
   
+  // Get assumptions from useAssumptions custom hook
+  const { assumptions: assumptionsData } = useQuery({
+    queryKey: ['/api/assumptions/user', userId],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/assumptions/user/${userId}`);
+        if (!response.ok) {
+          console.error("Failed to fetch assumptions:", response.statusText);
+          return []; // Return empty array if fetch fails
+        }
+        return response.json();
+      } catch (err) {
+        console.error("Error fetching assumptions:", err);
+        return []; // Return empty array on error
+      }
+    }
+  });
+  
+  // Function to get assumption value by category and key
+  const getAssumptionValue = (category: string, key: string, defaultVal: number): number => {
+    if (!assumptionsData || !Array.isArray(assumptionsData)) return defaultVal;
+    
+    const assumption = assumptionsData.find(a => 
+      a.category === category && a.key === key && a.isEnabled
+    );
+    
+    return assumption ? assumption.value : defaultVal;
+  };
+  
   // Process assumptions for financial calculations
   useEffect(() => {
     if (assumptions && assumptions.length > 0) {
@@ -1106,6 +1135,15 @@ const FinancialProjections = () => {
         })) || [];
         
         // Pass location data and configurable parameters to the Python calculator
+        // Get retirement contribution rate and growth rate from assumptions
+        const retirementContributionRate = getAssumptionValue('general', 'retirement-contribution-rate', 0.05);
+        const retirementGrowthRate = getAssumptionValue('general', 'retirement-growth-rate', 0.07);
+        
+        console.log("Using retirement assumptions:", { 
+          contributionRate: retirementContributionRate,
+          growthRate: retirementGrowthRate
+        });
+        
         const pythonInput = generatePythonCalculatorInput(
           age,
           years,
@@ -1118,7 +1156,9 @@ const FinancialProjections = () => {
           locationCostData, // Pass the location data directly
           emergencyFundAmount, // New parameter: fixed amount for emergency fund
           personalLoanTermYears, // New parameter: term length for personal loans
-          personalLoanInterestRate // New parameter: interest rate for personal loans
+          personalLoanInterestRate, // New parameter: interest rate for personal loans
+          retirementContributionRate, // New parameter: percentage of income to contribute to retirement
+          retirementGrowthRate // New parameter: annual growth rate for retirement accounts
         );
         
         console.log("Sending data to Python calculator:", pythonInput);

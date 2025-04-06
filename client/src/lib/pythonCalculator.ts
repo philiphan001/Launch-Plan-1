@@ -12,6 +12,8 @@ export interface CalculatorInputData {
   emergencyFundAmount?: number; // Fixed amount to maintain as emergency fund
   personalLoanTermYears?: number; // Term length in years for personal loans
   personalLoanInterestRate?: number; // Annual interest rate for personal loans (decimal format)
+  retirementContributionRate?: number; // Percentage of income to contribute to retirement accounts (decimal format)
+  retirementGrowthRate?: number; // Annual growth rate for retirement accounts (decimal format)
   assets: Array<{
     type: string;
     name: string;
@@ -110,7 +112,9 @@ export const generatePythonCalculatorInput = (
   locationCostData: any = null,
   emergencyFundAmount: number = 10000,
   personalLoanTermYears: number = 5,
-  personalLoanInterestRate: number = 0.08
+  personalLoanInterestRate: number = 0.08,
+  retirementContributionRate: number = 0.05,
+  retirementGrowthRate: number = 0.07
 ): CalculatorInputData => {
   // Sort milestones by yearsAway 
   const sortedMilestones = milestones ? [...milestones].sort((a, b) => {
@@ -261,6 +265,8 @@ export const generatePythonCalculatorInput = (
     emergencyFundAmount: emergencyFundAmount,
     personalLoanTermYears: personalLoanTermYears,
     personalLoanInterestRate: personalLoanInterestRate,
+    retirementContributionRate: retirementContributionRate,
+    retirementGrowthRate: retirementGrowthRate,
     
     // Assets
     assets: [
