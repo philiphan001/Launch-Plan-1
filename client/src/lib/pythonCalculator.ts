@@ -85,6 +85,7 @@ export interface FinancialProjectionData {
   carLoan: number[];
   studentLoan: number[];
   educationLoans?: number[]; // Student loans from education milestones
+  graduateSchoolLoans?: number[]; // Graduate school loans specifically
   personalLoans?: number[]; // Personal loans (auto-generated from negative cash flow)
   savingsValue?: number[]; // Direct savings value array from Python
   
@@ -484,6 +485,7 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       carLoan: result.carLoan || Array(result.liabilities?.length || 0).fill(0),
       studentLoan: result.studentLoan || Array(result.liabilities?.length || 0).fill(0),
       educationLoans: result.educationLoans || Array(result.liabilities?.length || 0).fill(0),
+      graduateSchoolLoans: result.graduateSchoolLoans || Array(result.liabilities?.length || 0).fill(0),
       personalLoans: result.personalLoans || Array(result.liabilities?.length || 0).fill(0),
       
       // Tax breakdown
@@ -560,6 +562,7 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       carLoan: [0],
       studentLoan: [0],
       educationLoans: [0],
+      graduateSchoolLoans: [0],
       personalLoans: [0],
       
       // Tax breakdown

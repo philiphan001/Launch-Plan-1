@@ -2511,6 +2511,34 @@ class FinancialCalculator:
             
             f.write(f"Total PersonalLoan instances: {personal_loan_count}\n")
         
+        # Debug student loans (including graduate school loans)
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\n\n=== STUDENT LOANS DATA (FINAL VALUES) ===\n")
+            # Log all the student loan values
+            for i in range(self.years_to_project + 1):
+                f.write(f"Year {i}: Student Loans: ${all_student_loans[i]}\n")
+            
+            # Check if we have any StudentLoan instances
+            student_loan_count = 0
+            for liability in self.liabilities:
+                if isinstance(liability, StudentLoan):
+                    student_loan_count += 1
+                    f.write(f"Found StudentLoan: '{liability.name}', initial_balance=${liability.initial_balance}\n")
+                    f.write(f"  Term: {liability.term_years} years at {liability.interest_rate*100:.2f}% interest\n")
+                    f.write(f"  Deferment: {liability.deferment_years} years\n")
+                    f.write(f"  Monthly payment: ${liability.monthly_payment:.2f}\n")
+                    
+                    # Log balance for each year
+                    f.write(f"  Year-by-year balances and payments:\n")
+                    for i in range(self.years_to_project + 1):
+                        balance = liability.get_balance(i)
+                        payment = liability.get_payment(i)
+                        interest = liability.get_interest_payment(i)
+                        principal = liability.get_principal_payment(i)
+                        f.write(f"    Year {i}: Balance=${balance:.2f}, Payment=${payment:.2f} (P=${principal:.2f}, I=${interest:.2f})\n")
+            
+            f.write(f"Total StudentLoan instances: {student_loan_count}\n")
+        
         # Compile results
         self.results = {
             'ages': ages,
@@ -2532,6 +2560,7 @@ class FinancialCalculator:
             'carLoan': car_loan_yearly,
             'studentLoan': student_loan_yearly,
             'educationLoans': all_student_loans,  # Track education milestone student loans separately
+            'graduateSchoolLoans': all_student_loans,  # Add separate key for clarity in frontend
             'personalLoans': all_personal_loans,  # Verify this is being passed correctly
             
             # Base cost of living categories
