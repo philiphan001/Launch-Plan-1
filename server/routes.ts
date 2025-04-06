@@ -616,12 +616,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Python financial calculator route
-  app.post("/api/calculate/financial-projection", (req: Request, res: Response) => {
+  app.post("/api/calculate/financial-projection", async (req: Request, res: Response) => {
     try {
       const inputData = req.body;
-      // Note: inputData should include costOfLivingFactor or locationCostData to ensure
-      // location-specific adjustments are applied to income and expenses
-      // The Python calculator will use this to adjust calculations based on location
+      let updatedInputData = { ...inputData };
+      
+      // Check if zip code is provided and costOfLivingFactor is not
+      // This centralizes location adjustment in the backend
+      if (inputData.zipCode && !inputData.costOfLivingFactor) {
+        try {
+          // Fetch the location data based on zip code
+          const locationData = await activeStorage.getLocationCostOfLivingByZipCode(inputData.zipCode);
+          
+          if (locationData) {
+            // Add location data for the Python calculator to use
+            updatedInputData.locationData = locationData;
+            // We still provide the factor as a fallback but the Python calculator
+            // will prioritize using the full location data when available
+            updatedInputData.costOfLivingFactor = locationData.income_adjustment_factor;
+            console.log(`Location data found for zip ${inputData.zipCode}, adjustment factor: ${locationData.income_adjustment_factor}`);
+          } else {
+            console.log(`No location data found for zip ${inputData.zipCode}, using default factor 1.0`);
+            // If no location data, use the default factor
+            updatedInputData.costOfLivingFactor = 1.0;
+          }
+        } catch (locationError) {
+          console.error("Error fetching location data:", locationError);
+          // If there's an error, continue with the existing data
+          // This ensures that calculations don't fail if location data is unavailable
+        }
+      }
       
       // Use path.resolve and the current directory for ESM compatibility
       const pythonScriptPath = path.resolve("server/python/calculator.py");
@@ -632,7 +656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Log the inputs for debugging
-      console.log("Running financial calculation with input:", JSON.stringify(inputData).substring(0, 200) + "...");
+      console.log("Running financial calculation with input:", JSON.stringify(updatedInputData).substring(0, 200) + "...");
       
       // Direct Python execution without temporary files
       const pythonProcess = spawn("python3", [pythonScriptPath], {
@@ -642,8 +666,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let resultData = "";
       let errorData = "";
       
-      // Send input data to Python process stdin
-      pythonProcess.stdin.write(JSON.stringify(inputData));
+      // Send updated input data to Python process stdin
+      pythonProcess.stdin.write(JSON.stringify(updatedInputData));
       pythonProcess.stdin.end();
       
       pythonProcess.stdout.on("data", (data) => {
@@ -665,6 +689,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Skip logging full output to avoid console clutter
           const parsedData = JSON.parse(resultData);
+          // Add location factor used to the response for transparency
+          if (updatedInputData.costOfLivingFactor) {
+            parsedData.locationFactor = updatedInputData.costOfLivingFactor;
+          }
           return res.json(parsedData);
         } catch (error) {
           console.error("Failed to parse Python output:", error);

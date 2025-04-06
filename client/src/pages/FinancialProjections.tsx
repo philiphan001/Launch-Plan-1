@@ -9,6 +9,7 @@ import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
 import CashFlowTable from "@/components/financial/CashFlowTable";
+import LocationAdjustmentInfo from "@/components/financial/LocationAdjustmentInfo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -1787,6 +1788,18 @@ const FinancialProjections = () => {
                 <UpdateLocationDialog userData={userData} />
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Location Adjustment Info */}
+      {projectionData?.location && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Location Impact Details</h3>
+            </div>
+            <LocationAdjustmentInfo projectionData={projectionData} />
           </CardContent>
         </Card>
       )}

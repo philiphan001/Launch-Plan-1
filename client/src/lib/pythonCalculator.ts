@@ -95,6 +95,45 @@ export interface FinancialProjectionData {
   effectiveTaxRate?: number[];
   marginalTaxRate?: number[];
   
+  // Location information
+  location?: {
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    costOfLivingIndex?: number;
+    incomeAdjustmentFactor?: number;
+    housingFactor?: number;
+    healthcareFactor?: number;
+    transportationFactor?: number;
+    foodFactor?: number;
+  };
+  
+  // Path-specific information
+  educationPath?: {
+    college: any;
+    occupation: any;
+    totalCollegeCost: number;
+    studentLoanAmount: number;
+    graduationYear: number;
+    estimatedStartingSalary: number;
+  };
+  
+  jobPath?: {
+    occupation: any;
+    startingSalary: number;
+    projection5Year: number;
+    projection10Year: number;
+  };
+  
+  militaryPath?: {
+    branch: string;
+    serviceYears: number;
+    basePay: number;
+    giBillBenefit: number;
+    vaLoanEligible: boolean;
+    postServiceOccupation: any;
+  };
+  
   // Milestone data
   milestones?: any[];
 }
@@ -260,6 +299,25 @@ export const generatePythonCalculatorInput = (
     yearsToProject: years,
     pathType: "baseline", // Using the default baseline projection type
     costOfLivingFactor: costOfLivingFactor, // Explicitly pass the cost of living factor to Python
+    
+    // Add detailed location data if available, used for more accurate calculations
+    ...(locationCostData && {
+      locationData: {
+        zip_code: locationCostData.zip_code,
+        city: locationCostData.city,
+        state: locationCostData.state,
+        cost_of_living_index: locationCostData.cost_of_living_index || 100,
+        income_adjustment_factor: locationCostData.income_adjustment_factor || costOfLivingFactor,
+        housing_factor: locationCostData.housing_factor || 1.0,
+        healthcare_factor: locationCostData.healthcare_factor || 1.0,
+        transportation_factor: locationCostData.transportation_factor || 1.0,
+        food_factor: locationCostData.food_factor || 1.0
+      }
+    }),
+    
+    // If location data with zip code is available but doesn't have adjustment factors,
+    // at least pass the zip code for database lookup in the backend
+    ...(!locationCostData && { zipCode: locationCostData?.zip_code }),
     
     // User-configurable parameters with the values from the function parameters
     emergencyFundAmount: emergencyFundAmount,
@@ -437,6 +495,14 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
         ? result.payrollTax.map((p: number, i: number) => 
             (p || 0) + (result.federalTax?.[i] || 0) + (result.stateTax?.[i] || 0))
         : []),
+      
+      // Add location information if available from the backend
+      ...(result.location && { location: result.location }),
+      
+      // Add path-specific information if available
+      ...(result.educationPath && { educationPath: result.educationPath }),
+      ...(result.jobPath && { jobPath: result.jobPath }),
+      ...(result.militaryPath && { militaryPath: result.militaryPath }),
       
       // Add milestone data if available
       milestones: result.milestones || []

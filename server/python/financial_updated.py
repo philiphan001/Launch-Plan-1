@@ -2217,14 +2217,35 @@ class FinancialCalculator:
         calculator.retirement_contribution_rate = retirement_contribution_rate
         calculator.retirement_growth_rate = retirement_growth_rate
         
-        # Extract cost of living factor if present 
-        # This factor adjusts income based on location data from the frontend
+        # Extract location data and cost of living factors for adjustments
+        # Check for detailed location data first, then fall back to simple factor
+        location_data = input_data.get('locationData', None)
         cost_of_living_factor = input_data.get('costOfLivingFactor', 1.0)
         
-        # Log the cost of living factor and user-configurable parameters for debugging
+        # If we have detailed location data, use it to set more specific adjustment factors
+        housing_factor = 1.0
+        healthcare_factor = 1.0
+        transportation_factor = 1.0
+        food_factor = 1.0
+        
+        if location_data:
+            # Use location_data to extract specific cost factors
+            housing_factor = location_data.get('housing_factor', 1.0)
+            healthcare_factor = location_data.get('healthcare_factor', 1.0)
+            transportation_factor = location_data.get('transportation_factor', 1.0)
+            food_factor = location_data.get('food_factor', 1.0)
+        
+        # Log the cost of living factors and user-configurable parameters for debugging
         with open('healthcare_debug.log', 'w') as f:
             f.write(f"Starting financial calculation with:\n")
+            f.write(f"  Location data present: {location_data is not None}\n")
             f.write(f"  Cost of Living Factor: {cost_of_living_factor}\n")
+            if location_data:
+                f.write(f"  Location: {location_data.get('city', 'Unknown')}, {location_data.get('state', 'Unknown')}\n")
+                f.write(f"  Housing Factor: {housing_factor}\n")
+                f.write(f"  Healthcare Factor: {healthcare_factor}\n")
+                f.write(f"  Transportation Factor: {transportation_factor}\n")
+                f.write(f"  Food Factor: {food_factor}\n")
             f.write(f"  Emergency Fund Amount: ${emergency_fund_amount}\n")
             f.write(f"  Personal Loan Term: {personal_loan_term_years} years\n")
             f.write(f"  Personal Loan Interest Rate: {personal_loan_interest_rate*100:.1f}%\n")
@@ -2325,27 +2346,49 @@ class FinancialCalculator:
             inflation_rate = expenditure_data.get('inflationRate', 0.02)  # 2% annual inflation
             
             # Debug healthcare expenses
-            is_healthcare = ('health' in name.lower() or 'medical' in name.lower())
+            is_healthcare = ('health' in name.lower() or 'medical' in name.lower() or expenditure_type == 'healthcare')
             is_transportation = ('transport' in name.lower() or 'car' in name.lower() or expenditure_type == 'transportation')
+            is_housing = ('housing' in name.lower() or 'rent' in name.lower() or 'mortgage' in name.lower() or expenditure_type == 'housing')
+            is_food = ('food' in name.lower() or 'grocery' in name.lower() or 'groceries' in name.lower() or expenditure_type == 'food')
             
+            # Apply location-specific adjustment factors to the expense amounts
+            location_adjusted_amount = annual_amount
+            factor_used = 1.0
+            
+            # Apply specific adjustment factors based on expense type
             if is_healthcare:
-                with open('healthcare_debug.log', 'a') as f:
-                    f.write(f"Processing healthcare expenditure: {name}\n")
-                    f.write(f"Type: {expenditure_type}, Annual Amount: {annual_amount}, Using HEALTHCARE_INFLATION_RATE: {HEALTHCARE_INFLATION_RATE}\n")
+                location_adjusted_amount = annual_amount * healthcare_factor
+                factor_used = healthcare_factor
                 # Use the healthcare inflation rate constant for healthcare expenses
                 inflation_rate = HEALTHCARE_INFLATION_RATE
-            
-            if is_transportation and expenditure_type != 'transportation':
-                # For transportation-named expenses that aren't explicitly typed as transportation
-                with open('healthcare_debug.log', 'a') as f:
-                    f.write(f"Processing transportation expenditure: {name}\n")
-                    f.write(f"Type: {expenditure_type}, Annual Amount: {annual_amount}, Using TRANSPORTATION_INFLATION_RATE: {TRANSPORTATION_INFLATION_RATE}\n")
+            elif is_transportation:
+                location_adjusted_amount = annual_amount * transportation_factor
+                factor_used = transportation_factor
                 # Use the transportation inflation rate constant
                 inflation_rate = TRANSPORTATION_INFLATION_RATE
+            elif is_housing:
+                location_adjusted_amount = annual_amount * housing_factor
+                factor_used = housing_factor
+            elif is_food:
+                location_adjusted_amount = annual_amount * food_factor
+                factor_used = food_factor
+            
+            # Log the expense adjustment for detailed tracking
+            with open('healthcare_debug.log', 'a') as f:
+                if location_adjusted_amount != annual_amount:
+                    f.write(f"Expense adjustment: {name} ({expenditure_type}) - original: ${annual_amount} → adjusted: ${location_adjusted_amount:.2f} (factor: {factor_used})\n")
+                
+                if is_healthcare:
+                    f.write(f"Processing healthcare expenditure: {name}\n")
+                    f.write(f"Type: {expenditure_type}, Annual Amount: ${location_adjusted_amount:.2f}, Using HEALTHCARE_INFLATION_RATE: {HEALTHCARE_INFLATION_RATE}\n")
+                
+                if is_transportation:
+                    f.write(f"Processing transportation expenditure: {name}\n")
+                    f.write(f"Type: {expenditure_type}, Annual Amount: ${location_adjusted_amount:.2f}, Using TRANSPORTATION_INFLATION_RATE: {TRANSPORTATION_INFLATION_RATE}\n")
             
             if expenditure_type == 'housing':
                 is_rent = 'rent' in name.lower()
-                expenditure = Housing(name, annual_amount, inflation_rate, is_rent)
+                expenditure = Housing(name, location_adjusted_amount, inflation_rate, is_rent)
             elif expenditure_type == 'transportation':
                 # Use our new constants for transportation expenses
                 car_replacement_years = expenditure_data.get('car_replacement_years', CAR_REPLACEMENT_YEARS)
@@ -2353,21 +2396,22 @@ class FinancialCalculator:
                 auto_replace = expenditure_data.get('auto_replace', CAR_AUTO_REPLACE)
                 # Use the transportation inflation rate constant
                 inflation_rate = TRANSPORTATION_INFLATION_RATE
-                expenditure = Transportation(name, annual_amount, inflation_rate, car_replacement_years, car_replacement_cost, auto_replace)
+                expenditure = Transportation(name, location_adjusted_amount, inflation_rate, car_replacement_years, car_replacement_cost, auto_replace)
             elif expenditure_type == 'tax':
                 tax_rate = expenditure_data.get('tax_rate', 0.25)
                 income_sources = expenditure_data.get('income_sources', [])
-                expenditure = Tax(name, annual_amount, tax_rate, income_sources)
+                expenditure = Tax(name, location_adjusted_amount, tax_rate, income_sources)
             else:  # Default to living expenses
                 lifestyle_factor = expenditure_data.get('lifestyle_factor', 1.0)
-                expenditure = Living(name, annual_amount, inflation_rate, lifestyle_factor)
+                expenditure = Living(name, location_adjusted_amount, inflation_rate, lifestyle_factor)
                 
                 # Special debug for healthcare expenses
                 if is_healthcare:
                     with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Created Living expense for healthcare: {name}, annual_amount={annual_amount}\n")
-                        f.write(f"Expense type={type(expenditure).__name__}, expense={expenditure.annual_amount}\n")
+                        f.write(f"Created Living expense for healthcare: {name}, annual_amount=${location_adjusted_amount:.2f}\n")
+                        f.write(f"Expense type={type(expenditure).__name__}, expense=${expenditure.annual_amount:.2f}\n")
                         f.write(f"Debugging object: {expenditure.__dict__}\n")
+                        f.write(f"Location adjustment: original ${annual_amount} → adjusted ${location_adjusted_amount:.2f} (factor: {factor_used})\n")
             
             calculator.add_expenditure(expenditure)
             

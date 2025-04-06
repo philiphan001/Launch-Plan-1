@@ -50,25 +50,51 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
     Create a baseline financial projection from input data.
     
     Important: This function supports location-based cost of living adjustments.
-    When the input_data includes a 'costOfLivingFactor' (usually in the range of 0.7-1.3),
-    the financial calculator will automatically apply this adjustment to income and expenses.
+    When the input_data includes 'locationData' or 'costOfLivingFactor',
+    the financial calculator will automatically apply these adjustments to income and expenses.
     
-    The frontend is responsible for supplying the correct costOfLivingFactor based on:
-    1. The user's selected location/zip code 
-    2. The location's income_adjustment_factor from the database
+    The system now supports two methods of location adjustment:
+    1. Detailed location data with specific factors for different expense categories
+       (housing_factor, healthcare_factor, transportation_factor, food_factor)
+    2. Simple costOfLivingFactor (usually in the range of 0.7-1.3) applied to all income/expenses
+    
+    With the enhanced centralized location handling, the backend API automatically fetches 
+    location data based on zip code, so the frontend only needs to provide the zip code.
     
     This factor gets incorporated by the FinancialCalculator.from_input_data() method
     during the creation of income and expense objects.
     
     Args:
         input_data: Dictionary containing financial input parameters
-                   including costOfLivingFactor if location adjustment is needed
+                   including locationData or costOfLivingFactor for location adjustments
         
     Returns:
-        Dictionary with projection results
+        Dictionary with projection results including location information
     """
     calculator = FinancialCalculator.from_input_data(input_data)
     result = calculator.calculate_projection()
+    
+    # Add location information to the result
+    if 'locationData' in input_data:
+        location_data = input_data['locationData']
+        result['location'] = {
+            'city': location_data.get('city', 'Unknown'),
+            'state': location_data.get('state', 'Unknown'),
+            'zipCode': location_data.get('zip_code', input_data.get('zipCode', 'Unknown')),
+            'costOfLivingIndex': location_data.get('cost_of_living_index', 100),
+            'incomeAdjustmentFactor': location_data.get('income_adjustment_factor', 1.0),
+            'housingFactor': location_data.get('housing_factor', 1.0),
+            'healthcareFactor': location_data.get('healthcare_factor', 1.0),
+            'transportationFactor': location_data.get('transportation_factor', 1.0),
+            'foodFactor': location_data.get('food_factor', 1.0)
+        }
+    elif 'costOfLivingFactor' in input_data or 'zipCode' in input_data:
+        # If we have only the simple factor or just a zip code
+        result['location'] = {
+            'zipCode': input_data.get('zipCode', 'Unknown'),
+            'incomeAdjustmentFactor': input_data.get('costOfLivingFactor', 1.0)
+        }
+    
     return result
 
 
@@ -188,6 +214,27 @@ def create_education_projection(input_data: Dict[str, Any], college_id: str, occ
         "estimatedStartingSalary": starting_salary
     }
     
+    # Add location information to the result
+    if 'locationData' in input_data:
+        location_data = input_data['locationData']
+        result['location'] = {
+            'city': location_data.get('city', 'Unknown'),
+            'state': location_data.get('state', 'Unknown'),
+            'zipCode': location_data.get('zip_code', input_data.get('zipCode', 'Unknown')),
+            'costOfLivingIndex': location_data.get('cost_of_living_index', 100),
+            'incomeAdjustmentFactor': location_data.get('income_adjustment_factor', 1.0),
+            'housingFactor': location_data.get('housing_factor', 1.0),
+            'healthcareFactor': location_data.get('healthcare_factor', 1.0),
+            'transportationFactor': location_data.get('transportation_factor', 1.0),
+            'foodFactor': location_data.get('food_factor', 1.0)
+        }
+    elif 'costOfLivingFactor' in input_data or 'zipCode' in input_data:
+        # If we have only the simple factor or just a zip code
+        result['location'] = {
+            'zipCode': input_data.get('zipCode', 'Unknown'),
+            'incomeAdjustmentFactor': input_data.get('costOfLivingFactor', 1.0)
+        }
+    
     return result
 
 
@@ -271,6 +318,27 @@ def create_job_projection(input_data: Dict[str, Any], occupation_id: str) -> Dic
         "projection5Year": starting_salary * (1.02 ** 5),  # 5-year salary projection
         "projection10Year": starting_salary * (1.02 ** 10)  # 10-year salary projection
     }
+    
+    # Add location information to the result
+    if 'locationData' in input_data:
+        location_data = input_data['locationData']
+        result['location'] = {
+            'city': location_data.get('city', 'Unknown'),
+            'state': location_data.get('state', 'Unknown'),
+            'zipCode': location_data.get('zip_code', input_data.get('zipCode', 'Unknown')),
+            'costOfLivingIndex': location_data.get('cost_of_living_index', 100),
+            'incomeAdjustmentFactor': location_data.get('income_adjustment_factor', 1.0),
+            'housingFactor': location_data.get('housing_factor', 1.0),
+            'healthcareFactor': location_data.get('healthcare_factor', 1.0),
+            'transportationFactor': location_data.get('transportation_factor', 1.0),
+            'foodFactor': location_data.get('food_factor', 1.0)
+        }
+    elif 'costOfLivingFactor' in input_data or 'zipCode' in input_data:
+        # If we have only the simple factor or just a zip code
+        result['location'] = {
+            'zipCode': input_data.get('zipCode', 'Unknown'),
+            'incomeAdjustmentFactor': input_data.get('costOfLivingFactor', 1.0)
+        }
     
     return result
 
@@ -433,6 +501,27 @@ def create_military_projection(input_data: Dict[str, Any], branch: str, occupati
         "vaLoanEligible": True,
         "postServiceOccupation": occupation_data if occupation_data else {"title": "Civilian Career", "salary": 55000}
     }
+    
+    # Add location information to the result
+    if 'locationData' in input_data:
+        location_data = input_data['locationData']
+        result['location'] = {
+            'city': location_data.get('city', 'Unknown'),
+            'state': location_data.get('state', 'Unknown'),
+            'zipCode': location_data.get('zip_code', input_data.get('zipCode', 'Unknown')),
+            'costOfLivingIndex': location_data.get('cost_of_living_index', 100),
+            'incomeAdjustmentFactor': location_data.get('income_adjustment_factor', 1.0),
+            'housingFactor': location_data.get('housing_factor', 1.0),
+            'healthcareFactor': location_data.get('healthcare_factor', 1.0),
+            'transportationFactor': location_data.get('transportation_factor', 1.0),
+            'foodFactor': location_data.get('food_factor', 1.0)
+        }
+    elif 'costOfLivingFactor' in input_data or 'zipCode' in input_data:
+        # If we have only the simple factor or just a zip code
+        result['location'] = {
+            'zipCode': input_data.get('zipCode', 'Unknown'),
+            'incomeAdjustmentFactor': input_data.get('costOfLivingFactor', 1.0)
+        }
     
     return result
 
