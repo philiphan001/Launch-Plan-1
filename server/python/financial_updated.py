@@ -403,6 +403,14 @@ class FinancialCalculator:
                     car_loan_yearly[i] += int(liability_balance)
                 elif isinstance(liability, StudentLoan):
                     student_loan_yearly[i] += int(liability_balance)
+                elif isinstance(liability, PersonalLoan):
+                    # Add personal loans to tracking array
+                    personal_loan_balance_int = int(liability_balance)
+                    all_personal_loans[i] += personal_loan_balance_int
+                    
+                    # Debug log
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Year {i}: Found PersonalLoan '{liability.name}' with balance ${personal_loan_balance_int}\n")
             
             # Calculate income for this year
             for income in self.incomes:
