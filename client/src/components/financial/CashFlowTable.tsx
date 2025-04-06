@@ -259,13 +259,26 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       const educationLoanVal = getValue(educationLoans, i);
                       const graduateSchoolLoanVal = getValue(graduateSchoolLoans, i);
                       const personalLoanVal = getValue(personalLoans, i);
-                      const totalLiabilities = getValue(liabilities, i);
+                      // Get the total liabilities from the API response
+                      let totalLiabilities = getValue(liabilities, i);
+                      
+                      // Calculate the explicit sum of all known liabilities to check for discrepancies
+                      const sumOfAllLiabilities = mortgageVal + carLoanVal + studentLoanVal + 
+                        educationLoanVal + graduateSchoolLoanVal + personalLoanVal;
+                      
+                      // If sumOfAllLiabilities is greater than totalLiabilities, it means some loans 
+                      // (like graduate school loans) aren't being included in the backend totals
+                      if (sumOfAllLiabilities > totalLiabilities) {
+                        // Update totalLiabilities to be at least the sum of all known liabilities
+                        totalLiabilities = sumOfAllLiabilities;
+                        console.log(`Year ${i}: Corrected liabilities value from ${getValue(liabilities, i)} to ${totalLiabilities}`);
+                      }
                       
                       const otherAssets = totalAssets - (homeVal + carVal);
-                      const otherLiabilities = totalLiabilities - (
+                      const otherLiabilities = Math.max(0, totalLiabilities - (
                         mortgageVal + carLoanVal + studentLoanVal + 
                         educationLoanVal + graduateSchoolLoanVal + personalLoanVal
-                      );
+                      ));
                       
                       return (
                         <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>

@@ -1,6 +1,56 @@
 import Chart from 'chart.js/auto';
 import { NetWorthData, CashFlowData, ProjectionData } from './types';
 
+/**
+ * Fixes the liability calculation by including graduate school loans
+ * in the total liabilities if they're not already included.
+ * 
+ * @param data The projection data to fix
+ * @returns A copy of the projection data with corrected liability values
+ */
+export function fixLiabilityCalculation(data: ProjectionData): ProjectionData {
+  if (!data.liabilities || !data.graduateSchoolLoans) {
+    // If there's no data to fix, return the original
+    return data;
+  }
+  
+  // Create a deep copy of the data
+  const fixedData = { ...data };
+  
+  // Create a new liabilities array 
+  fixedData.liabilities = data.liabilities.map((liability, index) => {
+    // Calculate the sum of all known liability types
+    const mortgageValue = data.mortgage && data.mortgage[index] ? data.mortgage[index] : 0;
+    const studentLoanValue = data.studentLoan && data.studentLoan[index] ? data.studentLoan[index] : 0;
+    const educationLoansValue = data.educationLoans && data.educationLoans[index] ? data.educationLoans[index] : 0;
+    const graduateSchoolLoansValue = data.graduateSchoolLoans && data.graduateSchoolLoans[index] ? data.graduateSchoolLoans[index] : 0;
+    const carLoanValue = data.carLoan && data.carLoan[index] ? data.carLoan[index] : 0;
+    const personalLoansValue = data.personalLoans && data.personalLoans[index] ? data.personalLoans[index] : 0;
+    
+    // Sum all liability types
+    const sumOfAllLiabilities = mortgageValue + studentLoanValue + educationLoansValue + 
+                               graduateSchoolLoansValue + carLoanValue + personalLoansValue;
+    
+    // If the sum of liabilities is greater than the reported total, use the sum instead
+    if (sumOfAllLiabilities > liability) {
+      console.log(`Year ${index}: Fixed liabilities from ${liability} to ${sumOfAllLiabilities} (added graduate school loans of ${graduateSchoolLoansValue})`);
+      return sumOfAllLiabilities;
+    }
+    
+    // Otherwise, keep the original value
+    return liability;
+  });
+  
+  // Also update the net worth to reflect the fixed liability values
+  if (fixedData.assets) {
+    fixedData.netWorth = fixedData.assets.map((asset, index) => {
+      return asset - (fixedData.liabilities?.[index] || 0);
+    });
+  }
+  
+  return fixedData;
+}
+
 // Function to create a net worth chart
 export function createNetWorthChart(ctx: CanvasRenderingContext2D, data: NetWorthData[]): Chart {
   const labels = data.map(item => item.age.toString());
@@ -670,6 +720,9 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
 
 // Function to create a stacked liability chart showing different liability categories
 export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  // Apply the liability fix to ensure graduate school loans are properly counted
+  data = fixLiabilityCalculation(data);
+  
   const labels = data.ages.map(age => age.toString());
   
   // Calculate other debts (total liabilities minus all specific loan types)
@@ -1281,6 +1334,9 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
 }
 
 export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: ProjectionData, type: string = 'netWorth'): Chart {
+  // Apply the liability fix to ensure graduate school loans are properly counted
+  data = fixLiabilityCalculation(data);
+  
   const labels = data.ages.map(age => age.toString());
   let chartData;
   let chartLabel;
