@@ -73,14 +73,18 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   
-  // Debug childcare data
+  // Debug loan data
   React.useEffect(() => {
-    console.log("CashFlowTable childcare debug:");
-    console.log("- childcareExpenses:", childcareExpenses);
-    console.log("- Is array:", Array.isArray(childcareExpenses));
-    console.log("- Length:", childcareExpenses?.length);
-    console.log("- First few values:", childcareExpenses?.slice(0, 5));
-  }, [childcareExpenses]);
+    console.log("CashFlowTable loan data debug:");
+    console.log("- studentLoan:", studentLoan);
+    console.log("- educationLoans:", educationLoans);
+    console.log("- graduateSchoolLoans:", graduateSchoolLoans);
+    console.log("- personalLoans:", personalLoans);
+    
+    console.log("- Student loan first few values:", studentLoan?.slice(0, 5));
+    console.log("- Education loans first few values:", educationLoans?.slice(0, 5));
+    console.log("- Graduate school loans first few values:", graduateSchoolLoans?.slice(0, 5));
+  }, [studentLoan, educationLoans, graduateSchoolLoans, personalLoans]);
   
   // Helper function to safely format monetary values
   const formatCurrency = (array: number[] | null | undefined, index: number): string => {
