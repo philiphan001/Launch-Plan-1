@@ -36,6 +36,8 @@ interface CashFlowTableProps {
   carValue?: number[] | null;
   carLoan?: number[] | null;
   studentLoan?: number[] | null;
+  educationLoans?: number[] | null; // Undergraduate education loans
+  graduateSchoolLoans?: number[] | null; // Graduate school loans
   personalLoans?: number[] | null; // Added personal loans tracking
 }
 
@@ -65,6 +67,8 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
   carValue,
   carLoan,
   studentLoan,
+  educationLoans,
+  graduateSchoolLoans,
   personalLoans
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -232,6 +236,8 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       <TableHead className="font-semibold">Car Value</TableHead>
                       <TableHead className="font-semibold">Car Loan</TableHead>
                       <TableHead className="font-semibold">Student Loan</TableHead>
+                      <TableHead className="font-semibold">Education Loans</TableHead>
+                      <TableHead className="font-semibold">Graduate School Loans</TableHead>
                       <TableHead className="font-semibold">Personal Loans</TableHead>
                       <TableHead className="font-semibold">Other Assets</TableHead>
                       <TableHead className="font-semibold">Other Liabilities</TableHead>
@@ -246,11 +252,16 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                       const mortgageVal = getValue(mortgage, i);
                       const carLoanVal = getValue(carLoan, i);
                       const studentLoanVal = getValue(studentLoan, i);
+                      const educationLoanVal = getValue(educationLoans, i);
+                      const graduateSchoolLoanVal = getValue(graduateSchoolLoans, i);
                       const personalLoanVal = getValue(personalLoans, i);
                       const totalLiabilities = getValue(liabilities, i);
                       
                       const otherAssets = totalAssets - (homeVal + carVal);
-                      const otherLiabilities = totalLiabilities - (mortgageVal + carLoanVal + studentLoanVal + personalLoanVal);
+                      const otherLiabilities = totalLiabilities - (
+                        mortgageVal + carLoanVal + studentLoanVal + 
+                        educationLoanVal + graduateSchoolLoanVal + personalLoanVal
+                      );
                       
                       return (
                         <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
@@ -261,6 +272,8 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                           <TableCell>{formatCurrency(carValue, i)}</TableCell>
                           <TableCell>{formatCurrency(carLoan, i)}</TableCell>
                           <TableCell>{formatCurrency(studentLoan, i)}</TableCell>
+                          <TableCell>{formatCurrency(educationLoans, i)}</TableCell>
+                          <TableCell>{formatCurrency(graduateSchoolLoans, i)}</TableCell>
                           <TableCell>{formatCurrency(personalLoans, i)}</TableCell>
                           <TableCell>${Math.max(0, otherAssets).toLocaleString()}</TableCell>
                           <TableCell>${Math.max(0, otherLiabilities).toLocaleString()}</TableCell>

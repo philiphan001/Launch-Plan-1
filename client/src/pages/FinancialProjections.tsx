@@ -1927,6 +1927,8 @@ const FinancialProjections = () => {
         carValue={projectionData.carValue}
         carLoan={projectionData.carLoan}
         studentLoan={projectionData.studentLoan}
+        educationLoans={projectionData.educationLoans}
+        graduateSchoolLoans={projectionData.graduateSchoolLoans}
         personalLoans={projectionData.personalLoans}
       />
       
