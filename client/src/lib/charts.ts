@@ -672,12 +672,15 @@ export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: P
 export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
   const labels = data.ages.map(age => age.toString());
   
-  // Calculate other debts (total liabilities minus mortgage, car loan, and student loans)
+  // Calculate other debts (total liabilities minus all specific loan types)
   const otherDebts = data.liabilities?.map((liabilityValue, index) => {
     const mortgageValue = data.mortgage && data.mortgage[index] ? data.mortgage[index] : 0;
     const studentLoanValue = data.studentLoan && data.studentLoan[index] ? data.studentLoan[index] : 0;
+    const educationLoansValue = data.educationLoans && data.educationLoans[index] ? data.educationLoans[index] : 0;
+    const graduateSchoolLoansValue = data.graduateSchoolLoans && data.graduateSchoolLoans[index] ? data.graduateSchoolLoans[index] : 0;
     const carLoanValue = data.carLoan && data.carLoan[index] ? data.carLoan[index] : 0;
-    return liabilityValue - mortgageValue - studentLoanValue - carLoanValue;
+    const personalLoansValue = data.personalLoans && data.personalLoans[index] ? data.personalLoans[index] : 0;
+    return liabilityValue - mortgageValue - studentLoanValue - educationLoansValue - graduateSchoolLoansValue - carLoanValue - personalLoansValue;
   }) || [];
 
   const datasets = [
@@ -696,6 +699,39 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
       label: 'Student Loans',
       data: data.studentLoan,
       backgroundColor: 'rgba(255, 152, 0, 0.7)', // Orange for student loans
+      borderRadius: 4,
+      stack: 'liabilities'
+    });
+  }
+  
+  // Add education loans (undergraduate) if they exist and have positive values
+  if (data.educationLoans && data.educationLoans.some(value => value > 0)) {
+    datasets.push({
+      label: 'Education Loans',
+      data: data.educationLoans,
+      backgroundColor: 'rgba(76, 175, 80, 0.7)', // Green for education loans
+      borderRadius: 4,
+      stack: 'liabilities'
+    });
+  }
+  
+  // Add graduate school loans if they exist and have positive values
+  if (data.graduateSchoolLoans && data.graduateSchoolLoans.some(value => value > 0)) {
+    datasets.push({
+      label: 'Graduate School Loans',
+      data: data.graduateSchoolLoans,
+      backgroundColor: 'rgba(0, 188, 212, 0.7)', // Cyan for graduate school loans
+      borderRadius: 4,
+      stack: 'liabilities'
+    });
+  }
+  
+  // Add personal loans if they exist and have positive values
+  if (data.personalLoans && data.personalLoans.some(value => value > 0)) {
+    datasets.push({
+      label: 'Personal Loans',
+      data: data.personalLoans,
+      backgroundColor: 'rgba(255, 87, 34, 0.7)', // Deep orange for personal loans
       borderRadius: 4,
       stack: 'liabilities'
     });
