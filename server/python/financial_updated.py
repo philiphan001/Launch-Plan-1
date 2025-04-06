@@ -1721,6 +1721,47 @@ class FinancialCalculator:
                         # Add income boost after education (optional, if you want to model income increases from education)
                         # This could be implemented based on the type of education
 
+                    elif milestone.get('type') == 'children':
+                        # Children affect expenses
+                        children_count = int(milestone.get('children_count', milestone.get('childrenCount', 1)))
+                        expense_per_child = int(milestone.get('children_expense_per_year', milestone.get('childrenExpensePerYear', 12000)))
+                        initial_expense = int(milestone.get('initial_expense', 5000) * children_count)  # Birth/adoption costs, baby supplies, etc.
+                        
+                        # Log children milestone processing
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nProcessing children milestone in year {milestone_year}:\n")
+                            f.write(f"- Number of children: {children_count}\n") 
+                            f.write(f"- Expense per child per year: ${expense_per_child}\n")
+                            f.write(f"- Initial one-time expense: ${initial_expense}\n")
+                        
+                        # Apply initial one-time expense for having a child (medical costs, supplies, etc.)
+                        expenses_yearly[milestone_year] += initial_expense
+                        cash_flow_yearly[milestone_year] = income_yearly[milestone_year] - expenses_yearly[milestone_year]
+                        
+                        # Reduce savings/investments for the initial child-related expenses
+                        savings_value_yearly[milestone_year] = max(0, savings_value_yearly[milestone_year] - initial_expense)
+                        
+                        # Apply ongoing child expenses for each year
+                        for i in range(milestone_year, self.years_to_project + 1):
+                            # Add child expenses to yearly expenses
+                            years_with_children = i - milestone_year
+                            # Children costs increase with age
+                            annual_child_expenses = int(children_count * expense_per_child * (1 + years_with_children * 0.03))
+                            expenses_yearly[i] += annual_child_expenses
+                            
+                            # Update child expense category
+                            child_expenses_yearly[i] += annual_child_expenses
+                            
+                            # Log child expense calculation for debugging
+                            if i == milestone_year:
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"- Annual child expenses (year {i}): ${annual_child_expenses}\n")
+                                    f.write(f"- Updated total expenses: ${expenses_yearly[i]}\n")
+                                    f.write(f"- Child expenses category: ${child_expenses_yearly[i]}\n")
+                            
+                            # Recalculate cash flow with new expenses
+                            cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+
                     elif milestone.get('type') == 'car':
                         # Process car purchase milestone
                         car_value = int(milestone.get('car_value', milestone.get('carValue', 25000)))
