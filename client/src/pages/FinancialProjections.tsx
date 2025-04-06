@@ -7,6 +7,7 @@ import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBre
 import RetirementGrowthWidget from "@/components/financial/RetirementGrowthWidget";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
+import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import LocationAdjustmentInfo from "@/components/financial/LocationAdjustmentInfo";

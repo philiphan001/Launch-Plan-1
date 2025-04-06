@@ -113,6 +113,41 @@ class Liability:
         
         # Otherwise return the standard payment
         return self.monthly_payment * 12
+        
+    def get_interest_payment(self, year: int) -> float:
+        """
+        Get the interest portion of the payment for a given year.
+        
+        Args:
+            year: Year to get interest payment for
+            
+        Returns:
+            Interest portion of the annual payment
+        """
+        if year <= 0:
+            return 0.0
+        
+        # Calculate interest based on previous year's balance
+        previous_balance = self.get_balance(year - 1)
+        interest = previous_balance * self.interest_rate
+        
+        # Interest can't exceed the total payment
+        total_payment = self.get_payment(year)
+        return min(interest, total_payment)
+    
+    def get_principal_payment(self, year: int) -> float:
+        """
+        Get the principal portion of the payment for a given year.
+        
+        Args:
+            year: Year to get principal payment for
+            
+        Returns:
+            Principal portion of the annual payment
+        """
+        total_payment = self.get_payment(year)
+        interest_payment = self.get_interest_payment(year)
+        return total_payment - interest_payment
     
     def make_payment(self, amount: float, year: int) -> None:
         """
@@ -346,3 +381,46 @@ class PersonalLoan(Liability):
         
         # After milestone year, use standard payment
         return super().get_payment(year)
+        
+    def get_interest_payment(self, year: int) -> float:
+        """
+        Get the interest portion of the payment for a given year, considering mid-year start.
+        
+        Args:
+            year: Year to get interest payment for
+            
+        Returns:
+            Interest portion of the annual payment
+        """
+        # No payments before the loan starts
+        if year < self.milestone_year:
+            return 0
+            
+        # For milestone year, calculate partial interest
+        if year == self.milestone_year:
+            # Get balance at start of loan
+            balance = self.initial_balance
+            
+            # Calculate partial year interest
+            interest = balance * self.interest_rate * self.first_year_fraction
+            
+            # Interest can't exceed the total payment
+            total_payment = self.get_payment(year)
+            return min(interest, total_payment)
+        
+        # For years after milestone, use standard calculation
+        return super().get_interest_payment(year)
+        
+    def get_principal_payment(self, year: int) -> float:
+        """
+        Get the principal portion of the payment for a given year, considering mid-year start.
+        
+        Args:
+            year: Year to get principal payment for
+            
+        Returns:
+            Principal portion of the annual payment
+        """
+        total_payment = self.get_payment(year)
+        interest_payment = self.get_interest_payment(year)
+        return total_payment - interest_payment

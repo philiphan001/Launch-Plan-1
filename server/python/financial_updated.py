@@ -308,6 +308,9 @@ class FinancialCalculator:
         education_expenses_yearly = [0] * (self.years_to_project + 1)
         child_expenses_yearly = [0] * (self.years_to_project + 1)
         debt_expenses_yearly = [0] * (self.years_to_project + 1)
+        # Split debt expenses into principal and interest components
+        debt_principal_yearly = [0] * (self.years_to_project + 1)
+        debt_interest_yearly = [0] * (self.years_to_project + 1)
         discretionary_expenses_yearly = [0] * (self.years_to_project + 1)
         
         # Calculate year 0 (starting point) values without any income or expenses
@@ -1324,6 +1327,12 @@ class FinancialCalculator:
                                 payment = personal_loan.get_payment(year)
                                 payment_int = int(payment)
                                 debt_expenses_yearly[year] += payment_int
+                                
+                                # Split payment into principal and interest components
+                                interest_payment = personal_loan.get_interest_payment(year)
+                                principal_payment = personal_loan.get_principal_payment(year)
+                                debt_interest_yearly[year] += int(interest_payment)
+                                debt_principal_yearly[year] += int(principal_payment)
                         
                         # Update cash flow by the actual savings withdrawal
                         cash_flow_yearly[milestone_year] -= savings_portion
@@ -1606,6 +1615,12 @@ class FinancialCalculator:
                                 # Add the loan payment to debt expenses
                                 payment = personal_loan.get_payment(year)
                                 debt_expenses_yearly[year] += int(payment)
+                                
+                                # Split payment into principal and interest components
+                                interest_payment = personal_loan.get_interest_payment(year)
+                                principal_payment = personal_loan.get_principal_payment(year)
+                                debt_interest_yearly[year] += int(interest_payment)
+                                debt_principal_yearly[year] += int(principal_payment)
                         
                         # Update cash flow by the actual savings withdrawal
                         cash_flow_yearly[milestone_year] -= savings_portion
@@ -2142,6 +2157,8 @@ class FinancialCalculator:
             'education': education_expenses_yearly,
             'childcare': child_expenses_yearly,
             'debt': debt_expenses_yearly,
+            'debtInterest': debt_interest_yearly,
+            'debtPrincipal': debt_principal_yearly,
             'discretionary': discretionary_expenses_yearly,
             
             # Tax breakdown

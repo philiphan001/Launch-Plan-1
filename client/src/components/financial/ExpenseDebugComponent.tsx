@@ -9,7 +9,7 @@ export const ExpenseDebugComponent: React.FC<ExpenseDebugComponentProps> = ({ pr
   const expenseCategories = [
     'housing', 'transportation', 'food', 'healthcare', 
     'personalInsurance', 'apparel', 'services', 'entertainment', 
-    'other', 'education', 'childcare', 'debt', 'discretionary', 'taxes'
+    'other', 'education', 'childcare', 'debt', 'debtInterest', 'debtPrincipal', 'discretionary', 'taxes'
   ];
 
   // Build a table of expense data for each year
