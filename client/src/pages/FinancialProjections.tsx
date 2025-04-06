@@ -9,6 +9,7 @@ import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
 import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
+import TaxBreakdownTable from "@/components/financial/TaxBreakdownTable";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import LocationAdjustmentInfo from "@/components/financial/LocationAdjustmentInfo";
 import { Button } from "@/components/ui/button";
@@ -1876,6 +1877,12 @@ const FinancialProjections = () => {
               <h3 className="text-lg font-medium">Tax Breakdown</h3>
             </div>
             <TaxBreakdownChart projectionData={projectionData} isLoading={isLoading} />
+            
+            {/* Add tabular view for detailed tax data */}
+            <div className="mt-6">
+              <TaxBreakdownTable projectionData={projectionData} isLoading={isLoading} />
+            </div>
+            
             <div className="mt-4">
               <p className="text-sm text-gray-600">
                 <span className="font-medium">Understanding your taxes:</span> This breakdown shows the different types of taxes 
