@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Info } from "lucide-react";
 import {
@@ -9,83 +8,119 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAssumptions } from '@/hooks/use-assumptions';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Input } from "@/components/ui/input";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/hooks/use-toast";
 
+// Hard-coding user ID for demo purposes
+const DEMO_USER_ID = 1;
+
 const RetirementGrowthWidget = () => {
-  const { assumptions, getAssumptionValue } = useAssumptions();
-  const [rate, setRate] = useState<number>(6.0); // Default value
-  const [originalRate, setOriginalRate] = useState<number>(6.0);
-  const [hasChanged, setHasChanged] = useState(false);
+  const [growthRate, setGrowthRate] = useState<number>(6.0);
+  const [hasChanges, setHasChanges] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Initialize with the actual assumption value when loaded
-  useEffect(() => {
-    if (assumptions.length > 0) {
-      const retirementRate = getAssumptionValue('retirement-growth-rate', 6.0);
-      setRate(retirementRate);
-      setOriginalRate(retirementRate);
+  // Fetch assumptions from API
+  const { data: assumptions, isLoading } = useQuery({
+    queryKey: ['/api/assumptions/user', DEMO_USER_ID],
+    queryFn: async () => {
+      const response = await fetch(`/api/assumptions/user/${DEMO_USER_ID}`);
+      if (!response.ok) {
+        throw new Error(`Error fetching assumptions: ${response.statusText}`);
+      }
+      return response.json();
     }
-  }, [assumptions, getAssumptionValue]);
+  });
 
-  // Find the actual assumption object
-  const retirementGrowthAssumption = assumptions.find(a => a.key === 'retirement-growth-rate');
+  // Find the retirement growth rate assumption
+  const retirementAssumption = assumptions?.find(
+    (a: any) => a.key === 'retirement-growth-rate'
+  );
 
-  // Save assumption mutation
-  const saveAssumption = useMutation({
+  // Initialize state when assumptions are loaded
+  useEffect(() => {
+    if (retirementAssumption) {
+      console.log("Found retirement growth assumption:", retirementAssumption);
+      setGrowthRate(retirementAssumption.value);
+      setHasChanges(false);
+    }
+  }, [retirementAssumption]);
+
+  // Save changes
+  const saveChanges = useMutation({
     mutationFn: async () => {
-      if (!retirementGrowthAssumption) return null;
+      if (!retirementAssumption) {
+        throw new Error("Retirement growth assumption not found");
+      }
 
-      const response = await fetch(`/api/assumptions/${retirementGrowthAssumption.id}`, {
+      console.log("Saving retirement growth rate:", growthRate);
+      
+      const response = await fetch(`/api/assumptions/${retirementAssumption.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          value: rate,
+          value: growthRate,
           isEnabled: true
         })
       });
       
       if (!response.ok) {
-        throw new Error(`Error updating retirement growth rate: ${response.statusText}`);
+        throw new Error(`Error saving changes: ${response.statusText}`);
       }
       
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/assumptions/user', 1] });
       toast({
         title: "Success",
-        description: "Retirement growth rate updated successfully!",
+        description: "Retirement growth rate updated successfully",
       });
-      setOriginalRate(rate);
-      setHasChanged(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/assumptions/user', DEMO_USER_ID] });
+      setHasChanges(false);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: `Failed to save retirement growth rate: ${error instanceof Error ? error.message : String(error)}`,
+        description: `Failed to save changes: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive",
       });
     }
   });
 
-  const handleChange = (value: number[]) => {
-    const newRate = value[0];
-    setRate(newRate);
-    setHasChanged(newRate !== originalRate);
-  };
-
-  const handleReset = () => {
-    if (retirementGrowthAssumption) {
-      setRate(retirementGrowthAssumption.defaultValue);
-      setHasChanged(retirementGrowthAssumption.defaultValue !== originalRate);
+  // Handle input change
+  const handleInputChange = (value: string) => {
+    const newRate = parseFloat(value);
+    if (!isNaN(newRate)) {
+      // Clamp value to min/max range
+      const min = retirementAssumption?.minValue || 0;
+      const max = retirementAssumption?.maxValue || 12;
+      const clampedValue = Math.min(Math.max(newRate, min), max);
+      
+      setGrowthRate(clampedValue);
+      setHasChanges(clampedValue !== retirementAssumption?.value);
+      console.log("Setting growth rate to:", clampedValue);
     }
   };
 
-  if (!retirementGrowthAssumption) {
-    return null; // Don't render if the assumption isn't found
+  // Reset to default
+  const handleReset = () => {
+    if (retirementAssumption) {
+      setGrowthRate(retirementAssumption.defaultValue);
+      setHasChanges(retirementAssumption.defaultValue !== retirementAssumption.value);
+    }
+  };
+
+  if (isLoading || !retirementAssumption) {
+    return (
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="h-40 flex items-center justify-center">
+            <p>Loading retirement settings...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -105,41 +140,49 @@ const RetirementGrowthWidget = () => {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="text-2xl font-semibold text-primary">{rate.toFixed(2)}%</div>
+          <div className="text-2xl font-semibold text-primary">{growthRate.toFixed(2)}%</div>
         </div>
 
         <div className="space-y-6">
-          <div>
-            <Slider
-              value={[rate]}
-              min={retirementGrowthAssumption.minValue}
-              max={retirementGrowthAssumption.maxValue}
-              step={retirementGrowthAssumption.stepValue}
-              onValueChange={handleChange}
-              className="mb-2"
-            />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>{retirementGrowthAssumption.minValue}%</span>
-              <span>Default: {retirementGrowthAssumption.defaultValue}%</span>
-              <span>{retirementGrowthAssumption.maxValue}%</span>
+          <div className="py-4">
+            <p className="text-sm text-gray-600 mb-4">
+              The growth rate represents how your retirement investments perform over time.
+              Historically, stock markets have returned 7-10% annually over the long term.
+            </p>
+            
+            <div className="flex items-center mt-4">
+              <label htmlFor="growth-rate" className="text-sm mr-4 whitespace-nowrap">
+                Growth rate:
+              </label>
+              <Input
+                id="growth-rate"
+                type="number"
+                value={growthRate}
+                onChange={(e) => handleInputChange(e.target.value)}
+                min={retirementAssumption.minValue}
+                max={retirementAssumption.maxValue}
+                step={retirementAssumption.stepValue}
+                className="w-20 text-right"
+              />
+              <span className="ml-2">%</span>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2">
+          <div className="pt-2 flex justify-end space-x-2">
             <Button 
               variant="outline" 
               size="sm"
               onClick={handleReset}
-              disabled={rate === retirementGrowthAssumption.defaultValue}
+              disabled={growthRate === retirementAssumption.defaultValue}
             >
               Reset to Default
             </Button>
             <Button 
               size="sm"
-              onClick={() => saveAssumption.mutate()}
-              disabled={!hasChanged || saveAssumption.isPending}
+              onClick={() => saveChanges.mutate()}
+              disabled={!hasChanges || saveChanges.isPending}
             >
-              {saveAssumption.isPending ? "Saving..." : "Save Changes"}
+              {saveChanges.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
