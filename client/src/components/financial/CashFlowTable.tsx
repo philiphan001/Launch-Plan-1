@@ -69,6 +69,15 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   
+  // Debug childcare data
+  React.useEffect(() => {
+    console.log("CashFlowTable childcare debug:");
+    console.log("- childcareExpenses:", childcareExpenses);
+    console.log("- Is array:", Array.isArray(childcareExpenses));
+    console.log("- Length:", childcareExpenses?.length);
+    console.log("- First few values:", childcareExpenses?.slice(0, 5));
+  }, [childcareExpenses]);
+  
   // Helper function to safely format monetary values
   const formatCurrency = (array: number[] | null | undefined, index: number): string => {
     if (!array || index >= array.length || array[index] === undefined || array[index] === null) {

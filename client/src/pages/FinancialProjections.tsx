@@ -1916,7 +1916,7 @@ const FinancialProjections = () => {
         entertainmentExpenses={projectionData.entertainment}
         otherExpenses={projectionData.other}
         educationExpenses={projectionData.education}
-        childcareExpenses={projectionData.childcare}
+        childcareExpenses={projectionData.childcare} 
         debtExpenses={projectionData.debt}
         discretionaryExpenses={projectionData.discretionary}
         assets={projectionData.assets}
