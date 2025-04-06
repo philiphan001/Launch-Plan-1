@@ -595,7 +595,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       
       {/* Milestone Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md md:max-w-2xl">
+        <DialogContent className="max-w-md md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {currentMilestone === "marriage" && "Get Married"}
@@ -1364,10 +1364,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                       <div className="mt-3 text-xs border-t border-purple-100 pt-2">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-600">Projected savings in {yearsAway} years:</span>
-                          <span className="font-medium">${Math.round(futureSavings.projectedAmount).toLocaleString()}</span>
+                          <span className="font-medium">${Math.round(futureSavings.futureSavings).toLocaleString()}</span>
                         </div>
                         
-                        {futureSavings.projectedAmount < Math.max(0, educationAnnualCost * educationYears - educationAnnualLoan * educationYears) ? (
+                        {futureSavings.futureSavings < Math.max(0, educationAnnualCost * educationYears - educationAnnualLoan * educationYears) ? (
                           <div className="mt-2 bg-red-50 text-red-700 p-2 rounded-md border border-red-100 flex items-start">
                             <AlertTriangle className="h-4 w-4 mr-1 mt-0.5 flex-shrink-0" />
                             <span>You may need to increase your savings rate or loan amount to cover the education costs.</span>
@@ -1385,11 +1385,11 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="sticky bottom-0 bg-white pt-4 pb-2 border-t">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveMilestone}>
+            <Button onClick={handleSaveMilestone} className="ml-2">
               {isEditing ? "Update Milestone" : "Save Milestone"}
             </Button>
           </DialogFooter>
