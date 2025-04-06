@@ -23,6 +23,9 @@ export interface ProjectionData {
   carValue?: number[];
   carLoan?: number[];
   studentLoan?: number[];
+  educationLoans?: number[]; // Undergraduate education loans
+  graduateSchoolLoans?: number[]; // Graduate school loans
+  personalLoans?: number[]; // Personal loans
   savingsValue?: number[];
   // Expense categories
   housing?: number[];
@@ -81,6 +84,11 @@ export interface Milestone {
   childrenExpensePerYear?: number;
   // Education-specific properties
   educationCost?: number;
+  educationType?: string; // Type of education (undergraduate, graduate, etc.)
+  educationYears?: number; // Duration of education in years
+  educationAnnualCost?: number; // Annual cost of education
+  educationAnnualLoan?: number; // Annual loan amount for education
+  targetOccupation?: string; // Target occupation after education
   // Status properties
   active?: boolean;
   completed?: boolean;
