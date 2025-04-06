@@ -400,14 +400,61 @@ class FinancialCalculator:
                 if isinstance(liability, Mortgage):
                     mortgage_balance_int = int(liability_balance)
                     mortgage_yearly[i] += mortgage_balance_int
+                    
+                    # Add mortgage payment to debt expenses yearly
+                    payment = liability.get_payment(i)
+                    debt_expenses_yearly[i] += int(payment)
+                    
+                    # Split payment into principal and interest components
+                    interest_payment = liability.get_interest_payment(i)
+                    principal_payment = liability.get_principal_payment(i)
+                    debt_interest_yearly[i] += int(interest_payment)
+                    debt_principal_yearly[i] += int(principal_payment)
+                    
                 elif isinstance(liability, AutoLoan):
                     car_loan_yearly[i] += int(liability_balance)
+                    
+                    # Add auto loan payment to debt expenses yearly
+                    payment = liability.get_payment(i)
+                    debt_expenses_yearly[i] += int(payment)
+                    
+                    # Split payment into principal and interest components
+                    interest_payment = liability.get_interest_payment(i)
+                    principal_payment = liability.get_principal_payment(i)
+                    debt_interest_yearly[i] += int(interest_payment)
+                    debt_principal_yearly[i] += int(principal_payment)
+                    
                 elif isinstance(liability, StudentLoan):
                     student_loan_yearly[i] += int(liability_balance)
+                    
+                    # Add student loan payment to debt expenses yearly
+                    payment = liability.get_payment(i)
+                    debt_expenses_yearly[i] += int(payment)
+                    
+                    # Split payment into principal and interest components
+                    interest_payment = liability.get_interest_payment(i)
+                    principal_payment = liability.get_principal_payment(i)
+                    debt_interest_yearly[i] += int(interest_payment)
+                    debt_principal_yearly[i] += int(principal_payment)
+                    
+                    # Debug log for student loan payments
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Year {i}: Adding StudentLoan '{liability.name}' payment ${payment} to debt_expenses_yearly\n")
+                    
                 elif isinstance(liability, PersonalLoan):
                     # Add personal loans to tracking array
                     personal_loan_balance_int = int(liability_balance)
                     all_personal_loans[i] += personal_loan_balance_int
+                    
+                    # Add personal loan payment to debt expenses yearly
+                    payment = liability.get_payment(i)
+                    debt_expenses_yearly[i] += int(payment)
+                    
+                    # Split payment into principal and interest components
+                    interest_payment = liability.get_interest_payment(i)
+                    principal_payment = liability.get_principal_payment(i)
+                    debt_interest_yearly[i] += int(interest_payment)
+                    debt_principal_yearly[i] += int(principal_payment)
                     
                     # Debug log
                     with open('healthcare_debug.log', 'a') as f:
@@ -1832,63 +1879,71 @@ class FinancialCalculator:
                             f.write(f"Assets after down payment: ${assets_yearly[milestone_year]}\n")
                             f.write(f"Cash flow reduced by down payment: ${cash_flow_yearly[milestone_year]}\n")
                         
-                        # Add car asset and loan to financial tracking
+                        # Create proper AutoLoan object for the car loan
+                        if car_loan_principal > 0:
+                            # Use constants from launch_plan_assumptions.py for loan parameters
+                            car_loan_term = CAR_LOAN_TERM  # From assumptions
+                            car_interest_rate = CAR_LOAN_INTEREST_RATE  # From assumptions
+                            
+                            # Create the AutoLoan object
+                            car_loan = AutoLoan(
+                                name=f"Car Loan (Purchase in Year {milestone_year})",
+                                initial_balance=car_loan_principal,
+                                interest_rate=car_interest_rate,
+                                term_years=car_loan_term,
+                                vehicle_value=car_value
+                            )
+                            
+                            # Add the auto loan to the calculator's liabilities
+                            self.add_liability(car_loan)
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nCreated AutoLoan object for car purchase:\n")
+                                f.write(f"- Loan amount: ${car_loan_principal}\n")
+                                f.write(f"- Term: {car_loan_term} years\n")
+                                f.write(f"- Interest rate: {car_interest_rate * 100}%\n")
+                                f.write(f"- Monthly payment: ${car_loan.monthly_payment:.2f}\n")
+                                f.write(f"- Annual payment: ${car_loan.monthly_payment * 12:.2f}\n")
+                        
+                        # Add car as asset and track depreciation
                         for i in range(milestone_year, self.years_to_project + 1):
                             # Calculate car value with depreciation (15% per year)
                             years_owned = i - milestone_year
                             current_car_value = int(car_value * (0.85 ** years_owned))
                             
-                            # Calculate loan balance based on simple amortization
-                            # Use constants from launch_plan_assumptions.py
-                            loan_term = CAR_LOAN_TERM  # From assumptions
-                            loan_years_passed = min(years_owned, loan_term)  # Cap at loan term
-                            car_interest_rate = CAR_LOAN_INTEREST_RATE  # From assumptions
-                            
-                            # Only calculate remaining principal if within loan term
-                            if loan_years_passed < loan_term:
-                                # Calculate proper amortization for level payment loan
-                                r = car_interest_rate
-                                n = loan_term  # Loan term from constants
-                                payment = (car_loan_principal * r * pow(1 + r, n)) / (pow(1 + r, n) - 1)
-                                
-                                # Calculate remaining principal after loan_years_passed
-                                remaining_principal = car_loan_principal
-                                for _ in range(loan_years_passed):
-                                    interest = remaining_principal * car_interest_rate
-                                    principal_reduction = payment - interest
-                                    remaining_principal -= principal_reduction
-                                
-                                current_car_loan = max(0, int(remaining_principal))
-                            else:
-                                current_car_loan = 0  # Loan is paid off
-                            
-                            # Update tracking arrays
+                            # Update car value tracking array
                             car_value_yearly[i] = current_car_value
-                            car_loan_yearly[i] = current_car_loan
                             
-                            # Update total assets and liabilities
+                            # Add car value to assets
                             assets_yearly[i] += current_car_value
-                            liabilities_yearly[i] += current_car_loan
+                            
+                            # We don't need to update car_loan_yearly or liabilities_yearly here
+                            # because the loan is now tracked through the AutoLoan object
+                            # and will be processed in the general liability processing code
                             
                             # CRITICAL FIX: Car transactions should not cause net worth to go negative
                             # Log the current net worth calculation details
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"\n[CAR PURCHASE IMPACT] Year {i}:\n")
                                 f.write(f"  Car value added to assets: ${current_car_value}\n")
-                                f.write(f"  Car loan added to liabilities: ${current_car_loan}\n")
-                                f.write(f"  Net car impact on net worth: ${current_car_value - current_car_loan}\n")
+                                
+                                # Get the car loan balance for this year from the AutoLoan object if it exists
+                                car_loan_balance = 0
+                                if 'car_loan' in locals() and car_loan is not None:
+                                    car_loan_balance = car_loan.get_balance(i)
+                                    
+                                f.write(f"  Car loan balance at end of year: ${car_loan_balance}\n")
+                                f.write(f"  Net car impact on net worth: ${current_car_value - car_loan_balance}\n")
                                 f.write(f"  Total assets: ${assets_yearly[i]}\n")
                                 f.write(f"  Total liabilities: ${liabilities_yearly[i]}\n")
                                 f.write(f"  Personal loans (included in liabilities): ${all_personal_loans[i]}\n")
                                 # FIXED: Don't double count personal loans - they're already in liabilities_yearly
                                 f.write(f"  Net worth calculation: ${assets_yearly[i]} - ${liabilities_yearly[i]} = ${assets_yearly[i] - liabilities_yearly[i]}\n")
                             
-                            # Add car payment to debt expenses category (don't modify expenses_yearly directly)
-                            if loan_years_passed < loan_term:
-                                # Add car payment to debt expenses category
-                                debt_expenses_yearly[i] += car_annual_payment
-                                
-                                # Note: We will recompute expenses_yearly at the end based on all categories
+                            # The car loan payments will be automatically included in the debt expenses later
+                            # since we're now using the proper AutoLoan object and its get_payment method
+                            # We don't need to manually add car_annual_payment to debt_expenses_yearly here
+                            # as it will be handled in the main liability processing section
                             
                             # Apply transportation expense reduction while the car is owned
                             # This reduces other transport costs like public transit
