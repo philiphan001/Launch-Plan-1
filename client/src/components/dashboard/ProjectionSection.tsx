@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart } from "@/lib/charts";
+import { Link } from "wouter";
+import { ArrowRight } from "lucide-react";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities";
 
@@ -80,7 +82,14 @@ const ProjectionSection = ({
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-display font-semibold text-gray-800">Financial Projection</h2>
+        <div className="flex items-center">
+          <h2 className="text-xl font-display font-semibold text-gray-800 mr-3">Financial Projection</h2>
+          <Link to="/projections">
+            <span className="text-primary text-sm flex items-center">
+              View Full Projections <ArrowRight className="h-4 w-4 ml-1" />
+            </span>
+          </Link>
+        </div>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-600">View:</span>
           <select 
@@ -156,6 +165,13 @@ const ProjectionSection = ({
                 </div>
               ))}
             </div>
+          </div>
+          <div className="mt-6 flex justify-center">
+            <Link to="/projections">
+              <button className="px-6 py-3 bg-primary text-white font-medium rounded-lg flex items-center hover:bg-primary-dark transition-colors">
+                View Full Financial Projections <ArrowRight className="h-5 w-5 ml-2" />
+              </button>
+            </Link>
           </div>
         </CardContent>
       </Card>

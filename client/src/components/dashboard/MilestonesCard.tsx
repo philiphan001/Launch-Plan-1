@@ -1,4 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "wouter";
+import { ArrowRight } from "lucide-react";
 
 interface Milestone {
   id: string;
@@ -57,12 +59,19 @@ const MilestonesCard = ({
     <Card className="overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 className="font-medium text-gray-700">Life Milestones</h3>
-        <button 
-          className="text-primary hover:text-primary-dark text-sm"
-          onClick={onAddMilestone}
-        >
-          Add
-        </button>
+        <div className="flex items-center space-x-3">
+          <button 
+            className="text-primary hover:text-primary-dark text-sm"
+            onClick={onAddMilestone}
+          >
+            Add
+          </button>
+          <Link to="/projections">
+            <span className="text-primary text-sm flex items-center">
+              Details <ArrowRight className="h-4 w-4 ml-1" />
+            </span>
+          </Link>
+        </div>
       </div>
       <CardContent className="px-6 py-4">
         <ul className="divide-y divide-gray-200">
@@ -83,6 +92,11 @@ const MilestonesCard = ({
             );
           })}
         </ul>
+        <div className="mt-4 text-center">
+          <Link to="/projections" className="text-primary text-sm">
+            Manage Milestones
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
