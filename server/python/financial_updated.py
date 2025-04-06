@@ -2189,8 +2189,20 @@ class FinancialCalculator:
         emergency_fund_amount = input_data.get('emergencyFundAmount', DEFAULT_EMERGENCY_FUND_AMOUNT)
         personal_loan_term_years = input_data.get('personalLoanTermYears', DEFAULT_PERSONAL_LOAN_TERM_YEARS)
         personal_loan_interest_rate = input_data.get('personalLoanInterestRate', DEFAULT_PERSONAL_LOAN_INTEREST_RATE)
-        retirement_contribution_rate = input_data.get('retirementContributionRate', DEFAULT_RETIREMENT_CONTRIBUTION_RATE)
-        retirement_growth_rate = input_data.get('retirementGrowthRate', DEFAULT_RETIREMENT_GROWTH_RATE)
+        
+        # Handle retirement rates which might be provided as whole numbers (3 instead of 0.03)
+        retirement_contribution_rate_raw = input_data.get('retirementContributionRate', DEFAULT_RETIREMENT_CONTRIBUTION_RATE)
+        retirement_growth_rate_raw = input_data.get('retirementGrowthRate', DEFAULT_RETIREMENT_GROWTH_RATE)
+        
+        # Convert to decimal if received as whole numbers (3 → 0.03)
+        retirement_contribution_rate = retirement_contribution_rate_raw / 100.0 if retirement_contribution_rate_raw > 1 else retirement_contribution_rate_raw
+        retirement_growth_rate = retirement_growth_rate_raw / 100.0 if retirement_growth_rate_raw > 1 else retirement_growth_rate_raw
+        
+        # Log the conversion for debugging
+        with open('healthcare_debug.log', 'a') as f:
+            f.write(f"Retirement rate conversion:\n")
+            f.write(f"  Contribution rate raw: {retirement_contribution_rate_raw} → {retirement_contribution_rate}\n")
+            f.write(f"  Growth rate raw: {retirement_growth_rate_raw} → {retirement_growth_rate}\n")
         
         # Create calculator with all parameters
         calculator = cls(
