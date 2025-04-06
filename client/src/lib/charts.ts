@@ -680,7 +680,12 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
     const graduateSchoolLoansValue = data.graduateSchoolLoans && data.graduateSchoolLoans[index] ? data.graduateSchoolLoans[index] : 0;
     const carLoanValue = data.carLoan && data.carLoan[index] ? data.carLoan[index] : 0;
     const personalLoansValue = data.personalLoans && data.personalLoans[index] ? data.personalLoans[index] : 0;
-    return liabilityValue - mortgageValue - studentLoanValue - educationLoansValue - graduateSchoolLoansValue - carLoanValue - personalLoansValue;
+    
+    // Calculate the sum of all known debt types
+    const sumOfKnownLoans = mortgageValue + studentLoanValue + educationLoansValue + graduateSchoolLoansValue + carLoanValue + personalLoansValue;
+    
+    // Take the max of 0 and the difference to avoid negative values
+    return Math.max(0, liabilityValue - sumOfKnownLoans);
   }) || [];
 
   const datasets = [
@@ -694,7 +699,7 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   ];
 
   // Add student loan dataset if it exists and has positive values
-  if (data.studentLoan && data.studentLoan.some(value => value > 0)) {
+  if (data.studentLoan && data.studentLoan.some((value: number) => value > 0)) {
     datasets.push({
       label: 'Student Loans',
       data: data.studentLoan,
@@ -705,7 +710,7 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   }
   
   // Add education loans (undergraduate) if they exist and have positive values
-  if (data.educationLoans && data.educationLoans.some(value => value > 0)) {
+  if (data.educationLoans && data.educationLoans.some((value: number) => value > 0)) {
     datasets.push({
       label: 'Education Loans',
       data: data.educationLoans,
@@ -716,7 +721,7 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   }
   
   // Add graduate school loans if they exist and have positive values
-  if (data.graduateSchoolLoans && data.graduateSchoolLoans.some(value => value > 0)) {
+  if (data.graduateSchoolLoans && data.graduateSchoolLoans.some((value: number) => value > 0)) {
     datasets.push({
       label: 'Graduate School Loans',
       data: data.graduateSchoolLoans,
@@ -727,7 +732,7 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   }
   
   // Add personal loans if they exist and have positive values
-  if (data.personalLoans && data.personalLoans.some(value => value > 0)) {
+  if (data.personalLoans && data.personalLoans.some((value: number) => value > 0)) {
     datasets.push({
       label: 'Personal Loans',
       data: data.personalLoans,
@@ -738,7 +743,7 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   }
   
   // Add car loan dataset if it exists and has positive values
-  if (data.carLoan && data.carLoan.some(value => value > 0)) {
+  if (data.carLoan && data.carLoan.some((value: number) => value > 0)) {
     datasets.push({
       label: 'Car Loan',
       data: data.carLoan,
@@ -749,7 +754,7 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   }
 
   // Add mortgage dataset if it exists and has positive values
-  if (data.mortgage && data.mortgage.some(value => value > 0)) {
+  if (data.mortgage && data.mortgage.some((value: number) => value > 0)) {
     datasets.push({
       label: 'Mortgage',
       data: data.mortgage,
