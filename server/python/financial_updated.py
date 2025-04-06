@@ -1761,6 +1761,59 @@ class FinancialCalculator:
                             
                             # Recalculate cash flow with new expenses
                             cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
+                            
+                            # Important: If we have a savings asset, we need to update its value
+                            # to reflect the reduced cash flow due to childcare expenses
+                            # This is necessary for proper net worth calculation
+                            if hasattr(self, 'assets') and cash_flow_yearly[i] < 0:
+                                # Find the savings asset (same logic as in yearly calculation loop)
+                                savings_asset = None
+                                for asset in self.assets:
+                                    # Use hasattr check to avoid LSP errors
+                                    if (hasattr(asset, 'get_type') and 
+                                        (asset.get_type() == 'savings' or asset.get_type() == 'investment')):
+                                        savings_asset = asset
+                                        break
+                                    # Alternatively, check based on class type
+                                    elif isinstance(asset, Investment) and 'savings' in asset.name.lower():
+                                        savings_asset = asset
+                                        break
+                                
+                                if savings_asset and i > milestone_year:
+                                    # Get current savings value before reduction
+                                    current_savings = savings_value_yearly[i]
+                                    
+                                    # Apply negative cash flow impact to savings
+                                    # Similar to how we handle negative cash flow in main loop
+                                    negative_amount = abs(cash_flow_yearly[i])
+                                    
+                                    # Calculate how much we can cover from savings
+                                    amount_covered_by_savings = min(negative_amount, current_savings)
+                                    
+                                    # Reduce savings by the covered amount
+                                    if amount_covered_by_savings > 0:
+                                        new_savings = max(0, current_savings - amount_covered_by_savings)
+                                        savings_value_yearly[i] = new_savings
+                                        
+                                        # Update the savings asset value
+                                        if hasattr(savings_asset, 'update_value'):
+                                            savings_asset.update_value(i, new_savings)
+                                            
+                                        # Log the update for debugging
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"Child expenses impact on savings in year {i}:\n")
+                                            f.write(f"- Reduced savings from ${current_savings} to ${new_savings}\n")
+                                            f.write(f"- Amount covered by savings: ${amount_covered_by_savings}\n")
+                                        
+                                        # Update assets to reflect reduced savings
+                                        assets_yearly[i] = (
+                                            home_value_yearly[i] +
+                                            car_value_yearly[i] +
+                                            savings_value_yearly[i]
+                                        )
+                                        
+                                        # Update net worth
+                                        net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
 
                     elif milestone.get('type') == 'car':
                         # Process car purchase milestone
@@ -1980,8 +2033,18 @@ class FinancialCalculator:
                                 
                                 # Get the car loan balance for this year from the AutoLoan object if it exists
                                 car_loan_balance = 0
-                                if 'car_loan' in locals() and car_loan is not None:
-                                    car_loan_balance = car_loan.get_balance(i)
+                                # Instead of using locals(), access the car loan objects via self.liabilities
+                                # Find any car loan for this milestone year
+                                for liability in self.liabilities:
+                                    # Check if this is a car loan using the class name
+                                    if isinstance(liability, AutoLoan):
+                                        # Check if it has a milestone_year attribute that matches
+                                        if hasattr(liability, 'milestone_year') and getattr(liability, 'milestone_year') == milestone_year:
+                                            # Found the matching car loan for this milestone
+                                            # Adjust for years since purchase
+                                            years_since_purchase = i - milestone_year
+                                            car_loan_balance = liability.get_balance(years_since_purchase)
+                                            break
                                     
                                 f.write(f"  Car loan balance at end of year: ${car_loan_balance}\n")
                                 f.write(f"  Net car impact on net worth: ${current_car_value - car_loan_balance}\n")
