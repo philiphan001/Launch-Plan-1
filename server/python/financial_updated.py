@@ -540,8 +540,14 @@ class FinancialCalculator:
             other_expenses_yearly[i] = int(year_other)
             education_expenses_yearly[i] = int(year_education)
             child_expenses_yearly[i] = int(year_childcare)
-            debt_expenses_yearly[i] = int(year_debt)
+            # IMPORTANT: Add year_debt to the existing debt_expenses_yearly value
+            # instead of overwriting it, to preserve loan payments already added
+            debt_expenses_yearly[i] += int(year_debt)
             discretionary_expenses_yearly[i] = int(year_discretionary)
+            
+            # Debug log for debt expenses
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"Year {i}: Final debt_expenses_yearly = ${debt_expenses_yearly[i]}\n")
             
             # Calculate tax for this year using current filing status
             # This will be "single" by default or "married" if marriage milestone occurred
@@ -922,7 +928,9 @@ class FinancialCalculator:
             # Milestone-driven categories
             education_expenses_yearly[i] = year_education
             child_expenses_yearly[i] = year_childcare
-            debt_expenses_yearly[i] = year_debt
+            # IMPORTANT: Add to existing debt_expenses_yearly instead of overwriting
+            # to preserve loan payments that were already added
+            debt_expenses_yearly[i] += year_debt
             discretionary_expenses_yearly[i] = year_discretionary
         
         # Process milestones
@@ -1274,7 +1282,9 @@ class FinancialCalculator:
                                 other_expenses_yearly[i] = int(year_other)
                                 education_expenses_yearly[i] = int(year_education)
                                 child_expenses_yearly[i] = int(year_childcare)
-                                debt_expenses_yearly[i] = int(year_debt)
+                                # IMPORTANT: Add to existing debt_expenses_yearly instead of overwriting
+                                # to preserve loan payments that were already added
+                                debt_expenses_yearly[i] += int(year_debt)
                                 discretionary_expenses_yearly[i] = int(year_discretionary)
                                 
                                 # Use total income (personal + spouse) for cash flow calculation
