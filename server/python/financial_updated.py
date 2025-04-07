@@ -681,16 +681,38 @@ class FinancialCalculator:
                             f.write(f"  Available savings (above emergency threshold): ${available_savings}\n")
                             f.write(f"  Personal loan settings: {self.personal_loan_term_years}-year term, {self.personal_loan_interest_rate*100:.1f}% interest\n")
                             
-                        # Only reduce savings if we're using some of it and the savings asset has the right method
-                        if amount_from_savings > 0 and hasattr(savings_asset, 'add_contribution'):
-                            # Use getattr to get the method to avoid LSP issues
-                            # Call the method to add a negative contribution (withdrawal) with year first
-                            # Ensure we're using the proper Investment type method with type casting
-                            if isinstance(savings_asset, Investment):
-                                savings_asset.add_contribution(i, -amount_from_savings)
+                        # Only reduce savings if we're using some of it and the savings asset is the right type
+                        if amount_from_savings > 0:
+                            # Check if it's an Investment type that has a withdraw method
+                            if isinstance(savings_asset, Investment) and hasattr(savings_asset, 'withdraw'):
+                                # Use withdraw method which has built-in safeguards and proper logging
+                                actual_withdrawn = savings_asset.withdraw(amount_from_savings, i)
+                                
+                                # If we couldn't withdraw the full amount, update our remaining negative amount
+                                if actual_withdrawn < amount_from_savings:
+                                    remaining_negative_amount += (amount_from_savings - actual_withdrawn)
+                                    amount_from_savings = actual_withdrawn
+                            else:
+                                # Fallback to direct contribution if withdraw isn't available
+                                if hasattr(savings_asset, 'add_contribution'):
+                                    savings_asset.add_contribution(i, -amount_from_savings)
+                            
+                            # Verify the savings never go below the emergency threshold
+                            updated_savings = savings_asset.get_value(i)
+                            if updated_savings < emergency_fund_threshold:
+                                # If we've gone below the threshold, adjust back up and increase remaining negative amount
+                                shortfall = emergency_fund_threshold - updated_savings
+                                # Add back the shortfall to maintain emergency fund
+                                if hasattr(savings_asset, 'add_contribution'):
+                                    savings_asset.add_contribution(i, shortfall)
+                                # Increase the remaining negative amount that will be handled by a loan
+                                remaining_negative_amount += shortfall
+                                # Reduce the amount_from_savings to reflect what we actually used
+                                amount_from_savings -= shortfall
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"  Using ${amount_from_savings} from savings\n")
+                                f.write(f"  Savings after withdrawal: ${savings_asset.get_value(i)}\n")
                                 f.write(f"  Remaining negative amount: ${remaining_negative_amount}\n")
                         
                         # Only create a loan if we still have a negative balance after using savings
