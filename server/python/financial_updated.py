@@ -842,6 +842,25 @@ class FinancialCalculator:
                         # If we're showing savings below the emergency threshold, create a cash flow deficit loan
                         shortfall = emergency_fund_threshold - savings_value_yearly[i]
                         
+                        # SAFETY CHECK: Limit the maximum loan size to prevent astronomical values
+                        # This can happen if there's a massive cash flow deficit
+                        MAX_EMERGENCY_LOAN = 100000  # $100k maximum emergency loan per year
+                        if shortfall > MAX_EMERGENCY_LOAN:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[EMERGENCY LOAN CAP] Year {i}: Capping emergency loan from ${shortfall} to ${MAX_EMERGENCY_LOAN}\n")
+                                f.write(f"  This indicates a severe cash flow problem that exceeds what personal loans can reasonably fix\n")
+                            shortfall = MAX_EMERGENCY_LOAN
+                        
+                        # Additional safety: If this is the first year and starting savings is exactly at the threshold,
+                        # we don't need to create a loan - this prevents instability at the boundary
+                        if i == 0 and abs(savings_value_yearly[i] - emergency_fund_threshold) < 0.01 * emergency_fund_threshold:
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[BOUNDARY CONDITION] Year {i}: Starting savings (${savings_value_yearly[i]}) already at/near threshold\n")
+                                f.write(f"  Skipping loan creation to prevent instability\n")
+                            # Just ensure the exact threshold value is set
+                            savings_value_yearly[i] = emergency_fund_threshold
+                            continue
+                        
                         # Log this critical correction
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"\n[CRITICAL CORRECTION] Year {i}: Savings value ${savings_value_yearly[i]} below emergency threshold ${emergency_fund_threshold}\n")
@@ -2646,6 +2665,13 @@ class FinancialCalculator:
                     
                     # Calculate shortfall
                     shortfall = self.emergency_fund_amount - savings_value_yearly[year_idx]
+                    
+                    # SAFETY CHECK: Limit the maximum final verification loan size
+                    MAX_EMERGENCY_LOAN = 100000  # $100k maximum emergency loan per year
+                    if shortfall > MAX_EMERGENCY_LOAN:
+                        f.write(f"[EMERGENCY LOAN CAP] Year {year_idx + self.start_age}: Capping emergency loan from ${shortfall} to ${MAX_EMERGENCY_LOAN}\n")
+                        f.write(f"  This indicates a severe cash flow problem that exceeds what personal loans can reasonably fix\n")
+                        shortfall = MAX_EMERGENCY_LOAN
                     
                     # Create emergency loan to cover the shortfall
                     emergency_loan_name = f"Final Emergency Fund Protection Loan {year_idx + self.start_age}"
