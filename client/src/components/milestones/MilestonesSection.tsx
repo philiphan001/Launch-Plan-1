@@ -48,6 +48,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 import { 
   Career,
   Milestone,
@@ -99,6 +103,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [educationAnnualCost, setEducationAnnualCost] = useState(30000);
   const [educationAnnualLoan, setEducationAnnualLoan] = useState(20000);
   const [targetOccupation, setTargetOccupation] = useState("");
+  const [workStatus, setWorkStatus] = useState("no"); // "no", "part-time", or "full-time"
+  const [partTimeIncome, setPartTimeIncome] = useState(20000);
+  const [returnToSameProfession, setReturnToSameProfession] = useState(true);
   
   const queryClient = useQueryClient();
   
@@ -288,6 +295,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setEducationAnnualCost(milestoneToEdit.educationAnnualCost || 30000);
         setEducationAnnualLoan(milestoneToEdit.educationAnnualLoan || 20000);
         setTargetOccupation(milestoneToEdit.targetOccupation || "");
+        setWorkStatus(milestoneToEdit.workStatus || "no");
+        setPartTimeIncome(milestoneToEdit.partTimeIncome || 20000);
+        setReturnToSameProfession(milestoneToEdit.returnToSameProfession || true);
       }
     } else {
       // This is a new milestone
@@ -323,6 +333,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setEducationAnnualCost(30000);
         setEducationAnnualLoan(20000);
         setTargetOccupation("");
+        setWorkStatus("no");
+        setPartTimeIncome(20000);
+        setReturnToSameProfession(true);
       }
     }
   };
@@ -456,6 +469,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         educationAnnualCost,
         educationAnnualLoan,
         targetOccupation,
+        workStatus,
+        partTimeIncome,
+        returnToSameProfession,
       };
       
       if (isEditing && editingMilestoneId) {
@@ -1376,7 +1392,48 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                     </p>
                   </div>
                   
-                  <div className="bg-white rounded-md p-3 border border-purple-100 mt-2">
+                  <div className="bg-white rounded-md p-3 border border-purple-100 mt-3">
+                    <h4 className="font-medium text-purple-700 mb-2">Working Status During Education</h4>
+                    <RadioGroup 
+                      value={workStatus} 
+                      onValueChange={(val: string) => setWorkStatus(val)}
+                      className="space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="work-status-no" />
+                        <Label htmlFor="work-status-no" className="font-normal">Not working during education</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="part-time" id="work-status-part-time" />
+                        <Label htmlFor="work-status-part-time" className="font-normal">Working part-time</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="full-time" id="work-status-full-time" />
+                        <Label htmlFor="work-status-full-time" className="font-normal">Working full-time</Label>
+                      </div>
+                    </RadioGroup>
+                    
+                    {workStatus === "part-time" && (
+                      <div className="mt-3 border-t border-purple-100 pt-3">
+                        <Label htmlFor="part-time-income" className="text-sm">Part-time Annual Income</Label>
+                        <div className="flex items-center mt-1">
+                          <span className="mr-2">$</span>
+                          <Input
+                            type="number"
+                            id="part-time-income"
+                            value={partTimeIncome}
+                            onChange={(e) => setPartTimeIncome(Number(e.target.value))}
+                            className="max-w-[200px]"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Estimated annual income from part-time work during studies
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="bg-white rounded-md p-3 border border-purple-100 mt-3">
                     <h4 className="font-medium text-purple-700 mb-2">Funding Summary</h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="text-gray-600">Total Program Cost:</div>
@@ -1417,9 +1474,27 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                   
                   <div className="bg-white rounded-md p-3 border border-purple-100 mt-4">
                     <h4 className="font-medium text-purple-700 mb-2">Career After Graduation</h4>
-                    <div>
+                    <div className="space-y-4">
+                      <div className="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                        <Label className="text-purple-700 font-medium">Career Path</Label>
+                        <RadioGroup 
+                          value={returnToSameProfession ? "same" : "new"} 
+                          onValueChange={(val: string) => setReturnToSameProfession(val === "same")}
+                          className="space-y-2 mt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="same" id="return-same-profession" />
+                            <Label htmlFor="return-same-profession" className="font-normal">Return to same profession</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="new" id="enter-new-profession" />
+                            <Label htmlFor="enter-new-profession" className="font-normal">Enter new profession</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                      
                       <Label htmlFor="target-occupation" className="text-purple-700 font-medium flex items-center">
-                        <span className="mr-2">💼</span> Target Occupation After Graduation
+                        <span className="mr-2">💼</span> {returnToSameProfession ? "Your Profession After Graduation" : "New Occupation After Graduation"}
                       </Label>
                       <div className="mt-2 relative">
                         <Popover>
