@@ -168,7 +168,7 @@ const Pathways = () => {
                 }}
               >
                 <CardContent className="p-6 text-center">
-                  <div className="rounded-full bg-primary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                  <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                     <span className="material-icons text-2xl">map</span>
                   </div>
                   <h3 className="text-lg font-medium mb-2">I know what I want to do</h3>
@@ -212,7 +212,7 @@ const Pathways = () => {
                     }}
                   >
                     <CardContent className="p-6 text-center">
-                      <div className="rounded-full bg-primary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                      <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                         <span className="material-icons text-2xl">swipe</span>
                       </div>
                       <h3 className="text-lg font-medium mb-2">Swipe Cards</h3>
