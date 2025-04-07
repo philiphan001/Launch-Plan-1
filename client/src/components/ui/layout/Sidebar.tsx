@@ -12,7 +12,6 @@ const navItems: NavItem[] = [
   { path: "/careers", label: "Career Exploration", icon: "work" },
   { path: "/colleges", label: "College Discovery", icon: "school" },
   { path: "/pathways", label: "Pathways", icon: "alt_route" },
-  { path: "/assumptions", label: "Launch Plan Assumptions", icon: "settings" },
   { path: "/profile", label: "Profile", icon: "account_circle" },
 ];
 

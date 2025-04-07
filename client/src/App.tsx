@@ -23,9 +23,16 @@ function App() {
         <Route path="/colleges" component={CollegeDiscovery} />
         <Route path="/calculator" component={NetPriceCalculator} />
         <Route path="/pathways" component={Pathways} />
-        <Route path="/assumptions" component={Assumptions} />
         <Route path="/profile" component={Profile} />
         <Route path="/settings" component={Settings} />
+        
+        {/* Redirect /assumptions to /settings with assumptions tab */}
+        <Route path="/assumptions">
+          {() => {
+            window.location.href = "/settings#assumptions";
+            return null;
+          }}
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </AppShell>

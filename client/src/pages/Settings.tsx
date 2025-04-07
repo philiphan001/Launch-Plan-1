@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SavedCalculationsSection from "@/components/profile/SavedCalculationsSection";
+import LaunchPlanAssumptionsCard from "@/components/assumptions/LaunchPlanAssumptionsCard";
 
 // Types for the favorites
 type FavoriteCollege = {
@@ -40,6 +41,18 @@ type FavoriteCareer = {
 
 const Settings = () => {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("financial");
+  
+  // Check hash in URL for direct tab access
+  useEffect(() => {
+    // Get the hash from the URL (without the # symbol)
+    const hash = window.location.hash.substring(1);
+    
+    // If there's a hash and it matches one of our tabs, set it as active
+    if (hash && ["profile", "financial", "favorites", "assumptions", "notifications"].includes(hash)) {
+      setActiveTab(hash);
+    }
+  }, []);
   
   // User info state
   const [firstName, setFirstName] = useState("Philip");
@@ -178,11 +191,12 @@ const Settings = () => {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Account Settings</h1>
       
-      <Tabs defaultValue="financial">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="financial">Financial Profile</TabsTrigger>
           <TabsTrigger value="favorites">My Favorites</TabsTrigger>
+          <TabsTrigger value="assumptions">Launch Plan Assumptions</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
         
@@ -591,6 +605,12 @@ const Settings = () => {
               <Button className="mt-6">Save Privacy Settings</Button>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="assumptions">
+          <div className="space-y-6">
+            <LaunchPlanAssumptionsCard />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
