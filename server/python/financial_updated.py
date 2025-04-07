@@ -837,14 +837,10 @@ class FinancialCalculator:
                     emergency_fund_threshold = self.emergency_fund_amount
                     
                     # ============================================================
-                    # COMPLETE REWRITE OF EMERGENCY FUND PROTECTION MECHANISM
+                    # EMERGENCY FUND PROTECTION MECHANISM
                     # ============================================================
                     
-                    # Step 1: Determine if we're in a critical initial state (starting at threshold)
-                    # This is a special case that can lead to cascading debt explosions
-                    is_critical_initial_state = (i == 0 and abs(savings_value_yearly[i] - emergency_fund_threshold) < 0.01 * emergency_fund_threshold)
-                    
-                    # Step 2: If savings are below threshold, we need to address it
+                    # If savings are below threshold, we need to address it
                     if savings_value_yearly[i] < emergency_fund_threshold:
                         # Calculate the shortfall
                         shortfall = emergency_fund_threshold - savings_value_yearly[i]
@@ -853,67 +849,41 @@ class FinancialCalculator:
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"\n[EMERGENCY FUND PROTECTION] Year {i}: Savings value ${savings_value_yearly[i]} below threshold ${emergency_fund_threshold}\n")
                         
-                        # DECISION TREE FOR EMERGENCY FUNDING
+                        # Create an emergency loan to cover the shortfall (no caps)
+                        emergency_loan_name = f"Emergency Fund Protection Loan {i}"
                         
-                        # Case 1: Critical initial state - just set the value without creating debt
-                        if is_critical_initial_state:
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"  CRITICAL INITIAL STATE: Starting savings equals emergency threshold\n")
-                                f.write(f"  Setting exact threshold without creating loan to prevent cascading debt\n")
+                        # Log final decision
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"  CREATING LOAN: ${shortfall} at {self.personal_loan_interest_rate*100:.1f}% for {self.personal_loan_term_years} years\n")
+                        
+                        # Create the loan
+                        emergency_loan = PersonalLoan(
+                            name=emergency_loan_name,
+                            initial_balance=shortfall,
+                            interest_rate=self.personal_loan_interest_rate,
+                            term_years=self.personal_loan_term_years,
+                            milestone_year=i,
+                            milestone_month=6
+                        )
+                        
+                        # Add the loan to the calculator
+                        self.add_liability(emergency_loan)
+                        
+                        # Update tracking for this loan
+                        for future_year in range(i, self.years_to_project + 1):
+                            future_balance = emergency_loan.get_balance(future_year - i)
+                            all_personal_loans[future_year] += int(future_balance)
+                        
+                        # Set savings to the emergency threshold
+                        savings_value_yearly[i] = emergency_fund_threshold
+                        
+                        # Add contribution to investment if appropriate
+                        if isinstance(savings_asset, Investment) and hasattr(savings_asset, 'add_contribution'):
+                            savings_asset.add_contribution(i, shortfall)
                             
-                            # Just set the savings to exactly the threshold without creating debt
-                            savings_value_yearly[i] = emergency_fund_threshold
-                            
-                        # Case 2: Normal case but with loan cap
-                        else:
-                            # Absolute maximum loan per year to prevent astronomical values
-                            MAX_LOAN_PER_YEAR = 25000  # $25k maximum per year to prevent debt explosions
-                            
-                            # Limit large shortfalls
-                            if shortfall > MAX_LOAN_PER_YEAR:
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"  CAPPING LOAN: Reducing from ${shortfall} to ${MAX_LOAN_PER_YEAR}\n")
-                                shortfall = MAX_LOAN_PER_YEAR
-                            
-                            # Create a capped emergency loan
-                            emergency_loan_name = f"Emergency Fund Protection Loan {i}"
-                            
-                            # Log final decision
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"  CREATING LOAN: ${shortfall} at {self.personal_loan_interest_rate*100:.1f}% for {self.personal_loan_term_years} years\n")
-                            
-                            # Create the loan
-                            emergency_loan = PersonalLoan(
-                                name=emergency_loan_name,
-                                initial_balance=shortfall,
-                                interest_rate=self.personal_loan_interest_rate,
-                                term_years=self.personal_loan_term_years,
-                                milestone_year=i,
-                                milestone_month=6
-                            )
-                            
-                            # Add the loan to the calculator
-                            self.add_liability(emergency_loan)
-                            
-                            # Update tracking for this loan
-                            # IMPORTANT: Only track for 5 years max to prevent accumulation
-                            max_tracking_years = min(self.personal_loan_term_years, self.years_to_project - i)
-                            for future_year in range(i, i + max_tracking_years):
-                                if future_year >= self.years_to_project:
-                                    break
-                                future_balance = emergency_loan.get_balance(future_year - i)
-                                all_personal_loans[future_year] += int(future_balance)
-                            
-                            # Set savings to the emergency threshold
-                            savings_value_yearly[i] = emergency_fund_threshold
-                            
-                            # Add contribution to investment if appropriate
-                            if isinstance(savings_asset, Investment) and hasattr(savings_asset, 'add_contribution'):
-                                savings_asset.add_contribution(i, shortfall)
-                                
-                            # Log the outcome
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"  RESULT: Savings now ${savings_value_yearly[i]}, added ${shortfall} loan\n")
+                        # Log the outcome
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"  RESULT: Savings now ${savings_value_yearly[i]}, added ${shortfall} loan\n")
                     
                     # Recalculate total assets with updated savings
                     # Note: Only include home, car, and savings values
@@ -2678,116 +2648,65 @@ class FinancialCalculator:
             min_savings = min(savings_value_yearly)
             f.write(f"Minimum savings value in array: ${min_savings}\n")
             
-            # Set a total maximum debt limit for the entire projection for the final verification
-            TOTAL_MAX_EMERGENCY_DEBT = 50000  # $50k maximum emergency debt across all years
-            total_emergency_debt_created = 0
+            # Final verification without any caps
             
-            # CRITICAL EXCEPTION: If first year is exactly at threshold or extremely close (±10%), 
-            # don't create any loans as this is likely a boundary condition that can cause debt explosions
-            boundary_condition = abs(savings_value_yearly[0] - self.emergency_fund_amount) < 0.1 * self.emergency_fund_amount
-            if boundary_condition:
-                f.write(f"CRITICAL BOUNDARY CONDITION DETECTED: First year savings (${savings_value_yearly[0]}) near threshold (${self.emergency_fund_amount})\n")
-                f.write(f"Setting all years to exactly the threshold without creating additional loans\n")
-                
-                # Set all years to exactly the threshold
-                for year_idx in range(len(savings_value_yearly)):
-                    if savings_value_yearly[year_idx] < self.emergency_fund_amount:
-                        savings_value_yearly[year_idx] = self.emergency_fund_amount
-                        # Update assets to reflect the change in savings
-                        assets_yearly[year_idx] = (
-                            home_value_yearly[year_idx] +
-                            car_value_yearly[year_idx] +
-                            savings_value_yearly[year_idx]
-                        )
-                        # Update net worth
-                        net_worth[year_idx] = assets_yearly[year_idx] - liabilities_yearly[year_idx]
-                
-                # Mark as "fixed" so we don't do further processing
-                found_negative = True  
-            else:
-                # Normal case - verify each year individually with strict caps
-                for year_idx in range(len(savings_value_yearly)):
-                    if savings_value_yearly[year_idx] < 0 or savings_value_yearly[year_idx] < self.emergency_fund_amount:
-                        found_negative = True
-                        
-                        # Keep track of the original value for logging
-                        original_value = savings_value_yearly[year_idx]
-                        
-                        # Calculate shortfall
-                        shortfall = self.emergency_fund_amount - savings_value_yearly[year_idx]
-                        
-                        # MULTIPLE SAFETY CHECKS to prevent debt explosion:
-                        
-                        # 1. Per-year cap
-                        MAX_LOAN_PER_YEAR = 15000  # $15k maximum per year (reduced from 25k)
-                        if shortfall > MAX_LOAN_PER_YEAR:
-                            f.write(f"[LOAN CAP] Year {year_idx + self.start_age}: Capping from ${shortfall} to ${MAX_LOAN_PER_YEAR}\n")
-                            shortfall = MAX_LOAN_PER_YEAR
-                        
-                        # 2. Total projection debt cap
-                        remaining_debt_allowance = TOTAL_MAX_EMERGENCY_DEBT - total_emergency_debt_created
-                        if shortfall > remaining_debt_allowance:
-                            f.write(f"[TOTAL DEBT CAP] Year {year_idx + self.start_age}: Capping from ${shortfall} to ${remaining_debt_allowance}\n")
-                            shortfall = max(0, remaining_debt_allowance)  # Ensure non-negative
-                        
-                        # If we can't create more debt, just set the savings to threshold without a loan
-                        if shortfall <= 0:
-                            f.write(f"[DEBT LIMIT REACHED] Year {year_idx + self.start_age}: Setting savings to threshold without loan\n")
-                            savings_value_yearly[year_idx] = self.emergency_fund_amount
-                            continue
-                        
-                        # Track the total emergency debt we're creating
-                        total_emergency_debt_created += shortfall
-                        
-                        # Create emergency loan to cover the shortfall
-                        emergency_loan_name = f"Final Emergency Fund Protection Loan {year_idx + self.start_age}"
-                        
-                        # Log the correction
-                        if original_value < 0:
-                            f.write(f"CORRECTING: Year {year_idx + self.start_age} has NEGATIVE savings: ${original_value}\n")
-                        else:
-                            f.write(f"CORRECTING: Year {year_idx + self.start_age} has savings below threshold: ${original_value}\n")
-                        
-                        f.write(f"  Creating emergency loan of ${shortfall} with {self.personal_loan_term_years}-year term at {self.personal_loan_interest_rate*100:.1f}% interest\n")
-                        
-                        # Create the emergency loan
-                        emergency_loan = PersonalLoan(
-                            name=emergency_loan_name,
-                            initial_balance=shortfall,
-                            interest_rate=self.personal_loan_interest_rate,
-                            term_years=self.personal_loan_term_years,
-                            milestone_year=year_idx,
-                            milestone_month=6
-                        )
-                        
-                        # Add to liabilities
-                        self.add_liability(emergency_loan)
-                        
-                        # IMPORTANT: Only track for a limited number of years to prevent accumulation
-                        max_tracking_years = min(self.personal_loan_term_years, len(liabilities_yearly) - year_idx)
-                        for future_year in range(year_idx, year_idx + max_tracking_years):
-                            if future_year >= len(liabilities_yearly):
-                                break
-                            future_balance = emergency_loan.get_balance(future_year - year_idx)
-                            liabilities_yearly[future_year] += int(future_balance)
-                            all_personal_loans[future_year] += int(future_balance)
-                        
-                        # Set savings to the emergency threshold
-                        savings_value_yearly[year_idx] = self.emergency_fund_amount
-                        
-                        # Update assets to reflect the change in savings
-                        assets_yearly[year_idx] = (
-                            home_value_yearly[year_idx] +
-                            car_value_yearly[year_idx] +
-                            savings_value_yearly[year_idx]
-                        )
-                        
-                        # Update net worth
-                        net_worth[year_idx] = assets_yearly[year_idx] - liabilities_yearly[year_idx]
-                        
-                        f.write(f"  Updated savings to ${savings_value_yearly[year_idx]}\n")
-                        f.write(f"  Updated liabilities to ${liabilities_yearly[year_idx]}\n")
-                        f.write(f"  Updated net worth to ${net_worth[year_idx]}\n")
+            # Check each year individually for negative or below-threshold savings
+            for year_idx in range(len(savings_value_yearly)):
+                if savings_value_yearly[year_idx] < 0 or savings_value_yearly[year_idx] < self.emergency_fund_amount:
+                    found_negative = True
+                    
+                    # Keep track of the original value for logging
+                    original_value = savings_value_yearly[year_idx]
+                    
+                    # Calculate shortfall
+                    shortfall = self.emergency_fund_amount - savings_value_yearly[year_idx]
+                    
+                    # Create emergency loan to cover the shortfall
+                    emergency_loan_name = f"Final Emergency Fund Protection Loan {year_idx + self.start_age}"
+                    
+                    # Log the correction
+                    if original_value < 0:
+                        f.write(f"CORRECTING: Year {year_idx + self.start_age} has NEGATIVE savings: ${original_value}\n")
+                    else:
+                        f.write(f"CORRECTING: Year {year_idx + self.start_age} has savings below threshold: ${original_value}\n")
+                    
+                    f.write(f"  Creating emergency loan of ${shortfall} with {self.personal_loan_term_years}-year term at {self.personal_loan_interest_rate*100:.1f}% interest\n")
+                    
+                    # Create the emergency loan
+                    emergency_loan = PersonalLoan(
+                        name=emergency_loan_name,
+                        initial_balance=shortfall,
+                        interest_rate=self.personal_loan_interest_rate,
+                        term_years=self.personal_loan_term_years,
+                        milestone_year=year_idx,
+                        milestone_month=6
+                    )
+                    
+                    # Add to liabilities
+                    self.add_liability(emergency_loan)
+                    
+                    # Track loan balance for all future years
+                    for future_year in range(year_idx, len(liabilities_yearly)):
+                        future_balance = emergency_loan.get_balance(future_year - year_idx)
+                        liabilities_yearly[future_year] += int(future_balance)
+                        all_personal_loans[future_year] += int(future_balance)
+                    
+                    # Set savings to the emergency threshold
+                    savings_value_yearly[year_idx] = self.emergency_fund_amount
+                    
+                    # Update assets to reflect the change in savings
+                    assets_yearly[year_idx] = (
+                        home_value_yearly[year_idx] +
+                        car_value_yearly[year_idx] +
+                        savings_value_yearly[year_idx]
+                    )
+                    
+                    # Update net worth
+                    net_worth[year_idx] = assets_yearly[year_idx] - liabilities_yearly[year_idx]
+                    
+                    f.write(f"  Updated savings to ${savings_value_yearly[year_idx]}\n")
+                    f.write(f"  Updated liabilities to ${liabilities_yearly[year_idx]}\n")
+                    f.write(f"  Updated net worth to ${net_worth[year_idx]}\n")
             
             if not found_negative:
                 f.write("SUCCESS: No negative savings values found!\n")
