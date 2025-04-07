@@ -10,6 +10,7 @@ import IdentityWheel from "@/components/pathways/IdentityWheel";
 import AdvancedWheel from "@/components/pathways/AdvancedWheel";
 import AvatarCreator from "@/components/pathways/AvatarCreator";
 import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
+import { useLocation } from "wouter";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 type EducationType = "4year" | "2year" | "vocational" | null;
@@ -39,6 +40,7 @@ const Step = ({ children, title, subtitle }: StepProps) => (
 );
 
 const Pathways = () => {
+  const [, navigate] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPath, setSelectedPath] = useState<PathChoice | null>(null);
   const [educationType, setEducationType] = useState<EducationType>(null);
@@ -47,6 +49,23 @@ const Pathways = () => {
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
+  
+  // Function to navigate to College Discovery with appropriate filtering
+  const navigateToCollegeDiscovery = (type: EducationType) => {
+    let queryParams = new URLSearchParams();
+    
+    // Set the appropriate school type filter
+    if (type === '4year') {
+      queryParams.set('types', '4-year');
+    } else if (type === '2year') {
+      queryParams.set('types', '2-year');
+    } else if (type === 'vocational') {
+      queryParams.set('types', 'vocational');
+    }
+    
+    // Navigate to College Discovery with the filter applied
+    navigate(`/college-discovery?${queryParams.toString()}`);
+  };
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
   const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | 'advancedWheel' | 'avatar' | 'quickSpin' | null>(null);
@@ -812,7 +831,10 @@ const Pathways = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div 
                   className={`border ${educationType === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setEducationType('4year')}
+                  onClick={() => {
+                    setEducationType('4year');
+                    navigateToCollegeDiscovery('4year');
+                  }}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -827,7 +849,10 @@ const Pathways = () => {
                 
                 <div 
                   className={`border ${educationType === '2year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setEducationType('2year')}
+                  onClick={() => {
+                    setEducationType('2year');
+                    navigateToCollegeDiscovery('2year');
+                  }}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === '2year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '2year' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -842,7 +867,10 @@ const Pathways = () => {
                 
                 <div 
                   className={`border ${educationType === 'vocational' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setEducationType('vocational')}
+                  onClick={() => {
+                    setEducationType('vocational');
+                    navigateToCollegeDiscovery('vocational');
+                  }}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === 'vocational' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === 'vocational' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -856,12 +884,9 @@ const Pathways = () => {
                 </div>
               </div>
               
-              {educationType && (
-                <div className="flex justify-between mt-6">
-                  <Button variant="outline" onClick={handleBack}>Back</Button>
-                  <Button onClick={handleNext}>Next Step</Button>
-                </div>
-              )}
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={handleBack}>Back</Button>
+              </div>
             </Step>
           );
         } else if (selectedPath === 'job') {
