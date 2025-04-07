@@ -64,6 +64,9 @@ const Pathways = () => {
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [hasSpecificSchool, setHasSpecificSchool] = useState<boolean | null>(null);
+  
+  // This will store the personalized narrative based on user selections
+  const [userJourney, setUserJourney] = useState<string>("After high school, I am interested in...");
   const [specificSchool, setSpecificSchool] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
@@ -71,6 +74,16 @@ const Pathways = () => {
   // This function will set the education type and advance to the specific school question
   const selectEducationType = (type: EducationType) => {
     setEducationType(type);
+    
+    // Update the narrative based on the education type selection
+    if (type === '4year') {
+      setUserJourney("After high school, I am interested in attending a 4-year college or university where...");
+    } else if (type === '2year') {
+      setUserJourney("After high school, I am interested in attending a 2-year community college where...");
+    } else if (type === 'vocational') {
+      setUserJourney("After high school, I am interested in attending a vocational/trade school where...");
+    }
+    
     // Move to the school selection step
     setCurrentStep(4);
   };
@@ -855,7 +868,11 @@ const Pathways = () => {
           );
         } else if (isEducationPath(selectedPath)) {
           return (
-            <Step title="What type of education are you interested in?">
+            <Step title="After high school, I am interested in...">
+              {/* User journey narrative starts here */}
+              <div className="mb-4 text-gray-600 text-sm">
+                <p>Choose the type of education that aligns with your goals</p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div 
                   className={`border ${educationType === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
@@ -1150,7 +1167,7 @@ const Pathways = () => {
         if (isEducationPath(selectedPath) && educationType) {
           return (
             <Step 
-              title="Do you have a specific school in mind?" 
+              title={userJourney}
               subtitle={`Finding the right ${educationType === '4year' ? '4-year college' : educationType === '2year' ? '2-year college' : 'vocational school'} for you`}
             >
               <div className="space-y-6">
@@ -1186,6 +1203,13 @@ const Pathways = () => {
                             onClick={() => {
                               setSpecificSchool(school.name);
                               setSearchQuery('');
+                              
+                              // Update the narrative to include the selected school
+                              const schoolType = educationType === '4year' ? 'attending' : 
+                                                educationType === '2year' ? 'attending' : 
+                                                'attending';
+                              setUserJourney(`After high school, I am interested in ${schoolType} ${school.name} where I am interested in studying...`);
+                              
                               // Automatically proceed to field of study step
                               handleNext();
                             }}
@@ -1248,7 +1272,7 @@ const Pathways = () => {
         // Field of Study selection step
         if (isEducationPath(selectedPath)) {
           return (
-            <Step title="What would you like to study?" subtitle="Choose a field of study that interests you">
+            <Step title={userJourney} subtitle="Choose a field of study that interests you">
               <Card>
                 <CardContent className="p-6">
                   {isLoadingAllPaths ? (
@@ -1264,6 +1288,16 @@ const Pathways = () => {
                           value={selectedFieldOfStudy || ""}
                           onValueChange={(value) => {
                             setSelectedFieldOfStudy(value);
+                            
+                            // Complete the narrative with the field of study
+                            if (specificSchool) {
+                              setUserJourney(`After high school, I am interested in attending ${specificSchool} where I am interested in studying ${value}.`);
+                            } else {
+                              const schoolType = educationType === '4year' ? 'a 4-year college' : 
+                                educationType === '2year' ? 'a 2-year college' : 'a vocational school';
+                              setUserJourney(`After high school, I am interested in attending ${schoolType} where I am interested in studying ${value}.`);
+                            }
+                            
                             console.log(`Selected field of study: ${value}`);
                             // Career paths will automatically load due to the useQuery dependency
                           }}
@@ -1447,7 +1481,7 @@ const Pathways = () => {
         // Profession selection step
         if (isEducationPath(selectedPath) && selectedFieldOfStudy) {
           return (
-            <Step title="Choose Your Profession" subtitle="Select a career that interests you">
+            <Step title={userJourney} subtitle="Select a career that interests you">
               <Card>
                 <CardContent className="p-6">
                   {isLoadingFieldPaths ? (
@@ -1467,6 +1501,13 @@ const Pathways = () => {
                               className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
                               onClick={() => {
                                 setSelectedProfession(path.career_title);
+                                
+                                // Complete the narrative with the selected profession
+                                setUserJourney(`After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${path.career_title}.`);
+                                
+                                // Store the narrative in localStorage for use in the calculator
+                                localStorage.setItem('userPathwayNarrative', userJourney);
+                                
                                 // Delay navigation to give visual feedback that the option was selected
                                 setTimeout(() => {
                                   navigate('/calculator');
@@ -1499,7 +1540,10 @@ const Pathways = () => {
                           <Button 
                             className="bg-green-500 hover:bg-green-600"
                             onClick={() => {
-                              // Redirect to milestones or financial planner here
+                              // Pass the complete narrative to the calculator via localStorage
+                              localStorage.setItem('userPathwayNarrative', userJourney);
+                              
+                              // Redirect to calculator
                               navigate('/calculator');
                             }}
                           >
