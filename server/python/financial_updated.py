@@ -2629,6 +2629,27 @@ class FinancialCalculator:
             
             f.write(f"Total StudentLoan instances: {student_loan_count}\n")
         
+        # DEBUG LOG: Before returning, verify that no savings values are negative
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\n\n=== FINAL VERIFICATION BEFORE RETURNING RESULTS ===\n")
+            found_negative = False
+            min_savings = min(savings_value_yearly)
+            f.write(f"Minimum savings value in array: ${min_savings}\n")
+            for year_idx in range(len(savings_value_yearly)):
+                if savings_value_yearly[year_idx] < 0:
+                    found_negative = True
+                    f.write(f"WARNING: Year {year_idx + self.start_age} has NEGATIVE savings: ${savings_value_yearly[year_idx]}\n")
+                elif savings_value_yearly[year_idx] < self.emergency_fund_amount:
+                    f.write(f"WARNING: Year {year_idx + self.start_age} has savings below emergency threshold: ${savings_value_yearly[year_idx]}\n")
+            
+            if not found_negative:
+                f.write("SUCCESS: No negative savings values found!\n")
+            
+            # Also log the values we're sending back to ensure they're correct
+            f.write("\nFINAL VALUES BEING SENT TO FRONTEND:\n")
+            f.write(f"Ages: {ages}\n")
+            f.write(f"Savings values in array: {savings_value_yearly}\n")
+        
         # Compile results
         self.results = {
             'ages': ages,
