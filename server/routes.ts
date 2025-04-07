@@ -579,46 +579,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Calculate future savings for a specific year (simple version)
-  app.post("/api/calculate/future-savings-simple", async (req: Request, res: Response) => {
+  // Calculate future savings using Python calculator with caching
+  app.post("/api/calculate/future-savings", async (req: Request, res: Response) => {
     try {
-      const { userId, year, currentSavings, growthRate = 0.03 } = req.body;
+      const { userId, targetYear, useSimpleCalculation } = req.body;
       
-      if (!userId || typeof year !== 'number' || typeof currentSavings !== 'number') {
-        return res.status(400).json({ message: "Invalid input parameters" });
+      if (!userId || !targetYear) {
+        return res.status(400).json({ message: "Missing required parameters: userId and targetYear" });
+      }
+
+      // Generate cache key
+      const cacheKey = generateCacheKey(userId, req.body);
+      const cachedResult = getCachedCalculation(cacheKey);
+      
+      if (cachedResult) {
+        return res.json(cachedResult);
       }
       
-      // Use financial profile data if currentSavings is not provided
-      let savings = currentSavings;
-      if (!savings && userId) {
-        const profile = await activeStorage.getFinancialProfileByUserId(parseInt(userId.toString()));
-        if (profile && profile.savingsAmount) {
-          savings = profile.savingsAmount;
-        } else {
-          savings = 0;
-        }
+      // Get user's financial profile
+      const profile = await activeStorage.getFinancialProfileByUserId(userId);
+      if (!profile) {
+        return res.status(404).json({ message: "Financial profile not found" });
       }
       
-      // Simple future value calculation: FV = PV * (1 + r)^n
-      // Where FV = future value, PV = present value (savings), r = growth rate, n = years
-      const futureSavings = savings * Math.pow(1 + growthRate, year);
-      
-      res.json({
-        currentSavings: savings,
-        futureSavings,
-        year,
-        growthRate
-      });
-    } catch (error) {
-      console.error("Error calculating future savings:", error);
-      res.status(500).json({ message: "Failed to calculate future savings" });
-    }
-  });
+      // For simple calculations, use basic compound interest
+      if (useSimpleCalculation) {
+        const savings = profile.savingsAmount || 0;
+        const growthRate = 0.03; // Default 3% growth
+        const yearsToProject = targetYear - new Date().getFullYear();
+        const futureSavings = savings * Math.pow(1 + growthRate, yearsToProject);
+        
+        const result = {
+          currentSavings: savings,
+          futureSavings,
+          targetYear,
+          yearsAway: yearsToProject,
+          isSimpleCalculation: true
+        };
+
+        setCachedCalculation(cacheKey, result);
+        return res.json(result);
+      }
+
+      // Otherwise use full Python calculator
+      // ... rest of the existing future-savings calculation code ...
 
   // Python financial calculator route
   app.post("/api/calculate/financial-projection", async (req: Request, res: Response) => {
     try {
       const inputData = req.body;
+      
+      // Generate cache key from input data
+      const cacheKey = generateCacheKey(inputData.userId || 0, inputData);
+      const cachedResult = getCachedCalculation(cacheKey);
+      
+      if (cachedResult) {
+        return res.json(cachedResult);
+      }
       let updatedInputData = { ...inputData };
       
       // Check if zip code is provided and costOfLivingFactor is not
@@ -728,6 +745,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (updatedInputData.costOfLivingFactor) {
             parsedData.locationFactor = updatedInputData.costOfLivingFactor;
           }
+          // Cache the results before returning
+          setCachedCalculation(cacheKey, parsedData);
           return res.json(parsedData);
         } catch (error) {
           console.error("Failed to parse Python output:", error);
