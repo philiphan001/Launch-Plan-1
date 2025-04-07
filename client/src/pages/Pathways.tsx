@@ -92,7 +92,7 @@ const Pathways = () => {
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
     queryKey: ['/api/career-paths'],
-    enabled: currentStep === 6 // Changed from 4 to 6 since we've added two new steps
+    enabled: currentStep === 5 || currentStep === 6 // Enable when on field of study step (5) or profession step (6)
   });
   
   // Get unique fields of study from the career paths
@@ -106,12 +106,14 @@ const Pathways = () => {
     enabled: !!selectedFieldOfStudy && (currentStep === 5 || currentStep === 6)
   });
   
-  // School search query using our new college search API
+  // School search query using our new college search API with education type filter
   const { data: searchResults, isLoading: isLoadingSearch } = useQuery<any[]>({
-    queryKey: ['/api/colleges/search', searchQuery],
+    queryKey: ['/api/colleges/search', searchQuery, educationType],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
-      const response = await fetch(`/api/colleges/search?q=${encodeURIComponent(searchQuery)}`);
+      const url = `/api/colleges/search?q=${encodeURIComponent(searchQuery)}${educationType ? `&educationType=${educationType}` : ''}`;
+      console.log(`Searching colleges with query: ${searchQuery}, educationType: ${educationType || 'all'}`);
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to search colleges');
       }
@@ -1184,6 +1186,8 @@ const Pathways = () => {
                             onClick={() => {
                               setSpecificSchool(school.name);
                               setSearchQuery('');
+                              // Automatically proceed to field of study step
+                              handleNext();
                             }}
                           >
                             <p className="font-medium">{school.name}</p>
@@ -1258,7 +1262,11 @@ const Pathways = () => {
                         <label htmlFor="field-select" className="block text-sm font-medium mb-2">Field of Study</label>
                         <Select 
                           value={selectedFieldOfStudy || ""}
-                          onValueChange={(value) => setSelectedFieldOfStudy(value)}
+                          onValueChange={(value) => {
+                            setSelectedFieldOfStudy(value);
+                            console.log(`Selected field of study: ${value}`);
+                            // Career paths will automatically load due to the useQuery dependency
+                          }}
                         >
                           <SelectTrigger id="field-select" className="w-full">
                             <SelectValue placeholder="Select a field of study" />
@@ -1457,7 +1465,13 @@ const Pathways = () => {
                             <Card 
                               key={path.id} 
                               className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
-                              onClick={() => setSelectedProfession(path.career_title)}
+                              onClick={() => {
+                                setSelectedProfession(path.career_title);
+                                // Delay navigation to give visual feedback that the option was selected
+                                setTimeout(() => {
+                                  navigate('/calculator');
+                                }, 500);
+                              }}
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-center">
