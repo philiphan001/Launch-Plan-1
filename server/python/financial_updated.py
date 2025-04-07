@@ -1039,11 +1039,29 @@ class FinancialCalculator:
             # Create a simpler array of just the years for each milestone
             milestone_years = {}
             for milestone in self.milestones:
-                year = milestone.get('year', 0)
+                # Support both 'year' and 'yearsAway' fields for milestone timing
+                # 'year' is the absolute year index (0 = first year of projection)
+                # 'yearsAway' is the number of years from the start (2 = starts in year 2)
+                if 'year' in milestone:
+                    year = milestone.get('year', 0)
+                elif 'yearsAway' in milestone:
+                    year = milestone.get('yearsAway', 0)
+                else:
+                    year = 0  # Default to first year if no timing specified
+                    
+                # Add to appropriate year bucket
                 if year in milestone_years:
                     milestone_years[year].append(milestone)
                 else:
                     milestone_years[year] = [milestone]
+                    
+                # Debug education milestone year mapping
+                if milestone.get('type') == 'education':
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"\nEducation milestone mapped to year {year}:\n")
+                        f.write(f"- Original data: {milestone}\n")
+                        f.write(f"- 'year' present: {'year' in milestone}\n")
+                        f.write(f"- 'yearsAway' present: {'yearsAway' in milestone}\n")
             
             # Process each milestone in chronological order
             for year in sorted(milestone_years.keys()):
@@ -1697,9 +1715,11 @@ class FinancialCalculator:
                     elif milestone.get('type') == 'education':
                         # Process education milestone with new fields
                         education_type = milestone.get('educationType', 'masters')
-                        education_years = int(milestone.get('educationYears', 2))
-                        education_annual_cost = int(milestone.get('educationAnnualCost', 30000))
-                        education_annual_loan = int(milestone.get('educationAnnualLoan', 20000))
+                        # Support both 'educationYears' and 'years' fields for education duration
+                        education_years = int(milestone.get('educationYears', milestone.get('years', 2)))
+                        # Support both old and new field names for education cost
+                        education_annual_cost = int(milestone.get('educationAnnualCost', milestone.get('tuition', 30000)))
+                        education_annual_loan = int(milestone.get('educationAnnualLoan', milestone.get('educationLoans', 20000)))
                         total_education_cost = education_annual_cost * education_years
                         total_education_loan = education_annual_loan * education_years
                         target_occupation = milestone.get('targetOccupation', None)
@@ -1854,6 +1874,23 @@ class FinancialCalculator:
                         
                         # Apply income boost after education if a target occupation is specified or returning to same profession
                         graduation_year = milestone_year + education_years
+                        
+                        # Create a tracking set of years when the person is in education with work_status="no"
+                        no_income_education_years = set()
+                        if work_status == 'no':
+                            # Add all education years to the tracking set - making sure we use the actual milestone_year
+                            for edu_yr in range(education_years):
+                                year_idx = milestone_year + edu_yr  # This gives the absolute year index
+                                if year_idx <= self.years_to_project:
+                                    no_income_education_years.add(year_idx)
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                # Debug why this might be wrong
+                                f.write(f"\nEducation details for tracking:\n")
+                                f.write(f"- Milestone year: {milestone_year}\n")
+                                f.write(f"- Education years: {education_years}\n")
+                                f.write(f"- Years calculated: {sorted(list(no_income_education_years))}\n")
+                                f.write(f"- 'workStatus' value from milestone: {work_status}\n")
                         
                         # Store original income/career trajectory for returning to same profession
                         original_income_trajectory = {}
@@ -2111,7 +2148,7 @@ class FinancialCalculator:
                                 # Always log the current income before change
                                 f.write(f"Current income before change: ${income_yearly[graduation_year]}\n")
                             
-                            # Apply the income change for all years after graduation
+                            # Apply the income change for all years after graduation (not during education)
                             for year in range(graduation_year, self.years_to_project + 1):
                                 # Ensure we have a valid target_salary
                                 if target_salary is None:
@@ -2127,34 +2164,41 @@ class FinancialCalculator:
                                 # Calculate new income based on target salary with growth
                                 new_income = int(target_salary * career_growth_factor)
                                 
-                                # Update income for this year
-                                income_yearly[year] = new_income
-                                # Update total income as well
-                                total_income_yearly[year] = new_income + spouse_income_yearly[year]
+                                # Update income for this year - ONLY if this year is at or after graduation
+                                # AND not in the education years where we specifically set income to zero
+                                if year >= graduation_year and year not in no_income_education_years:
+                                    income_yearly[year] = new_income
+                                    # Update total income as well
+                                    total_income_yearly[year] = new_income + spouse_income_yearly[year]
+                                    
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Year {year}: Updated income to ${new_income} (post-graduation)\n")
+                                    
+                                    # Recalculate taxes with new income - ONLY for graduation year and beyond
+                                    filing_status = "single"
+                                    if any(m for m in self.milestones if m.get('type') == 'marriage' and 
+                                          int(m.get('yearsAway', 0)) + self.start_age <= self.start_age + year):
+                                        filing_status = "married"
+                                    
+                                    new_taxes = self._calculate_taxes(total_income_yearly[year], year, filing_status)
+                                    payroll_tax_expenses_yearly[year] = int(new_taxes["fica_tax"])
+                                    federal_tax_expenses_yearly[year] = int(new_taxes["federal_tax"])
+                                    state_tax_expenses_yearly[year] = int(new_taxes["state_tax"])
+                                    tax_expenses_yearly[year] = (payroll_tax_expenses_yearly[year] + 
+                                                                federal_tax_expenses_yearly[year] + 
+                                                                state_tax_expenses_yearly[year])
+                                    
+                                    # Update cash flow with new income and tax calculations
+                                    cash_flow_yearly[year] = total_income_yearly[year] - expenses_yearly[year]
                                 
-                                # Recalculate taxes with new income
-                                filing_status = "single"
-                                if any(m for m in self.milestones if m.get('type') == 'marriage' and 
-                                      int(m.get('yearsAway', 0)) + self.start_age <= self.start_age + year):
-                                    filing_status = "married"
-                                
-                                new_taxes = self._calculate_taxes(total_income_yearly[year], year, filing_status)
-                                payroll_tax_expenses_yearly[year] = int(new_taxes["fica_tax"])
-                                federal_tax_expenses_yearly[year] = int(new_taxes["federal_tax"])
-                                state_tax_expenses_yearly[year] = int(new_taxes["state_tax"])
-                                tax_expenses_yearly[year] = (payroll_tax_expenses_yearly[year] + 
-                                                            federal_tax_expenses_yearly[year] + 
-                                                            state_tax_expenses_yearly[year])
-                                
-                                # Update cash flow with new income and tax calculations
-                                cash_flow_yearly[year] = total_income_yearly[year] - expenses_yearly[year]
-                                
-                                with open('healthcare_debug.log', 'a') as f:
-                                    if year == graduation_year:  # Only log first year to avoid excessive logging
-                                        f.write(f"Updated income to ${new_income} after graduation\n")
-                                        f.write(f"New total income: ${total_income_yearly[year]}\n")
-                                        f.write(f"Recalculated taxes: ${tax_expenses_yearly[year]}\n")
-                                        f.write(f"Updated cash flow: ${cash_flow_yearly[year]}\n")
+                                # Only log if this is a post-graduation year
+                                if year >= graduation_year:
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        if year == graduation_year:  # Only log first year to avoid excessive logging
+                                            f.write(f"Updated income to ${new_income} after graduation\n")
+                                            f.write(f"New total income: ${total_income_yearly[year]}\n")
+                                            f.write(f"Recalculated taxes: ${tax_expenses_yearly[year]}\n")
+                                            f.write(f"Updated cash flow: ${cash_flow_yearly[year]}\n")
 
                     elif milestone.get('type') == 'children':
                         # Children affect expenses
