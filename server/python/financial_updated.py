@@ -694,7 +694,7 @@ class FinancialCalculator:
                                     amount_from_savings = actual_withdrawn
                             else:
                                 # Fallback to direct contribution if withdraw isn't available
-                                if hasattr(savings_asset, 'add_contribution'):
+                                if isinstance(savings_asset, Investment) and hasattr(savings_asset, 'add_contribution'):
                                     savings_asset.add_contribution(i, -amount_from_savings)
                             
                             # Verify the savings never go below the emergency threshold
@@ -703,7 +703,7 @@ class FinancialCalculator:
                                 # If we've gone below the threshold, adjust back up and increase remaining negative amount
                                 shortfall = emergency_fund_threshold - updated_savings
                                 # Add back the shortfall to maintain emergency fund
-                                if hasattr(savings_asset, 'add_contribution'):
+                                if isinstance(savings_asset, Investment) and hasattr(savings_asset, 'add_contribution'):
                                     savings_asset.add_contribution(i, shortfall)
                                 # Increase the remaining negative amount that will be handled by a loan
                                 remaining_negative_amount += shortfall
@@ -832,6 +832,46 @@ class FinancialCalculator:
                     
                     # Update the savings value in our tracking array
                     savings_value_yearly[i] = int(updated_value)
+                    
+                    # Define emergency fund threshold - this will ensure the variable is always bound
+                    emergency_fund_threshold = self.emergency_fund_amount
+                    
+                    # CRITICAL FIX: Ensure savings value is never below the emergency threshold
+                    # This is an absolute safety check to prevent negative or below-emergency-threshold savings
+                    if savings_value_yearly[i] < emergency_fund_threshold:
+                        # If we're showing savings below the emergency threshold, create a cash flow deficit loan
+                        shortfall = emergency_fund_threshold - savings_value_yearly[i]
+                        
+                        # Log this critical correction
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\n[CRITICAL CORRECTION] Year {i}: Savings value ${savings_value_yearly[i]} below emergency threshold ${emergency_fund_threshold}\n")
+                            f.write(f"  Adding emergency personal loan for ${shortfall} to correct\n")
+                        
+                        # Create an emergency loan
+                        emergency_loan_name = f"Emergency Fund Protection Loan {i}"
+                        emergency_loan = PersonalLoan(
+                            name=emergency_loan_name,
+                            initial_balance=shortfall,
+                            interest_rate=self.personal_loan_interest_rate,
+                            term_years=self.personal_loan_term_years,
+                            milestone_year=i,
+                            milestone_month=6
+                        )
+                        
+                        # Add the emergency loan to the calculator's liabilities
+                        self.add_liability(emergency_loan)
+                        
+                        # Update liability tracking arrays for this and all future years
+                        for future_year in range(i, self.years_to_project + 1):
+                            future_balance = emergency_loan.get_balance(future_year - i)
+                            all_personal_loans[future_year] += int(future_balance)
+                        
+                        # Correct the savings value to the emergency threshold
+                        savings_value_yearly[i] = emergency_fund_threshold
+                        
+                        # Add back to the investment
+                        if isinstance(savings_asset, Investment) and hasattr(savings_asset, 'add_contribution'):
+                            savings_asset.add_contribution(i, shortfall)
                     
                     # Recalculate total assets with updated savings
                     # Note: Only include home, car, and savings values
