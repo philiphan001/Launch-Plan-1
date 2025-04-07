@@ -64,7 +64,7 @@ const Pathways = () => {
     }
     
     // Navigate to College Discovery with the filter applied
-    navigate(`/college-discovery?${queryParams.toString()}`);
+    navigate(`/colleges?${queryParams.toString()}`);
   };
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
