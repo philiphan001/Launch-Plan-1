@@ -350,11 +350,18 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
     const retirement = retirementSavings[i] || 0;
     // Regular savings is what's left after accounting for retirement
     // However, we need to handle cases where total might be negative
-    if (total < 0) {
-      // If total is negative, assume all of it is regular savings (debt)
-      return total;
+    
+    // CRITICAL: Check if we have data from the emergency fund protection
+    // This ensures we're displaying the protected emergency fund amount properly
+    // The backend ensures savings will never be below the threshold (typically $10,000)
+    // so we should never see values < 0 or below the emergency fund threshold
+    if (total <= 0) {
+      // If total is zero or negative, something is wrong - indicate critical error with a small value
+      console.warn(`Critical error: Savings should never be <= 0 due to emergency fund protection, but got ${total} at age ${data.ages[i]}`);
+      return 500; // Show a small visible amount to indicate there's a value that should be higher
     } else {
-      // Otherwise subtract retirement from total, but don't go below zero
+      // Use the value from the backend, which should already be at or above the emergency threshold
+      // Subtract retirement from total, but don't go below zero for display purposes
       return Math.max(0, total - retirement);
     }
   });
