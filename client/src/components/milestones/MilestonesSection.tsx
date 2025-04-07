@@ -70,6 +70,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [income, setIncome] = useState(60000); // Current user's income
   const [isEditing, setIsEditing] = useState(false);
   const [editingMilestoneId, setEditingMilestoneId] = useState<number | null>(null);
+  const [customName, setCustomName] = useState("");
   
   // Marriage milestone specific state
   const [spouseOccupation, setSpouseOccupation] = useState("");
@@ -256,25 +257,31 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       
       // Set common fields
       setYearsAway(milestoneToEdit.yearsAway || 3);
+      setCustomName(milestoneToEdit.title || "");
       
-      // Set type-specific fields
+      // Set type-specific fields based on milestone type
       if (type === "marriage") {
+        // Set marriage-specific fields
         setSpouseOccupation(milestoneToEdit.spouseOccupation || "");
         setSpouseIncome(milestoneToEdit.spouseIncome || 50000);
         setSpouseAssets(milestoneToEdit.spouseAssets || 10000);
         setSpouseLiabilities(milestoneToEdit.spouseLiabilities || 5000);
       } else if (type === "home") {
+        // Set home-specific fields
         setHomeValue(milestoneToEdit.homeValue || 300000);
         setHomeDownPayment(milestoneToEdit.homeDownPayment || 60000);
         setHomeMonthlyPayment(milestoneToEdit.homeMonthlyPayment || 1500);
       } else if (type === "car") {
+        // Set car-specific fields
         setCarValue(milestoneToEdit.carValue || 25000);
         setCarDownPayment(milestoneToEdit.carDownPayment || 5000);
         setCarMonthlyPayment(milestoneToEdit.carMonthlyPayment || 350);
       } else if (type === "children") {
+        // Set children-specific fields
         setChildrenCount(milestoneToEdit.childrenCount || 2);
         setChildrenExpensePerYear(milestoneToEdit.childrenExpensePerYear || 12000);
       } else if (type === "education") {
+        // Set education-specific fields
         setEducationCost(milestoneToEdit.educationCost || 30000);
         setEducationType(milestoneToEdit.educationType || "masters");
         setEducationYears(milestoneToEdit.educationYears || 2);
@@ -286,6 +293,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       // This is a new milestone
       setIsEditing(false);
       setEditingMilestoneId(null);
+      setCustomName(""); // Reset custom name for new milestones
       
       // Reset all state values to defaults
       setYearsAway(3);
@@ -320,8 +328,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   };
 
   const handleSaveMilestone = () => {
-    let title = "";
     let type = "";
+    // Use custom name if provided, otherwise use default title
+    let title = customName.trim() || "";
     
     const now = new Date();
     const targetYear = now.getFullYear() + yearsAway;
@@ -329,7 +338,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
     
     // Build milestone based on type
     if (currentMilestone === "marriage") {
-      title = "Get Married";
+      if (!title) title = "Get Married";
       type = "marriage";
       
       const selectedCareer = careers?.find(c => c.title === spouseOccupation);
@@ -358,7 +367,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         createMilestone.mutate(milestoneData);
       }
     } else if (currentMilestone === "home") {
-      title = "Buy a Home";
+      if (!title) title = "Buy a Home";
       type = "home";
       
       const milestoneData = {
@@ -383,7 +392,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         createMilestone.mutate(milestoneData);
       }
     } else if (currentMilestone === "car") {
-      title = "Buy a Car";
+      if (!title) title = "Buy a Car";
       type = "car";
       
       const milestoneData = {
@@ -408,7 +417,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         createMilestone.mutate(milestoneData);
       }
     } else if (currentMilestone === "children") {
-      title = "Have Children";
+      if (!title) title = "Have Children";
       type = "children";
       
       const milestoneData = {
@@ -432,7 +441,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         createMilestone.mutate(milestoneData);
       }
     } else if (currentMilestone === "education") {
-      title = "Graduate School";
+      if (!title) title = "Graduate School";
       type = "education";
       
       const milestoneData = {
@@ -613,6 +622,23 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
           <div className="py-4">
             <div className="grid grid-cols-1 gap-6">
               {/* Common fields for all milestones */}
+              <div>
+                <Label htmlFor="custom-name">Milestone Name</Label>
+                <Input
+                  id="custom-name"
+                  placeholder={
+                    currentMilestone === "marriage" ? "Wedding" : 
+                    currentMilestone === "children" ? "First Child" : 
+                    currentMilestone === "home" ? "Dream Home" : 
+                    currentMilestone === "car" ? "New Car" : 
+                    "Graduate Degree"
+                  }
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+              
               <div>
                 <Label htmlFor="years-away">Years to Milestone</Label>
                 <div className="flex items-center mt-2">
