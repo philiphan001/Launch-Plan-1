@@ -6,7 +6,6 @@ import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
 import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBreakdownChart";
 import RetirementGrowthWidget from "@/components/financial/RetirementGrowthWidget";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
-import { ExpenseDebugComponent } from "@/components/financial/ExpenseDebugComponent";
 import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
 import TaxBreakdownTable from "@/components/financial/TaxBreakdownTable";
@@ -16,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { Info, School, Briefcase, GraduationCap } from "lucide-react";
+import { Info, School, Briefcase, GraduationCap, ChevronUp, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Tooltip,
   TooltipContent,
@@ -140,6 +140,15 @@ const FinancialProjections = () => {
   const [incomeGrowth, setIncomeGrowth] = useState<number>(3);
   const [studentLoanDebt, setStudentLoanDebt] = useState<number>(0);
   const [financialAdvice, setFinancialAdvice] = useState<FinancialAdvice[]>([]);
+  
+  // State for collapsible sections
+  const [locationSectionOpen, setLocationSectionOpen] = useState<boolean>(true);
+  const [expenseSectionOpen, setExpenseSectionOpen] = useState<boolean>(true);
+  const [assetSectionOpen, setAssetSectionOpen] = useState<boolean>(true);
+  const [debtSectionOpen, setDebtSectionOpen] = useState<boolean>(true);
+  const [taxSectionOpen, setTaxSectionOpen] = useState<boolean>(true);
+  const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
+  const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
@@ -1797,32 +1806,50 @@ const FinancialProjections = () => {
       {/* Location Adjustment Info */}
       {projectionData?.location && (
         <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-4">
+          <Collapsible open={locationSectionOpen} onOpenChange={setLocationSectionOpen}>
+            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
               <h3 className="text-lg font-medium">Location Impact Details</h3>
-            </div>
-            <LocationAdjustmentInfo projectionData={projectionData} />
-          </CardContent>
+              {locationSectionOpen ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6 pt-0">
+                <LocationAdjustmentInfo projectionData={projectionData} />
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       )}
       
       {/* Expense Breakdown Chart */}
       {projectionData?.currentExpenses && (
         <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-4">
+          <Collapsible open={expenseSectionOpen} onOpenChange={setExpenseSectionOpen}>
+            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
               <h3 className="text-lg font-medium">Expense Breakdown</h3>
-            </div>
-            <ExpenseBreakdownChart currentExpenses={projectionData.currentExpenses} />
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Understanding your expenses:</span> This breakdown shows where your 
-                money is going. Housing (30%), transportation (15%), food (15%), healthcare (10%), taxes (typically 15-25%), 
-                and discretionary spending (30%) form your basic expenses, with additional categories for education, debt, and 
-                childcare when applicable.
-              </p>
-            </div>
-          </CardContent>
+              {expenseSectionOpen ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6 pt-0">
+                <ExpenseBreakdownChart currentExpenses={projectionData.currentExpenses} />
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Understanding your expenses:</span> This breakdown shows where your 
+                    money is going. Housing (30%), transportation (15%), food (15%), healthcare (10%), taxes (typically 15-25%), 
+                    and discretionary spending (30%) form your basic expenses, with additional categories for education, debt, and 
+                    childcare when applicable.
+                  </p>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       )}
 
@@ -1832,71 +1859,95 @@ const FinancialProjections = () => {
       {/* Asset Breakdown Chart */}
       {projectionData?.assets && projectionData?.savingsValue && (
         <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-4">
+          <Collapsible open={assetSectionOpen} onOpenChange={setAssetSectionOpen}>
+            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
               <h3 className="text-lg font-medium">Asset Breakdown</h3>
-            </div>
-            <EnhancedAssetBreakdownChart 
-              assetData={{
-                savings: projectionData.savingsValue[0] || 0,
-                retirement: projectionData.retirementContribution ? projectionData.retirementContribution[0] || 0 : 0,
-                homeValue: projectionData.homeValue[0] || 0,
-                carValue: projectionData.carValue[0] || 0,
-                otherAssets: 0, // Set to 0 for now, may customize in the future
-              }}
-              projectionData={{
-                ages: projectionData.ages,
-                retirementContribution: projectionData.retirementContribution
-              }}
-            />
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Understanding your assets:</span> This breakdown shows where your 
-                wealth is currently allocated. Having a diverse mix of assets (savings, retirement accounts, property, etc.) 
-                helps create a strong financial foundation and reduces risk through diversification.
-              </p>
-            </div>
-          </CardContent>
+              {assetSectionOpen ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6 pt-0">
+                <EnhancedAssetBreakdownChart 
+                  assetData={{
+                    savings: projectionData.savingsValue[0] || 0,
+                    retirement: projectionData.retirementContribution ? projectionData.retirementContribution[0] || 0 : 0,
+                    homeValue: projectionData.homeValue[0] || 0,
+                    carValue: projectionData.carValue[0] || 0,
+                    otherAssets: 0, // Set to 0 for now, may customize in the future
+                  }}
+                  projectionData={{
+                    ages: projectionData.ages,
+                    retirementContribution: projectionData.retirementContribution
+                  }}
+                />
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Understanding your assets:</span> This breakdown shows where your 
+                    wealth is currently allocated. Having a diverse mix of assets (savings, retirement accounts, property, etc.) 
+                    helps create a strong financial foundation and reduces risk through diversification.
+                  </p>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       )}
 
       {/* Debt Breakdown by Loan Type */}
       {projectionData?.debt && (
         <Card className="mb-6">
-          <CardContent className="p-6">
-            <DebtBreakdownComponent projectionData={projectionData} />
-          </CardContent>
+          <Collapsible open={debtSectionOpen} onOpenChange={setDebtSectionOpen}>
+            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
+              <h3 className="text-lg font-medium">Debt Breakdown</h3>
+              {debtSectionOpen ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6 pt-0">
+                <DebtBreakdownComponent projectionData={projectionData} />
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       )}
 
       {/* Tax Breakdown Chart */}
       {projectionData?.payrollTax && projectionData?.federalTax && projectionData?.stateTax && (
         <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-4">
+          <Collapsible open={taxSectionOpen} onOpenChange={setTaxSectionOpen}>
+            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
               <h3 className="text-lg font-medium">Tax Breakdown</h3>
-            </div>
-            <TaxBreakdownChart projectionData={projectionData} isLoading={isLoading} />
-            
-            {/* Add tabular view for detailed tax data */}
-            <div className="mt-6">
-              <TaxBreakdownTable projectionData={projectionData} isLoading={isLoading} />
-            </div>
-            
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Understanding your taxes:</span> This breakdown shows the different types of taxes 
-                you'll pay based on your income projections. This includes federal income tax, state income tax, and payroll taxes 
-                (Social Security and Medicare). Your effective tax rate represents the percentage of your total income paid in taxes.
-              </p>
-            </div>
-            
-            {/* Debug component to see raw expense data (can be removed in production) */}
-            <div className="mt-6 border-t pt-4">
-              <h4 className="text-md font-medium mb-2">Expense Data Debugging</h4>
-              <ExpenseDebugComponent projectionData={projectionData} />
-            </div>
-          </CardContent>
+              {taxSectionOpen ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6 pt-0">
+                <TaxBreakdownChart projectionData={projectionData} isLoading={isLoading} />
+                
+                {/* Add tabular view for detailed tax data */}
+                <div className="mt-6">
+                  <TaxBreakdownTable projectionData={projectionData} isLoading={isLoading} />
+                </div>
+                
+                <div className="mt-4">
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">Understanding your taxes:</span> This breakdown shows the different types of taxes 
+                    you'll pay based on your income projections. This includes federal income tax, state income tax, and payroll taxes 
+                    (Social Security and Medicare). Your effective tax rate represents the percentage of your total income paid in taxes.
+                  </p>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       )}
       
@@ -1925,119 +1976,142 @@ const FinancialProjections = () => {
       
       {/* Card to display included college and career calculations */}
       <Card className="mb-6">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-medium mb-4">Included Calculations</h3>
-          <p className="text-gray-600 mb-4">
-            These saved calculations are factored into your financial projections.
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 ml-1">
-                    <Info className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">
-                    Your age is derived from birth year, student debt comes from college calculations, 
-                    and starting income uses your career's entry-level salary.
-                    {locationCostData && " Income and expenses are adjusted based on your location's cost of living."}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </p>
-          
-          {isLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* College calculation section */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <School className="h-5 w-5 text-primary mr-2" />
-                  <h4 className="font-medium">College</h4>
-                </div>
-                
-                {includedCollegeCalc ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">College:</span>
-                      <span className="font-medium">{includedCollegeCalc.college?.name || "Unknown College"}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Student Loan Amount:</span>
-                      <span className="font-medium">{formatCurrency(includedCollegeCalc.studentLoanAmount || 0)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Cost:</span>
-                      <span className="font-medium">{formatCurrency(includedCollegeCalc.netPrice)}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-3">
-                    <span className="text-gray-400">No college calculation included</span>
-                    <div className="mt-2">
-                      <Button variant="outline" size="sm" onClick={() => window.location.href = "/net-price-calculator"}>
-                        Add College Cost
+        <Collapsible open={calculationsSectionOpen} onOpenChange={setCalculationsSectionOpen}>
+          <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
+            <h3 className="text-lg font-medium">Included Calculations</h3>
+            {calculationsSectionOpen ? (
+              <ChevronUp className="h-5 w-5" />
+            ) : (
+              <ChevronDown className="h-5 w-5" />
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="p-6 pt-0">
+              <p className="text-gray-600 mb-4">
+                These saved calculations are factored into your financial projections.
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full p-0 ml-1">
+                        <Info className="h-4 w-4" />
                       </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        Your age is derived from birth year, student debt comes from college calculations, 
+                        and starting income uses your career's entry-level salary.
+                        {locationCostData && " Income and expenses are adjusted based on your location's cost of living."}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </p>
               
-              {/* Career calculation section */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <Briefcase className="h-5 w-5 text-primary mr-2" />
-                  <h4 className="font-medium">Career</h4>
+              {isLoading ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
                 </div>
-                
-                {includedCareerCalc ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Career:</span>
-                      <span className="font-medium">{includedCareerCalc.career?.title || "Unknown Career"}</span>
+              ) : (
+                <div className="space-y-4">
+                  {/* College calculation section */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <School className="h-5 w-5 text-primary mr-2" />
+                      <h4 className="font-medium">College</h4>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Starting Salary:</span>
-                      <span className="font-medium">
-                        {formatCurrency(includedCareerCalc.entryLevelSalary || includedCareerCalc.projectedSalary)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Education:</span>
-                      <span className="font-medium">{includedCareerCalc.education || "Not specified"}</span>
-                    </div>
+                    
+                    {includedCollegeCalc ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">College:</span>
+                          <span className="font-medium">{includedCollegeCalc.college?.name || "Unknown College"}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Student Loan Amount:</span>
+                          <span className="font-medium">{formatCurrency(includedCollegeCalc.studentLoanAmount || 0)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Total Cost:</span>
+                          <span className="font-medium">{formatCurrency(includedCollegeCalc.netPrice)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-3">
+                        <span className="text-gray-400">No college calculation included</span>
+                        <div className="mt-2">
+                          <Button variant="outline" size="sm" onClick={() => window.location.href = "/net-price-calculator"}>
+                            Add College Cost
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-center py-3">
-                    <span className="text-gray-400">No career calculation included</span>
-                    <div className="mt-2">
-                      <Button variant="outline" size="sm" onClick={() => window.location.href = "/career-builder"}>
-                        Add Career
-                      </Button>
+                  
+                  {/* Career calculation section */}
+                  <div className="border rounded-lg p-4">
+                    <div className="flex items-center mb-2">
+                      <Briefcase className="h-5 w-5 text-primary mr-2" />
+                      <h4 className="font-medium">Career</h4>
                     </div>
+                    
+                    {includedCareerCalc ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Career:</span>
+                          <span className="font-medium">{includedCareerCalc.career?.title || "Unknown Career"}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Starting Salary:</span>
+                          <span className="font-medium">
+                            {formatCurrency(includedCareerCalc.entryLevelSalary || includedCareerCalc.projectedSalary)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Education:</span>
+                          <span className="font-medium">{includedCareerCalc.education || "Not specified"}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-3">
+                        <span className="text-gray-400">No career calculation included</span>
+                        <div className="mt-2">
+                          <Button variant="outline" size="sm" onClick={() => window.location.href = "/career-builder"}>
+                            Add Career
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-        </CardContent>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
       </Card>
       
       {/* Financial Advice Section */}
       {financialAdvice.length > 0 && (
         <Card className="mb-6">
-          <CardContent className="p-6">
-            <AdvicePanel 
-              advice={financialAdvice} 
-              title="Financial Recommendations" 
-              showCount={true} 
-            />
-          </CardContent>
+          <Collapsible open={adviceSectionOpen} onOpenChange={setAdviceSectionOpen}>
+            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
+              <h3 className="text-lg font-medium">Financial Recommendations</h3>
+              {adviceSectionOpen ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="p-6 pt-0">
+                <AdvicePanel 
+                  advice={financialAdvice} 
+                  title="" 
+                  showCount={true} 
+                />
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       )}
       
