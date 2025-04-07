@@ -636,7 +636,16 @@ def main() -> None:
         print(json.dumps(result))
     
     except Exception as e:
-        print(json.dumps({"error": str(e)}))
+        import traceback
+        error_message = str(e)
+        stack_trace = traceback.format_exc()
+        # Log the detailed error to a file for debugging
+        with open('calculator_error.log', 'a') as f:
+            f.write("\n--- ERROR IN CALCULATOR EXECUTION ---\n")
+            f.write(f"Error: {error_message}\n")
+            f.write(f"Stack trace:\n{stack_trace}\n")
+            f.write("--- END ERROR ---\n\n")
+        print(json.dumps({"error": error_message, "stack_trace": stack_trace}))
         sys.exit(1)
 
 

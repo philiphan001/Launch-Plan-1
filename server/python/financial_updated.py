@@ -135,6 +135,8 @@ class FinancialCalculator:
         self.expenditures: List[Expenditure] = []
         self.milestones: List[Dict[str, Any]] = []
         self.results: Dict[str, Any] = {}
+        # Store input data for future reference by milestone handlers
+        self.input_data: Dict[str, Any] = {}
         # Track tax filing status, which can change with marriage milestone
         self.tax_filing_status = "single"
         
@@ -1880,23 +1882,69 @@ class FinancialCalculator:
                             
                             if apply_new_career:
                                 # Use target occupation logic - get target occupation data
-                                careers_data = getattr(self, 'input_data', {}).get('careersData', [])
-                                
-                                # Look for the target occupation in careers data
-                                for career in careers_data:
-                                    if career.get('title') == target_occupation:
-                                        target_career = career
-                                        break
+                                try:
+                                    # First, check if input_data attribute exists and has careersData
+                                    if hasattr(self, 'input_data') and self.input_data and 'careersData' in self.input_data:
+                                        careers_data = self.input_data.get('careersData', [])
+                                    else:
+                                        # Fallback to empty list if not found
+                                        careers_data = []
+                                        
+                                    # Log information about careers data
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"\nDebug - Looking up career data for target occupation: {target_occupation}\n")
+                                        f.write(f"Has input_data attribute: {hasattr(self, 'input_data')}\n")
+                                        if hasattr(self, 'input_data'):
+                                            f.write(f"input_data keys: {list(self.input_data.keys())}\n")
+                                            f.write(f"Has careersData: {'careersData' in self.input_data}\n")
+                                            f.write(f"Number of careers: {len(careers_data)}\n")
+                                            # Log titles of available careers
+                                            if careers_data:
+                                                f.write("Available career titles:\n")
+                                                for c in careers_data:
+                                                    f.write(f"  - {c.get('title', 'Unknown')}\n")
+                                    
+                                    # Look for the target occupation in careers data
+                                    target_career = None
+                                    for career in careers_data:
+                                        if career.get('title') == target_occupation:
+                                            target_career = career
+                                            break
+                                            
+                                except Exception as e:
+                                    # Log the error but continue with fallback logic
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"\nError accessing career data: {str(e)}\n")
+                                    target_career = None
                                 
                                 # Check for various salary field formats (handling both camelCase and snake_case)
                                 # This makes the code more resilient to changes in the frontend data format
                                 if target_career:
+                                    # Initialize base_salary to a default value (set to 0) to avoid undefined variable issues
+                                    base_salary = 0
+                                    
                                     # First check for snake_case format (from client/src/pages/FinancialProjections.tsx)
                                     if 'median_salary' in target_career:
                                         base_salary = int(target_career.get('median_salary', 0))
                                     # Then check for camelCase format as fallback
                                     elif 'salaryMedian' in target_career:
                                         base_salary = int(target_career.get('salaryMedian', 0))
+                                    # Add another check for alternative field names that might appear
+                                    elif 'salary' in target_career:
+                                        base_salary = int(target_career.get('salary', 0))
+                                    elif 'income' in target_career:
+                                        base_salary = int(target_career.get('income', 0))
+                                        
+                                    # Log the field names in the career data for debugging
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"\nTarget career data fields: {list(target_career.keys())}\n")
+                                    
+                                    # If base_salary is still 0, log a warning and use a default value
+                                    if base_salary == 0:
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"WARNING: Could not find salary information in target career data.\n")
+                                            f.write(f"Using default target salary of $60,000.\n")
+                                        base_salary = 60000  # Default salary if none found
                                     
                                     # Apply inflation from base year to graduation year
                                     base_year = 2024  # Year of our salary data
@@ -1920,8 +1968,23 @@ class FinancialCalculator:
                                         f.write(f"Inflation-adjusted salary: ${target_salary}\n")
                                     
                                     # Apply location adjustment if needed
-                                    cost_of_living_factor = getattr(self, 'input_data', {}).get('costOfLivingFactor', 1.0)
-                                    target_salary = int(target_salary * cost_of_living_factor)
+                                    try:
+                                        # First check if input_data is available and has the costOfLivingFactor
+                                        cost_of_living_factor = 1.0  # Default value
+                                        
+                                        if hasattr(self, 'input_data') and self.input_data:
+                                            cost_of_living_factor = self.input_data.get('costOfLivingFactor', 1.0)
+                                            
+                                        # Log the factor for debugging
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"Location cost of living factor: {cost_of_living_factor}\n")
+                                        
+                                        # Apply the factor to the target salary
+                                        target_salary = int(target_salary * cost_of_living_factor)
+                                    except Exception as e:
+                                        # Log the error but continue without adjusting
+                                        with open('healthcare_debug.log', 'a') as f:
+                                            f.write(f"Error applying location adjustment: {str(e)}\n")
                                 else:
                                     # Fallback to multiplier if career data not found
                                     income_multiplier = 1.2  # Default 20% increase
