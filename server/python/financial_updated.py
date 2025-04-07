@@ -684,9 +684,10 @@ class FinancialCalculator:
                         # Only reduce savings if we're using some of it and the savings asset has the right method
                         if amount_from_savings > 0 and hasattr(savings_asset, 'add_contribution'):
                             # Use getattr to get the method to avoid LSP issues
-                            contribution_method = getattr(savings_asset, 'add_contribution')
-                            # Call the method to add a negative contribution (withdrawal)
-                            contribution_method(i, -amount_from_savings)
+                            # Call the method to add a negative contribution (withdrawal) with year first
+                            # Ensure we're using the proper Investment type method with type casting
+                            if isinstance(savings_asset, Investment):
+                                savings_asset.add_contribution(i, -amount_from_savings)
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"  Using ${amount_from_savings} from savings\n")
@@ -767,9 +768,10 @@ class FinancialCalculator:
                         # Handle positive cash flow - add to savings
                         if hasattr(savings_asset, 'add_contribution'):
                             # Use getattr to get the method to avoid LSP issues
-                            contribution_method = getattr(savings_asset, 'add_contribution')
-                            # Call the method to add a positive contribution
-                            contribution_method(i, cash_flow_yearly[i])
+                            # Call the method to add a positive contribution with year first
+                            # Ensure we're using the proper Investment type method with type casting
+                            if isinstance(savings_asset, Investment):
+                                savings_asset.add_contribution(i, cash_flow_yearly[i])
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"  Positive cash flow: ${cash_flow_yearly[i]}\n")
@@ -789,8 +791,10 @@ class FinancialCalculator:
                     if retirement_contribution_yearly[i] > 0:
                         # For LSP compatibility, use hasattr/getattr instead of direct method calls
                         if hasattr(savings_asset, 'add_contribution'):
-                            # Add retirement contribution directly to the asset
-                            getattr(savings_asset, 'add_contribution')(retirement_contribution_yearly[i], i)
+                            # Add retirement contribution directly to the asset with year first
+                            # Ensure we're using the proper Investment type method with type casting
+                            if isinstance(savings_asset, Investment):
+                                savings_asset.add_contribution(i, retirement_contribution_yearly[i])
                             with open('healthcare_debug.log', 'a') as f:
                                 f.write(f"  Added retirement contribution: ${retirement_contribution_yearly[i]}\n")
                         else:

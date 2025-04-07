@@ -172,40 +172,63 @@ class Investment(Asset):
         
         return value
     
-    def add_contribution(self, amount: float, year: int) -> None:
+    def add_contribution(self, year: int, amount: float) -> None:
         """
         Add a contribution to the investment.
         
         Args:
-            amount: Amount to contribute
             year: Year of contribution
+            amount: Amount to contribute (positive) or withdraw (negative)
         """
+        # Add to contributions dictionary, which tracks for each year
         if year in self.contributions:
             self.contributions[year] += amount
         else:
             self.contributions[year] = amount
         
-        # If we've already calculated the value for this year, update it
+        # If we've already calculated the value for this year, update it directly
         if year in self.value_history:
             self.value_history[year] += amount
+            
+            # Important: Clear all future years so they recalculate based on this change
+            future_years = [y for y in self.value_history.keys() if y > year]
+            for y in future_years:
+                del self.value_history[y]
+            
+            # Log the operation for debugging
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"  INVESTMENT UPDATE: {self.name} for year {year}: ")
+                if amount >= 0:
+                    f.write(f"Added ${amount}\n")
+                else:
+                    f.write(f"Withdrew ${abs(amount)}\n")
+                f.write(f"  New balance: ${self.value_history[year]}\n")
     
     def withdraw(self, amount: float, year: int) -> float:
         """
         Withdraw funds from the investment.
         
         Args:
-            amount: Amount to withdraw
+            amount: Amount to withdraw (positive value)
             year: Year of withdrawal
             
         Returns:
             Actual amount withdrawn (may be less if insufficient funds)
         """
+        if amount <= 0:
+            return 0  # Cannot withdraw negative or zero amount
+            
         current_value = self.get_value(year)
         withdrawal = min(amount, current_value)
         
         if withdrawal > 0:
-            # Update the value after withdrawal
-            self.value_history[year] = current_value - withdrawal
+            # Update the value after withdrawal using negative contribution
+            self.add_contribution(year, -withdrawal)
+            
+            # Log the withdrawal
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"  WITHDRAWAL: {self.name} for year {year}: ${withdrawal}\n")
+                f.write(f"  Remaining balance: ${self.get_value(year)}\n")
         
         return withdrawal
         
