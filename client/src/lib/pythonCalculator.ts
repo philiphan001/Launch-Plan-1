@@ -199,9 +199,10 @@ export const generatePythonCalculatorInput = (
       year: yearsAway ?? 0,
       ...rest,
       // Ensure these fields are present for education milestones
-      workStatus: milestone.workStatus || null,
-      partTimeIncome: milestone.partTimeIncome || null,
-      returnToSameProfession: milestone.returnToSameProfession || false,
+      // Pass workStatus as-is without using || since "no" is a valid value
+      workStatus: milestone.workStatus !== undefined ? milestone.workStatus : null,
+      partTimeIncome: milestone.partTimeIncome !== undefined ? milestone.partTimeIncome : 0,
+      returnToSameProfession: milestone.returnToSameProfession !== undefined ? milestone.returnToSameProfession : true,
       details: milestone.details || {}
     };
   });

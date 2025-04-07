@@ -1781,11 +1781,20 @@ class FinancialCalculator:
                                 
                                 # Handle income based on work status during education
                                 # Check for various forms of "no" including case differences and None/null
+                                # Strip whitespace from string values to avoid issues with extra spaces
                                 no_work_values = ['no', 'false', 'null', 'none', '0', 'n', '']
-                                is_not_working = (
-                                    (isinstance(work_status, str) and work_status.lower() in no_work_values) or
-                                    work_status is False or work_status is None or work_status == 0
-                                )
+                                is_not_working = False
+                                
+                                if isinstance(work_status, str):
+                                    work_status_clean = work_status.lower().strip()
+                                    is_not_working = work_status_clean in no_work_values
+                                    with open('education_income_debug.log', 'a') as f:
+                                        f.write(f"String work status: '{work_status}' cleaned to '{work_status_clean}'\n")
+                                        f.write(f"Is in no_work_values: {work_status_clean in no_work_values}\n")
+                                elif work_status is False or work_status is None or work_status == 0:
+                                    is_not_working = True
+                                    with open('education_income_debug.log', 'a') as f:
+                                        f.write(f"Non-string work status detected: {work_status}\n")
                                 
                                 with open('education_income_debug.log', 'a') as f:
                                     f.write(f"Is not working evaluation: {is_not_working}\n")
@@ -1814,8 +1823,8 @@ class FinancialCalculator:
                                         f.write(f"Year {year_index}: Setting income to $0 (not working during education)\n")
                                         f.write(f"Original income was: ${original_income}\n")
                                 
-                                elif isinstance(work_status, str) and work_status.lower() == 'part-time':
-                                    # Working part-time during education
+                                elif isinstance(work_status, str) and work_status.lower().strip() == 'part-time':
+                                    # Working part-time during education - handle casing and whitespace
                                     original_income = income_yearly[year_index]
                                     income_yearly[year_index] = part_time_income
                                     total_income_yearly[year_index] = part_time_income + spouse_income_yearly[year_index]
@@ -1832,7 +1841,13 @@ class FinancialCalculator:
                                         f.write(f"Original income was: ${original_income}\n")
                                 
                                 # Full-time work keeps the normal income (no adjustment needed)
-                                elif isinstance(work_status, str) and work_status.lower() == 'full-time':
+                                elif isinstance(work_status, str) and work_status.lower().strip() == 'full-time':
+                                    with open('education_income_debug.log', 'a') as f:
+                                        f.write(f"\n===== FULL-TIME INCOME IN YEAR {year_index} =====\n")
+                                        f.write(f"Education milestone in progress (workStatus=full-time)\n")
+                                        f.write(f"Keeping original income of ${income_yearly[year_index]}\n")
+                                    
+                                    # Also write to healthcare_debug.log for backward compatibility
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"Year {year_index}: Keeping full income of ${income_yearly[year_index]} (full-time during education)\n")
                                 
@@ -1929,11 +1944,19 @@ class FinancialCalculator:
                         no_income_education_years = set()
                         
                         # Use the same condition we used earlier for checking if not working
+                        # Strip whitespace from string values to avoid issues with extra spaces
                         no_work_values = ['no', 'false', 'null', 'none', '0', 'n', '']
-                        is_not_working = (
-                            (isinstance(work_status, str) and work_status.lower() in no_work_values) or
-                            work_status is False or work_status is None or work_status == 0
-                        )
+                        is_not_working = False
+                        
+                        if isinstance(work_status, str):
+                            work_status_clean = work_status.lower().strip()
+                            is_not_working = work_status_clean in no_work_values
+                            with open('education_income_debug.log', 'a') as f:
+                                f.write(f"\n===== TRACKING PHASE: CHECKING WORK STATUS =====\n")
+                                f.write(f"String work status: '{work_status}' cleaned to '{work_status_clean}'\n")
+                                f.write(f"Is in no_work_values: {work_status_clean in no_work_values}\n")
+                        elif work_status is False or work_status is None or work_status == 0:
+                            is_not_working = True
                         
                         if is_not_working:
                             # Add all education years to the tracking set - making sure we use the actual milestone_year
