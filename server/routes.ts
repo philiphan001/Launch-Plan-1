@@ -651,8 +651,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const careersData = await activeStorage.getCareers();
         if (careersData && careersData.length > 0) {
-          updatedInputData.careersData = careersData;
-          console.log(`Added ${careersData.length} careers to calculator input`);
+          // Optimize by only sending essential career fields to reduce payload size
+          updatedInputData.careersData = careersData.map((career: any) => ({
+            id: career.id,
+            title: career.title,
+            median_salary: career.salary || 0,  // Use salary as median_salary
+            entry_salary: career.salaryPct25 || 0, // Use salaryPct25 as entry_salary
+            experienced_salary: career.salaryPct75 || 0 // Use salaryPct75 as experienced_salary
+          }));
+          console.log(`Added ${careersData.length} careers to calculator input (optimized)`);
         }
       } catch (careersError) {
         console.error("Error fetching careers data:", careersError);
@@ -801,8 +808,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const careersData = await activeStorage.getCareers();
         if (careersData && careersData.length > 0) {
-          inputData.careersData = careersData;
-          console.log(`Added ${careersData.length} careers to future savings calculation input`);
+          // Optimize by only sending essential career fields to reduce payload size
+          inputData.careersData = careersData.map((career: any) => ({
+            id: career.id,
+            title: career.title,
+            median_salary: career.salary || 0,  // Use salary as median_salary
+            entry_salary: career.salaryPct25 || 0, // Use salaryPct25 as entry_salary
+            experienced_salary: career.salaryPct75 || 0 // Use salaryPct75 as experienced_salary
+          }));
+          console.log(`Added ${careersData.length} careers to future savings calculation input (optimized)`);
         }
       } catch (careersError) {
         console.error("Error fetching careers data for future savings:", careersError);

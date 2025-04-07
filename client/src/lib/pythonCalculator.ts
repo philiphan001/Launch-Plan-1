@@ -193,10 +193,16 @@ export const generatePythonCalculatorInput = (
     const { type, yearsAway, ...rest } = milestone;
     
     // Create a new milestone object with year property instead of yearsAway
+    // Make sure we have all the required fields for the education milestone type
     return {
       type,
       year: yearsAway ?? 0,
-      ...rest
+      ...rest,
+      // Ensure these fields are present for education milestones
+      workStatus: milestone.workStatus || null,
+      partTimeIncome: milestone.partTimeIncome || null,
+      returnToSameProfession: milestone.returnToSameProfession || false,
+      details: milestone.details || {}
     };
   });
   

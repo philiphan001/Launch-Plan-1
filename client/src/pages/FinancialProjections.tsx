@@ -1206,8 +1206,15 @@ const FinancialProjections = () => {
         
         // Add the careers data to the calculator input for post-graduation occupation selection
         if (careers && careers.length > 0) {
-          pythonInput.careersData = careers;
-          console.log(`Added ${careers.length} careers to Python calculator input for milestone target occupations`);
+          // Optimize by only sending essential career fields to reduce payload size
+          pythonInput.careersData = careers.map((career: any) => ({
+            id: career.id,
+            title: career.title,
+            median_salary: career.median_salary || 0,
+            entry_salary: career.entry_salary || 0,
+            experienced_salary: career.experienced_salary || 0
+          }));
+          console.log(`Added ${careers.length} careers to Python calculator input for milestone target occupations (optimized fields)`);
         }
         
         console.log("Sending data to Python calculator:", pythonInput);
@@ -1223,7 +1230,12 @@ const FinancialProjections = () => {
             ...m,
             // Ensure yearsAway is a number relative to the start age
             yearsAway: m.yearsAway !== null ? m.yearsAway : 
-              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25)))
+              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25))),
+            // Add fields that TypeScript expects for Milestone type
+            workStatus: m.workStatus || null,
+            partTimeIncome: m.partTimeIncome || null,
+            returnToSameProfession: m.returnToSameProfession || false,
+            details: m.details || {}
           }))
         };
         
