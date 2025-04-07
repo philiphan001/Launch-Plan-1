@@ -2635,15 +2635,62 @@ class FinancialCalculator:
             found_negative = False
             min_savings = min(savings_value_yearly)
             f.write(f"Minimum savings value in array: ${min_savings}\n")
+            
+            # CRITICAL FIX: Final pass to correct any remaining negative savings values or values below threshold
             for year_idx in range(len(savings_value_yearly)):
-                if savings_value_yearly[year_idx] < 0:
+                if savings_value_yearly[year_idx] < 0 or savings_value_yearly[year_idx] < self.emergency_fund_amount:
                     found_negative = True
-                    f.write(f"WARNING: Year {year_idx + self.start_age} has NEGATIVE savings: ${savings_value_yearly[year_idx]}\n")
-                elif savings_value_yearly[year_idx] < self.emergency_fund_amount:
-                    f.write(f"WARNING: Year {year_idx + self.start_age} has savings below emergency threshold: ${savings_value_yearly[year_idx]}\n")
+                    
+                    # Keep track of the original value for logging
+                    original_value = savings_value_yearly[year_idx]
+                    
+                    # Calculate shortfall
+                    shortfall = self.emergency_fund_amount - savings_value_yearly[year_idx]
+                    
+                    # Create emergency loan to cover the shortfall
+                    emergency_loan_name = f"Final Emergency Fund Protection Loan {year_idx + self.start_age}"
+                    
+                    # Log the correction
+                    if original_value < 0:
+                        f.write(f"CORRECTING: Year {year_idx + self.start_age} has NEGATIVE savings: ${original_value}\n")
+                    else:
+                        f.write(f"CORRECTING: Year {year_idx + self.start_age} has savings below threshold: ${original_value}\n")
+                    
+                    f.write(f"  Creating emergency loan of ${shortfall} with {self.personal_loan_term_years}-year term at {self.personal_loan_interest_rate*100:.1f}% interest\n")
+                    
+                    # Create the emergency loan
+                    emergency_loan = PersonalLoan(
+                        name=emergency_loan_name,
+                        initial_balance=shortfall,
+                        interest_rate=self.personal_loan_interest_rate,
+                        term_years=self.personal_loan_term_years,
+                        milestone_year=year_idx,
+                        milestone_month=6
+                    )
+                    
+                    # Add to liabilities
+                    self.add_liability(emergency_loan)
+                    
+                    # Update liabilities and personal loans for this and all future years
+                    for future_year in range(year_idx, len(liabilities_yearly)):
+                        future_balance = emergency_loan.get_balance(future_year - year_idx)
+                        liabilities_yearly[future_year] += int(future_balance)
+                        all_personal_loans[future_year] += int(future_balance)
+                    
+                    # Set savings to the emergency threshold
+                    savings_value_yearly[year_idx] = self.emergency_fund_amount
+                    
+                    # Update net worth
+                    net_worth[year_idx] = assets_yearly[year_idx] - liabilities_yearly[year_idx]
+                    
+                    f.write(f"  Updated savings to ${savings_value_yearly[year_idx]}\n")
+                    f.write(f"  Updated liabilities to ${liabilities_yearly[year_idx]}\n")
+                    f.write(f"  Updated net worth to ${net_worth[year_idx]}\n")
             
             if not found_negative:
                 f.write("SUCCESS: No negative savings values found!\n")
+            else:
+                f.write("NOTE: Corrected all negative or below-threshold savings values\n")
             
             # Also log the values we're sending back to ensure they're correct
             f.write("\nFINAL VALUES BEING SENT TO FRONTEND:\n")
