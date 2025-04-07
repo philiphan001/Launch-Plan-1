@@ -328,7 +328,7 @@ const CollegeDiscovery = () => {
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-display font-semibold text-gray-800">College Discovery</h1>
-        <Button className="flex items-center bg-primary text-white hover:bg-primary/90" asChild>
+        <Button className="flex items-center bg-green-600 text-white hover:bg-green-700" asChild>
           <a href="/calculator">
             <svg
               xmlns="http://www.w3.org/2000/svg"
