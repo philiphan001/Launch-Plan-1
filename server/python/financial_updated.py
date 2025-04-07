@@ -1888,9 +1888,15 @@ class FinancialCalculator:
                                         target_career = career
                                         break
                                 
-                                if target_career and 'salaryMedian' in target_career:
-                                    # Use the actual salary from the selected career
-                                    base_salary = int(target_career.get('salaryMedian', 0))
+                                # Check for various salary field formats (handling both camelCase and snake_case)
+                                # This makes the code more resilient to changes in the frontend data format
+                                if target_career:
+                                    # First check for snake_case format (from client/src/pages/FinancialProjections.tsx)
+                                    if 'median_salary' in target_career:
+                                        base_salary = int(target_career.get('median_salary', 0))
+                                    # Then check for camelCase format as fallback
+                                    elif 'salaryMedian' in target_career:
+                                        base_salary = int(target_career.get('salaryMedian', 0))
                                     
                                     # Apply inflation from base year to graduation year
                                     base_year = 2024  # Year of our salary data
@@ -3218,9 +3224,13 @@ class FinancialCalculator:
         for milestone_data in input_data.get('milestones', []):
             calculator.add_milestone(milestone_data)
           
+        # Store input_data as an instance attribute for future reference by milestone handlers
+        calculator.input_data = input_data
+        
         # Add debug logging
         with open('healthcare_debug.log', 'a') as f:
             f.write(f"\nFinancial calculator created from input data\n")
+            f.write(f"Stored input_data as instance attribute, contains careersData: {'careersData' in input_data}\n")
             
         # Just return the calculator object - don't run calculation here
         # The caller will run calculator.calculate_projection() as needed
