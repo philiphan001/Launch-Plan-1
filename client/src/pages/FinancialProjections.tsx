@@ -109,6 +109,14 @@ interface Milestone {
   childrenExpensePerYear?: number;
   // Education specific fields
   educationCost?: number;
+  educationType?: string;
+  educationYears?: number;
+  educationAnnualCost?: number;
+  educationAnnualLoan?: number;
+  targetOccupation?: string;
+  workStatus?: string; // "no", "part-time", or "full-time"
+  partTimeIncome?: number;
+  returnToSameProfession?: boolean;
   // Additional properties used in the app but not in the database
   financialImpact?: number;
   active?: boolean;

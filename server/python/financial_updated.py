@@ -1698,6 +1698,11 @@ class FinancialCalculator:
                         total_education_loan = education_annual_loan * education_years
                         target_occupation = milestone.get('targetOccupation', None)
                         
+                        # Get working status during education
+                        work_status = milestone.get('workStatus', 'no')  # Options: 'no', 'part-time', 'full-time'
+                        part_time_income = int(milestone.get('partTimeIncome', 0))
+                        return_to_same_profession = milestone.get('returnToSameProfession', True)
+                        
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"\nProcessing education milestone in year {milestone_year}\n")
                             f.write(f"Education type: {education_type}\n")
@@ -1707,6 +1712,9 @@ class FinancialCalculator:
                             f.write(f"Total education cost: ${total_education_cost}\n")
                             f.write(f"Total education loan: ${total_education_loan}\n")
                             f.write(f"Target occupation after graduation: {target_occupation}\n")
+                            f.write(f"Work status during education: {work_status}\n")
+                            f.write(f"Part-time income: ${part_time_income}\n")
+                            f.write(f"Return to same profession after graduation: {return_to_same_profession}\n")
                         
                         # Calculate out-of-pocket cost (not covered by loans)
                         annual_out_of_pocket = max(0, education_annual_cost - education_annual_loan)
@@ -1726,11 +1734,49 @@ class FinancialCalculator:
                                 # Add to total expenses
                                 expenses_yearly[year_index] += annual_out_of_pocket
                                 
-                                # Reduce cash flow for this year
-                                cash_flow_yearly[year_index] -= annual_out_of_pocket
+                                # Handle income based on work status during education
+                                if work_status == 'no':
+                                    # Not working during education - set income to zero
+                                    original_income = income_yearly[year_index]
+                                    income_yearly[year_index] = 0
+                                    total_income_yearly[year_index] = spouse_income_yearly[year_index]  # Only spouse income (if any)
+                                    
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Year {year_index}: Setting income to $0 (not working during education)\n")
+                                        f.write(f"Original income was: ${original_income}\n")
+                                
+                                elif work_status == 'part-time':
+                                    # Working part-time during education
+                                    original_income = income_yearly[year_index]
+                                    income_yearly[year_index] = part_time_income
+                                    total_income_yearly[year_index] = part_time_income + spouse_income_yearly[year_index]
+                                    
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Year {year_index}: Setting income to ${part_time_income} (part-time during education)\n")
+                                        f.write(f"Original income was: ${original_income}\n")
+                                
+                                # Full-time work keeps the normal income (no adjustment needed)
+                                elif work_status == 'full-time':
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Year {year_index}: Keeping full income of ${income_yearly[year_index]} (full-time during education)\n")
+                                
+                                # Recalculate taxes based on new income
+                                new_taxes = self._calculate_taxes(total_income_yearly[year_index], year_index, self.tax_filing_status)
+                                payroll_tax_expenses_yearly[year_index] = int(new_taxes["fica_tax"])
+                                federal_tax_expenses_yearly[year_index] = int(new_taxes["federal_tax"])
+                                state_tax_expenses_yearly[year_index] = int(new_taxes["state_tax"])
+                                tax_expenses_yearly[year_index] = (payroll_tax_expenses_yearly[year_index] + 
+                                                                  federal_tax_expenses_yearly[year_index] + 
+                                                                  state_tax_expenses_yearly[year_index])
+                                
+                                # Reduce cash flow for this year (updated with new income and taxes)
+                                cash_flow_yearly[year_index] = total_income_yearly[year_index] - expenses_yearly[year_index]
                                 
                                 with open('healthcare_debug.log', 'a') as f:
                                     f.write(f"Year {year_index}: Added ${annual_out_of_pocket} to education expenses\n")
+                                    f.write(f"Year {year_index}: Updated income: ${income_yearly[year_index]}, Total income: ${total_income_yearly[year_index]}\n")
+                                    f.write(f"Year {year_index}: Updated taxes: ${tax_expenses_yearly[year_index]}\n")
+                                    f.write(f"Year {year_index}: Updated cash flow: ${cash_flow_yearly[year_index]}\n")
                         
                         # Check if we need to create student loans
                         if total_education_loan > 0:
@@ -1800,65 +1846,146 @@ class FinancialCalculator:
                                     debt_interest_yearly[year] += int(interest_payment)
                                     debt_principal_yearly[year] += int(principal_payment)
                         
-                        # Apply income boost after education if a target occupation is specified
+                        # Apply income boost after education if a target occupation is specified or returning to same profession
                         graduation_year = milestone_year + education_years
-                        if target_occupation and graduation_year <= self.years_to_project:
-                            # Get target occupation data from self.input_data if available
-                            careers_data = getattr(self, 'input_data', {}).get('careersData', [])
-                            target_career = None
+                        
+                        # Store original income/career trajectory for returning to same profession
+                        original_income_trajectory = {}
+                        if return_to_same_profession:
+                            # Save income trajectory from before education
+                            for year in range(graduation_year, self.years_to_project + 1):
+                                # Calculate what the income would have been without the education interruption
+                                # assuming a 3% annual growth from the pre-education income
+                                years_from_start = year - milestone_year
+                                pre_education_income = income_yearly[milestone_year - 1] if milestone_year > 0 else income_yearly[0]
+                                growth_factor = 1.0 + (0.03 * years_from_start)  # 3% annual growth
+                                projected_income = int(pre_education_income * growth_factor)
+                                original_income_trajectory[year] = projected_income
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    if year == graduation_year:  # Only log the first year to avoid excessive logging
+                                        f.write(f"Saved original income trajectory for returning to same profession\n")
+                                        f.write(f"Pre-education income: ${pre_education_income}\n")
+                                        f.write(f"Projected income for year {year}: ${projected_income}\n")
+                        
+                        # Choose between target occupation or returning to same profession
+                        apply_new_career = target_occupation and not return_to_same_profession
+                        apply_same_career_with_boost = return_to_same_profession
+                        
+                        if (apply_new_career or apply_same_career_with_boost) and graduation_year <= self.years_to_project:
                             target_salary = None
                             
-                            # Look for the target occupation in careers data
-                            for career in careers_data:
-                                if career.get('title') == target_occupation:
-                                    target_career = career
-                                    break
+                            # Initialize target_career variable to avoid potential reference issues
+                            target_career = None
                             
-                            if target_career and 'salaryMedian' in target_career:
-                                # Use the actual salary from the selected career
-                                target_salary = int(target_career.get('salaryMedian', 0))
-                                # Apply location adjustment if needed
-                                cost_of_living_factor = getattr(self, 'input_data', {}).get('costOfLivingFactor', 1.0)
-                                target_salary = int(target_salary * cost_of_living_factor)
-                            else:
-                                # Fallback to multiplier if career data not found
-                                income_multiplier = 1.2  # Default 20% increase
-                                if education_type == 'bachelors':
-                                    income_multiplier = 1.3  # 30% increase
-                                elif education_type == 'masters':
-                                    income_multiplier = 1.5  # 50% increase
-                                elif education_type == 'doctorate':
-                                    income_multiplier = 1.8  # 80% increase
-                                elif education_type == 'professional':
-                                    income_multiplier = 2.0  # 100% increase (double)
+                            if apply_new_career:
+                                # Use target occupation logic - get target occupation data
+                                careers_data = getattr(self, 'input_data', {}).get('careersData', [])
                                 
-                                # Use current income as base and apply multiplier
-                                base_graduation_income = income_yearly[graduation_year]
-                                target_salary = int(base_graduation_income * income_multiplier)
+                                # Look for the target occupation in careers data
+                                for career in careers_data:
+                                    if career.get('title') == target_occupation:
+                                        target_career = career
+                                        break
+                                
+                                if target_career and 'salaryMedian' in target_career:
+                                    # Use the actual salary from the selected career
+                                    target_salary = int(target_career.get('salaryMedian', 0))
+                                    # Apply location adjustment if needed
+                                    cost_of_living_factor = getattr(self, 'input_data', {}).get('costOfLivingFactor', 1.0)
+                                    target_salary = int(target_salary * cost_of_living_factor)
+                                else:
+                                    # Fallback to multiplier if career data not found
+                                    income_multiplier = 1.2  # Default 20% increase
+                                    if education_type == 'bachelors':
+                                        income_multiplier = 1.3  # 30% increase
+                                    elif education_type == 'masters':
+                                        income_multiplier = 1.5  # 50% increase
+                                    elif education_type == 'doctorate':
+                                        income_multiplier = 1.8  # 80% increase
+                                    elif education_type == 'professional':
+                                        income_multiplier = 2.0  # 100% increase (double)
+                                    
+                                    # Apply multiplier to the income at graduation year
+                                    # This should be the income without education adjustments
+                                    # or the original trajectory income if returning to same profession
+                                    base_income = income_yearly[graduation_year]
+                                    if work_status != 'full-time':
+                                        # If not working full-time during education, base income might be 0 or part-time
+                                        # Use the pre-education income as the base instead
+                                        base_income = income_yearly[milestone_year - 1] if milestone_year > 0 else income_yearly[0]
+                                    
+                                    target_salary = int(base_income * income_multiplier)
+                            elif apply_same_career_with_boost:
+                                # Apply education boost to same career path
+                                # Determine the boost multiplier based on education type
+                                boost_multiplier = 1.2  # Default 20% boost
+                                if education_type == 'bachelors':
+                                    boost_multiplier = 1.15  # 15% boost for same career
+                                elif education_type == 'masters':
+                                    boost_multiplier = 1.25  # 25% boost for same career
+                                elif education_type == 'doctorate':
+                                    boost_multiplier = 1.35  # 35% boost for same career
+                                elif education_type == 'professional':
+                                    boost_multiplier = 1.4   # 40% boost for same career
+                                
+                                # Apply boost to the original career trajectory
+                                base_income = original_income_trajectory[graduation_year]
+                                target_salary = int(base_income * boost_multiplier)
                             
                             with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Applying career change after graduation in year {graduation_year}\n")
-                                f.write(f"Target occupation: {target_occupation}\n")
-                                if target_career:
-                                    f.write(f"Target occupation salary: ${target_salary}\n")
-                                else:
-                                    # Get the income_multiplier based on education type for logging
-                                    log_multiplier = 1.2  # Default
+                                if apply_same_career_with_boost:
+                                    f.write(f"Applying education boost to same career in year {graduation_year}\n")
+                                    f.write(f"Returning to same profession with education boost\n")
+                                    
+                                    # Log the boost multiplier based on education type
+                                    log_boost_multiplier = 1.2  # Default
                                     if education_type == 'bachelors':
-                                        log_multiplier = 1.3
+                                        log_boost_multiplier = 1.15
                                     elif education_type == 'masters':
-                                        log_multiplier = 1.5
+                                        log_boost_multiplier = 1.25
                                     elif education_type == 'doctorate':
-                                        log_multiplier = 1.8
+                                        log_boost_multiplier = 1.35
                                     elif education_type == 'professional':
-                                        log_multiplier = 2.0
-                                        
-                                    f.write(f"Target occupation not found in careers data, applying multiplier instead\n")
-                                    f.write(f"Income multiplier for {education_type}: {log_multiplier}\n")
+                                        log_boost_multiplier = 1.4
+                                    
+                                    f.write(f"Original projected income for year {graduation_year}: ${original_income_trajectory[graduation_year]}\n")
+                                    f.write(f"Education boost multiplier for {education_type}: {log_boost_multiplier}\n")
+                                    f.write(f"Boosted salary: ${target_salary}\n")
+                                else:
+                                    f.write(f"Applying career change after graduation in year {graduation_year}\n")
+                                    f.write(f"Target occupation: {target_occupation}\n")
+                                    
+                                    # Only try to access target_career if it's a new career (not when returning to same profession)
+                                    if apply_new_career and 'target_career' in locals() and target_career:
+                                        f.write(f"Target occupation salary: ${target_salary}\n")
+                                    else:
+                                        # Get the income_multiplier based on education type for logging
+                                        log_multiplier = 1.2  # Default
+                                        if education_type == 'bachelors':
+                                            log_multiplier = 1.3
+                                        elif education_type == 'masters':
+                                            log_multiplier = 1.5
+                                        elif education_type == 'doctorate':
+                                            log_multiplier = 1.8
+                                        elif education_type == 'professional':
+                                            log_multiplier = 2.0
+                                            
+                                        f.write(f"Target occupation not found in careers data, applying multiplier instead\n")
+                                        f.write(f"Income multiplier for {education_type}: {log_multiplier}\n")
+                                
+                                # Always log the current income before change
                                 f.write(f"Current income before change: ${income_yearly[graduation_year]}\n")
                             
                             # Apply the income change for all years after graduation
                             for year in range(graduation_year, self.years_to_project + 1):
+                                # Ensure we have a valid target_salary
+                                if target_salary is None:
+                                    # Fallback to current income if target_salary is None for some reason
+                                    target_salary = income_yearly[graduation_year]
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Warning: target_salary was None, using current income as fallback: ${target_salary}\n")
+                                
                                 # Increment salary by 3% per year after graduation (for career growth)
                                 years_since_graduation = year - graduation_year
                                 career_growth_factor = 1.0 + (0.03 * years_since_graduation)
