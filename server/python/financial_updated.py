@@ -2013,12 +2013,50 @@ class FinancialCalculator:
                             if apply_new_career:
                                 # Use target occupation logic - get target occupation data
                                 try:
-                                    # Use the helper method to find the career
+                                    # Check for various ways the career data could be stored
+                                    target_career = None
+                                    
+                                    # Log the search process
                                     with open('healthcare_debug.log', 'a') as f:
-                                        f.write(f"\nLooking up career data for target occupation: {target_occupation}\n")
+                                        f.write(f"\nDebug - Looking up career data for target occupation: {target_occupation}\n")
+                                        
+                                        # Check for different attributes where career data might be stored
+                                        f.write("Available career data sources:\n")
+                                        f.write(f"  - careers_map attribute: {hasattr(self, 'careers_map')}\n")
+                                        f.write(f"  - careersData attribute: {hasattr(self, 'careersData')}\n")
+                                        f.write(f"  - input_data attribute: {hasattr(self, 'input_data')}\n")
+                                        if hasattr(self, 'input_data'):
+                                            f.write(f"    - input_data has careersData: {'careersData' in self.input_data}\n")
                                     
-                                    target_career = self.find_career_by_title(target_occupation)
+                                    # Method 1: Try to find career using the careers_map attribute (fastest)
+                                    if hasattr(self, 'careers_map') and self.careers_map and target_occupation:
+                                        # Try exact match first
+                                        if target_occupation.lower() in self.careers_map:
+                                            target_career = self.careers_map[target_occupation.lower()]
+                                            with open('healthcare_debug.log', 'a') as f:
+                                                f.write(f"Found career in careers_map by exact match: {target_occupation}\n")
                                     
+                                    # Method 2: Try to find career in the careersData attribute (direct access)
+                                    if target_career is None and hasattr(self, 'careersData') and self.careersData:
+                                        for career in self.careersData:
+                                            career_title = career.get('title', career.get('name', '')).lower()
+                                            if career_title == target_occupation.lower():
+                                                target_career = career
+                                                with open('healthcare_debug.log', 'a') as f:
+                                                    f.write(f"Found career in careersData by direct search: {target_occupation}\n")
+                                                break
+                                    
+                                    # Method 3: Fall back to searching in the input_data
+                                    if target_career is None and hasattr(self, 'input_data') and self.input_data:
+                                        careers_data = self.input_data.get('careersData', [])
+                                        for career in careers_data:
+                                            career_title = career.get('title', career.get('name', '')).lower()
+                                            if career_title == target_occupation.lower():
+                                                target_career = career
+                                                with open('healthcare_debug.log', 'a') as f:
+                                                    f.write(f"Found career in input_data.careersData: {target_occupation}\n")
+                                                break
+                                                
                                     # Log results of search
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"Target career found: {target_career is not None}\n")
@@ -2026,6 +2064,7 @@ class FinancialCalculator:
                                             f.write(f"Career data: {target_career}\n")
                                         else:
                                             f.write(f"FAILED to find career data for: {target_occupation}\n")
+                                            # Fallback for testing purposes
                                             f.write(f"Will use default salary values\n")
                                             
                                 except Exception as e:
@@ -3140,130 +3179,6 @@ class FinancialCalculator:
     def to_json(self) -> str:
         """Convert calculation results to JSON string."""
         return json.dumps(self.results)
-    
-    def find_career_by_title(self, title: str) -> Optional[Dict[str, Any]]:
-        """
-        Find a career in the available data sources by title.
-        
-        This method searches through all available data sources in the following order:
-        1. careers_map attribute
-        2. careersData attribute
-        3. input_data.careersData
-        
-        The method performs multiple search strategies:
-        1. Exact match on the title field (case-insensitive)
-        2. Exact match on the name field (case-insensitive)
-        3. Substring match (if the search title is contained in the career title)
-        
-        Args:
-            title: The title of the career to search for
-            
-        Returns:
-            Career data dictionary if found, None otherwise
-        """
-        if not title:
-            with open('healthcare_debug.log', 'a') as f:
-                f.write("find_career_by_title called with empty title\n")
-            return None
-        
-        target_career = None
-        search_title = title.lower().strip()
-        
-        # Log the search process
-        with open('healthcare_debug.log', 'a') as f:
-            f.write(f"\nFIND_CAREER_BY_TITLE - Searching for: '{search_title}'\n")
-            
-            # Check for different attributes where career data might be stored
-            f.write("Available career data sources:\n")
-            f.write(f"  - careers_map attribute: {hasattr(self, 'careers_map')}\n")
-            f.write(f"  - careersData attribute: {hasattr(self, 'careersData')}\n")
-            f.write(f"  - input_data attribute: {hasattr(self, 'input_data')}\n")
-            if hasattr(self, 'input_data'):
-                f.write(f"    - input_data has careersData: {'careersData' in self.input_data}\n")
-        
-        # Method 1: Try to find career using the careers_map attribute (fastest)
-        if hasattr(self, 'careers_map') and self.careers_map and search_title:
-            # Try exact match first
-            if search_title in self.careers_map:
-                target_career = self.careers_map[search_title]
-                with open('healthcare_debug.log', 'a') as f:
-                    f.write(f"Found career in careers_map by exact match: {search_title}\n")
-        
-        # Method 2: Try to find career in the careersData attribute (direct access)
-        if target_career is None and hasattr(self, 'careersData') and self.careersData:
-            for career in self.careersData:
-                # Check title field first
-                if 'title' in career:
-                    career_title = career['title'].lower().strip()
-                    if career_title == search_title:
-                        target_career = career
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Found career in careersData by title match: {search_title}\n")
-                        break
-                
-                # Then check name field
-                elif 'name' in career:
-                    career_name = career['name'].lower().strip()
-                    if career_name == search_title:
-                        target_career = career
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Found career in careersData by name match: {search_title}\n")
-                        break
-        
-        # Method 3: Try second pass with substring matching if still not found
-        if target_career is None and hasattr(self, 'careersData') and self.careersData:
-            for career in self.careersData:
-                # Check if search term is contained in title or name
-                if 'title' in career and search_title in career['title'].lower():
-                    target_career = career
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Found career in careersData by title substring: {search_title} in {career['title'].lower()}\n")
-                    break
-                elif 'name' in career and search_title in career['name'].lower():
-                    target_career = career
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Found career in careersData by name substring: {search_title} in {career['name'].lower()}\n")
-                    break
-        
-        # Method 4: Fall back to searching in the input_data
-        if target_career is None and hasattr(self, 'input_data') and self.input_data:
-            careers_data = self.input_data.get('careersData', [])
-            # First try exact matching
-            for career in careers_data:
-                if 'title' in career and career['title'].lower().strip() == search_title:
-                    target_career = career
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Found career in input_data.careersData by title: {search_title}\n")
-                    break
-                elif 'name' in career and career['name'].lower().strip() == search_title:
-                    target_career = career
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Found career in input_data.careersData by name: {search_title}\n")
-                    break
-            
-            # Then try substring matching
-            if target_career is None:
-                for career in careers_data:
-                    if 'title' in career and search_title in career['title'].lower():
-                        target_career = career
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Found career in input_data.careersData by title substring: {search_title}\n")
-                        break
-                    elif 'name' in career and search_title in career['name'].lower():
-                        target_career = career
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Found career in input_data.careersData by name substring: {search_title}\n")
-                        break
-        
-        # Log the result
-        with open('healthcare_debug.log', 'a') as f:
-            if target_career:
-                title_or_name = target_career.get('title', target_career.get('name', 'Unknown'))
-                f.write(f"SUCCESS: Found career data for '{search_title}' => '{title_or_name}'\n")
-            else:
-                f.write(f"FAILED: Could not find career data for '{search_title}'\n")
-        
-        return target_career
     
     @classmethod
     def from_input_data(cls, input_data: Dict[str, Any]) -> 'FinancialCalculator':
