@@ -689,22 +689,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }))
         );
         
-        // Also log to file for more permanent tracking
-        try {
-          const fs = require('fs');
-          fs.appendFileSync(
-            'milestone_debug.log', 
-            `\n${new Date().toISOString()} - MILESTONE DEBUG (routes.ts):\n${JSON.stringify(
-              updatedInputData.milestones.map((milestone: any) => ({
-                type: milestone.type,
-                year: milestone.year,
-                workStatus: milestone.workStatus,
-                workStatusType: typeof milestone.workStatus
-              })), null, 2)}\n`
-          );
-        } catch (logError) {
-          console.error("Error writing to milestone debug log:", logError);
-        }
+        // Console log is sufficient for debugging, skip file logging
+        // We removed file logging because of the require error in ESM context
       }
       
       // Direct Python execution without temporary files
