@@ -1034,6 +1034,16 @@ class FinancialCalculator:
             debt_expenses_yearly[i] += year_debt
             discretionary_expenses_yearly[i] = year_discretionary
         
+        # NEW DEBUG LOG: Write out all milestones at the start
+        with open('education_income_debug.log', 'a') as f:
+            f.write("\n\n===== STARTING MILESTONE PROCESSING =====\n")
+            f.write(f"Total milestones to process: {len(self.milestones)}\n")
+            for i, m in enumerate(self.milestones):
+                f.write(f"Milestone {i+1}: Type={m.get('type')}, Year/YearsAway={m.get('year', m.get('yearsAway', 'unknown'))}\n")
+                if m.get('type') == 'education':
+                    f.write(f"  Education details: workStatus={m.get('workStatus', 'unknown')}, years={m.get('years', m.get('educationYears', 'unknown'))}\n")
+                    f.write(f"  Full milestone data: {m}\n")
+        
         # Process milestones
         if self.milestones:
             # Create a simpler array of just the years for each milestone
@@ -1057,11 +1067,12 @@ class FinancialCalculator:
                     
                 # Debug education milestone year mapping
                 if milestone.get('type') == 'education':
-                    with open('healthcare_debug.log', 'a') as f:
+                    with open('education_income_debug.log', 'a') as f:
                         f.write(f"\nEducation milestone mapped to year {year}:\n")
                         f.write(f"- Original data: {milestone}\n")
                         f.write(f"- 'year' present: {'year' in milestone}\n")
                         f.write(f"- 'yearsAway' present: {'yearsAway' in milestone}\n")
+                        f.write(f"- 'workStatus' value: {milestone.get('workStatus', 'not present')}\n")
             
             # Process each milestone in chronological order
             for year in sorted(milestone_years.keys()):
@@ -1760,29 +1771,68 @@ class FinancialCalculator:
                                 # Add to total expenses
                                 expenses_yearly[year_index] += annual_out_of_pocket
                                 
+                                # Add debug log of work status value and type
+                                with open('education_income_debug.log', 'a') as f:
+                                    f.write(f"\n===== WORK STATUS CHECK FOR YEAR {year_index} =====\n")
+                                    f.write(f"Work status value: '{work_status}'\n")
+                                    f.write(f"Work status type: {type(work_status)}\n")
+                                    if isinstance(work_status, str):
+                                        f.write(f"Work status lowercase: '{work_status.lower()}'\n")
+                                
                                 # Handle income based on work status during education
-                                if work_status == 'no':
+                                # Check for various forms of "no" including case differences and None/null
+                                no_work_values = ['no', 'false', 'null', 'none', '0', 'n', '']
+                                is_not_working = (
+                                    (isinstance(work_status, str) and work_status.lower() in no_work_values) or
+                                    work_status is False or work_status is None or work_status == 0
+                                )
+                                
+                                with open('education_income_debug.log', 'a') as f:
+                                    f.write(f"Is not working evaluation: {is_not_working}\n")
+                                
+                                if is_not_working:
                                     # Not working during education - set income to zero
                                     original_income = income_yearly[year_index]
-                                    income_yearly[year_index] = 0
-                                    total_income_yearly[year_index] = spouse_income_yearly[year_index]  # Only spouse income (if any)
                                     
+                                    # IMPORTANT FIX: Zero out income and ensure it stays zeroed
+                                    income_yearly[year_index] = 0
+                                    
+                                    # Make sure total income only includes spouse income (if any)
+                                    total_income_yearly[year_index] = spouse_income_yearly[year_index]
+                                    
+                                    # Record in education income debug log
+                                    with open('education_income_debug.log', 'a') as f:
+                                        f.write(f"\n===== ZEROING INCOME IN YEAR {year_index} =====\n")
+                                        f.write(f"Education milestone in progress (workStatus={work_status})\n")
+                                        f.write(f"Original income was: ${original_income}\n")
+                                        f.write(f"Setting income to $0\n")
+                                        f.write(f"Income after setting: ${income_yearly[year_index]}\n")
+                                        f.write(f"Total income for this year: ${total_income_yearly[year_index]}\n")
+                                    
+                                    # Also write to healthcare_debug.log for backward compatibility
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"Year {year_index}: Setting income to $0 (not working during education)\n")
                                         f.write(f"Original income was: ${original_income}\n")
                                 
-                                elif work_status == 'part-time':
+                                elif isinstance(work_status, str) and work_status.lower() == 'part-time':
                                     # Working part-time during education
                                     original_income = income_yearly[year_index]
                                     income_yearly[year_index] = part_time_income
                                     total_income_yearly[year_index] = part_time_income + spouse_income_yearly[year_index]
                                     
+                                    with open('education_income_debug.log', 'a') as f:
+                                        f.write(f"\n===== PART-TIME INCOME IN YEAR {year_index} =====\n")
+                                        f.write(f"Education milestone in progress (workStatus=part-time)\n")
+                                        f.write(f"Original income was: ${original_income}\n")
+                                        f.write(f"Setting income to ${part_time_income}\n")
+                                    
+                                    # Also write to healthcare_debug.log for backward compatibility
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"Year {year_index}: Setting income to ${part_time_income} (part-time during education)\n")
                                         f.write(f"Original income was: ${original_income}\n")
                                 
                                 # Full-time work keeps the normal income (no adjustment needed)
-                                elif work_status == 'full-time':
+                                elif isinstance(work_status, str) and work_status.lower() == 'full-time':
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"Year {year_index}: Keeping full income of ${income_yearly[year_index]} (full-time during education)\n")
                                 
@@ -1877,13 +1927,29 @@ class FinancialCalculator:
                         
                         # Create a tracking set of years when the person is in education with work_status="no"
                         no_income_education_years = set()
-                        if work_status == 'no':
+                        
+                        # Use the same condition we used earlier for checking if not working
+                        no_work_values = ['no', 'false', 'null', 'none', '0', 'n', '']
+                        is_not_working = (
+                            (isinstance(work_status, str) and work_status.lower() in no_work_values) or
+                            work_status is False or work_status is None or work_status == 0
+                        )
+                        
+                        if is_not_working:
                             # Add all education years to the tracking set - making sure we use the actual milestone_year
                             for edu_yr in range(education_years):
                                 year_idx = milestone_year + edu_yr  # This gives the absolute year index
                                 if year_idx <= self.years_to_project:
                                     no_income_education_years.add(year_idx)
                             
+                            with open('education_income_debug.log', 'a') as f:
+                                f.write(f"\n===== TRACKING EDUCATION YEARS WITH NO INCOME =====\n")
+                                f.write(f"Milestone year: {milestone_year}\n")
+                                f.write(f"Education years: {education_years}\n")
+                                f.write(f"Years with no income: {sorted(list(no_income_education_years))}\n")
+                                f.write(f"Work status value: '{work_status}'\n")
+                            
+                            # Also write to healthcare_debug.log for backward compatibility
                             with open('healthcare_debug.log', 'a') as f:
                                 # Debug why this might be wrong
                                 f.write(f"\nEducation details for tracking:\n")
