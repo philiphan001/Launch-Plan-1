@@ -677,6 +677,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the inputs for debugging
       console.log("Running financial calculation with input:", JSON.stringify(updatedInputData).substring(0, 200) + "...");
       
+      // Debug milestone data - especially workStatus values
+      if (updatedInputData.milestones && updatedInputData.milestones.length > 0) {
+        // Log milestone workStatus details to server console
+        console.log("MILESTONE DEBUG (in routes.ts):", 
+          updatedInputData.milestones.map((milestone: any) => ({
+            type: milestone.type,
+            year: milestone.year,
+            workStatus: milestone.workStatus,
+            workStatusType: typeof milestone.workStatus
+          }))
+        );
+        
+        // Also log to file for more permanent tracking
+        try {
+          const fs = require('fs');
+          fs.appendFileSync(
+            'milestone_debug.log', 
+            `\n${new Date().toISOString()} - MILESTONE DEBUG (routes.ts):\n${JSON.stringify(
+              updatedInputData.milestones.map((milestone: any) => ({
+                type: milestone.type,
+                year: milestone.year,
+                workStatus: milestone.workStatus,
+                workStatusType: typeof milestone.workStatus
+              })), null, 2)}\n`
+          );
+        } catch (logError) {
+          console.error("Error writing to milestone debug log:", logError);
+        }
+      }
+      
       // Direct Python execution without temporary files
       const pythonProcess = spawn("python3", [pythonScriptPath], {
         env: { ...process.env },

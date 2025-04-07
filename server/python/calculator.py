@@ -97,10 +97,16 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
                 
                 # Check for required fields and set defaults if missing
                 # But carefully preserve 'no', 'false', and other valid values
-                if 'workStatus' not in milestone or milestone['workStatus'] is None:
-                    milestone['workStatus'] = 'full-time'
+                if 'workStatus' not in milestone:
+                    # Only set default if field is completely missing
+                    milestone['workStatus'] = 'no'  # Changed default to 'no' instead of 'full-time'
                     with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Added default workStatus: 'full-time'\n")
+                        f.write(f"Added default workStatus (missing): 'no'\n")
+                # If it's None, set a default value
+                elif milestone['workStatus'] is None:
+                    milestone['workStatus'] = 'no'  # Changed default to 'no' instead of 'full-time'
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Added default workStatus (None): 'no'\n")
                 # If it's an empty string, also set a default
                 elif milestone['workStatus'] == '':
                     milestone['workStatus'] = 'no'  # Empty string is treated as "no"
@@ -108,7 +114,8 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
                         f.write(f"Empty workStatus converted to: 'no'\n")
                 # Debug: Force string conversion for non-None values to ensure consistent type
                 elif milestone['workStatus'] is not None:
-                    milestone['workStatus'] = str(milestone['workStatus'])
+                    # If workStatus is something else like boolean or number, convert to string
+                    milestone['workStatus'] = str(milestone['workStatus']).lower()
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"Force converted workStatus to string: {milestone['workStatus']}\n")
                 

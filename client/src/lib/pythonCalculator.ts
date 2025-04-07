@@ -192,9 +192,18 @@ export const generatePythonCalculatorInput = (
     // Extract milestone type and yearsAway
     const { type, yearsAway, ...rest } = milestone;
     
+    // Debug: Log the raw milestone data before formatting
+    if (type === 'education') {
+      console.log('DEBUG - Education milestone before formatting:', {
+        workStatus: milestone.workStatus,
+        workStatusType: typeof milestone.workStatus,
+        milestone: JSON.stringify(milestone)
+      });
+    }
+    
     // Create a new milestone object with year property instead of yearsAway
     // Make sure we have all the required fields for the education milestone type
-    return {
+    const formattedMilestone = {
       type,
       year: yearsAway ?? 0,
       ...rest,
@@ -205,6 +214,16 @@ export const generatePythonCalculatorInput = (
       returnToSameProfession: milestone.returnToSameProfession !== undefined ? milestone.returnToSameProfession : true,
       details: milestone.details || {}
     };
+    
+    // Debug: Log the formatted milestone data after formatting
+    if (type === 'education') {
+      console.log('DEBUG - Education milestone after formatting:', {
+        workStatus: formattedMilestone.workStatus,
+        workStatusType: typeof formattedMilestone.workStatus
+      });
+    }
+    
+    return formattedMilestone;
   });
   
   // Calculate total annual expenses if location data is available
@@ -400,6 +419,18 @@ export const generatePythonCalculatorInput = (
 // Call the Python calculator API
 export const calculateFinancialProjection = async (inputData: CalculatorInputData): Promise<FinancialProjectionData> => {
   try {
+    // Enhanced debugging: Focus on milestone data
+    if (inputData.milestones && inputData.milestones.length > 0) {
+      console.log("MILESTONE DEBUG - Before sending to API:", 
+        inputData.milestones.map(milestone => ({
+          type: milestone.type,
+          year: milestone.year,
+          workStatus: milestone.workStatus,
+          workStatusType: typeof milestone.workStatus
+        }))
+      );
+    }
+    
     console.log("Sending data to Python calculator:", inputData);
     
     // Call the Python calculator API
