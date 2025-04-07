@@ -17,7 +17,7 @@ import {
   assumptions, type Assumption, type InsertAssumption, defaultAssumptions
 } from "@shared/schema";
 import { IStorage } from './storage';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 
 export class PgStorage implements IStorage {
   // User methods
@@ -72,6 +72,69 @@ export class PgStorage implements IStorage {
   async getColleges(): Promise<College[]> {
     const result = await db.select().from(colleges);
     console.log(`Retrieved ${result.length} colleges from database. First college:`, result[0]);
+    return result;
+  }
+  
+  async searchColleges(query: string, educationType?: string): Promise<College[]> {
+    if (!query || query.length < 2) {
+      return [];
+    }
+    
+    const lowerQuery = `%${query.toLowerCase()}%`;
+    
+    let conditions = [
+      or(
+        sql`LOWER(${colleges.name}) LIKE ${lowerQuery}`,
+        sql`LOWER(${colleges.location}) LIKE ${lowerQuery}`
+      )
+    ];
+    
+    // Add education type filter if provided
+    if (educationType) {
+      let typeCondition;
+      
+      // For education types from the pathways component
+      switch (educationType) {
+        case '4year':
+          typeCondition = or(
+            sql`LOWER(${colleges.type}) LIKE '%research%'`,
+            sql`LOWER(${colleges.type}) LIKE '%university%'`,
+            sql`LOWER(${colleges.type}) LIKE '%4-year%'`,
+            sql`LOWER(${colleges.type}) LIKE '%4 year%'`
+          );
+          break;
+        case '2year':
+          typeCondition = or(
+            sql`LOWER(${colleges.type}) LIKE '%community%'`,
+            sql`LOWER(${colleges.type}) LIKE '%2-year%'`,
+            sql`LOWER(${colleges.type}) LIKE '%2 year%'`,
+            sql`LOWER(${colleges.type}) LIKE '%junior%'`
+          );
+          break;
+        case 'vocational':
+          typeCondition = or(
+            sql`LOWER(${colleges.type}) LIKE '%vocational%'`,
+            sql`LOWER(${colleges.type}) LIKE '%technical%'`,
+            sql`LOWER(${colleges.type}) LIKE '%trade%'`,
+            sql`LOWER(${colleges.type}) LIKE '%career%'`
+          );
+          break;
+        default:
+          // If we don't recognize the education type, don't filter by it
+          typeCondition = null;
+      }
+      
+      if (typeCondition) {
+        conditions.push(typeCondition);
+      }
+    }
+    
+    // Search by name or location, and filter by education type if provided
+    const result = await db.select().from(colleges)
+      .where(and(...conditions))
+      .limit(10);
+    
+    console.log(`Found ${result.length} colleges matching query "${query}" ${educationType ? `with education type "${educationType}"` : ''}`);
     return result;
   }
   

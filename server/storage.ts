@@ -33,6 +33,7 @@ export interface IStorage {
   // College methods
   getCollege(id: number): Promise<College | undefined>;
   getColleges(): Promise<College[]>;
+  searchColleges(query: string, educationType?: string): Promise<College[]>;
   createCollege(college: InsertCollege): Promise<College>;
   
   // Career methods
@@ -388,6 +389,56 @@ export class MemStorage implements IStorage {
   
   async getColleges(): Promise<College[]> {
     return Array.from(this.colleges.values());
+  }
+  
+  async searchColleges(query: string, educationType?: string): Promise<College[]> {
+    if (!query || query.length < 2) {
+      return [];
+    }
+    
+    const searchQuery = query.toLowerCase().trim();
+    let colleges = Array.from(this.colleges.values());
+    
+    // First filter by education type if provided
+    if (educationType) {
+      colleges = colleges.filter(college => {
+        if (!college.type) return false;
+        
+        // For education types, we'll do a fuzzy match
+        const collegeType = college.type.toLowerCase();
+        
+        // Map the education type from pathways to college types in our data
+        switch (educationType) {
+          case '4year':
+            return collegeType.includes('research') || 
+                  collegeType.includes('university') || 
+                  collegeType.includes('4-year') ||
+                  collegeType.includes('4 year');
+          case '2year':
+            return collegeType.includes('community') || 
+                  collegeType.includes('2-year') || 
+                  collegeType.includes('2 year') || 
+                  collegeType.includes('junior');
+          case 'vocational':
+            return collegeType.includes('vocational') || 
+                  collegeType.includes('technical') || 
+                  collegeType.includes('trade') || 
+                  collegeType.includes('career');
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Then filter by search query
+    return colleges.filter(college => {
+      if (!college.name) return false;
+      
+      const collegeName = college.name.toLowerCase();
+      const collegeLocation = college.location ? college.location.toLowerCase() : '';
+      
+      return collegeName.includes(searchQuery) || collegeLocation.includes(searchQuery);
+    });
   }
   
   async createCollege(insertCollege: InsertCollege): Promise<College> {

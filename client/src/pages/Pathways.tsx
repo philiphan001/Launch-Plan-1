@@ -106,9 +106,17 @@ const Pathways = () => {
     enabled: !!selectedFieldOfStudy && (currentStep === 5 || currentStep === 6)
   });
   
-  // School search query
-  const { data: searchResults } = useQuery<any[]>({
+  // School search query using our new college search API
+  const { data: searchResults, isLoading: isLoadingSearch } = useQuery<any[]>({
     queryKey: ['/api/colleges/search', searchQuery],
+    queryFn: async () => {
+      if (!searchQuery || searchQuery.length < 2) return [];
+      const response = await fetch(`/api/colleges/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) {
+        throw new Error('Failed to search colleges');
+      }
+      return response.json();
+    },
     enabled: !!searchQuery && searchQuery.length > 2
   });
 
@@ -1145,31 +1153,37 @@ const Pathways = () => {
             >
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <p className="text-gray-600">If you do, please enter/search here:</p>
-                  <div className="flex items-center space-x-2">
-                    <Input 
-                      type="text" 
-                      placeholder="Type school name..." 
-                      value={searchQuery}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        setSearchQuery(e.target.value);
-                        setHasSpecificSchool(true);
-                      }}
-                      className="flex-1"
-                    />
-                    <Button variant="outline" type="button">Search</Button>
+                  <div className="mb-4">
+                    <p className="text-gray-600 mb-2">Search for your school:</p>
+                    <div className="flex items-center space-x-2">
+                      <Input 
+                        type="text" 
+                        placeholder="Type school name..." 
+                        value={searchQuery}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setSearchQuery(e.target.value);
+                          setHasSpecificSchool(true);
+                        }}
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                   
-                  {searchQuery.length > 2 && searchResults && (
+                  {searchQuery.length > 2 && (
                     <div className="border rounded-lg divide-y max-h-60 overflow-y-auto">
-                      {Array.isArray(searchResults) && searchResults.length > 0 ? (
+                      {isLoadingSearch ? (
+                        <div className="p-4 text-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                          <p className="text-sm text-gray-500">Searching schools...</p>
+                        </div>
+                      ) : searchResults && Array.isArray(searchResults) && searchResults.length > 0 ? (
                         searchResults.map((school: any) => (
                           <div 
                             key={school.id} 
                             className="p-3 hover:bg-blue-50 cursor-pointer transition-colors"
                             onClick={() => {
                               setSpecificSchool(school.name);
-                              handleNext();
+                              setSearchQuery('');
                             }}
                           >
                             <p className="font-medium">{school.name}</p>
@@ -1178,52 +1192,44 @@ const Pathways = () => {
                         ))
                       ) : (
                         <div className="p-3 text-center text-gray-500">
-                          No schools found. Try a different search term.
+                          {searchQuery.length > 0 ? 'No schools found. Try a different search term.' : 'Type to search for schools'}
                         </div>
                       )}
                     </div>
                   )}
                   
                   {specificSchool && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-                        <div>
-                          <p className="font-medium">Selected School:</p>
-                          <p>{specificSchool}</p>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setSpecificSchool('');
-                            setSearchQuery('');
-                          }}
-                        >
-                          Change
-                        </Button>
+                    <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+                      <div>
+                        <p className="font-medium">Selected School:</p>
+                        <p>{specificSchool}</p>
                       </div>
-                      
                       <Button 
-                        onClick={handleNext} 
-                        className="bg-green-500 hover:bg-green-600 w-full"
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSpecificSchool('');
+                          setSearchQuery('');
+                        }}
                       >
-                        Next: Choose Field of Study
+                        Change
                       </Button>
                     </div>
                   )}
-                </div>
-
-                <div className="mt-6">
-                  <p className="text-gray-600 mb-4">Otherwise, click Next to continue:</p>
-                  <Button 
-                    className="bg-green-500 hover:bg-green-600 text-white"
-                    onClick={() => {
-                      setHasSpecificSchool(false);
-                      handleNext(); // Skip to the field of study selection
-                    }}
-                  >
-                    Next
-                  </Button>
+                  
+                  <div className="mt-6">
+                    <Button 
+                      className="bg-green-500 hover:bg-green-600 text-white w-full"
+                      onClick={() => {
+                        handleNext(); // Continue to the field of study selection
+                      }}
+                    >
+                      Next
+                    </Button>
+                    <p className="text-gray-500 text-sm text-center mt-2">
+                      {specificSchool ? 'Continue to choose your field of study' : 'Otherwise, click Next to continue'}
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="flex justify-between mt-6">

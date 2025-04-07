@@ -170,6 +170,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get colleges", error: error instanceof Error ? error.message : String(error) });
     }
   });
+  
+  // Search endpoint for colleges
+  app.get("/api/colleges/search", async (req: Request, res: Response) => {
+    try {
+      const searchQuery = req.query.q as string;
+      const educationType = req.query.educationType as string;
+      
+      if (!searchQuery || searchQuery.length < 2) {
+        return res.json([]);
+      }
+      
+      console.log(`Searching colleges with query: ${searchQuery}${educationType ? `, education type: ${educationType}` : ''}`);
+      const colleges = await activeStorage.searchColleges(searchQuery, educationType);
+      
+      console.log(`Found ${colleges.length} colleges matching "${searchQuery}"${educationType ? ` with education type "${educationType}"` : ''}`);
+      
+      // Transform and limit results
+      const transformedResults = colleges.slice(0, 10).map(college => ({
+        id: college.id,
+        name: college.name,
+        city: college.location?.split(',')?.[0]?.trim() || '',
+        state: college.state || '',
+        type: college.type
+      }));
+      
+      res.json(transformedResults);
+    } catch (error) {
+      console.error("Error searching colleges:", error);
+      res.status(500).json({ 
+        message: "Failed to search colleges", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
 
   app.get("/api/colleges/:id", async (req: Request, res: Response) => {
     try {
