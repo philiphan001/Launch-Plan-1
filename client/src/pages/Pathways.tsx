@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +15,13 @@ import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
 import { useLocation } from "wouter";
 
 type PathChoice = "education" | "job" | "military" | "gap";
+
+// Create a type specifically for the "education" path
+type EducationPathChoice = "education";
+
+// Other paths
+type OtherPathChoice = "job" | "military" | "gap";
+
 type EducationType = "4year" | "2year" | "vocational" | null;
 type JobType = "fulltime" | "parttime" | "apprenticeship" | null;
 type MilitaryBranch = "army" | "navy" | "airforce" | "marines" | "coastguard" | "spaceguard" | null;
@@ -43,28 +52,27 @@ const Pathways = () => {
   const [, navigate] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPath, setSelectedPath] = useState<PathChoice | null>(null);
+  
+  // A type guard function to check if the path is education
+  const isEducationPath = (path: PathChoice | null): path is EducationPathChoice => {
+    return path === 'education';
+  };
   const [educationType, setEducationType] = useState<EducationType>(null);
   const [jobType, setJobType] = useState<JobType>(null);
   const [militaryBranch, setMilitaryBranch] = useState<MilitaryBranch>(null);
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
+  const [hasSpecificSchool, setHasSpecificSchool] = useState<boolean | null>(null);
+  const [specificSchool, setSpecificSchool] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   
-  // Function to navigate to College Discovery with appropriate filtering
-  const navigateToCollegeDiscovery = (type: EducationType) => {
-    let queryParams = new URLSearchParams();
-    
-    // Set the appropriate school type filter
-    if (type === '4year') {
-      queryParams.set('types', '4-year');
-    } else if (type === '2year') {
-      queryParams.set('types', '2-year');
-    } else if (type === 'vocational') {
-      queryParams.set('types', 'vocational');
-    }
-    
-    // Navigate to College Discovery with the filter applied
-    navigate(`/colleges?${queryParams.toString()}`);
+  // This function will set the education type and advance to the specific school question
+  const selectEducationType = (type: EducationType) => {
+    setEducationType(type);
+    // Move to the school selection step
+    setCurrentStep(4);
   };
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
@@ -84,7 +92,7 @@ const Pathways = () => {
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
     queryKey: ['/api/career-paths'],
-    enabled: currentStep === 4 && educationType === '4year'
+    enabled: currentStep === 6 // Changed from 4 to 6 since we've added two new steps
   });
   
   // Get unique fields of study from the career paths
@@ -95,13 +103,19 @@ const Pathways = () => {
   // Fetch career paths for a specific field when selected
   const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery<CareerPath[]>({
     queryKey: ['/api/career-paths/field', selectedFieldOfStudy],
-    enabled: !!selectedFieldOfStudy && currentStep === 4
+    enabled: !!selectedFieldOfStudy && (currentStep === 5 || currentStep === 6)
+  });
+  
+  // School search query
+  const { data: searchResults } = useQuery<any[]>({
+    queryKey: ['/api/colleges/search', searchQuery],
+    enabled: !!searchQuery && searchQuery.length > 2
   });
 
   const handlePathSelect = (path: PathChoice) => {
     setSelectedPath(path);
     // Automatically set default sub-types based on selection
-    if (path === 'education') {
+    if (isEducationPath(path)) {
       setEducationType('4year'); // Default to 4-year college
     } else if (path === 'job') {
       setJobType('fulltime'); // Default to full-time job
@@ -131,6 +145,10 @@ const Pathways = () => {
     setGapYearActivity(null);
     setNeedsGuidance(null);
     setSelectedFieldOfStudy(null);
+    setHasSpecificSchool(null);
+    setSpecificSchool('');
+    setSearchQuery('');
+    setSelectedProfession(null);
     setExplorationMethod(null);
     setSwipeResults({});
     setWheelResults({});
@@ -401,16 +419,16 @@ const Pathways = () => {
             <Step title="What would you like to do after high school?">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div 
-                  className={`border ${selectedPath === 'education' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  className={`border ${isEducationPath(selectedPath) ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
                   onClick={() => {
                     handlePathSelect('education');
                     handleNext(); // Auto-progress to next step
                   }}
                 >
-                  <div className={`rounded-full ${selectedPath === 'education' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'education' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
+                  <div className={`rounded-full ${isEducationPath(selectedPath) ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${isEducationPath(selectedPath) ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
                     <span className="material-icons">school</span>
                   </div>
-                  <h5 className={`font-medium ${selectedPath === 'education' ? 'text-primary' : ''}`}>Continue Education</h5>
+                  <h5 className={`font-medium ${isEducationPath(selectedPath) ? 'text-primary' : ''}`}>Continue Education</h5>
                   <p className="text-sm text-gray-600 mt-1">Pursue college or other learning</p>
                 </div>
                 
@@ -825,16 +843,13 @@ const Pathways = () => {
               </Card>
             </Step>
           );
-        } else if (selectedPath === 'education') {
+        } else if (isEducationPath(selectedPath)) {
           return (
             <Step title="What type of education are you interested in?">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div 
                   className={`border ${educationType === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setEducationType('4year');
-                    navigateToCollegeDiscovery('4year');
-                  }}
+                  onClick={() => selectEducationType('4year')}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -849,10 +864,7 @@ const Pathways = () => {
                 
                 <div 
                   className={`border ${educationType === '2year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setEducationType('2year');
-                    navigateToCollegeDiscovery('2year');
-                  }}
+                  onClick={() => selectEducationType('2year')}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === '2year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '2year' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -867,10 +879,7 @@ const Pathways = () => {
                 
                 <div 
                   className={`border ${educationType === 'vocational' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setEducationType('vocational');
-                    navigateToCollegeDiscovery('vocational');
-                  }}
+                  onClick={() => selectEducationType('vocational')}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${educationType === 'vocational' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === 'vocational' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -1127,9 +1136,130 @@ const Pathways = () => {
         return null;
       
       case 4:
-        if (educationType === '4year') {
+        // Do you have a specific school in mind?
+        if (isEducationPath(selectedPath) && educationType) {
           return (
-            <Step title="Explore Career Paths by Field of Study" subtitle="Select a field of study to see potential career paths">
+            <Step 
+              title="Do you have a specific school in mind?" 
+              subtitle={`Finding the right ${educationType === '4year' ? '4-year college' : educationType === '2year' ? '2-year college' : 'vocational school'} for you`}
+            >
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card 
+                    className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${hasSpecificSchool === true ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                    onClick={() => {
+                      setHasSpecificSchool(true);
+                    }}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">check_circle</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Yes, I do</h3>
+                      <p className="text-sm text-gray-600">I know which school I want to attend</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${hasSpecificSchool === false ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                    onClick={() => {
+                      setHasSpecificSchool(false);
+                      handleNext(); // Skip to the field of study selection
+                    }}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-orange-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">school</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">No, help me find one</h3>
+                      <p className="text-sm text-gray-600">I'd like to explore school options</p>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {hasSpecificSchool && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-3">Search for your school</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Input 
+                          type="text" 
+                          placeholder="Type school name..." 
+                          value={searchQuery}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Button variant="outline" type="button">Search</Button>
+                      </div>
+                      
+                      {searchQuery.length > 2 && searchResults && (
+                        <div className="border rounded-lg divide-y max-h-60 overflow-y-auto">
+                          {Array.isArray(searchResults) && searchResults.length > 0 ? (
+                            searchResults.map((school: any) => (
+                              <div 
+                                key={school.id} 
+                                className="p-3 hover:bg-blue-50 cursor-pointer transition-colors"
+                                onClick={() => {
+                                  setSpecificSchool(school.name);
+                                  handleNext();
+                                }}
+                              >
+                                <p className="font-medium">{school.name}</p>
+                                <p className="text-sm text-gray-600">{school.city}, {school.state}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-3 text-center text-gray-500">
+                              No schools found. Try a different search term.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {specificSchool && (
+                        <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
+                          <div>
+                            <p className="font-medium">Selected School:</p>
+                            <p>{specificSchool}</p>
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSpecificSchool('');
+                              setSearchQuery('');
+                            }}
+                          >
+                            Change
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {specificSchool && (
+                        <Button 
+                          onClick={handleNext} 
+                          className="bg-green-500 hover:bg-green-600 w-full"
+                        >
+                          Next: Choose Field of Study
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                </div>
+              </div>
+            </Step>
+          );
+        }
+      
+      case 5:
+        // Field of Study selection step
+        if (isEducationPath(selectedPath)) {
+          return (
+            <Step title="What would you like to study?" subtitle="Choose a field of study that interests you">
               <Card>
                 <CardContent className="p-6">
                   {isLoadingAllPaths ? (
@@ -1192,7 +1322,14 @@ const Pathways = () => {
                       
                       <div className="flex justify-between mt-6">
                         <Button variant="outline" onClick={handleBack}>Back</Button>
-                        <Button onClick={handleRestartExploration}>Explore Another Path</Button>
+                        {selectedFieldOfStudy && (
+                          <Button 
+                            onClick={handleNext}
+                            className="bg-green-500 hover:bg-green-600"
+                          >
+                            Next: Choose Profession
+                          </Button>
+                        )}
                       </div>
                     </>
                   )}
@@ -1211,8 +1348,9 @@ const Pathways = () => {
                     </div>
                     <h3 className="text-xl font-medium mb-2">You've chosen your path!</h3>
                     <p className="text-gray-600">
-                      {selectedPath === 'education' && educationType === '2year' && 'Pursuing a 2-year college degree can be a great way to enter the workforce quickly or transfer to a 4-year program later.'}
-                      {selectedPath === 'education' && educationType === 'vocational' && 'Vocational training provides specialized skills that are in high demand in many industries.'}
+                      {isEducationPath(selectedPath) && educationType === '4year' && 'Pursuing a 4-year college degree can open up many career opportunities and provide a well-rounded education.'}
+                      {isEducationPath(selectedPath) && educationType === '2year' && 'Pursuing a 2-year college degree can be a great way to enter the workforce quickly or transfer to a 4-year program later.'}
+                      {isEducationPath(selectedPath) && educationType === 'vocational' && 'Vocational training provides specialized skills that are in high demand in many industries.'}
                       {selectedPath === 'job' && 'Entering the workforce directly can provide valuable experience and help you save money.'}
                       {selectedPath === 'military' && 'Military service offers training, education benefits, and the opportunity to serve your country.'}
                       {selectedPath === 'gap' && 'A gap year can provide time for personal growth and clarity about your future goals.'}
@@ -1222,7 +1360,20 @@ const Pathways = () => {
                   <div className="space-y-4 mb-6">
                     <h4 className="font-medium">Resources to explore:</h4>
                     <ul className="space-y-2 text-sm">
-                      {selectedPath === 'education' && educationType === '2year' && (
+                      {isEducationPath(selectedPath) && educationType === '4year' && (
+                        <>
+                          <li className="flex items-start">
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>College Search: Find the right university for you</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
+                            <span>Financial Aid Resources: Learn about scholarships and grants</span>
+                          </li>
+                        </>
+                      )}
+                      
+                      {isEducationPath(selectedPath) && educationType === '2year' && (
                         <>
                           <li className="flex items-start">
                             <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
@@ -1235,7 +1386,7 @@ const Pathways = () => {
                         </>
                       )}
                       
-                      {selectedPath === 'education' && educationType === 'vocational' && (
+                      {isEducationPath(selectedPath) && educationType === 'vocational' && (
                         <>
                           <li className="flex items-start">
                             <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
@@ -1299,6 +1450,72 @@ const Pathways = () => {
           );
         }
       
+      case 6:
+        // Profession selection step
+        if (isEducationPath(selectedPath) && selectedFieldOfStudy) {
+          return (
+            <Step title="Choose Your Profession" subtitle="Select a career that interests you">
+              <Card>
+                <CardContent className="p-6">
+                  {isLoadingFieldPaths ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-4 text-gray-600">Loading career paths...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-medium mb-4">Careers in {selectedFieldOfStudy}</h3>
+                      
+                      {fieldCareerPaths && Array.isArray(fieldCareerPaths) && fieldCareerPaths.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          {fieldCareerPaths.map((path: CareerPath) => (
+                            <Card 
+                              key={path.id} 
+                              className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                              onClick={() => setSelectedProfession(path.career_title)}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-center">
+                                  <div className={`rounded-full ${selectedProfession === path.career_title ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${selectedProfession === path.career_title ? 'text-white' : 'text-gray-600'} mr-3 flex-shrink-0`}>
+                                    <span className="material-icons text-sm">work</span>
+                                  </div>
+                                  <div>
+                                    <h5 className={`font-medium ${selectedProfession === path.career_title ? 'text-primary' : ''}`}>{path.career_title}</h5>
+                                    <p className="text-sm text-gray-600">Rank: {path.option_rank}</p>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 border rounded-lg mb-6">
+                          <p className="text-gray-500">No career paths found for this field of study</p>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between mt-6">
+                        <Button variant="outline" onClick={handleBack}>Back</Button>
+                        {selectedProfession && (
+                          <Button 
+                            className="bg-green-500 hover:bg-green-600"
+                            onClick={() => {
+                              // Redirect to milestones or financial planner here
+                              navigate('/calculator');
+                            }}
+                          >
+                            Create Financial Plan
+                          </Button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </Step>
+          );
+        }
+      
       default:
         return null;
     }
@@ -1324,6 +1541,14 @@ const Pathways = () => {
         <div className={`h-1 flex-1 ${currentStep >= 4 ? 'bg-primary' : 'bg-gray-200'}`}></div>
         <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 4 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
           4
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 5 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 5 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          5
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 6 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 6 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          6
         </div>
       </div>
       
