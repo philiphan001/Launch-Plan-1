@@ -184,7 +184,7 @@ const Pathways = () => {
                 }}
               >
                 <CardContent className="p-6 text-center">
-                  <div className="rounded-full bg-secondary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                  <div className="rounded-full bg-orange-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
                     <span className="material-icons text-2xl">help_outline</span>
                   </div>
                   <h3 className="text-lg font-medium mb-2">Help me with ideas</h3>
