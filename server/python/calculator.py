@@ -80,11 +80,22 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
                     f.write(f"\n==== Preprocessing Education Milestone {i} ====\n")
                     f.write(f"Milestone data: {milestone}\n")
                 
+                # Log the workStatus value and type for debugging
+                with open('healthcare_debug.log', 'a') as f:
+                    work_status = milestone.get('workStatus')
+                    f.write(f"Original workStatus: {work_status} (type: {type(work_status).__name__})\n")
+                
                 # Check for required fields and set defaults if missing
+                # But preserve 'no', 'false', and other valid values
                 if 'workStatus' not in milestone or milestone['workStatus'] is None:
                     milestone['workStatus'] = 'full-time'
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"Added default workStatus: 'full-time'\n")
+                # If it's an empty string, also set a default
+                elif milestone['workStatus'] == '':
+                    milestone['workStatus'] = 'no'  # Empty string is treated as "no"
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Empty workStatus converted to: 'no'\n")
                 
                 if 'partTimeIncome' not in milestone or milestone['partTimeIncome'] is None:
                     milestone['partTimeIncome'] = 20000
