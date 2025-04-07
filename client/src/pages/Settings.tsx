@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SavedCalculationsSection from "@/components/profile/SavedCalculationsSection";
 import LaunchPlanAssumptionsCard from "@/components/assumptions/LaunchPlanAssumptionsCard";
+import { Rocket } from "lucide-react";
 
 // Types for the favorites
 type FavoriteCollege = {
@@ -196,7 +197,7 @@ const Settings = () => {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="financial">Financial Profile</TabsTrigger>
           <TabsTrigger value="favorites">My Favorites</TabsTrigger>
-          <TabsTrigger value="assumptions">Launch Plan Assumptions</TabsTrigger>
+          <TabsTrigger value="assumptions">Launch Plan</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
         
@@ -609,6 +610,10 @@ const Settings = () => {
         
         <TabsContent value="assumptions">
           <div className="space-y-6">
+            <div className="flex items-center mb-4">
+              <Rocket className="h-6 w-6 text-green-500 mr-2" />
+              <h2 className="text-xl font-semibold">Launch Plan</h2>
+            </div>
             <LaunchPlanAssumptionsCard />
           </div>
         </TabsContent>
