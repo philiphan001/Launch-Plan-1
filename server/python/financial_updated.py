@@ -1733,7 +1733,16 @@ class FinancialCalculator:
                         education_annual_loan = int(milestone.get('educationAnnualLoan', milestone.get('educationLoans', 20000)))
                         total_education_cost = education_annual_cost * education_years
                         total_education_loan = education_annual_loan * education_years
+                        # Get the target occupation after graduation - with extra debug
                         target_occupation = milestone.get('targetOccupation', None)
+                        
+                        # Add debugging to log target occupation value
+                        with open('education_income_debug.log', 'a') as f:
+                            f.write(f"\n===== TARGET OCCUPATION DEBUG =====\n")
+                            f.write(f"Raw targetOccupation value: {repr(target_occupation)}\n")
+                            f.write(f"Type: {type(target_occupation).__name__}\n")
+                            if target_occupation:
+                                f.write(f"Value should be passed through to FinancialCalculator.calculate_projection_with_milestones\n")
                         
                         # Get working status during education
                         work_status = milestone.get('workStatus', 'no')  # Options: 'no', 'part-time', 'full-time'
@@ -1742,6 +1751,12 @@ class FinancialCalculator:
                         # Force the value to be a string to avoid type issues
                         if work_status is not None:
                             work_status = str(work_status)
+                            
+                        # Get part-time income with proper type conversion
+                        try:
+                            part_time_income = float(milestone.get('partTimeIncome', 0))
+                        except (TypeError, ValueError):
+                            part_time_income = 0
                         
                         with open('education_income_debug.log', 'a') as f:
                             f.write(f"\n===== EDUCATION MILESTONE INITIAL PROCESSING =====\n")
@@ -1993,6 +2008,13 @@ class FinancialCalculator:
                         # Create a tracking set of years when the person is in education with work_status="no"
                         no_income_education_years = set()
                         
+                        # Add debugging for post-graduation occupation change
+                        with open('education_income_debug.log', 'a') as f:
+                            f.write(f"\n===== POST-GRADUATION OCCUPATION CHANGE DEBUG =====\n")
+                            f.write(f"Graduation year: {graduation_year}\n")
+                            f.write(f"Target occupation: {repr(target_occupation)}\n")
+                            f.write(f"Return to same profession: {return_to_same_profession}\n")
+                        
                         # Add enhanced debugging for workStatus tracking
                         with open('education_income_debug.log', 'a') as f:
                             f.write(f"\n===== TRACKING PHASE: WORK STATUS VALUE DEBUG =====\n")
@@ -2067,8 +2089,17 @@ class FinancialCalculator:
                                         f.write(f"Projected income for year {year}: ${projected_income}\n")
                         
                         # Choose between target occupation or returning to same profession
-                        apply_new_career = target_occupation and not return_to_same_profession
+                        # Make sure we properly check for empty strings in target_occupation
+                        apply_new_career = target_occupation and (isinstance(target_occupation, str) and target_occupation.strip() != "") and not return_to_same_profession
                         apply_same_career_with_boost = return_to_same_profession
+                        
+                        # Additional debugging for career decision
+                        with open('education_income_debug.log', 'a') as f:
+                            f.write(f"\n===== CAREER PATH DECISION =====\n")
+                            f.write(f"Target occupation: {repr(target_occupation)}\n")
+                            f.write(f"Return to same profession: {return_to_same_profession}\n")
+                            f.write(f"Apply new career: {apply_new_career}\n")
+                            f.write(f"Apply same career with boost: {apply_same_career_with_boost}\n")
                         
                         if (apply_new_career or apply_same_career_with_boost) and graduation_year <= self.years_to_project:
                             target_salary = None
