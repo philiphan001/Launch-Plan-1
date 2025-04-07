@@ -377,9 +377,11 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
   const datasets = [];
   
   // Create dataset for regular savings
+  // This is a direct fix to ensure we always display the emergency fund threshold
+  // We use the raw savingsRaw values from the backend which are already protected at the minimum
   datasets.push({
     label: 'Regular Savings',
-    data: regularSavings,
+    data: savingsRaw, // Use the raw values from the backend instead of calculated regularSavings
     backgroundColor: (context: any) => {
       const value = context.raw as number;
       return value >= 0 ? 'rgba(63, 81, 181, 0.7)' : 'rgba(244, 67, 54, 0.7)';
