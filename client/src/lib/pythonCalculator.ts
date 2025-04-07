@@ -365,7 +365,12 @@ export const generatePythonCalculatorInput = (
     expenditures,
     
     // Add milestones for the calculation
-    milestones: formattedMilestones
+    milestones: formattedMilestones,
+    
+    // Add the careers data to be used by the Python calculator
+    // This allows the calculator to look up target occupations for milestone-driven career changes
+    // such as those after graduation from education milestones
+    careersData: window.careersData || []
   };
 };
 
