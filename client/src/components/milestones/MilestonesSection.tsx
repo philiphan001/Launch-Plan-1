@@ -297,7 +297,8 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setTargetOccupation(milestoneToEdit.targetOccupation || "");
         setWorkStatus(milestoneToEdit.workStatus || "no");
         setPartTimeIncome(milestoneToEdit.partTimeIncome || 20000);
-        setReturnToSameProfession(milestoneToEdit.returnToSameProfession || true);
+        // Fix for handling the boolean value correctly - use null check instead of logical OR
+        setReturnToSameProfession(milestoneToEdit.returnToSameProfession !== false);
       }
     } else {
       // This is a new milestone

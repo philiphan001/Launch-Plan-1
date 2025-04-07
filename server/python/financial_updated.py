@@ -1890,7 +1890,29 @@ class FinancialCalculator:
                                 
                                 if target_career and 'salaryMedian' in target_career:
                                     # Use the actual salary from the selected career
-                                    target_salary = int(target_career.get('salaryMedian', 0))
+                                    base_salary = int(target_career.get('salaryMedian', 0))
+                                    
+                                    # Apply inflation from base year to graduation year
+                                    base_year = 2024  # Year of our salary data
+                                    current_year = self.start_age + graduation_year
+                                    years_of_inflation = graduation_year
+                                    salary_inflation_rate = 0.03  # Use the same rate as income growth
+                                    
+                                    # Calculate inflation factor
+                                    inflation_factor = (1 + salary_inflation_rate) ** years_of_inflation
+                                    
+                                    # Apply inflation to get the future starting salary
+                                    target_salary = int(base_salary * inflation_factor)
+                                    
+                                    # Log the inflation adjustment
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"\nApplying inflation adjustment to target salary:\n")
+                                        f.write(f"Base salary (current year): ${base_salary}\n")
+                                        f.write(f"Years of inflation: {years_of_inflation}\n")
+                                        f.write(f"Inflation rate: {salary_inflation_rate*100}%\n")
+                                        f.write(f"Inflation factor: {inflation_factor}\n")
+                                        f.write(f"Inflation-adjusted salary: ${target_salary}\n")
+                                    
                                     # Apply location adjustment if needed
                                     cost_of_living_factor = getattr(self, 'input_data', {}).get('costOfLivingFactor', 1.0)
                                     target_salary = int(target_salary * cost_of_living_factor)
@@ -1931,7 +1953,18 @@ class FinancialCalculator:
                                 
                                 # Apply boost to the original career trajectory
                                 base_income = original_income_trajectory[graduation_year]
+                                
+                                # Apply inflation adjustment since we're comparing to a future projection
+                                # that already has inflation built in (original_income_trajectory)
+                                # Note: We don't need additional inflation factor here since original_income_trajectory
+                                # already contains inflation via its growth projection
                                 target_salary = int(base_income * boost_multiplier)
+                                
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"\nApplying education boost to same career trajectory:\n")
+                                    f.write(f"Base projected income without education: ${base_income}\n")
+                                    f.write(f"Education boost multiplier: {boost_multiplier}\n")
+                                    f.write(f"Boosted salary after education: ${target_salary}\n")
                             
                             with open('healthcare_debug.log', 'a') as f:
                                 if apply_same_career_with_boost:
