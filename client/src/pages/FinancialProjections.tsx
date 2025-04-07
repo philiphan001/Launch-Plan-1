@@ -275,6 +275,27 @@ const FinancialProjections = () => {
     refetchOnWindowFocus: true
   });
   
+  // Get all available careers for reference in milestone processing
+  // This data is needed for salary information when changing careers after graduation
+  const { data: careers, isLoading: isLoadingCareers } = useQuery({
+    queryKey: ['/api/careers'],
+    queryFn: async () => {
+      const response = await fetch('/api/careers');
+      if (!response.ok) throw new Error('Failed to fetch careers');
+      return response.json();
+    }
+  });
+
+  // Make careers data available globally for Python calculator access
+  // This is needed for the targetOccupation functionality in education milestones
+  useEffect(() => {
+    if (careers && careers.length > 0) {
+      // @ts-ignore - Adding global property for Python calculator
+      window.careersData = careers;
+      console.log("Made careers data globally available for Python calculator:", careers.length);
+    }
+  }, [careers]);
+  
   // Create mutation to update financial profile
   const updateFinancialProfileMutation = useMutation({
     mutationFn: async (data: Partial<FinancialProfile>) => {
@@ -457,7 +478,7 @@ const FinancialProjections = () => {
   }, [assumptionsData]);
   
   // Check if data is being loaded
-  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData || isLoadingMilestones || isLoadingAssumptions;
+  const isLoading = isLoadingUser || isLoadingFinancialProfile || isLoadingCollegeCalcs || isLoadingCareerCalcs || isLoadingLocationData || isLoadingMilestones || isLoadingAssumptions || isLoadingCareers;
   
   // Determine years based on timeframe
   const years = timeframe === "5 Years" ? 5 : timeframe === "20 Years" ? 20 : 10;
@@ -1183,6 +1204,12 @@ const FinancialProjections = () => {
           retirementGrowthRate // New parameter: annual growth rate for retirement accounts
         );
         
+        // Add the careers data to the calculator input for post-graduation occupation selection
+        if (careers && careers.length > 0) {
+          pythonInput.careersData = careers;
+          console.log(`Added ${careers.length} careers to Python calculator input for milestone target occupations`);
+        }
+        
         console.log("Sending data to Python calculator:", pythonInput);
         
         // Call the Python calculator and get the results
@@ -1219,7 +1246,7 @@ const FinancialProjections = () => {
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
       spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
-      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate]); // Include all configurable parameters to ensure recalculation when any of them change
+      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers]); // Include all configurable parameters to ensure recalculation when any of them change
   
   // Generate financial advice based on current financial state
   useEffect(() => {

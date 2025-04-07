@@ -14,6 +14,21 @@ export interface CalculatorInputData {
   personalLoanInterestRate?: number; // Annual interest rate for personal loans (decimal format)
   retirementContributionRate?: number; // Percentage of income to contribute to retirement accounts (decimal format)
   retirementGrowthRate?: number; // Annual growth rate for retirement accounts (decimal format)
+  careersData?: Array<{
+    id: number;
+    title: string;
+    description?: string;
+    median_salary?: number;
+    entry_salary?: number;
+    experienced_salary?: number;
+    percentile_10?: number;
+    percentile_25?: number;
+    percentile_75?: number;
+    percentile_90?: number;
+    category?: string;
+    education_required?: string;
+    growth_rate?: number;
+  }>; // List of all available careers for target occupation lookup
   assets: Array<{
     type: string;
     name: string;
@@ -370,7 +385,8 @@ export const generatePythonCalculatorInput = (
     // Add the careers data to be used by the Python calculator
     // This allows the calculator to look up target occupations for milestone-driven career changes
     // such as those after graduation from education milestones
-    careersData: window.careersData || []
+    // Now passed directly as a property by the FinancialProjections component
+    careersData: []
   };
 };
 

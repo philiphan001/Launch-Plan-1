@@ -647,6 +647,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Fetch all careers data to pass to the Python calculator for post-graduation income calculation
+      try {
+        const careersData = await activeStorage.getCareers();
+        if (careersData && careersData.length > 0) {
+          updatedInputData.careersData = careersData;
+          console.log(`Added ${careersData.length} careers to calculator input`);
+        }
+      } catch (careersError) {
+        console.error("Error fetching careers data:", careersError);
+        // Continue without careers data if there's an error
+      }
+      
       // Use path.resolve and the current directory for ESM compatibility
       const pythonScriptPath = path.resolve("server/python/calculator.py");
       
@@ -737,7 +749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prepare input data for the financial calculator
-      const inputData = {
+      const inputData: any = {
         startAge,
         yearsToProject: yearsToProject + 1, // Add 1 to include the target year
         pathType: "baseline",
@@ -783,6 +795,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if the Python script exists
       if (!fs.existsSync(pythonScriptPath)) {
         return res.status(500).json({ message: "Financial calculator script not found", path: pythonScriptPath });
+      }
+      
+      // Fetch all careers data to pass to the Python calculator for post-graduation income calculation
+      try {
+        const careersData = await activeStorage.getCareers();
+        if (careersData && careersData.length > 0) {
+          inputData.careersData = careersData;
+          console.log(`Added ${careersData.length} careers to future savings calculation input`);
+        }
+      } catch (careersError) {
+        console.error("Error fetching careers data for future savings:", careersError);
+        // Continue without careers data if there's an error
       }
       
       // Log the inputs for debugging
