@@ -1234,7 +1234,8 @@ const FinancialProjections = () => {
             // Add fields that TypeScript expects for Milestone type
             workStatus: m.workStatus || null,
             partTimeIncome: m.partTimeIncome || null,
-            returnToSameProfession: m.returnToSameProfession || false,
+            // Only use a default value if returnToSameProfession is undefined - otherwise preserve the actual value
+            returnToSameProfession: m.returnToSameProfession !== undefined ? m.returnToSameProfession : false,
             details: m.details || {}
           }))
         };

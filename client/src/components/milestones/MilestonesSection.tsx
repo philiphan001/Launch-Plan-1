@@ -1305,7 +1305,6 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                   </div>
                 </div>
               )}
-              
               {/* Education specific fields */}
               {currentMilestone === "education" && (
                 <div className="space-y-4 bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-200">

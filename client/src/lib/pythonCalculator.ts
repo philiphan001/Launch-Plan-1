@@ -209,7 +209,8 @@ export const generatePythonCalculatorInput = (
       ...rest,
       // Ensure these fields are present for education milestones
       // Explicitly pass workStatus as a string to ensure it's not null/undefined
-      workStatus: milestone.workStatus !== undefined ? String(milestone.workStatus) : "full-time",
+      // IMPORTANT: we need to preserve the original workStatus value (especially "no")
+      workStatus: milestone.workStatus !== undefined && milestone.workStatus !== null ? String(milestone.workStatus) : "full-time",
       partTimeIncome: milestone.partTimeIncome !== undefined ? Number(milestone.partTimeIncome) : 0,
       targetOccupation: milestone.targetOccupation || "",
       // Handle returnToSameProfession safely - true by default
