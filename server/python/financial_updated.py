@@ -139,6 +139,10 @@ class FinancialCalculator:
         self.input_data: Dict[str, Any] = {}
         # Track tax filing status, which can change with marriage milestone
         self.tax_filing_status = "single"
+        # Career data for education milestone processing
+        self.careersData: List[Dict[str, Any]] = []
+        self.careers_map: Dict[str, Dict[str, Any]] = {}
+        self.careers_id_map: Dict[str, Dict[str, Any]] = {}
         
     def set_start_age(self, start_age: int) -> None:
         """
@@ -1883,38 +1887,66 @@ class FinancialCalculator:
                             if apply_new_career:
                                 # Use target occupation logic - get target occupation data
                                 try:
-                                    # First, check if input_data attribute exists and has careersData
-                                    if hasattr(self, 'input_data') and self.input_data and 'careersData' in self.input_data:
-                                        careers_data = self.input_data.get('careersData', [])
-                                    else:
-                                        # Fallback to empty list if not found
-                                        careers_data = []
-                                        
-                                    # Log information about careers data
+                                    # Check for various ways the career data could be stored
+                                    target_career = None
+                                    
+                                    # Log the search process
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"\nDebug - Looking up career data for target occupation: {target_occupation}\n")
-                                        f.write(f"Has input_data attribute: {hasattr(self, 'input_data')}\n")
+                                        
+                                        # Check for different attributes where career data might be stored
+                                        f.write("Available career data sources:\n")
+                                        f.write(f"  - careers_map attribute: {hasattr(self, 'careers_map')}\n")
+                                        f.write(f"  - careersData attribute: {hasattr(self, 'careersData')}\n")
+                                        f.write(f"  - input_data attribute: {hasattr(self, 'input_data')}\n")
                                         if hasattr(self, 'input_data'):
-                                            f.write(f"input_data keys: {list(self.input_data.keys())}\n")
-                                            f.write(f"Has careersData: {'careersData' in self.input_data}\n")
-                                            f.write(f"Number of careers: {len(careers_data)}\n")
-                                            # Log titles of available careers
-                                            if careers_data:
-                                                f.write("Available career titles:\n")
-                                                for c in careers_data:
-                                                    f.write(f"  - {c.get('title', 'Unknown')}\n")
+                                            f.write(f"    - input_data has careersData: {'careersData' in self.input_data}\n")
                                     
-                                    # Look for the target occupation in careers data
-                                    target_career = None
-                                    for career in careers_data:
-                                        if career.get('title') == target_occupation:
-                                            target_career = career
-                                            break
+                                    # Method 1: Try to find career using the careers_map attribute (fastest)
+                                    if hasattr(self, 'careers_map') and self.careers_map and target_occupation:
+                                        # Try exact match first
+                                        if target_occupation.lower() in self.careers_map:
+                                            target_career = self.careers_map[target_occupation.lower()]
+                                            with open('healthcare_debug.log', 'a') as f:
+                                                f.write(f"Found career in careers_map by exact match: {target_occupation}\n")
+                                    
+                                    # Method 2: Try to find career in the careersData attribute (direct access)
+                                    if target_career is None and hasattr(self, 'careersData') and self.careersData:
+                                        for career in self.careersData:
+                                            career_title = career.get('title', career.get('name', '')).lower()
+                                            if career_title == target_occupation.lower():
+                                                target_career = career
+                                                with open('healthcare_debug.log', 'a') as f:
+                                                    f.write(f"Found career in careersData by direct search: {target_occupation}\n")
+                                                break
+                                    
+                                    # Method 3: Fall back to searching in the input_data
+                                    if target_career is None and hasattr(self, 'input_data') and self.input_data:
+                                        careers_data = self.input_data.get('careersData', [])
+                                        for career in careers_data:
+                                            career_title = career.get('title', career.get('name', '')).lower()
+                                            if career_title == target_occupation.lower():
+                                                target_career = career
+                                                with open('healthcare_debug.log', 'a') as f:
+                                                    f.write(f"Found career in input_data.careersData: {target_occupation}\n")
+                                                break
+                                                
+                                    # Log results of search
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        f.write(f"Target career found: {target_career is not None}\n")
+                                        if target_career:
+                                            f.write(f"Career data: {target_career}\n")
+                                        else:
+                                            f.write(f"FAILED to find career data for: {target_occupation}\n")
+                                            # Fallback for testing purposes
+                                            f.write(f"Will use default salary values\n")
                                             
                                 except Exception as e:
                                     # Log the error but continue with fallback logic
+                                    import traceback
                                     with open('healthcare_debug.log', 'a') as f:
                                         f.write(f"\nError accessing career data: {str(e)}\n")
+                                        f.write(f"Traceback: {traceback.format_exc()}\n")
                                     target_career = None
                                 
                                 # Check for various salary field formats (handling both camelCase and snake_case)
@@ -3290,10 +3322,45 @@ class FinancialCalculator:
         # Store input_data as an instance attribute for future reference by milestone handlers
         calculator.input_data = input_data
         
+        # Store careers data specifically for graduate school milestone processing
+        if 'careersData' in input_data:
+            # Initialize careers database with the input data format
+            calculator.careersData = input_data.get('careersData', [])
+            # Create a careers map for faster lookups by name and ID
+            calculator.careers_map = {}
+            calculator.careers_id_map = {}
+            
+            for career in calculator.careersData:
+                # Handle both camelCase and snake_case field variations
+                career_name = career.get('title', career.get('name', ''))
+                career_id = str(career.get('id', ''))
+                
+                if career_name:
+                    calculator.careers_map[career_name.lower()] = career
+                if career_id:
+                    calculator.careers_id_map[career_id] = career
+            
+            # Log career data loading
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"\nLoaded career data: {len(calculator.careersData)} careers\n")
+                f.write(f"Career map contains {len(calculator.careers_map)} named careers\n")
+                f.write(f"Career ID map contains {len(calculator.careers_id_map)} ID-mapped careers\n")
+                
+                # Log sample of career data structure
+                if calculator.careersData:
+                    sample = calculator.careersData[0]
+                    f.write(f"Sample career data structure: {list(sample.keys())}\n")
+                    f.write(f"Sample career salary fields: ")
+                    for key in ['salary', 'median_salary', 'salaryMedian', 'entry_salary', 'entrySalary', 'entry_level_salary']:
+                        if key in sample:
+                            f.write(f"{key}={sample[key]}, ")
+                    f.write("\n")
+        
         # Add debug logging
         with open('healthcare_debug.log', 'a') as f:
             f.write(f"\nFinancial calculator created from input data\n")
             f.write(f"Stored input_data as instance attribute, contains careersData: {'careersData' in input_data}\n")
+            f.write(f"Calculator has following attributes: {[attr for attr in dir(calculator) if not attr.startswith('_')]}\n")
             
         # Just return the calculator object - don't run calculation here
         # The caller will run calculator.calculate_projection() as needed

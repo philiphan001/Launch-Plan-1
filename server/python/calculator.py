@@ -71,8 +71,54 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dictionary with projection results including location information
     """
-    calculator = FinancialCalculator.from_input_data(input_data)
-    result = calculator.calculate_projection()
+    try:
+        # Check for education milestones with missing fields
+        for i, milestone in enumerate(input_data.get('milestones', [])):
+            if milestone.get('type') == 'education':
+                # Log milestone data for debugging
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"\n==== Preprocessing Education Milestone {i} ====\n")
+                    f.write(f"Milestone data: {milestone}\n")
+                
+                # Check for required fields and set defaults if missing
+                if 'workStatus' not in milestone or milestone['workStatus'] is None:
+                    milestone['workStatus'] = 'full-time'
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Added default workStatus: 'full-time'\n")
+                
+                if 'partTimeIncome' not in milestone or milestone['partTimeIncome'] is None:
+                    milestone['partTimeIncome'] = 20000
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Added default partTimeIncome: 20000\n")
+                
+                if 'returnToSameProfession' not in milestone:
+                    milestone['returnToSameProfession'] = False
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Added default returnToSameProfession: False\n")
+        
+        # Create the calculator instance and store input_data as an attribute
+        calculator = FinancialCalculator.from_input_data(input_data)
+        
+        # Ensure careersData is available to the calculator for milestone processing
+        if 'careersData' in input_data and not hasattr(calculator, 'careersData'):
+            calculator.careersData = input_data.get('careersData', [])
+            with open('healthcare_debug.log', 'a') as f:
+                f.write(f"\nEnsured careersData is available to calculator: {len(calculator.careersData)} careers\n")
+                
+        # Calculate the projection
+        result = calculator.calculate_projection()
+        
+    except Exception as e:
+        # Log detailed error information
+        import traceback
+        with open('healthcare_debug.log', 'a') as f:
+            f.write(f"\n==== CRITICAL ERROR IN BASELINE PROJECTION ====\n")
+            f.write(f"Error: {str(e)}\n")
+            f.write(f"Traceback: {traceback.format_exc()}\n")
+            f.write(f"Input data: {str(input_data)[:500]}...\n")  # Log truncated input data
+        
+        # Re-raise the exception to be caught by the caller
+        raise
     
     # Add location information to the result
     if 'locationData' in input_data:
