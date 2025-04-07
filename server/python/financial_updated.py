@@ -1737,6 +1737,28 @@ class FinancialCalculator:
                         
                         # Get working status during education
                         work_status = milestone.get('workStatus', 'no')  # Options: 'no', 'part-time', 'full-time'
+                        
+                        # Additional safeguards to ensure work_status is properly handled
+                        # Force the value to be a string to avoid type issues
+                        if work_status is not None:
+                            work_status = str(work_status)
+                        
+                        with open('education_income_debug.log', 'a') as f:
+                            f.write(f"\n===== EDUCATION MILESTONE INITIAL PROCESSING =====\n")
+                            f.write(f"Original workStatus value: {type(work_status).__name__}:{work_status}\n")
+                            
+                            # If it's a string, check for specific values and normalization
+                            if isinstance(work_status, str):
+                                normalized = work_status.lower().strip()
+                                f.write(f"Normalized workStatus: '{normalized}'\n")
+                                
+                                # If we get "no" as a string, make sure we keep it exactly as "no"
+                                if normalized == "no":
+                                    work_status = "no"
+                                    f.write(f"Enforcing exact string 'no' for workStatus\n")
+                            
+                            f.write(f"Final workStatus for processing: {type(work_status).__name__}:{work_status}\n")
+                        
                         part_time_income = int(milestone.get('partTimeIncome', 0))
                         return_to_same_profession = milestone.get('returnToSameProfession', True)
                         
@@ -1780,24 +1802,52 @@ class FinancialCalculator:
                                         f.write(f"Work status lowercase: '{work_status.lower()}'\n")
                                 
                                 # Handle income based on work status during education
+                                # Add extended debugging to trace workStatus values through the pipeline
+                                with open('education_income_debug.log', 'a') as f:
+                                    f.write(f"\n===== WORK STATUS ANALYSIS FOR INCOME CALCULATION =====\n")
+                                    f.write(f"Raw work_status value: {repr(work_status)}\n")
+                                    f.write(f"work_status type: {type(work_status).__name__}\n")
+                                    
+                                    # Check for exact "no" match which is most important
+                                    if work_status == "no":
+                                        f.write(f"CRITICAL CHECK: work_status EXACTLY equals the string 'no'\n")
+                                    else:
+                                        f.write(f"work_status does NOT exactly equal the string 'no'\n")
+                                        
+                                        # If it's a string, do character-by-character inspection
+                                        if isinstance(work_status, str):
+                                            f.write(f"Character codes for work_status: {[ord(c) for c in work_status]}\n")
+                                            f.write(f"Character codes for 'no': {[ord(c) for c in 'no']}\n")
+                                
                                 # Check for various forms of "no" including case differences and None/null
                                 # Strip whitespace from string values to avoid issues with extra spaces
                                 no_work_values = ['no', 'false', 'null', 'none', '0', 'n', '']
                                 is_not_working = False
                                 
-                                if isinstance(work_status, str):
+                                # Add special case for exact "no" string match
+                                if work_status == "no":
+                                    is_not_working = True
+                                    with open('education_income_debug.log', 'a') as f:
+                                        f.write(f"EXACT MATCH: work_status is exactly the string 'no'\n")
+                                elif isinstance(work_status, str):
                                     work_status_clean = work_status.lower().strip()
                                     is_not_working = work_status_clean in no_work_values
                                     with open('education_income_debug.log', 'a') as f:
                                         f.write(f"String work status: '{work_status}' cleaned to '{work_status_clean}'\n")
                                         f.write(f"Is in no_work_values: {work_status_clean in no_work_values}\n")
+                                        
+                                        # Debug each value in no_work_values
+                                        f.write("Comparing with each possible 'no' value:\n")
+                                        for val in no_work_values:
+                                            is_equal = work_status_clean == val
+                                            f.write(f"  '{work_status_clean}' == '{val}': {is_equal}\n")
                                 elif work_status is False or work_status is None or work_status == 0:
                                     is_not_working = True
                                     with open('education_income_debug.log', 'a') as f:
                                         f.write(f"Non-string work status detected: {work_status}\n")
                                 
                                 with open('education_income_debug.log', 'a') as f:
-                                    f.write(f"Is not working evaluation: {is_not_working}\n")
+                                    f.write(f"Final determination - Is not working: {is_not_working}\n")
                                 
                                 if is_not_working:
                                     # Not working during education - set income to zero
@@ -1943,20 +1993,36 @@ class FinancialCalculator:
                         # Create a tracking set of years when the person is in education with work_status="no"
                         no_income_education_years = set()
                         
+                        # Add enhanced debugging for workStatus tracking
+                        with open('education_income_debug.log', 'a') as f:
+                            f.write(f"\n===== TRACKING PHASE: WORK STATUS VALUE DEBUG =====\n")
+                            f.write(f"Raw workStatus value: {repr(work_status)}\n")
+                            f.write(f"workStatus type: {type(work_status).__name__}\n")
+                        
                         # Use the same condition we used earlier for checking if not working
                         # Strip whitespace from string values to avoid issues with extra spaces
                         no_work_values = ['no', 'false', 'null', 'none', '0', 'n', '']
                         is_not_working = False
                         
-                        if isinstance(work_status, str):
+                        # Add special case checking for "no" with explicit string equality
+                        if work_status == "no":
+                            is_not_working = True
+                            with open('education_income_debug.log', 'a') as f:
+                                f.write(f"EXACT MATCH: workStatus is exactly 'no' string\n")
+                        elif isinstance(work_status, str):
                             work_status_clean = work_status.lower().strip()
                             is_not_working = work_status_clean in no_work_values
                             with open('education_income_debug.log', 'a') as f:
                                 f.write(f"\n===== TRACKING PHASE: CHECKING WORK STATUS =====\n")
                                 f.write(f"String work status: '{work_status}' cleaned to '{work_status_clean}'\n")
                                 f.write(f"Is in no_work_values: {work_status_clean in no_work_values}\n")
+                                # Additional low-level diagnostics for string comparisons
+                                for val in no_work_values:
+                                    f.write(f"Compare to '{val}': {work_status_clean == val} (ord values: {[ord(c) for c in work_status_clean]} vs {[ord(c) for c in val]})\n")
                         elif work_status is False or work_status is None or work_status == 0:
                             is_not_working = True
+                            with open('education_income_debug.log', 'a') as f:
+                                f.write(f"Non-string work_status: {work_status} is treated as not working\n")
                         
                         if is_not_working:
                             # Add all education years to the tracking set - making sure we use the actual milestone_year

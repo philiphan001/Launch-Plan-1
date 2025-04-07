@@ -85,8 +85,18 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
                     work_status = milestone.get('workStatus')
                     f.write(f"Original workStatus: {work_status} (type: {type(work_status).__name__})\n")
                 
+                # Enhanced logging to diagnose workStatus issues
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Debug workStatus issue: Original value={work_status}, Type={type(work_status).__name__}, isNone={work_status is None}, isEmpty={work_status == ''}, isString={isinstance(work_status, str)}\n")
+                    
+                    # Debug string equality comparison
+                    if isinstance(work_status, str):
+                        f.write(f"String comparison diagnostics: equals 'no'={work_status == 'no'}, equals 'full-time'={work_status == 'full-time'}, length={len(work_status)}\n")
+                        # Check for hidden characters or encoding issues
+                        f.write(f"Character codes: {[ord(c) for c in work_status]}\n")
+                
                 # Check for required fields and set defaults if missing
-                # But preserve 'no', 'false', and other valid values
+                # But carefully preserve 'no', 'false', and other valid values
                 if 'workStatus' not in milestone or milestone['workStatus'] is None:
                     milestone['workStatus'] = 'full-time'
                     with open('healthcare_debug.log', 'a') as f:
@@ -96,6 +106,11 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
                     milestone['workStatus'] = 'no'  # Empty string is treated as "no"
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"Empty workStatus converted to: 'no'\n")
+                # Debug: Force string conversion for non-None values to ensure consistent type
+                elif milestone['workStatus'] is not None:
+                    milestone['workStatus'] = str(milestone['workStatus'])
+                    with open('healthcare_debug.log', 'a') as f:
+                        f.write(f"Force converted workStatus to string: {milestone['workStatus']}\n")
                 
                 if 'partTimeIncome' not in milestone or milestone['partTimeIncome'] is None:
                     milestone['partTimeIncome'] = 20000
