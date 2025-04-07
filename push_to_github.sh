@@ -1,9 +1,16 @@
 #!/bin/bash
-echo "Pushing to GitHub..."
-echo "Please enter your GitHub username:"
-read username
-echo "Please enter your GitHub Personal Access Token (it won't be displayed):"
-read -s token
+
+# Check if arguments are provided
+if [ "$#" -eq 2 ]; then
+  username=$1
+  token=$2
+else
+  echo "Pushing to GitHub..."
+  echo "Please enter your GitHub username:"
+  read username
+  echo "Please enter your GitHub Personal Access Token (it won't be displayed):"
+  read -s token
+fi
 
 # Fix remote setup
 git remote remove origin
