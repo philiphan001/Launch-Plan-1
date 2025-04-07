@@ -85,17 +85,41 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
                     work_status = milestone.get('workStatus')
                     f.write(f"Original workStatus: {work_status} (type: {type(work_status).__name__})\n")
                 
-                # Check for required fields and set defaults if missing
-                # But preserve 'no', 'false', and other valid values
+                # Handle different forms of workStatus values
                 if 'workStatus' not in milestone or milestone['workStatus'] is None:
+                    # Only set a default if it's completely missing
                     milestone['workStatus'] = 'full-time'
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"Added default workStatus: 'full-time'\n")
-                # If it's an empty string, also set a default
                 elif milestone['workStatus'] == '':
-                    milestone['workStatus'] = 'no'  # Empty string is treated as "no"
+                    # Empty string is treated as "no"
+                    milestone['workStatus'] = 'no'
                     with open('healthcare_debug.log', 'a') as f:
                         f.write(f"Empty workStatus converted to: 'no'\n")
+                elif isinstance(milestone['workStatus'], str):
+                    # Normalize string values but preserve meaning
+                    work_status_lower = milestone['workStatus'].lower().strip()
+                    
+                    # Keep "no" as "no"
+                    if work_status_lower == 'no' or work_status_lower == 'none' or work_status_lower == 'false':
+                        milestone['workStatus'] = 'no'
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"Normalized workStatus to 'no'\n")
+                    # Keep "part-time" as "part-time" 
+                    elif work_status_lower == 'part-time' or work_status_lower == 'part time' or work_status_lower == 'parttime':
+                        milestone['workStatus'] = 'part-time'
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"Normalized workStatus to 'part-time'\n")
+                    # Normalize other values to "full-time"
+                    elif work_status_lower == 'full-time' or work_status_lower == 'full time' or work_status_lower == 'fulltime' or work_status_lower == 'yes' or work_status_lower == 'true':
+                        milestone['workStatus'] = 'full-time'
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"Normalized workStatus to 'full-time'\n")
+                    # For any other unrecognized string value, leave it as is
+                    
+                # Log the final workStatus value
+                with open('healthcare_debug.log', 'a') as f:
+                    f.write(f"Final workStatus: {milestone['workStatus']}\n")
                 
                 if 'partTimeIncome' not in milestone or milestone['partTimeIncome'] is None:
                     milestone['partTimeIncome'] = 20000
