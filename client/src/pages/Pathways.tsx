@@ -214,7 +214,8 @@ const Pathways = () => {
       });
     }
     
-    // Go back to step 3 (the exploration activity)
+    // Go back to step 3 (the exploration activity) 
+    // The exploration method is preserved so user stays in the same type of game
     setCurrentStep(3);
   };
   
@@ -364,6 +365,12 @@ const Pathways = () => {
                         handleNext();
                       }} 
                     />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">refresh</span>
+                        Start Over
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </Step>
@@ -382,6 +389,12 @@ const Pathways = () => {
                         handleNext();
                       }}
                     />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">refresh</span>
+                        Start Over
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </Step>
@@ -400,6 +413,12 @@ const Pathways = () => {
                         handleNext();
                       }}
                     />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">refresh</span>
+                        Start Over
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </Step>
@@ -418,6 +437,12 @@ const Pathways = () => {
                         handleNext();
                       }}
                     />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">refresh</span>
+                        Start Over
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </Step>
@@ -436,6 +461,12 @@ const Pathways = () => {
                         handleNext();
                       }}
                     />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">refresh</span>
+                        Start Over
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </Step>
