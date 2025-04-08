@@ -509,32 +509,7 @@ const Pathways = () => {
                 </Card>
               </Step>
             );
-          } else if (explorationMethod === 'quickSpin') {
-            return (
-              <Step 
-                title="Spin the Identity Wheel" 
-                subtitle="Discover what makes you unique through this fun wheel game"
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <QuickSpinWheel 
-                      key={`quick-spin-${resetCounter}`}
-                      resetKey={resetCounter}
-                      onComplete={(results) => {
-                        setQuickSpinResults(results);
-                        handleNext();
-                      }}
-                    />
-                    <div className="flex justify-center mt-6">
-                      <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">sports_esports</span>
-                        Play Game Again
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Step>
-            );
+          // The quickSpin case is now handled with the conditional rendering check above
           }
         } else {
           return (
@@ -954,6 +929,38 @@ const Pathways = () => {
                         // Let this same case 3 handle it with the swipe results
                       }} 
                     />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
+          // If the exploration method is 'quickSpin', check if we have quickSpin results
+          // If no quickSpin results yet, show the QuickSpinWheel component first
+          if (explorationMethod === 'quickSpin' && 
+              (!quickSpinResults || quickSpinResults.superpower === '')) {
+            return (
+              <Step 
+                title="Spin the Identity Wheel" 
+                subtitle="Discover what makes you unique through this fun wheel game"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <QuickSpinWheel 
+                      key={`quick-spin-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setQuickSpinResults(results);
+                        // Don't automatically move to the next step
+                        // Let this same case 3 handle it with the quickSpin results
+                      }}
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </Step>
