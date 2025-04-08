@@ -36,6 +36,8 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
   
   // Reset state when resetKey changes
   useEffect(() => {
+    console.log('IdentityWheel: resetKey changed to', resetKey);
+    // Completely reset the component state
     setIsSpinning(false);
     setRotation(0);
     setCurrentPromptIndex(0);
@@ -44,7 +46,21 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
     setCategory(null);
     setShowPrompt(false);
     setShowInstructions(true);
-    console.log('IdentityWheel reset with key:', resetKey);
+    
+    // Force a repaint of the component with a small delay
+    const timer = setTimeout(() => {
+      console.log('IdentityWheel: Delayed reset complete');
+      // Force update of wheel position
+      if (wheelRef.current) {
+        const currentDisplay = wheelRef.current.style.display;
+        wheelRef.current.style.display = 'none';
+        // Trigger reflow
+        void wheelRef.current.offsetHeight;
+        wheelRef.current.style.display = currentDisplay;
+      }
+    }, 50);
+    
+    return () => clearTimeout(timer);
   }, [resetKey]);
   
   // Define prompts

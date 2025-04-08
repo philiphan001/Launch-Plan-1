@@ -208,46 +208,40 @@ const Pathways = () => {
       setCurrentStep(3);
     }
     
-    // Use a two-step approach: first unmount the component by setting a special value,
-    // then remount it with a new key in the next render cycle
+    // Simple approach: just increment the reset counter which will cause the key prop to change
+    // and all components to completely remount
+    setResetCounter(prev => {
+      const newCounter = prev + 1;
+      console.log('Incrementing resetCounter from', prev, 'to', newCounter);
+      return newCounter;
+    });
     
-    // Step 1: Set exploration method to null temporarily to unmount the component
-    setExplorationMethod(null);
-    
-    // Step 2: After a short delay, restore the exploration method and increment the reset counter
-    setTimeout(() => {
-      // Reset result states based on the previously active game
-      if (currentMethod === 'swipe') {
-        setSwipeResults({});
-      } else if (currentMethod === 'wheel' || currentMethod === 'advancedWheel') {
-        setWheelResults({});
-      } else if (currentMethod === 'avatar') {
-        setAvatarResults({});
-      } else if (currentMethod === 'quickSpin') {
-        setQuickSpinResults({
-          superpower: '',
-          ideal_day: '',
-          values: '',
-          activities: '',
-          feelings: '',
-          location: '',
-          team_role: '',
-          wildcard: ''
-        });
-      }
-      
-      // Increment counter to ensure we get a new key when the component remounts
-      setResetCounter(prev => {
-        const newCounter = prev + 1;
-        console.log('Incrementing resetCounter from', prev, 'to', newCounter);
-        return newCounter;
+    // Also reset the results state variables for extra safety
+    if (currentMethod === 'swipe') {
+      setSwipeResults({});
+    } else if (currentMethod === 'wheel' || currentMethod === 'advancedWheel') {
+      setWheelResults({});
+    } else if (currentMethod === 'avatar') {
+      setAvatarResults({});
+    } else if (currentMethod === 'quickSpin') {
+      setQuickSpinResults({
+        superpower: '',
+        ideal_day: '',
+        values: '',
+        activities: '',
+        feelings: '',
+        location: '',
+        team_role: '',
+        wildcard: ''
       });
-      
-      // Restore the exploration method to remount the component
-      setExplorationMethod(currentMethod);
-      
-      console.log('Game reset complete - exploration method restored to:', currentMethod);
-    }, 100);
+    }
+    
+    // Force a rerender after a short delay to ensure state changes are processed
+    setTimeout(() => {
+      console.log('Game reset complete - counter is now:', resetCounter + 1);
+      // This empty setState forces a rerender
+      setCurrentStep(currentStep);
+    }, 50);
   };
   
   const renderCurrentStep = () => {
