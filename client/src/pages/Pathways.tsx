@@ -972,11 +972,11 @@ const Pathways = () => {
                   />
                   
                   <div className="flex justify-between mt-6">
-                    <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button variant="outline" onClick={handleRestartExploration}>
+                    <Button variant="outline" onClick={handleBack}>
                       <span className="material-icons text-sm mr-1">sports_esports</span>
                       Play Game Again
                     </Button>
+                    <Button onClick={handleNext}>Continue to Pathways</Button>
                   </div>
                 </CardContent>
               </Card>
