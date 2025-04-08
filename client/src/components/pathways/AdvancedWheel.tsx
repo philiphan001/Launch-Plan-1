@@ -22,9 +22,10 @@ interface WheelPrompt {
 
 interface AdvancedWheelProps {
   onComplete: (results: Record<string, string>) => void;
+  resetKey?: number; // Add reset key prop for forcing re-mount
 }
 
-export default function AdvancedWheel({ onComplete }: AdvancedWheelProps) {
+export default function AdvancedWheel({ onComplete, resetKey = 0 }: AdvancedWheelProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);

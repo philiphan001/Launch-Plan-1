@@ -20,9 +20,10 @@ interface WheelPrompt {
 
 interface IdentityWheelProps {
   onComplete: (results: Record<string, string>) => void;
+  resetKey?: number; // Add reset key prop for forcing re-mount
 }
 
-export default function IdentityWheel({ onComplete }: IdentityWheelProps) {
+export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWheelProps) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);

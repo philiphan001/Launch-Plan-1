@@ -2,6 +2,7 @@ import SpinWheel from './SpinWheel';
 
 interface QuickSpinWheelProps {
   onComplete: (results: Record<string, string>) => void;
+  resetKey?: number; // Add reset key prop for forcing re-mount
 }
 
 const quickWheelOptions = [
@@ -79,12 +80,13 @@ const quickWheelOptions = [
   }
 ];
 
-const QuickSpinWheel = ({ onComplete }: QuickSpinWheelProps) => {
+const QuickSpinWheel = ({ onComplete, resetKey = 0 }: QuickSpinWheelProps) => {
   return (
     <SpinWheel
       title="Quick Identity Spin"
       options={quickWheelOptions}
       onComplete={onComplete}
+      resetKey={resetKey}
     />
   );
 };

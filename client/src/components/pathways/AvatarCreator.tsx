@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 
 interface AvatarCreatorProps {
   onComplete: (results: Record<string, string>) => void;
+  resetKey?: number; // Add reset key prop for forcing re-mount
 }
 
 export interface AvatarAttributes {
@@ -25,7 +26,7 @@ export interface AvatarAttributes {
   lifestyle: string;
 }
 
-const AvatarCreator = ({ onComplete }: AvatarCreatorProps) => {
+const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [avatarName, setAvatarName] = useState('');
   const [futureTitle, setFutureTitle] = useState('');

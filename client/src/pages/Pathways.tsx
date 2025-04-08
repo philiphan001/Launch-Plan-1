@@ -393,6 +393,7 @@ const Pathways = () => {
                   <CardContent className="p-6">
                     <IdentityWheel 
                       key={`wheel-${resetCounter}`}
+                      resetKey={resetCounter}
                       onComplete={(results) => {
                         setWheelResults(results);
                         handleNext();
@@ -418,6 +419,7 @@ const Pathways = () => {
                   <CardContent className="p-6">
                     <AdvancedWheel 
                       key={`advanced-wheel-${resetCounter}`}
+                      resetKey={resetCounter}
                       onComplete={(results) => {
                         setWheelResults(results);
                         handleNext();
@@ -443,6 +445,7 @@ const Pathways = () => {
                   <CardContent className="p-6">
                     <AvatarCreator 
                       key={`avatar-${resetCounter}`}
+                      resetKey={resetCounter}
                       onComplete={(results) => {
                         setAvatarResults(results);
                         handleNext();
@@ -468,6 +471,7 @@ const Pathways = () => {
                   <CardContent className="p-6">
                     <QuickSpinWheel 
                       key={`quick-spin-${resetCounter}`}
+                      resetKey={resetCounter}
                       onComplete={(results) => {
                         setQuickSpinResults(results);
                         handleNext();
@@ -894,6 +898,8 @@ const Pathways = () => {
                 <Card>
                   <CardContent className="p-6">
                     <SwipeableScenarios 
+                      key={`swipe-${resetCounter}`}
+                      resetKey={resetCounter}
                       onComplete={(results) => {
                         setSwipeResults(results);
                         // Don't automatically move to the next step

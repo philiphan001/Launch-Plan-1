@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, PanInfo, useAnimation } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,13 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   const [results, setResults] = useState<Record<string, boolean>>({});
   const cardControls = useAnimation();
   const dragControls = useRef({ startX: 0 });
+  
+  // Reset state when resetKey changes
+  useEffect(() => {
+    setCurrentIndex(0);
+    setResults({});
+    cardControls.set({ x: 0, rotate: 0, opacity: 1 });
+  }, [resetKey, cardControls]);
   
   const scenarios: Scenario[] = [
     {

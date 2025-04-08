@@ -15,12 +15,14 @@ interface SpinWheelProps {
   title?: string;
   options: WheelOption[];
   onComplete: (results: Record<string, string>) => void;
+  resetKey?: number; // Add reset key prop for forcing re-mount
 }
 
 const SpinWheel = ({ 
   title = "Spin the Wheel of Identity", 
   options, 
-  onComplete 
+  onComplete,
+  resetKey = 0
 }: SpinWheelProps) => {
   const [spinning, setSpinning] = useState(false);
   const [selectedOption, setSelectedOption] = useState<WheelOption | null>(null);
