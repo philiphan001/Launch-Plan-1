@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,6 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface AvatarCreatorProps {
   onComplete: (results: Record<string, string>) => void;
@@ -26,10 +29,28 @@ export interface AvatarAttributes {
   lifestyle: string;
 }
 
+interface WorkLifeBalance {
+  workLifeBalance: number;
+  riskTolerance: number;
+  teamPreference: number;
+}
+
 const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [avatarName, setAvatarName] = useState('');
   const [futureTitle, setFutureTitle] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [completion, setCompletion] = useState({
+    step1: 0, // 0-100 percentage
+    step2: 0,
+    step3: 0
+  });
+  const [workLifeBalance, setWorkLifeBalance] = useState<WorkLifeBalance>({
+    workLifeBalance: 50,
+    riskTolerance: 50,
+    teamPreference: 50
+  });
   const [attributes, setAttributes] = useState<AvatarAttributes>({
     style: 'casual',
     hairColor: 'brown',
@@ -50,6 +71,40 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
     biggestAspiration: ''
   });
   
+  // DOM reference for scrolling to errors
+  const errorRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate completion percentage for each step
+  useEffect(() => {
+    // Step 1 completion: Avatar name + future title + attributes
+    const step1Items = 2 + Object.keys(attributes).length;
+    const step1Completed = (avatarName ? 1 : 0) + (futureTitle ? 1 : 0) + Object.keys(attributes).length;
+    const step1Percentage = Math.round((step1Completed / step1Items) * 100);
+    
+    // Step 2 completion: Values + lifestyle + work-life balance settings
+    const step2Items = 2 + Object.keys(workLifeBalance).length;
+    const step2Completed = 2 + Object.keys(workLifeBalance).length; // These are always selected
+    const step2Percentage = Math.round((step2Completed / step2Items) * 100);
+    
+    // Step 3 completion: Reflections
+    const step3Items = Object.keys(reflections).length;
+    const step3Completed = Object.values(reflections).filter(v => v.trim().length > 0).length;
+    const step3Percentage = Math.round((step3Completed / step3Items) * 100);
+    
+    setCompletion({
+      step1: step1Percentage,
+      step2: step2Percentage,
+      step3: step3Percentage
+    });
+  }, [avatarName, futureTitle, attributes, workLifeBalance, reflections]);
+  
+  // Scroll to error message when it appears
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [error]);
+  
   // Reset state when resetKey changes
   useEffect(() => {
     console.log('AvatarCreator: resetKey changed to', resetKey);
@@ -57,6 +112,13 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
     setCurrentStep(1);
     setAvatarName('');
     setFutureTitle('');
+    setError(null);
+    setSuccess(null);
+    setWorkLifeBalance({
+      workLifeBalance: 50,
+      riskTolerance: 50,
+      teamPreference: 50
+    });
     setAttributes({
       style: 'casual',
       hairColor: 'brown',
@@ -90,6 +152,8 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
       ...attributes,
       [category]: value
     });
+    // Clear any errors when user makes changes
+    setError(null);
   };
 
   const handleReflectionChange = (field: keyof typeof reflections, value: string) => {
@@ -97,37 +161,103 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
       ...reflections,
       [field]: value
     });
+    // Clear any errors when user makes changes
+    setError(null);
+  };
+  
+  const handleWorkLifeBalanceChange = (field: keyof WorkLifeBalance, value: number) => {
+    setWorkLifeBalance({
+      ...workLifeBalance,
+      [field]: value
+    });
+  };
+  
+  // Validate the current step before proceeding
+  const validateCurrentStep = (): boolean => {
+    setError(null);
+    setSuccess(null);
+    
+    if (currentStep === 1) {
+      // Validate step 1 - at least name is required
+      if (!avatarName.trim()) {
+        setError("Please give your avatar a name before continuing");
+        return false;
+      }
+      
+      setSuccess("Avatar basic profile complete!");
+      return true;
+    } 
+    else if (currentStep === 2) {
+      // All fields are pre-selected, so validation always passes
+      setSuccess("Values and lifestyle preferences saved!");
+      return true;
+    }
+    else if (currentStep === 3) {
+      // Require at least 3 reflection fields to be filled
+      const filledFields = Object.values(reflections).filter(value => value.trim().length > 0).length;
+      
+      if (filledFields < 3) {
+        setError("Please fill in at least 3 reflection fields to complete your avatar");
+        return false;
+      }
+      
+      setSuccess("Future self reflections complete!");
+      return true;
+    }
+    
+    return true;
   };
 
   const handleNext = () => {
+    // Validate the current step first
+    if (!validateCurrentStep()) {
+      return;
+    }
+    
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Convert our avatar and reflections to a format compatible with other exploration methods
-      const results: Record<string, string> = {
-        avatar_name: avatarName,
-        future_title: futureTitle,
-        avatar_style: attributes.style,
-        avatar_hair: `${attributes.hairColor}-${attributes.hairStyle}`,
-        avatar_outfit: attributes.outfit,
-        avatar_accessory: attributes.accessory,
-        avatar_location: attributes.location,
-        avatar_occupation: attributes.occupation,
-        avatar_personality: attributes.personality,
-        avatar_values: attributes.values,
-        avatar_lifestyle: attributes.lifestyle,
-        reflection_work_attire: reflections.workAttire,
-        reflection_living_location: reflections.livingLocation,
-        reflection_weekend: reflections.weekendActivity,
-        reflection_routine: reflections.dailyRoutine,
-        reflection_aspiration: reflections.biggestAspiration
-      };
-      
-      onComplete(results);
+      try {
+        // Create a more comprehensive avatar data with personal details
+        // Add a catch block for any potential errors during this process
+        
+        // Convert our avatar and reflections to a format compatible with other exploration methods
+        const results: Record<string, string> = {
+          avatar_name: avatarName,
+          future_title: futureTitle || 'Future Professional',
+          avatar_style: attributes.style,
+          avatar_hair: `${attributes.hairColor}-${attributes.hairStyle}`,
+          avatar_outfit: attributes.outfit,
+          avatar_accessory: attributes.accessory,
+          avatar_location: attributes.location,
+          avatar_occupation: attributes.occupation,
+          avatar_personality: attributes.personality,
+          avatar_values: attributes.values,
+          avatar_lifestyle: attributes.lifestyle,
+          avatar_work_life_balance: workLifeBalance.workLifeBalance.toString(),
+          avatar_risk_tolerance: workLifeBalance.riskTolerance.toString(),
+          avatar_team_preference: workLifeBalance.teamPreference.toString(),
+          reflection_work_attire: reflections.workAttire || 'Professional attire appropriate for my field',
+          reflection_living_location: reflections.livingLocation || 'A comfortable place that fits my lifestyle',
+          reflection_weekend: reflections.weekendActivity || 'Activities that help me recharge and grow',
+          reflection_routine: reflections.dailyRoutine || 'A balanced day of productive work and personal time',
+          reflection_aspiration: reflections.biggestAspiration || 'To succeed in my chosen field and find fulfillment'
+        };
+        
+        // Call the onComplete callback with our complete results
+        onComplete(results);
+      } catch (err) {
+        console.error('Error creating avatar data:', err);
+        setError('There was a problem saving your avatar. Please try again.');
+      }
     }
   };
 
   const handleBack = () => {
+    // Clear any errors or success messages when navigating between steps
+    setError(null);
+    setSuccess(null);
+    
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
@@ -232,10 +362,52 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold">Create Your Future Self Avatar</h3>
         <div className="text-sm font-medium">Step {currentStep} of 3</div>
       </div>
+      
+      {/* Progress indicator */}
+      <div className="mb-6">
+        <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <span>Basics</span>
+          <span>Values</span>
+          <span>Reflections</span>
+        </div>
+        <div className="grid grid-cols-3 gap-1">
+          <Progress 
+            value={completion.step1} 
+            className={`h-2 ${currentStep === 1 ? 'bg-primary' : 'bg-muted'}`} 
+          />
+          <Progress 
+            value={completion.step2} 
+            className={`h-2 ${currentStep === 2 ? 'bg-primary' : 'bg-muted'}`} 
+          />
+          <Progress 
+            value={completion.step3} 
+            className={`h-2 ${currentStep === 3 ? 'bg-primary' : 'bg-muted'}`} 
+          />
+        </div>
+      </div>
+      
+      {/* Error and success messages */}
+      {error && (
+        <div ref={errorRef} className="mb-4">
+          <Alert variant="destructive" className="border-red-500">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        </div>
+      )}
+      
+      {success && (
+        <div className="mb-4">
+          <Alert className="bg-green-50 border-green-500 text-green-800">
+            <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left panel: Avatar preview */}
@@ -246,10 +418,11 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
               <div className="mt-4 text-center">
                 <input
                   type="text"
-                  placeholder="Name your avatar"
+                  placeholder="Name your avatar *"
                   value={avatarName}
                   onChange={(e) => setAvatarName(e.target.value)}
-                  className="w-full p-2 mb-2 border rounded"
+                  className={`w-full p-2 mb-2 border rounded ${!avatarName.trim() ? 'border-red-300' : ''}`}
+                  aria-required="true"
                 />
                 <input
                   type="text"
@@ -258,6 +431,9 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
                   onChange={(e) => setFutureTitle(e.target.value)}
                   className="w-full p-2 border rounded"
                 />
+                {!avatarName.trim() && (
+                  <p className="text-xs text-red-500 text-left mt-1">Avatar name is required</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -515,11 +691,17 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
                             <span>Life-Focused</span>
                           </div>
                           <Slider
-                            defaultValue={[50]}
+                            value={[workLifeBalance.workLifeBalance]}
                             max={100}
                             step={10}
                             className="w-full"
+                            onValueChange={(values) => handleWorkLifeBalanceChange('workLifeBalance', values[0])}
                           />
+                          <div className="text-center text-xs text-gray-500 mt-1">
+                            {workLifeBalance.workLifeBalance < 40 ? 'Prioritizing career advancement' : 
+                             workLifeBalance.workLifeBalance > 60 ? 'Prioritizing personal fulfillment' : 
+                             'Seeking work-life harmony'}
+                          </div>
                         </div>
                         
                         <div>
@@ -528,11 +710,17 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
                             <span>Risk & Reward</span>
                           </div>
                           <Slider
-                            defaultValue={[50]}
+                            value={[workLifeBalance.riskTolerance]}
                             max={100}
                             step={10}
                             className="w-full"
+                            onValueChange={(values) => handleWorkLifeBalanceChange('riskTolerance', values[0])}
                           />
+                          <div className="text-center text-xs text-gray-500 mt-1">
+                            {workLifeBalance.riskTolerance < 40 ? 'Preferring stability and predictability' : 
+                             workLifeBalance.riskTolerance > 60 ? 'Comfortable with uncertainty for potential gains' : 
+                             'Balanced approach to risk'}
+                          </div>
                         </div>
                         
                         <div>
@@ -541,11 +729,17 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
                             <span>Team-Based</span>
                           </div>
                           <Slider
-                            defaultValue={[50]}
+                            value={[workLifeBalance.teamPreference]}
                             max={100}
                             step={10}
                             className="w-full"
+                            onValueChange={(values) => handleWorkLifeBalanceChange('teamPreference', values[0])}
                           />
+                          <div className="text-center text-xs text-gray-500 mt-1">
+                            {workLifeBalance.teamPreference < 40 ? 'Thriving in independent work environments' : 
+                             workLifeBalance.teamPreference > 60 ? 'Energized by collaboration and teamwork' : 
+                             'Adaptable to both individual and group settings'}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -558,48 +752,95 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
                   <h4 className="text-lg font-medium mb-4">Reflect on Your Future Self</h4>
                   
                   <div className="space-y-4">
+                    <p className="text-sm text-gray-500 italic mb-3">
+                      Please complete at least 3 reflections below to help define your future self.
+                    </p>
+                    
                     <div>
-                      <label className="block text-sm font-medium mb-1">What does your future self wear to work?</label>
+                      <label className="block text-sm font-medium mb-1 flex items-center">
+                        What does your future self wear to work?
+                        {reflections.workAttire && (
+                          <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                        )}
+                      </label>
                       <Input
                         placeholder="Describe what you're wearing on a typical workday..."
                         value={reflections.workAttire}
                         onChange={(e) => handleReflectionChange('workAttire', e.target.value)}
+                        className={reflections.workAttire ? 'border-green-200 bg-green-50' : ''}
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium mb-1">Where does your future self live?</label>
+                      <label className="block text-sm font-medium mb-1 flex items-center">
+                        Where does your future self live?
+                        {reflections.livingLocation && (
+                          <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                        )}
+                      </label>
                       <Input
                         placeholder="Describe your ideal living situation..."
                         value={reflections.livingLocation}
                         onChange={(e) => handleReflectionChange('livingLocation', e.target.value)}
+                        className={reflections.livingLocation ? 'border-green-200 bg-green-50' : ''}
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium mb-1">How does your future self spend weekends?</label>
+                      <label className="block text-sm font-medium mb-1 flex items-center">
+                        How does your future self spend weekends?
+                        {reflections.weekendActivity && (
+                          <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                        )}
+                      </label>
                       <Input
                         placeholder="What activities do you enjoy on your free time?"
                         value={reflections.weekendActivity}
                         onChange={(e) => handleReflectionChange('weekendActivity', e.target.value)}
+                        className={reflections.weekendActivity ? 'border-green-200 bg-green-50' : ''}
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium mb-1">What does a typical day look like for your future self?</label>
+                      <label className="block text-sm font-medium mb-1 flex items-center">
+                        What does a typical day look like for your future self?
+                        {reflections.dailyRoutine && (
+                          <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                        )}
+                      </label>
                       <Input
                         placeholder="Describe a day in your life..."
                         value={reflections.dailyRoutine}
                         onChange={(e) => handleReflectionChange('dailyRoutine', e.target.value)}
+                        className={reflections.dailyRoutine ? 'border-green-200 bg-green-50' : ''}
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium mb-1">What is your future self's biggest aspiration?</label>
+                      <label className="block text-sm font-medium mb-1 flex items-center">
+                        What is your future self's biggest aspiration?
+                        {reflections.biggestAspiration && (
+                          <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                        )}
+                      </label>
                       <Input
                         placeholder="What big goal are you working toward?"
                         value={reflections.biggestAspiration}
                         onChange={(e) => handleReflectionChange('biggestAspiration', e.target.value)}
+                        className={reflections.biggestAspiration ? 'border-green-200 bg-green-50' : ''}
+                      />
+                    </div>
+                    
+                    {/* Visual indicator of completion */}
+                    <div className="mt-2">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>0/5 complete</span>
+                        <span>3/5 required</span>
+                        <span>5/5 complete</span>
+                      </div>
+                      <Progress 
+                        value={Object.values(reflections).filter(v => v.trim().length > 0).length * 20} 
+                        className={`h-2 ${Object.values(reflections).filter(v => v.trim().length > 0).length >= 3 ? 'bg-green-500' : 'bg-amber-500'}`} 
                       />
                     </div>
                   </div>
