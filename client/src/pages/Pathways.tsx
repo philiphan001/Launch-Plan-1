@@ -113,8 +113,8 @@ const Pathways = () => {
   // Query to get all fields of study
   const { data: fieldsOfStudy = [], isLoading: isLoadingAllPaths } = useQuery({
     queryKey: ['/api/career-paths/fields'],
-    select: (data) => 
-      Array.from(new Set(data.map((path: CareerPath) => path.field_of_study))).sort(),
+    select: (data: unknown) => 
+      Array.from(new Set((data as CareerPath[]).map(path => path.field_of_study))).sort(),
   });
   
   // Query to get career paths for a specific field
@@ -1007,7 +1007,7 @@ const Pathways = () => {
                   {guidedPathComplete ? (
                     <RecommendationEngine 
                       preferences={swipeResults} 
-                      onSelect={handleSelectPath}
+                      onSelectPath={handleSelectPath}
                     />
                   ) : (
                     <SwipeableScenarios
@@ -1038,7 +1038,7 @@ const Pathways = () => {
                   {guidedPathComplete ? (
                     <RecommendationEngine 
                       preferences={convertWheelResultsToPreferences()} 
-                      onSelect={handleSelectPath}
+                      onSelectPath={handleSelectPath}
                     />
                   ) : (
                     <IdentityWheel
@@ -1069,7 +1069,7 @@ const Pathways = () => {
                   {guidedPathComplete ? (
                     <RecommendationEngine 
                       preferences={convertWheelResultsToPreferences()} 
-                      onSelect={handleSelectPath}
+                      onSelectPath={handleSelectPath}
                     />
                   ) : (
                     <AdvancedWheel
@@ -1100,7 +1100,7 @@ const Pathways = () => {
                   {guidedPathComplete ? (
                     <RecommendationEngine 
                       preferences={convertAvatarResultsToPreferences()} 
-                      onSelect={handleSelectPath}
+                      onSelectPath={handleSelectPath}
                     />
                   ) : (
                     <AvatarCreator
@@ -1131,13 +1131,20 @@ const Pathways = () => {
                   {guidedPathComplete ? (
                     <RecommendationEngine 
                       preferences={convertQuickSpinResultsToPreferences()} 
-                      onSelect={handleSelectPath}
+                      onSelectPath={handleSelectPath}
                     />
                   ) : (
                     <QuickSpinWheel
                       key={resetKey}
                       onComplete={(results) => {
-                        setQuickSpinResults(results);
+                        // Make sure results conform to our expected structure
+                        const formattedResults = {
+                          superpower: results.superpower || '',
+                          ideal_day: results.ideal_day || '',
+                          values: results.values || '',
+                          activities: results.activities || ''
+                        };
+                        setQuickSpinResults(formattedResults);
                         setGuidedPathComplete(true);
                       }}
                     />
