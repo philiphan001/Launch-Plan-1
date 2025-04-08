@@ -14,9 +14,10 @@ interface Scenario {
 
 interface SwipeableScenariosProps {
   onComplete: (results: Record<string, boolean>) => void;
+  resetKey?: number; // Add a reset key prop for forcing re-mount
 }
 
-export default function SwipeableScenarios({ onComplete }: SwipeableScenariosProps) {
+export default function SwipeableScenarios({ onComplete, resetKey = 0 }: SwipeableScenariosProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [results, setResults] = useState<Record<string, boolean>>({});
   const cardControls = useAnimation();

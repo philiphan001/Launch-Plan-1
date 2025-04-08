@@ -192,9 +192,15 @@ const Pathways = () => {
     });
   };
   
+  // State to track reset triggers for each game
+  const [resetCounter, setResetCounter] = useState(0);
+  
   // This function restarts just the current exploration method
   const handleRestartExploration = () => {
-    // Keep the same exploration method but reset the results
+    // Reset the game by incrementing the counter to force a component re-mount
+    setResetCounter(prev => prev + 1);
+    
+    // Reset result states
     if (explorationMethod === 'swipe') {
       setSwipeResults({});
     } else if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
@@ -360,6 +366,8 @@ const Pathways = () => {
                 <Card>
                   <CardContent className="p-6">
                     <SwipeableScenarios 
+                      key={`swipe-${resetCounter}`}
+                      resetKey={resetCounter}
                       onComplete={(results) => {
                         setSwipeResults(results);
                         handleNext();
@@ -384,6 +392,7 @@ const Pathways = () => {
                 <Card>
                   <CardContent className="p-6">
                     <IdentityWheel 
+                      key={`wheel-${resetCounter}`}
                       onComplete={(results) => {
                         setWheelResults(results);
                         handleNext();
@@ -408,6 +417,7 @@ const Pathways = () => {
                 <Card>
                   <CardContent className="p-6">
                     <AdvancedWheel 
+                      key={`advanced-wheel-${resetCounter}`}
                       onComplete={(results) => {
                         setWheelResults(results);
                         handleNext();
@@ -432,6 +442,7 @@ const Pathways = () => {
                 <Card>
                   <CardContent className="p-6">
                     <AvatarCreator 
+                      key={`avatar-${resetCounter}`}
                       onComplete={(results) => {
                         setAvatarResults(results);
                         handleNext();
@@ -456,6 +467,7 @@ const Pathways = () => {
                 <Card>
                   <CardContent className="p-6">
                     <QuickSpinWheel 
+                      key={`quick-spin-${resetCounter}`}
                       onComplete={(results) => {
                         setQuickSpinResults(results);
                         handleNext();
