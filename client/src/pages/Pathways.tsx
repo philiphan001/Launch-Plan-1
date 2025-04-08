@@ -65,6 +65,9 @@ const Pathways = () => {
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [hasSpecificSchool, setHasSpecificSchool] = useState<boolean | null>(null);
   
+  // Track whether the user came through the guided path for proper flow separation
+  const [guidedPathComplete, setGuidedPathComplete] = useState<boolean>(false);
+  
   // This will store the personalized narrative based on user selections
   const [userJourney, setUserJourney] = useState<string>("After high school, I am interested in...");
   const [specificSchool, setSpecificSchool] = useState<string>('');
@@ -173,6 +176,7 @@ const Pathways = () => {
     setSearchQuery('');
     setSelectedProfession(null);
     setExplorationMethod(null);
+    setGuidedPathComplete(false); // Reset the guided path completion flag
     setSwipeResults({});
     setWheelResults({});
     setAvatarResults({});
@@ -504,8 +508,17 @@ const Pathways = () => {
         }
       
       case 3:
+        // When starting over, make sure to reset the guidedPathComplete flag
+        if (currentStep === 3 && guidedPathComplete && !needsGuidance) {
+          // Reset the guidedPathComplete flag when explicitly returning to step 3 in direct path
+          setGuidedPathComplete(false);
+        }
+        
         if (needsGuidance) {
           const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
+            // Mark that this selection came from the guided path
+            setGuidedPathComplete(true);
+            
             // Here we could map the recommendations back to our app paths
             if (pathType === 'education') {
               setSelectedPath('education');
@@ -517,6 +530,15 @@ const Pathways = () => {
                 setEducationType('2year');
               } else if (id === 'trade_school') {
                 setEducationType('vocational');
+              }
+              
+              // Update the narrative based on the education type selection
+              if (['liberal_arts', 'stem_college', 'business_school'].includes(id)) {
+                setUserJourney("Based on my interests, I'm considering a 4-year college or university where...");
+              } else if (id === 'community_college') {
+                setUserJourney("Based on my interests, I'm considering a 2-year community college where...");
+              } else if (id === 'trade_school') {
+                setUserJourney("Based on my interests, I'm considering a trade school where...");
               }
               
               // Jump to the appropriate next step
@@ -1165,9 +1187,17 @@ const Pathways = () => {
       case 4:
         // Do you have a specific school in mind?
         if (isEducationPath(selectedPath) && educationType) {
+          // Set a different title based on whether we came from guided or direct path
+          const stepTitle = guidedPathComplete 
+            ? userJourney
+            : `After high school, I am interested in attending a ${educationType === '4year' 
+                ? '4-year college or university' 
+                : educationType === '2year' 
+                ? '2-year community college' 
+                : 'vocational/trade school'} where...`;
           return (
             <Step 
-              title={userJourney}
+              title={stepTitle}
               subtitle={`Finding the right ${educationType === '4year' ? '4-year college' : educationType === '2year' ? '2-year college' : 'vocational school'} for you`}
             >
               <div className="space-y-6">
