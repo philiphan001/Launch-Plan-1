@@ -220,8 +220,12 @@ const Pathways = () => {
       });
     }
     
-    // Stay on the current step so the user can see the reset component
-    // The resetKey change will trigger the components to reset their state
+    // If we're on the recommendations step, go back to the game step (3)
+    // Otherwise stay on the current step
+    if (currentStep >= 4) {
+      setCurrentStep(3);
+    }
+    
     console.log('Resetting exploration with new resetCounter:', resetCounter + 1);
   };
   
@@ -375,8 +379,8 @@ const Pathways = () => {
                     />
                     <div className="flex justify-center mt-6">
                       <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">refresh</span>
-                        Start Over
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
                       </Button>
                     </div>
                   </CardContent>
@@ -401,8 +405,8 @@ const Pathways = () => {
                     />
                     <div className="flex justify-center mt-6">
                       <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">refresh</span>
-                        Start Over
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
                       </Button>
                     </div>
                   </CardContent>
@@ -427,8 +431,8 @@ const Pathways = () => {
                     />
                     <div className="flex justify-center mt-6">
                       <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">refresh</span>
-                        Start Over
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
                       </Button>
                     </div>
                   </CardContent>
@@ -453,8 +457,8 @@ const Pathways = () => {
                     />
                     <div className="flex justify-center mt-6">
                       <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">refresh</span>
-                        Start Over
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
                       </Button>
                     </div>
                   </CardContent>
@@ -479,8 +483,8 @@ const Pathways = () => {
                     />
                     <div className="flex justify-center mt-6">
                       <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">refresh</span>
-                        Start Over
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
                       </Button>
                     </div>
                   </CardContent>
@@ -954,7 +958,10 @@ const Pathways = () => {
                   
                   <div className="flex justify-between mt-6">
                     <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button variant="outline" onClick={handleRestartExploration}>Start Over</Button>
+                    <Button variant="outline" onClick={handleRestartExploration}>
+                      <span className="material-icons text-sm mr-1">sports_esports</span>
+                      Play Game Again
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1571,7 +1578,10 @@ const Pathways = () => {
                   
                   <div className="flex justify-between">
                     <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button onClick={handleRestartExploration}>Explore Another Path</Button>
+                    <Button onClick={handleRestartExploration}>
+                      <span className="material-icons text-sm mr-1">sports_esports</span>
+                      Play Game Again
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1677,7 +1687,7 @@ const Pathways = () => {
           className="flex items-center gap-1"
         >
           <span className="material-icons text-sm">refresh</span>
-          Reset
+          Start Over
         </Button>
       </div>
       
