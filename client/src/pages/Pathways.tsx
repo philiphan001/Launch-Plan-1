@@ -298,6 +298,10 @@ const Pathways = () => {
                     className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
                     onClick={() => {
                       setExplorationMethod('swipe');
+                      // Clear previous results
+                      setSwipeResults({});
+                      // Increment reset counter to ensure component remounts with fresh state
+                      setResetCounter(prev => prev + 1);
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
@@ -314,6 +318,10 @@ const Pathways = () => {
                     className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
                     onClick={() => {
                       setExplorationMethod('wheel');
+                      // Clear previous results
+                      setWheelResults({});
+                      // Increment reset counter to ensure component remounts with fresh state
+                      setResetCounter(prev => prev + 1);
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
@@ -330,6 +338,10 @@ const Pathways = () => {
                     className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
                     onClick={() => {
                       setExplorationMethod('advancedWheel');
+                      // Clear previous results
+                      setWheelResults({});
+                      // Increment reset counter to ensure component remounts with fresh state
+                      setResetCounter(prev => prev + 1);
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
@@ -346,6 +358,10 @@ const Pathways = () => {
                     className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
                     onClick={() => {
                       setExplorationMethod('avatar');
+                      // Clear previous results
+                      setAvatarResults({});
+                      // Increment reset counter to ensure component remounts with fresh state
+                      setResetCounter(prev => prev + 1);
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
@@ -362,6 +378,19 @@ const Pathways = () => {
                     className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
                     onClick={() => {
                       setExplorationMethod('quickSpin');
+                      // Clear previous results
+                      setQuickSpinResults({
+                        superpower: '',
+                        ideal_day: '',
+                        values: '',
+                        activities: '',
+                        feelings: '',
+                        location: '',
+                        team_role: '',
+                        wildcard: ''
+                      });
+                      // Increment reset counter to ensure component remounts with fresh state
+                      setResetCounter(prev => prev + 1);
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
