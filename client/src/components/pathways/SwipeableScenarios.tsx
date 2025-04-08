@@ -121,10 +121,11 @@ export default function SwipeableScenarios({ onComplete }: SwipeableScenariosPro
         transition: { duration: 0.5 } 
       }).then(() => {
         // Track result
-        setResults(prev => ({
-          ...prev,
+        const updatedResults = {
+          ...results,
           [scenario.id]: liked
-        }));
+        };
+        setResults(updatedResults);
         
         // Update index to move to next card
         if (currentIndex < scenarios.length - 1) {
@@ -132,16 +133,25 @@ export default function SwipeableScenarios({ onComplete }: SwipeableScenariosPro
           // Reset animation for next card
           cardControls.set({ x: 0, rotate: 0, opacity: 1 });
         } else {
-          // All scenarios done
-          onComplete(results);
+          // All scenarios done - use the updated results to ensure the last card is included
+          onComplete(updatedResults);
         }
       });
     }
   };
   
   const handleSkip = () => {
-    // Complete the activity early
-    onComplete(results);
+    // Complete the activity early with current results
+    // Add the currently visible card as neutral (false) to ensure we don't skip it entirely
+    if (currentIndex < scenarios.length) {
+      const updatedResults = {
+        ...results,
+        [scenarios[currentIndex].id]: false
+      };
+      onComplete(updatedResults);
+    } else {
+      onComplete(results);
+    }
   };
   
   const getEmoji = (category: string) => {
