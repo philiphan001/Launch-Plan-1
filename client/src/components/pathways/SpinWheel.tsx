@@ -36,6 +36,26 @@ const SpinWheel = ({
   useEffect(() => {
     setRemainingOptions([...options]);
   }, [options]);
+  
+  // Reset state when resetKey changes
+  useEffect(() => {
+    console.log('SpinWheel: resetKey changed to', resetKey);
+    // Reset all component state
+    setSpinning(false);
+    setSelectedOption(null);
+    setResponse('');
+    setCompletedOptions({});
+    setRemainingOptions([...options]);
+    setShowPrompt(false);
+    setCurrentPromptIndex(0);
+    
+    // Force a repaint of the component with a small delay
+    const timer = setTimeout(() => {
+      console.log('SpinWheel: Delayed reset complete');
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [resetKey, options]);
 
   const spinWheel = () => {
     if (spinning || remainingOptions.length === 0) return;

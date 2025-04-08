@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,6 +36,36 @@ export default function AdvancedWheel({ onComplete, resetKey = 0 }: AdvancedWhee
   const [showPrompt, setShowPrompt] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
   const wheelRef = useRef<HTMLDivElement>(null);
+  
+  // Reset state when resetKey changes
+  useEffect(() => {
+    console.log('AdvancedWheel: resetKey changed to', resetKey);
+    // Completely reset the component state
+    setIsSpinning(false);
+    setRotation(0);
+    setCurrentPromptIndex(0);
+    setSelectedOptions({});
+    setCustomInputs({});
+    setIsComplete(false);
+    setCategory(null);
+    setShowPrompt(false);
+    setShowInstructions(true);
+    
+    // Force a repaint of the component with a small delay
+    const timer = setTimeout(() => {
+      console.log('AdvancedWheel: Delayed reset complete');
+      // Force update of wheel position
+      if (wheelRef.current) {
+        const currentDisplay = wheelRef.current.style.display;
+        wheelRef.current.style.display = 'none';
+        // Trigger reflow
+        void wheelRef.current.offsetHeight;
+        wheelRef.current.style.display = currentDisplay;
+      }
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [resetKey]);
   
   // Define prompts based on user requirements
   const prompts: WheelPrompt[] = [

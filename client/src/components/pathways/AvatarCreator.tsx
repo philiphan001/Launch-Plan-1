@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,6 +49,41 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
     dailyRoutine: '',
     biggestAspiration: ''
   });
+  
+  // Reset state when resetKey changes
+  useEffect(() => {
+    console.log('AvatarCreator: resetKey changed to', resetKey);
+    // Reset all component state
+    setCurrentStep(1);
+    setAvatarName('');
+    setFutureTitle('');
+    setAttributes({
+      style: 'casual',
+      hairColor: 'brown',
+      hairStyle: 'short',
+      outfit: 'business',
+      accessory: 'glasses',
+      location: 'city',
+      occupation: 'tech',
+      personality: 'creative',
+      values: 'family',
+      lifestyle: 'balanced'
+    });
+    setReflections({
+      workAttire: '',
+      livingLocation: '',
+      weekendActivity: '',
+      dailyRoutine: '',
+      biggestAspiration: ''
+    });
+    
+    // Force a repaint of the component with a small delay
+    const timer = setTimeout(() => {
+      console.log('AvatarCreator: Delayed reset complete');
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [resetKey]);
 
   const handleAttributeChange = (category: keyof AvatarAttributes, value: string) => {
     setAttributes({
