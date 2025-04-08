@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -244,6 +244,168 @@ const Pathways = () => {
     }, 50);
   };
   
+  // Convert wheel results to a format compatible with RecommendationEngine
+  const convertWheelResultsToPreferences = () => {
+    // This maps the wheel choices to equivalent card preferences
+    const wheelPreferences: Record<string, boolean> = {};
+    
+    if ((explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') && wheelResults && Object.keys(wheelResults).length > 0) {
+      // Map values responses to preferences
+      if (wheelResults['success_meaning'] === 'freedom') {
+        wheelPreferences['innovation'] = true;
+        wheelPreferences['entrepreneurship'] = true;
+      } else if (wheelResults['success_meaning'] === 'respect') {
+        wheelPreferences['team_collaboration'] = true;
+        wheelPreferences['strategic_thinking'] = true;
+      } else if (wheelResults['success_meaning'] === 'wealth') {
+        wheelPreferences['strategic_thinking'] = true;
+        wheelPreferences['numbers_data'] = true;
+      } else if (wheelResults['success_meaning'] === 'impact') {
+        wheelPreferences['helping_others'] = true;
+        wheelPreferences['working_with_people'] = true;
+      }
+      
+      // Map work environment preferences
+      if (wheelResults['dream_environment'] === 'office') {
+        wheelPreferences['strategic_thinking'] = true;
+        wheelPreferences['numbers_data'] = true;
+      } else if (wheelResults['dream_environment'] === 'remote') {
+        wheelPreferences['digital_work'] = true;
+        wheelPreferences['technical_skills'] = true;
+      } else if (wheelResults['dream_environment'] === 'outdoors') {
+        wheelPreferences['outdoor_work'] = true;
+        wheelPreferences['nature_environment'] = true;
+      } else if (wheelResults['dream_environment'] === 'creative') {
+        wheelPreferences['artistic_expression'] = true;
+        wheelPreferences['building_creating'] = true;
+      }
+      
+      // Map talents
+      if (wheelResults['talent_recognition'] === 'solve') {
+        wheelPreferences['problem_solving'] = true;
+        wheelPreferences['strategic_thinking'] = true;
+      } else if (wheelResults['talent_recognition'] === 'create') {
+        wheelPreferences['artistic_expression'] = true;
+        wheelPreferences['building_creating'] = true;
+      } else if (wheelResults['talent_recognition'] === 'communicate') {
+        wheelPreferences['working_with_people'] = true;
+        wheelPreferences['team_collaboration'] = true;
+      } else if (wheelResults['talent_recognition'] === 'organize') {
+        wheelPreferences['strategic_thinking'] = true;
+        wheelPreferences['numbers_data'] = true;
+      }
+    }
+    
+    return wheelPreferences;
+  };
+  
+  // Convert avatar results to preferences
+  const convertAvatarResultsToPreferences = () => {
+    const avatarPreferences: Record<string, boolean> = {};
+    
+    // This maps the avatar attributes to equivalent card preferences
+    if (avatarResults && Object.keys(avatarResults).length > 0) {
+      // Map occupation field to interests
+      if (avatarResults.occupation === 'tech') {
+        avatarPreferences['technical_skills'] = true;
+        avatarPreferences['digital_work'] = true;
+      } else if (avatarResults.occupation === 'health') {
+        avatarPreferences['helping_others'] = true;
+        avatarPreferences['working_with_people'] = true;
+      } else if (avatarResults.occupation === 'creative') {
+        avatarPreferences['artistic_expression'] = true;
+        avatarPreferences['building_creating'] = true;
+      } else if (avatarResults.occupation === 'business') {
+        avatarPreferences['strategic_thinking'] = true;
+        avatarPreferences['entrepreneurship'] = true;
+      }
+    }
+    
+    return avatarPreferences;
+  };
+  
+  // Convert quickSpin results to preferences
+  const convertQuickSpinResultsToPreferences = () => {
+    const quickSpinPreferences: Record<string, boolean> = {};
+    
+    if (quickSpinResults && quickSpinResults.superpower) {
+      // Map superpower responses
+      // Creative abilities
+      if (quickSpinResults.superpower.toLowerCase().includes('creat') || 
+          quickSpinResults.superpower.toLowerCase().includes('art')) {
+        quickSpinPreferences['artistic_expression'] = true;
+        quickSpinPreferences['building_creating'] = true;
+      }
+      
+      // Technical abilities
+      if (quickSpinResults.superpower.toLowerCase().includes('tech') || 
+          quickSpinResults.superpower.toLowerCase().includes('program') ||
+          quickSpinResults.superpower.toLowerCase().includes('code')) {
+        quickSpinPreferences['technical_skills'] = true;
+        quickSpinPreferences['digital_work'] = true;
+      }
+      
+      // People skills
+      if (quickSpinResults.superpower.toLowerCase().includes('people') || 
+          quickSpinResults.superpower.toLowerCase().includes('communicat')) {
+        quickSpinPreferences['working_with_people'] = true;
+        quickSpinPreferences['team_collaboration'] = true;
+      }
+    }
+    
+    return quickSpinPreferences;
+  };
+  
+  // Handler for selecting a recommended path
+  const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
+    // Mark that this selection came from the guided path
+    setGuidedPathComplete(true);
+    
+    // Here we could map the recommendations back to our app paths
+    if (pathType === 'education') {
+      setSelectedPath('education');
+      
+      // Determine education type based on recommendation
+      if (['liberal_arts', 'stem_college', 'business_school'].includes(id)) {
+        setEducationType('4year');
+      } else if (id === 'community_college') {
+        setEducationType('2year');
+      } else if (id === 'trade_school') {
+        setEducationType('vocational');
+      }
+      
+      // Update the narrative based on the education type selection
+      if (['liberal_arts', 'stem_college', 'business_school'].includes(id)) {
+        setUserJourney("Based on my interests, I'm considering a 4-year college or university where...");
+      } else if (id === 'community_college') {
+        setUserJourney("Based on my interests, I'm considering a 2-year community college where...");
+      } else if (id === 'trade_school') {
+        setUserJourney("Based on my interests, I'm considering a trade school where...");
+      }
+      
+      // Jump to the appropriate next step
+      setCurrentStep(4);
+    } else if (pathType === 'career') {
+      setSelectedPath('job');
+      
+      // Determine job type based on recommendation
+      if (id === 'trades') {
+        setJobType('apprenticeship');
+      } else {
+        setJobType('fulltime');
+      }
+      
+      // Jump to the appropriate next step
+      setCurrentStep(4);
+    } else {
+      // For lifestyle recommendations, we could set some other state
+      // or just show more information
+      setSelectedPath('gap');
+      setGapYearActivity(id === 'digital_nomad' ? 'travel' : 'work');
+      setCurrentStep(4);
+    }
+  };
+  
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -377,7 +539,28 @@ const Pathways = () => {
               </Step>
             );
           } else if (explorationMethod === 'swipe') {
-            return (
+            if (guidedPathComplete) {
+              // Show recommendations if exploration is completed
+              return (
+                <Step title="Your Personalized Path Recommendations" subtitle="Based on your selections, here are some paths that might be a good fit">
+                  <Card>
+                    <CardContent className="p-6">
+                      <RecommendationEngine 
+                        preferences={swipeResults}
+                        onSelectPath={handleSelectPath}
+                      />
+                      <div className="flex justify-center mt-6">
+                        <Button variant="outline" onClick={handleRestartExploration}>
+                          <span className="material-icons text-sm mr-1">sports_esports</span>
+                          Play Game Again
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Step>
+              );
+            } else {
+              return (
               <Step 
                 title="Find Your Perfect Path" 
                 subtitle="Swipe through cards to tell us what you like and don't like"
@@ -402,8 +585,31 @@ const Pathways = () => {
                 </Card>
               </Step>
             );
-          } else if (explorationMethod === 'wheel') {
-            return (
+          } 
+          
+          if (explorationMethod === 'wheel') {
+            if (guidedPathComplete) {
+              // Show recommendations if exploration is completed
+              return (
+                <Step title="Your Personalized Path Recommendations" subtitle="Based on your quiz results, here are some paths that might be a good fit">
+                  <Card>
+                    <CardContent className="p-6">
+                      <RecommendationEngine 
+                        preferences={convertWheelResultsToPreferences()}
+                        onSelectPath={handleSelectPath}
+                      />
+                      <div className="flex justify-center mt-6">
+                        <Button variant="outline" onClick={handleRestartExploration}>
+                          <span className="material-icons text-sm mr-1">sports_esports</span>
+                          Play Game Again
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Step>
+              );
+            } else {
+              return (
               <Step 
                 title="Spin the Wheel of Identity" 
                 subtitle="Discover what matters most to you through fun prompts and questions"
@@ -428,7 +634,30 @@ const Pathways = () => {
                 </Card>
               </Step>
             );
-          } else if (explorationMethod === 'advancedWheel') {
+          }
+          
+          if (explorationMethod === 'advancedWheel') {
+            if (guidedPathComplete) {
+              // Show recommendations if the game is completed
+              return (
+                <Step title="Your Personalized Path Recommendations" subtitle="Based on your quiz results, here are some paths that might be a good fit">
+                  <Card>
+                    <CardContent className="p-6">
+                      <RecommendationEngine 
+                        preferences={convertWheelResultsToPreferences()}
+                        onSelectPath={handleSelectPath}
+                      />
+                      <div className="flex justify-center mt-6">
+                        <Button variant="outline" onClick={handleRestartExploration}>
+                          <span className="material-icons text-sm mr-1">sports_esports</span>
+                          Play Game Again
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Step>
+              );
+            }
             return (
               <Step 
                 title="Spin the Advanced Identity Wheel" 
@@ -455,6 +684,27 @@ const Pathways = () => {
               </Step>
             );
           } else if (explorationMethod === 'avatar') {
+            if (guidedPathComplete) {
+              // Show recommendations if the game is completed
+              return (
+                <Step title="Your Personalized Path Recommendations" subtitle="Based on your avatar choices, here are some paths that might be a good fit">
+                  <Card>
+                    <CardContent className="p-6">
+                      <RecommendationEngine 
+                        preferences={convertAvatarResultsToPreferences()}
+                        onSelectPath={handleSelectPath}
+                      />
+                      <div className="flex justify-center mt-6">
+                        <Button variant="outline" onClick={handleRestartExploration}>
+                          <span className="material-icons text-sm mr-1">sports_esports</span>
+                          Play Game Again
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Step>
+              );
+            }
             return (
               <Step 
                 title="Create Your Future Self" 
@@ -481,6 +731,27 @@ const Pathways = () => {
               </Step>
             );
           } else if (explorationMethod === 'quickSpin') {
+            if (guidedPathComplete) {
+              // Show recommendations if the game is completed
+              return (
+                <Step title="Your Personalized Path Recommendations" subtitle="Based on your quick spin results, here are some paths that might be a good fit">
+                  <Card>
+                    <CardContent className="p-6">
+                      <RecommendationEngine 
+                        preferences={convertQuickSpinResultsToPreferences()}
+                        onSelectPath={handleSelectPath}
+                      />
+                      <div className="flex justify-center mt-6">
+                        <Button variant="outline" onClick={handleRestartExploration}>
+                          <span className="material-icons text-sm mr-1">sports_esports</span>
+                          Play Game Again
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Step>
+              );
+            }
             return (
               <Step 
                 title="Spin the Identity Wheel" 
@@ -572,7 +843,8 @@ const Pathways = () => {
             </Step>
           );
         }
-      
+        break;
+        
       case 3:
         // When starting over, make sure to reset the guidedPathComplete flag
         if (currentStep === 3 && guidedPathComplete && !needsGuidance) {
@@ -581,6 +853,20 @@ const Pathways = () => {
         }
         
         if (needsGuidance) {
+          // Check if we have results for the selected exploration method and set flag accordingly
+          useEffect(() => {
+            const hasCompletedGame = 
+              (explorationMethod === 'swipe' && Object.keys(swipeResults).length > 0) ||
+              (explorationMethod === 'wheel' && Object.keys(wheelResults).length > 0) ||
+              (explorationMethod === 'advancedWheel' && Object.keys(wheelResults).length > 0) ||
+              (explorationMethod === 'avatar' && Object.keys(avatarResults).length > 0) ||
+              (explorationMethod === 'quickSpin' && quickSpinResults.superpower !== '');
+            
+            if (hasCompletedGame) {
+              setGuidedPathComplete(true);
+            }
+          }, [explorationMethod, swipeResults, wheelResults, avatarResults, quickSpinResults]);
+          
           const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
             // Mark that this selection came from the guided path
             setGuidedPathComplete(true);
@@ -906,29 +1192,40 @@ const Pathways = () => {
             return avatarPreferences;
           };
           
-          // If the exploration method is 'swipe', we need to check if we have swipe results
-          // If no swipe results yet, show the swipe cards component first
-          if (explorationMethod === 'swipe' && Object.keys(swipeResults).length === 0) {
-            return (
-              <Step 
-                title="Find Your Perfect Path" 
-                subtitle="Swipe through cards to tell us what you like and don't like"
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <SwipeableScenarios 
-                      key={`swipe-${resetCounter}`}
-                      resetKey={resetCounter}
-                      onComplete={(results) => {
-                        setSwipeResults(results);
-                        // Don't automatically move to the next step
-                        // Let this same case 3 handle it with the swipe results
-                      }} 
-                    />
-                  </CardContent>
-                </Card>
-              </Step>
-            );
+          // Use guidedPathComplete flag to determine if we should show a game
+          
+          // If no results yet for any game type, show the respective game
+          if (!guidedPathComplete) {
+            if (explorationMethod === 'swipe') {
+              return (
+                <Step 
+                  title="Find Your Perfect Path" 
+                  subtitle="Swipe through cards to tell us what you like and don't like"
+                >
+                  <Card>
+                    <CardContent className="p-6">
+                      <SwipeableScenarios 
+                        key={`swipe-${resetCounter}`}
+                        resetKey={resetCounter}
+                        onComplete={(results) => {
+                          setSwipeResults(results);
+                          handleNext(); // Now we'll automatically advance like other games
+                        }} 
+                      />
+                      <div className="flex justify-center mt-6">
+                        <Button variant="outline" onClick={handleRestartExploration}>
+                          <span className="material-icons text-sm mr-1">sports_esports</span>
+                          Play Game Again
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Step>
+              );
+            }
+            
+            // The rendering for other game types will happen in their respective sections below
+            // This ensures we return to the correct game if there are no results yet
           }
           
           // Determine which results to use based on the exploration method
@@ -1277,6 +1574,7 @@ const Pathways = () => {
           );
         }
         return null;
+      }
       
       case 4:
         // Do you have a specific school in mind?
