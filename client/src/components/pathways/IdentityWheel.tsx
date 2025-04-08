@@ -34,6 +34,19 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
   const [showInstructions, setShowInstructions] = useState(true);
   const wheelRef = useRef<HTMLDivElement>(null);
   
+  // Reset state when resetKey changes
+  useEffect(() => {
+    setIsSpinning(false);
+    setRotation(0);
+    setCurrentPromptIndex(0);
+    setSelectedOptions({});
+    setIsComplete(false);
+    setCategory(null);
+    setShowPrompt(false);
+    setShowInstructions(true);
+    console.log('IdentityWheel reset with key:', resetKey);
+  }, [resetKey]);
+  
   // Define prompts
   const prompts: WheelPrompt[] = [
     {

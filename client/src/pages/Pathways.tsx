@@ -200,7 +200,7 @@ const Pathways = () => {
     // Reset the game by incrementing the counter to force a component re-mount
     setResetCounter(prev => prev + 1);
     
-    // Reset result states
+    // Reset result states based on the current exploration method
     if (explorationMethod === 'swipe') {
       setSwipeResults({});
     } else if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
@@ -220,9 +220,9 @@ const Pathways = () => {
       });
     }
     
-    // Go back to step 3 (the exploration activity) 
-    // The exploration method is preserved so user stays in the same type of game
-    setCurrentStep(3);
+    // Stay on the current step so the user can see the reset component
+    // The resetKey change will trigger the components to reset their state
+    console.log('Resetting exploration with new resetCounter:', resetCounter + 1);
   };
   
   const renderCurrentStep = () => {
