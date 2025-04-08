@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,14 +40,11 @@ interface CareerPath {
   option_rank: number;
 }
 
-// Helper component for step rendering
 const Step = ({ children, title, subtitle }: StepProps) => (
-  <div className="space-y-4">
-    <div className="space-y-2">
-      <h2 className="text-2xl font-bold">{title}</h2>
-      {subtitle && <p className="text-gray-600">{subtitle}</p>}
-    </div>
-    <div>{children}</div>
+  <div className="mb-6">
+    <h4 className="text-gray-800 font-medium mb-1">{title}</h4>
+    {subtitle && <p className="text-sm text-gray-500 mb-3">{subtitle}</p>}
+    {children}
   </div>
 );
 
@@ -60,114 +57,126 @@ const Pathways = () => {
   const isEducationPath = (path: PathChoice | null): path is EducationPathChoice => {
     return path === 'education';
   };
-  
   const [educationType, setEducationType] = useState<EducationType>(null);
   const [jobType, setJobType] = useState<JobType>(null);
   const [militaryBranch, setMilitaryBranch] = useState<MilitaryBranch>(null);
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
-  
-  // State for "Do you need guidance?" step
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
-  const [explorationMethod, setExplorationMethod] = useState<string>('');
-  
-  // State for search functionality for schools
-  const [searchQuery, setSearchQuery] = useState('');
-  const [hasSpecificSchool, setHasSpecificSchool] = useState(false);
-  const [specificSchool, setSpecificSchool] = useState('');
-  
-  // State for field of study and profession selection
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
+  const [hasSpecificSchool, setHasSpecificSchool] = useState<boolean | null>(null);
+  
+  // Track whether the user came through the guided path for proper flow separation
+  const [guidedPathComplete, setGuidedPathComplete] = useState<boolean>(false);
+  
+  // This will store the personalized narrative based on user selections
+  const [userJourney, setUserJourney] = useState<string>("After high school, I am interested in...");
+  const [specificSchool, setSpecificSchool] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   
-  // Track user's narrative journey
-  const [userJourney, setUserJourney] = useState<string>('');
-  
-  // State to track when the guided path games have been completed
-  const [guidedPathComplete, setGuidedPathComplete] = useState(false);
-  
-  // Results from different exploration methods
+  // This function will set the education type and advance to the specific school question
+  const selectEducationType = (type: EducationType) => {
+    setEducationType(type);
+    
+    // Update the narrative based on the education type selection
+    if (type === '4year') {
+      setUserJourney("After high school, I am interested in attending a 4-year college or university where...");
+    } else if (type === '2year') {
+      setUserJourney("After high school, I am interested in attending a 2-year community college where...");
+    } else if (type === 'vocational') {
+      setUserJourney("After high school, I am interested in attending a vocational/trade school where...");
+    }
+    
+    // Move to the school selection step
+    setCurrentStep(4);
+  };
   const [swipeResults, setSwipeResults] = useState<Record<string, boolean>>({});
   const [wheelResults, setWheelResults] = useState<Record<string, string>>({});
+  const [explorationMethod, setExplorationMethod] = useState<'swipe' | 'wheel' | 'advancedWheel' | 'avatar' | 'quickSpin' | null>(null);
   const [avatarResults, setAvatarResults] = useState<Record<string, string>>({});
-  const [quickSpinResults, setQuickSpinResults] = useState<{
-    superpower: string;
-    ideal_day: string;
-    values: string;
-    activities: string;
-  }>({
+  const [quickSpinResults, setQuickSpinResults] = useState<Record<string, string>>({
     superpower: '',
     ideal_day: '',
     values: '',
-    activities: ''
+    activities: '',
+    feelings: '',
+    location: '',
+    team_role: '',
+    wildcard: ''
   });
   
-  // Reset key to force component remounting
-  const [resetKey, setResetKey] = useState(0);
-  
-  // Query to get search results for colleges
-  const { data: searchResults, isLoading: isLoadingSearch } = useQuery({
-    queryKey: ['/api/colleges/search', searchQuery, educationType],
-    enabled: searchQuery.length > 2,
-  });
-  
-  // Query to get all fields of study - using the main career paths endpoint
-  const { data: fieldsOfStudy = [], isLoading: isLoadingAllPaths } = useQuery({
+  // Fetch all career paths for the field selection dropdown
+  const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
     queryKey: ['/api/career-paths'],
-    select: (data: unknown) => 
-      Array.from(new Set((data as CareerPath[]).map(path => path.field_of_study))).sort(),
+    enabled: currentStep === 5 || currentStep === 6 // Enable when on field of study step (5) or profession step (6)
   });
   
-  // Query to get career paths for a specific field
-  const { data: fieldCareerPaths = [], isLoading: isLoadingFieldPaths } = useQuery({
+  // Get unique fields of study from the career paths
+  const fieldsOfStudy = allCareerPaths && Array.isArray(allCareerPaths)
+    ? Array.from(new Set(allCareerPaths.map((path: CareerPath) => path.field_of_study))).sort() 
+    : [];
+  
+  // Fetch career paths for a specific field when selected
+  const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery<CareerPath[]>({
     queryKey: ['/api/career-paths/field', selectedFieldOfStudy],
-    enabled: !!selectedFieldOfStudy,
-    queryFn: () => 
-      fetch(`/api/career-paths/field/${selectedFieldOfStudy}`).then(res => res.json()),
+    enabled: !!selectedFieldOfStudy && (currentStep === 5 || currentStep === 6)
   });
+  
+  // School search query using our new college search API with education type filter
+  const { data: searchResults, isLoading: isLoadingSearch } = useQuery<any[]>({
+    queryKey: ['/api/colleges/search', searchQuery, educationType],
+    queryFn: async () => {
+      if (!searchQuery || searchQuery.length < 2) return [];
+      const url = `/api/colleges/search?q=${encodeURIComponent(searchQuery)}${educationType ? `&educationType=${educationType}` : ''}`;
+      console.log(`Searching colleges with query: ${searchQuery}, educationType: ${educationType || 'all'}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to search colleges');
+      }
+      return response.json();
+    },
+    enabled: !!searchQuery && searchQuery.length > 2
+  });
+
+  const handlePathSelect = (path: PathChoice) => {
+    setSelectedPath(path);
+    // Automatically set default sub-types based on selection
+    if (isEducationPath(path)) {
+      setEducationType('4year'); // Default to 4-year college
+    } else if (path === 'job') {
+      setJobType('fulltime'); // Default to full-time job
+    } else if (path === 'military') {
+      setMilitaryBranch('army'); // Default to Army
+    } else if (path === 'gap') {
+      setGapYearActivity('travel'); // Default to travel
+    }
+  };
   
   const handleNext = () => {
     setCurrentStep(currentStep + 1);
   };
   
   const handleBack = () => {
-    setCurrentStep(currentStep - 1);
-  };
-  
-  const selectEducationType = (type: EducationType) => {
-    setEducationType(type);
-    setSelectedPath('education');
-    handleNext();
-  };
-  
-  const handlePathSelect = (path: PathChoice) => {
-    setSelectedPath(path);
-    
-    if (path === 'education') {
-      setUserJourney("After high school, I am interested in...");
-    } else if (path === 'job') {
-      setUserJourney("After high school, I am interested in entering the workforce.");
-      setSelectedPath('job');
-      handleNext();
-    } else if (path === 'military') {
-      setUserJourney("After high school, I am interested in joining the military.");
-      setSelectedPath('military');
-      handleNext();
-    } else if (path === 'gap') {
-      setUserJourney("After high school, I am interested in taking a gap year.");
-      setSelectedPath('gap');
-      handleNext();
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     }
   };
   
-  const handleExplorationMethodSelect = (method: string) => {
-    setExplorationMethod(method);
-    setResetKey(prevKey => prevKey + 1);
-    handleNext();
-  };
-  
-  const handleRestartExploration = () => {
-    // Reset all exploration-related state
-    setGuidedPathComplete(false);
+  const handleStartOver = () => {
+    setCurrentStep(1);
+    setSelectedPath(null);
+    setEducationType(null);
+    setJobType(null);
+    setMilitaryBranch(null);
+    setGapYearActivity(null);
+    setNeedsGuidance(null);
+    setSelectedFieldOfStudy(null);
+    setHasSpecificSchool(null);
+    setSpecificSchool('');
+    setSearchQuery('');
+    setSelectedProfession(null);
+    setExplorationMethod(null);
+    setGuidedPathComplete(false); // Reset the guided path completion flag
     setSwipeResults({});
     setWheelResults({});
     setAvatarResults({});
@@ -175,480 +184,396 @@ const Pathways = () => {
       superpower: '',
       ideal_day: '',
       values: '',
-      activities: ''
+      activities: '',
+      feelings: '',
+      location: '',
+      team_role: '',
+      wildcard: ''
     });
-    
-    // Go back to the exploration method selection
-    setCurrentStep(3);
   };
   
-  // Render different steps based on currentStep
+  // State to track reset triggers for each game
+  const [resetCounter, setResetCounter] = useState(0);
+  
+  // This function restarts just the current exploration method
+  // This function completely resets and remounts the active game component
+  const handleRestartExploration = () => {
+    console.log('handleRestartExploration called - current resetCounter:', resetCounter);
+    
+    // Store the current exploration method to ensure we're operating on the right game
+    const currentMethod = explorationMethod;
+    
+    // If we're on the recommendations step, go back to the game step (3)
+    if (currentStep >= 4) {
+      setCurrentStep(3);
+    }
+    
+    // Simple approach: just increment the reset counter which will cause the key prop to change
+    // and all components to completely remount
+    setResetCounter(prev => {
+      const newCounter = prev + 1;
+      console.log('Incrementing resetCounter from', prev, 'to', newCounter);
+      return newCounter;
+    });
+    
+    // Also reset the results state variables for extra safety
+    if (currentMethod === 'swipe') {
+      setSwipeResults({});
+    } else if (currentMethod === 'wheel' || currentMethod === 'advancedWheel') {
+      setWheelResults({});
+    } else if (currentMethod === 'avatar') {
+      setAvatarResults({});
+    } else if (currentMethod === 'quickSpin') {
+      setQuickSpinResults({
+        superpower: '',
+        ideal_day: '',
+        values: '',
+        activities: '',
+        feelings: '',
+        location: '',
+        team_role: '',
+        wildcard: ''
+      });
+    }
+    
+    // Force a rerender after a short delay to ensure state changes are processed
+    setTimeout(() => {
+      console.log('Game reset complete - counter is now:', resetCounter + 1);
+      // This empty setState forces a rerender
+      setCurrentStep(currentStep);
+    }, 50);
+  };
+  
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <Step 
-            title="What would you like to do after high school?" 
-            subtitle="Choose a path to explore your options"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <Step title="How would you like to plan your future?">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <Card 
-                className={`border-2 cursor-pointer transition-all hover:shadow-md ${selectedPath === 'education' ? 'border-primary' : 'border-gray-200'}`}
-                onClick={() => handlePathSelect('education')}
+                className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${needsGuidance === false ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                onClick={() => {
+                  setNeedsGuidance(false);
+                  handleNext(); // Automatically proceed to next step
+                }}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${selectedPath === 'education' ? 'bg-primary' : 'bg-gray-100'} h-10 w-10 flex items-center justify-center mr-3`}>
-                      <span className="material-icons text-lg">school</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-lg">Continue Education</h3>
-                      <p className="text-gray-600 text-sm">College, university, or vocational training</p>
-                    </div>
+                <CardContent className="p-6 text-center">
+                  <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                    <span className="material-icons text-2xl">map</span>
                   </div>
+                  <h3 className="text-lg font-medium mb-2">I know what I want to do</h3>
+                  <p className="text-sm text-gray-600">I have a clear path in mind after high school</p>
                 </CardContent>
               </Card>
               
               <Card 
-                className={`border-2 cursor-pointer transition-all hover:shadow-md ${selectedPath === 'job' ? 'border-primary' : 'border-gray-200'}`}
-                onClick={() => handlePathSelect('job')}
+                className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${needsGuidance === true ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                onClick={() => {
+                  setNeedsGuidance(true);
+                  handleNext(); // Automatically proceed to next step
+                }}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${selectedPath === 'job' ? 'bg-primary' : 'bg-gray-100'} h-10 w-10 flex items-center justify-center mr-3`}>
-                      <span className="material-icons text-lg">work</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-lg">Enter Workforce</h3>
-                      <p className="text-gray-600 text-sm">Start a job or career</p>
-                    </div>
+                <CardContent className="p-6 text-center">
+                  <div className="rounded-full bg-orange-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                    <span className="material-icons text-2xl">help_outline</span>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card 
-                className={`border-2 cursor-pointer transition-all hover:shadow-md ${selectedPath === 'military' ? 'border-primary' : 'border-gray-200'}`}
-                onClick={() => handlePathSelect('military')}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${selectedPath === 'military' ? 'bg-primary' : 'bg-gray-100'} h-10 w-10 flex items-center justify-center mr-3`}>
-                      <span className="material-icons text-lg">military_tech</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-lg">Join Military</h3>
-                      <p className="text-gray-600 text-sm">Serve in a branch of the armed forces</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card 
-                className={`border-2 cursor-pointer transition-all hover:shadow-md ${selectedPath === 'gap' ? 'border-primary' : 'border-gray-200'}`}
-                onClick={() => handlePathSelect('gap')}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${selectedPath === 'gap' ? 'bg-primary' : 'bg-gray-100'} h-10 w-10 flex items-center justify-center mr-3`}>
-                      <span className="material-icons text-lg">explore</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-lg">Gap Year</h3>
-                      <p className="text-gray-600 text-sm">Travel, volunteer, or personal development</p>
-                    </div>
-                  </div>
+                  <h3 className="text-lg font-medium mb-2">Help me with ideas</h3>
+                  <p className="text-sm text-gray-600">I'm not sure what I want to do after high school</p>
                 </CardContent>
               </Card>
             </div>
-            
-            {selectedPath && (
-              <div className="mt-6">
-                <Button 
-                  onClick={handleNext} 
-                  className="bg-green-500 hover:bg-green-600 text-white"
-                >
-                  Continue
-                </Button>
-              </div>
-            )}
           </Step>
         );
       
       case 2:
         if (needsGuidance) {
-          return (
-            <Step 
-              title="How would you like to explore?" 
-              subtitle="Choose an exploration method that interests you"
-            >
-              <div className="mt-4 space-y-4">
-                <Card 
-                  className="border cursor-pointer hover:shadow-md transition"
-                  onClick={() => handleExplorationMethodSelect('quickSpin')}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center">
-                      <div className="bg-blue-100 text-blue-600 rounded-full p-3 mr-4">
-                        <span className="material-icons">psychology</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Quick Self-Discovery</h3>
-                        <p className="text-sm text-gray-600">Answer a few questions about yourself</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card 
-                  className="border cursor-pointer hover:shadow-md transition"
-                  onClick={() => handleExplorationMethodSelect('swipe')}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center">
-                      <div className="bg-green-100 text-green-600 rounded-full p-3 mr-4">
-                        <span className="material-icons">swipe</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Interest Cards</h3>
-                        <p className="text-sm text-gray-600">Swipe through activities and interests</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card 
-                  className="border cursor-pointer hover:shadow-md transition"
-                  onClick={() => handleExplorationMethodSelect('wheel')}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center">
-                      <div className="bg-purple-100 text-purple-600 rounded-full p-3 mr-4">
-                        <span className="material-icons">sports_esports</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Spin the Wheel</h3>
-                        <p className="text-sm text-gray-600">Answer random questions about your preferences</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card 
-                  className="border cursor-pointer hover:shadow-md transition"
-                  onClick={() => handleExplorationMethodSelect('advancedWheel')}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center">
-                      <div className="bg-indigo-100 text-indigo-600 rounded-full p-3 mr-4">
-                        <span className="material-icons">insights</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Deep Dive Wheel</h3>
-                        <p className="text-sm text-gray-600">In-depth exploration of your values and aspirations</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card 
-                  className="border cursor-pointer hover:shadow-md transition"
-                  onClick={() => handleExplorationMethodSelect('avatar')}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center">
-                      <div className="bg-amber-100 text-amber-600 rounded-full p-3 mr-4">
-                        <span className="material-icons">person</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">Future Self Avatar</h3>
-                        <p className="text-sm text-gray-600">Create an avatar of your future self</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={handleBack}>Back</Button>
-              </div>
-            </Step>
-          );
-        } else {
-          // Direct path - choose education type when selected path is education
-          if (isEducationPath(selectedPath)) {
+          if (explorationMethod === null) {
             return (
               <Step 
-                title="What type of education are you interested in?" 
-                subtitle="Choose the type of education you want to pursue"
+                title="Choose Your Exploration Method" 
+                subtitle="Select a fun activity to help discover your interests and values"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
                   <Card 
-                    className="border-2 cursor-pointer transition-all hover:shadow-md"
-                    onClick={() => selectEducationType('4year')}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-center">
-                        <div className="bg-blue-100 text-blue-600 h-12 w-12 rounded-full flex items-center justify-center mr-4">
-                          <span className="material-icons">school</span>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-lg">4-Year College/University</h3>
-                          <p className="text-gray-600 text-sm">Bachelor's degree programs</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card 
-                    className="border-2 cursor-pointer transition-all hover:shadow-md"
-                    onClick={() => selectEducationType('2year')}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-center">
-                        <div className="bg-green-100 text-green-600 h-12 w-12 rounded-full flex items-center justify-center mr-4">
-                          <span className="material-icons">menu_book</span>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-lg">2-Year College</h3>
-                          <p className="text-gray-600 text-sm">Associate's degree programs</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card 
-                    className="border-2 cursor-pointer transition-all hover:shadow-md"
-                    onClick={() => selectEducationType('vocational')}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-center">
-                        <div className="bg-amber-100 text-amber-600 h-12 w-12 rounded-full flex items-center justify-center mr-4">
-                          <span className="material-icons">construction</span>
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-lg">Vocational/Trade School</h3>
-                          <p className="text-gray-600 text-sm">Specialized skills training</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="flex justify-between mt-6">
-                  <Button variant="outline" onClick={handleBack}>Back</Button>
-                  <Button 
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
                     onClick={() => {
-                      setNeedsGuidance(true);
-                      handleNext();
+                      setExplorationMethod('swipe');
+                      handleNext(); // Automatically proceed to next step
                     }}
                   >
-                    Help me with ideas
-                  </Button>
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">swipe</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Swipe Cards</h3>
+                      <p className="text-sm text-gray-600">Swipe left or right on different interests, values and lifestyle options</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('wheel');
+                      handleNext(); // Automatically proceed to next step
+                    }}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-secondary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">casino</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Identity Wheel</h3>
+                      <p className="text-sm text-gray-600">Spin a wheel to discover prompts about your values, talents, fears and wishes</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('advancedWheel');
+                      handleNext(); // Automatically proceed to next step
+                    }}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-purple-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">psychology</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Advanced Identity Wheel</h3>
+                      <p className="text-sm text-gray-600">Explore deeper aspects of your identity with fun prompts and mini-games</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('avatar');
+                      handleNext(); // Automatically proceed to next step
+                    }}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">face</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Future Self Avatar</h3>
+                      <p className="text-sm text-gray-600">Create a personalized avatar that represents your future self</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card 
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    onClick={() => {
+                      setExplorationMethod('quickSpin');
+                      handleNext(); // Automatically proceed to next step
+                    }}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="rounded-full bg-yellow-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
+                        <span className="material-icons text-2xl">toys</span>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">Quick Spin Game</h3>
+                      <p className="text-sm text-gray-600">Play a quick spinning wheel game to explore your future identity</p>
+                    </CardContent>
+                  </Card>
                 </div>
               </Step>
             );
-          }
-          
-          // Direct paths for other options - will implement their specific steps later
-          return (
-            <Step 
-              title={`Let's explore your ${selectedPath} path`} 
-              subtitle="We'll help you plan your next steps"
-            >
-              <Card className="mt-4">
-                <CardContent className="p-6">
-                  <div className="text-center mb-4">
-                    <div className="rounded-full bg-blue-100 text-blue-600 h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                      {selectedPath === 'job' && <span className="material-icons text-2xl">work</span>}
-                      {selectedPath === 'military' && <span className="material-icons text-2xl">military_tech</span>}
-                      {selectedPath === 'gap' && <span className="material-icons text-2xl">explore</span>}
+          } else if (explorationMethod === 'swipe') {
+            return (
+              <Step 
+                title="Find Your Perfect Path" 
+                subtitle="Swipe through cards to tell us what you like and don't like"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <SwipeableScenarios 
+                      key={`swipe-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setSwipeResults(results);
+                        handleNext();
+                      }} 
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
                     </div>
-                    <h3 className="text-xl font-medium mb-2">
-                      {selectedPath === 'job' && 'Entering the Workforce'}
-                      {selectedPath === 'military' && 'Military Service'}
-                      {selectedPath === 'gap' && 'Taking a Gap Year'}
-                    </h3>
-                    <p className="text-gray-600">
-                      {selectedPath === 'job' && 
-                        'Starting your career right away can provide valuable experience and help you save money.'}
-                      {selectedPath === 'military' && 
-                        'Military service offers training, education benefits, and the opportunity to serve your country.'}
-                      {selectedPath === 'gap' && 
-                        'Taking a gap year can provide time for personal growth, exploration, and clarity about your future goals.'}
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    {selectedPath === 'job' && (
-                      <div>
-                        <h4 className="font-medium mb-2">What type of job are you interested in?</h4>
-                        <div className="space-y-2">
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${jobType === 'fulltime' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setJobType('fulltime')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${jobType === 'fulltime' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Full-time employment</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${jobType === 'parttime' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setJobType('parttime')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${jobType === 'parttime' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Part-time work</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${jobType === 'apprenticeship' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setJobType('apprenticeship')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${jobType === 'apprenticeship' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Apprenticeship or on-the-job training</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {selectedPath === 'military' && (
-                      <div>
-                        <h4 className="font-medium mb-2">Which branch of the military interests you?</h4>
-                        <div className="space-y-2">
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${militaryBranch === 'army' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setMilitaryBranch('army')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${militaryBranch === 'army' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Army</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${militaryBranch === 'navy' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setMilitaryBranch('navy')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${militaryBranch === 'navy' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Navy</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${militaryBranch === 'airforce' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setMilitaryBranch('airforce')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${militaryBranch === 'airforce' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Air Force</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${militaryBranch === 'marines' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setMilitaryBranch('marines')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${militaryBranch === 'marines' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Marines</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${militaryBranch === 'coastguard' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setMilitaryBranch('coastguard')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${militaryBranch === 'coastguard' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Coast Guard</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${militaryBranch === 'spaceguard' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setMilitaryBranch('spaceguard')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${militaryBranch === 'spaceguard' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Space Force</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {selectedPath === 'gap' && (
-                      <div>
-                        <h4 className="font-medium mb-2">What would you like to do during your gap year?</h4>
-                        <div className="space-y-2">
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${gapYearActivity === 'travel' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setGapYearActivity('travel')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${gapYearActivity === 'travel' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Travel and explore</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${gapYearActivity === 'volunteer' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setGapYearActivity('volunteer')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${gapYearActivity === 'volunteer' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Volunteer or service</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${gapYearActivity === 'work' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setGapYearActivity('work')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${gapYearActivity === 'work' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Work and save money</div>
-                            </div>
-                          </div>
-                          <div 
-                            className={`border p-3 rounded-md cursor-pointer hover:bg-gray-50 ${gapYearActivity === 'other' ? 'border-primary bg-blue-50' : ''}`}
-                            onClick={() => setGapYearActivity('other')}
-                          >
-                            <div className="flex items-center">
-                              <div className={`h-5 w-5 rounded-full border ${gapYearActivity === 'other' ? 'bg-primary border-primary' : 'border-gray-300'} mr-2`}></div>
-                              <div>Other personal development</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex justify-between mt-6">
-                    <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button 
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
-                      onClick={() => {
-                        setNeedsGuidance(true);
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else if (explorationMethod === 'wheel') {
+            return (
+              <Step 
+                title="Spin the Wheel of Identity" 
+                subtitle="Discover what matters most to you through fun prompts and questions"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <IdentityWheel 
+                      key={`wheel-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setWheelResults(results);
                         handleNext();
                       }}
-                    >
-                      Help me with ideas
-                    </Button>
-                    {(jobType || militaryBranch || gapYearActivity) && (
-                      <Button 
-                        className="bg-green-500 hover:bg-green-600 text-white"
-                        onClick={() => navigate('/calculator')}
-                      >
-                        Continue to Financial Planner
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
                       </Button>
-                    )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else if (explorationMethod === 'advancedWheel') {
+            return (
+              <Step 
+                title="Spin the Advanced Identity Wheel" 
+                subtitle="Explore deeper aspects of your identity with fun prompts and mini-games"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <AdvancedWheel 
+                      key={`advanced-wheel-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setWheelResults(results);
+                        handleNext();
+                      }}
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else if (explorationMethod === 'avatar') {
+            return (
+              <Step 
+                title="Create Your Future Self" 
+                subtitle="Design an avatar that represents who you want to become"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <AvatarCreator 
+                      key={`avatar-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setAvatarResults(results);
+                        handleNext();
+                      }}
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          } else if (explorationMethod === 'quickSpin') {
+            return (
+              <Step 
+                title="Spin the Identity Wheel" 
+                subtitle="Discover what makes you unique through this fun wheel game"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <QuickSpinWheel 
+                      key={`quick-spin-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setQuickSpinResults(results);
+                        handleNext();
+                      }}
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+        } else {
+          return (
+            <Step title="What would you like to do after high school?">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div 
+                  className={`border ${isEducationPath(selectedPath) ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('education');
+                    handleNext(); // Auto-progress to next step
+                  }}
+                >
+                  <div className={`rounded-full ${isEducationPath(selectedPath) ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${isEducationPath(selectedPath) ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
+                    <span className="material-icons">school</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <h5 className={`font-medium ${isEducationPath(selectedPath) ? 'text-primary' : ''}`}>Continue Education</h5>
+                  <p className="text-sm text-gray-600 mt-1">Pursue college or other learning</p>
+                </div>
+                
+                <div 
+                  className={`border ${selectedPath === 'job' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('job');
+                    handleNext(); // Auto-progress to next step
+                  }}
+                >
+                  <div className={`rounded-full ${selectedPath === 'job' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'job' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
+                    <span className="material-icons">work</span>
+                  </div>
+                  <h5 className={`font-medium ${selectedPath === 'job' ? 'text-primary' : ''}`}>Get a Job</h5>
+                  <p className="text-sm text-gray-600 mt-1">Enter the workforce</p>
+                </div>
+                
+                <div 
+                  className={`border ${selectedPath === 'military' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('military');
+                    handleNext(); // Auto-progress to next step
+                  }}
+                >
+                  <div className={`rounded-full ${selectedPath === 'military' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'military' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
+                    <span className="material-icons">military_tech</span>
+                  </div>
+                  <h5 className={`font-medium ${selectedPath === 'military' ? 'text-primary' : ''}`}>Join Military</h5>
+                  <p className="text-sm text-gray-600 mt-1">Serve in armed forces</p>
+                </div>
+                
+                <div 
+                  className={`border ${selectedPath === 'gap' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  onClick={() => {
+                    handlePathSelect('gap');
+                    handleNext(); // Auto-progress to next step
+                  }}
+                >
+                  <div className={`rounded-full ${selectedPath === 'gap' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'gap' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
+                    <span className="material-icons">explore</span>
+                  </div>
+                  <h5 className={`font-medium ${selectedPath === 'gap' ? 'text-primary' : ''}`}>Take a Gap Year</h5>
+                  <p className="text-sm text-gray-600 mt-1">Explore before deciding</p>
+                </div>
+              </div>
+              
+              {/* Next button removed as cards now auto-progress */}
             </Step>
           );
         }
       
-      case 3: {
+      case 3:
         // When starting over, make sure to reset the guidedPathComplete flag
         if (currentStep === 3 && guidedPathComplete && !needsGuidance) {
           // Reset the guidedPathComplete flag when explicitly returning to step 3 in direct path
@@ -656,21 +581,6 @@ const Pathways = () => {
         }
         
         if (needsGuidance) {
-          // Check if we have results for the selected exploration method and set flag accordingly
-          useEffect(() => {
-            const hasCompletedGame = 
-              (explorationMethod === 'swipe' && Object.keys(swipeResults).length > 0) ||
-              (explorationMethod === 'wheel' && Object.keys(wheelResults).length > 0) ||
-              (explorationMethod === 'advancedWheel' && Object.keys(wheelResults).length > 0) ||
-              (explorationMethod === 'avatar' && Object.keys(avatarResults).length > 0) ||
-              (explorationMethod === 'quickSpin' && quickSpinResults.superpower !== '');
-            
-            if (hasCompletedGame) {
-              setGuidedPathComplete(true);
-            }
-          }, [explorationMethod, swipeResults, wheelResults, avatarResults, quickSpinResults]);
-          
-          // Helper function to handle selections from recommendations
           const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
             // Mark that this selection came from the guided path
             setGuidedPathComplete(true);
@@ -800,81 +710,6 @@ const Pathways = () => {
           };
           
           // Convert avatar results to preferences
-          const convertAvatarResultsToPreferences = () => {
-            const avatarPreferences: Record<string, boolean> = {};
-            
-            // This maps the avatar attributes to equivalent card preferences
-            if (avatarResults && Object.keys(avatarResults).length > 0) {
-              // Map occupation field to interests
-              if (avatarResults.avatar_occupation === 'tech') {
-                avatarPreferences['technical_skills'] = true;
-                avatarPreferences['problem_solving'] = true;
-                avatarPreferences['digital_work'] = true;
-              } else if (avatarResults.avatar_occupation === 'creative') {
-                avatarPreferences['artistic_expression'] = true;
-                avatarPreferences['building_creating'] = true;
-              } else if (avatarResults.avatar_occupation === 'health') {
-                avatarPreferences['helping_others'] = true;
-                avatarPreferences['working_with_people'] = true;
-              } else if (avatarResults.avatar_occupation === 'business') {
-                avatarPreferences['strategic_thinking'] = true;
-                avatarPreferences['team_collaboration'] = true;
-                avatarPreferences['entrepreneurship'] = true;
-              } else if (avatarResults.avatar_occupation === 'education') {
-                avatarPreferences['helping_others'] = true;
-                avatarPreferences['working_with_people'] = true;
-              } else if (avatarResults.avatar_occupation === 'trades') {
-                avatarPreferences['building_creating'] = true;
-                avatarPreferences['outdoor_work'] = true;
-              }
-              
-              // Map location preferences
-              if (avatarResults.avatar_location === 'city') {
-                avatarPreferences['urban_environment'] = true;
-              } else if (avatarResults.avatar_location === 'rural' || avatarResults.avatar_location === 'mountains') {
-                avatarPreferences['nature_environment'] = true;
-                avatarPreferences['outdoor_work'] = true;
-              }
-              
-              // Map personality traits
-              if (avatarResults.avatar_personality === 'creative') {
-                avatarPreferences['artistic_expression'] = true;
-                avatarPreferences['innovation'] = true;
-              } else if (avatarResults.avatar_personality === 'analytical') {
-                avatarPreferences['problem_solving'] = true;
-                avatarPreferences['strategic_thinking'] = true;
-              } else if (avatarResults.avatar_personality === 'social') {
-                avatarPreferences['working_with_people'] = true;
-                avatarPreferences['team_collaboration'] = true;
-              } else if (avatarResults.avatar_personality === 'practical') {
-                avatarPreferences['outdoor_work'] = true;
-                avatarPreferences['building_creating'] = true;
-              }
-              
-              // Map income preferences
-              if (avatarResults.avatar_income === 'high') {
-                avatarPreferences['strategic_thinking'] = true;
-                avatarPreferences['entrepreneurship'] = true;
-              } else if (avatarResults.avatar_income === 'stable') {
-                avatarPreferences['team_collaboration'] = true;
-                avatarPreferences['problem_solving'] = true;
-              }
-              
-              // Map lifestyle preferences
-              if (avatarResults.avatar_lifestyle === 'active') {
-                avatarPreferences['outdoor_work'] = true;
-              } else if (avatarResults.avatar_lifestyle === 'balanced') {
-                avatarPreferences['team_collaboration'] = true;
-              } else if (avatarResults.avatar_lifestyle === 'creative') {
-                avatarPreferences['artistic_expression'] = true;
-              } else if (avatarResults.avatar_lifestyle === 'social') {
-                avatarPreferences['working_with_people'] = true;
-              }
-            }
-            
-            return avatarPreferences;
-          };
-          
           // Convert quickSpin results to preferences
           const convertQuickSpinResultsToPreferences = () => {
             const quickSpinPreferences: Record<string, boolean> = {};
@@ -990,234 +825,215 @@ const Pathways = () => {
             return quickSpinPreferences;
           };
           
-          // Determine which exploration tool to render
-          switch (explorationMethod) {
-            case 'swipe':
-              return (
-                <Step 
-                  title={
-                    guidedPathComplete 
-                      ? "Here are your personalized recommendations"
-                      : "Swipe through these cards to help us understand your interests"
-                  } 
-                  subtitle={
-                    guidedPathComplete 
-                      ? "Based on your preferences, these paths might be a good fit"
-                      : "Swipe right if something interests you, left if it doesn't"
-                  }
-                >
-                  {guidedPathComplete ? (
-                    <RecommendationEngine 
-                      preferences={swipeResults} 
-                      onSelectPath={handleSelectPath}
-                    />
-                  ) : (
-                    <SwipeableScenarios
-                      key={resetKey}
+          const convertAvatarResultsToPreferences = () => {
+            const avatarPreferences: Record<string, boolean> = {};
+            
+            // This maps the avatar attributes to equivalent card preferences
+            if (avatarResults && Object.keys(avatarResults).length > 0) {
+              // Map occupation field to interests
+              if (avatarResults.avatar_occupation === 'tech') {
+                avatarPreferences['technical_skills'] = true;
+                avatarPreferences['problem_solving'] = true;
+                avatarPreferences['digital_work'] = true;
+              } else if (avatarResults.avatar_occupation === 'creative') {
+                avatarPreferences['artistic_expression'] = true;
+                avatarPreferences['building_creating'] = true;
+              } else if (avatarResults.avatar_occupation === 'health') {
+                avatarPreferences['helping_others'] = true;
+                avatarPreferences['working_with_people'] = true;
+              } else if (avatarResults.avatar_occupation === 'business') {
+                avatarPreferences['strategic_thinking'] = true;
+                avatarPreferences['team_collaboration'] = true;
+                avatarPreferences['entrepreneurship'] = true;
+              } else if (avatarResults.avatar_occupation === 'education') {
+                avatarPreferences['helping_others'] = true;
+                avatarPreferences['working_with_people'] = true;
+              } else if (avatarResults.avatar_occupation === 'trades') {
+                avatarPreferences['building_creating'] = true;
+                avatarPreferences['outdoor_work'] = true;
+              }
+              
+              // Map location preferences
+              if (avatarResults.avatar_location === 'city') {
+                avatarPreferences['urban_environment'] = true;
+              } else if (avatarResults.avatar_location === 'rural' || avatarResults.avatar_location === 'mountains') {
+                avatarPreferences['nature_environment'] = true;
+                avatarPreferences['outdoor_work'] = true;
+              }
+              
+              // Map personality traits
+              if (avatarResults.avatar_personality === 'creative') {
+                avatarPreferences['artistic_expression'] = true;
+                avatarPreferences['innovation'] = true;
+              } else if (avatarResults.avatar_personality === 'analytical') {
+                avatarPreferences['problem_solving'] = true;
+                avatarPreferences['numbers_data'] = true;
+              } else if (avatarResults.avatar_personality === 'social') {
+                avatarPreferences['working_with_people'] = true;
+                avatarPreferences['team_collaboration'] = true;
+              } else if (avatarResults.avatar_personality === 'caring') {
+                avatarPreferences['helping_others'] = true;
+              } else if (avatarResults.avatar_personality === 'ambitious') {
+                avatarPreferences['entrepreneurship'] = true;
+                avatarPreferences['strategic_thinking'] = true;
+              }
+              
+              // Map values
+              if (avatarResults.avatar_values === 'achievement') {
+                avatarPreferences['strategic_thinking'] = true;
+              } else if (avatarResults.avatar_values === 'creativity') {
+                avatarPreferences['artistic_expression'] = true;
+                avatarPreferences['building_creating'] = true;
+              } else if (avatarResults.avatar_values === 'helping') {
+                avatarPreferences['helping_others'] = true;
+              } else if (avatarResults.avatar_values === 'freedom') {
+                avatarPreferences['entrepreneurship'] = true;
+              } else if (avatarResults.avatar_values === 'learning') {
+                avatarPreferences['technical_skills'] = true;
+              }
+              
+              // Map lifestyle preferences
+              if (avatarResults.avatar_lifestyle === 'adventurous') {
+                avatarPreferences['outdoor_work'] = true;
+              } else if (avatarResults.avatar_lifestyle === 'balanced') {
+                avatarPreferences['working_with_people'] = true;
+              } else if (avatarResults.avatar_lifestyle === 'social') {
+                avatarPreferences['team_collaboration'] = true;
+                avatarPreferences['working_with_people'] = true;
+              }
+            }
+            
+            return avatarPreferences;
+          };
+          
+          // If the exploration method is 'swipe', we need to check if we have swipe results
+          // If no swipe results yet, show the swipe cards component first
+          if (explorationMethod === 'swipe' && Object.keys(swipeResults).length === 0) {
+            return (
+              <Step 
+                title="Find Your Perfect Path" 
+                subtitle="Swipe through cards to tell us what you like and don't like"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <SwipeableScenarios 
+                      key={`swipe-${resetCounter}`}
+                      resetKey={resetCounter}
                       onComplete={(results) => {
                         setSwipeResults(results);
-                        setGuidedPathComplete(true);
-                      }}
+                        // Don't automatically move to the next step
+                        // Let this same case 3 handle it with the swipe results
+                      }} 
                     />
-                  )}
-                </Step>
-              );
-              
-            case 'wheel':
-              return (
-                <Step 
-                  title={
-                    guidedPathComplete 
-                      ? "Here are your personalized recommendations"
-                      : "Spin the wheel to explore your interests"
-                  } 
-                  subtitle={
-                    guidedPathComplete 
-                      ? "Based on your choices, these paths might be a good fit"
-                      : "Answer questions to help discover what paths might interest you"
-                  }
-                >
-                  {guidedPathComplete ? (
-                    <RecommendationEngine 
-                      preferences={convertWheelResultsToPreferences()} 
-                      onSelectPath={handleSelectPath}
-                    />
-                  ) : (
-                    <IdentityWheel
-                      key={resetKey}
-                      onComplete={(results) => {
-                        setWheelResults(results);
-                        setGuidedPathComplete(true);
-                      }}
-                    />
-                  )}
-                </Step>
-              );
-              
-            case 'advancedWheel':
-              return (
-                <Step 
-                  title={
-                    guidedPathComplete 
-                      ? "Here are your personalized recommendations"
-                      : "Deep dive into your values and aspirations"
-                  } 
-                  subtitle={
-                    guidedPathComplete 
-                      ? "Based on your values, these paths might be a good fit"
-                      : "Answer questions to explore what truly matters to you"
-                  }
-                >
-                  {guidedPathComplete ? (
-                    <RecommendationEngine 
-                      preferences={convertWheelResultsToPreferences()} 
-                      onSelectPath={handleSelectPath}
-                    />
-                  ) : (
-                    <AdvancedWheel
-                      key={resetKey}
-                      onComplete={(results) => {
-                        setWheelResults(results);
-                        setGuidedPathComplete(true);
-                      }}
-                    />
-                  )}
-                </Step>
-              );
-              
-            case 'avatar':
-              return (
-                <Step 
-                  title={
-                    guidedPathComplete 
-                      ? "Here are your personalized recommendations"
-                      : "Create your future self avatar"
-                  } 
-                  subtitle={
-                    guidedPathComplete 
-                      ? "Based on your future self vision, these paths might be a good fit"
-                      : "Visualize where you want to be in the future"
-                  }
-                >
-                  {guidedPathComplete ? (
-                    <RecommendationEngine 
-                      preferences={convertAvatarResultsToPreferences()} 
-                      onSelectPath={handleSelectPath}
-                    />
-                  ) : (
-                    <AvatarCreator
-                      key={resetKey}
-                      onComplete={(results) => {
-                        setAvatarResults(results);
-                        setGuidedPathComplete(true);
-                      }}
-                    />
-                  )}
-                </Step>
-              );
-              
-            case 'quickSpin':
-              return (
-                <Step 
-                  title={
-                    guidedPathComplete 
-                      ? "Here are your personalized recommendations"
-                      : "Quick self-discovery questions"
-                  } 
-                  subtitle={
-                    guidedPathComplete 
-                      ? "Based on your answers, these paths might be a good fit"
-                      : "Answer a few questions to help us understand your interests"
-                  }
-                >
-                  {guidedPathComplete ? (
-                    <RecommendationEngine 
-                      preferences={convertQuickSpinResultsToPreferences()} 
-                      onSelectPath={handleSelectPath}
-                    />
-                  ) : (
-                    <QuickSpinWheel
-                      key={resetKey}
-                      onComplete={(results) => {
-                        // Make sure results conform to our expected structure
-                        const formattedResults = {
-                          superpower: results.superpower || '',
-                          ideal_day: results.ideal_day || '',
-                          values: results.values || '',
-                          activities: results.activities || ''
-                        };
-                        setQuickSpinResults(formattedResults);
-                        setGuidedPathComplete(true);
-                      }}
-                    />
-                  )}
-                </Step>
-              );
-              
-            default: {
-              return (
-                <Step 
-                  title="Let's explore your options" 
-                  subtitle="Choose an exploration method to continue"
-                >
-                  <div className="text-center py-8">
-                    <Button 
-                      onClick={handleBack}
-                      className="bg-primary"
-                    >
-                      Go back to select an exploration method
-                    </Button>
-                  </div>
-                </Step>
-              );
-            }
+                  </CardContent>
+                </Card>
+              </Step>
+            );
           }
-        } else {
+          
+          // Determine which results to use based on the exploration method
+          let preferences: Record<string, boolean>;
+          
+          if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
+            preferences = convertWheelResultsToPreferences();
+          } else if (explorationMethod === 'avatar') {
+            preferences = convertAvatarResultsToPreferences();
+          } else if (explorationMethod === 'quickSpin') {
+            preferences = convertQuickSpinResultsToPreferences();
+          } else {
+            preferences = swipeResults;
+          }
+          
+          // Determine the activity name for the subtitle
+          let activityName: string;
+          
+          if (explorationMethod === 'wheel') {
+            activityName = 'Identity Wheel';
+          } else if (explorationMethod === 'advancedWheel') {
+            activityName = 'Advanced Identity Wheel';
+          } else if (explorationMethod === 'avatar') {
+            activityName = 'Future Self Avatar';
+          } else if (explorationMethod === 'quickSpin') {
+            activityName = 'Quick Spin Game';
+          } else {
+            activityName = 'Card Preferences';
+          }
+            
           return (
             <Step 
-              title="Do you need guidance choosing a path?" 
-              subtitle="We can help you explore options based on your interests"
+              title="Your Personalized Recommendations" 
+              subtitle={`Based on your ${activityName} results, here are paths that might be the best fit for you`}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                <Card 
-                  className="border-2 cursor-pointer hover:shadow-md transition-all"
-                  onClick={() => {
-                    setNeedsGuidance(true);
-                    handleNext();
-                  }}
+              <Card>
+                <CardContent className="p-6">
+                  <RecommendationEngine 
+                    preferences={preferences} 
+                    onSelectPath={handleSelectPath} 
+                  />
+                  
+                  <div className="flex justify-between mt-6">
+                    <Button variant="outline" onClick={handleBack}>
+                      <span className="material-icons text-sm mr-1">sports_esports</span>
+                      Play Game Again
+                    </Button>
+                    <Button onClick={handleNext}>Continue to Pathways</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </Step>
+          );
+        } else if (isEducationPath(selectedPath)) {
+          return (
+            <Step title="After high school, I am interested in...">
+              {/* User journey narrative starts here */}
+              <div className="mb-4 text-gray-600 text-sm">
+                <p>Choose the type of education that aligns with your goals</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div 
+                  className={`border ${educationType === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => selectEducationType('4year')}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <div className="bg-orange-100 text-orange-600 h-12 w-12 rounded-full flex items-center justify-center mr-4">
-                        <span className="material-icons">psychology</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-lg">Yes, I'd like help</h3>
-                        <p className="text-gray-600 text-sm">Explore your interests and get personalized suggestions</p>
-                      </div>
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${educationType === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">school</span>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <h5 className={`font-medium ${educationType === '4year' ? 'text-primary' : ''}`}>4-Year College/University</h5>
+                      <p className="text-sm text-gray-600">Bachelor's degree programs</p>
+                    </div>
+                  </div>
+                </div>
                 
-                <Card 
-                  className="border-2 cursor-pointer hover:shadow-md transition-all"
-                  onClick={() => {
-                    setNeedsGuidance(false);
-                    handleBack();
-                  }}
+                <div 
+                  className={`border ${educationType === '2year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => selectEducationType('2year')}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-center">
-                      <div className="bg-blue-100 text-blue-600 h-12 w-12 rounded-full flex items-center justify-center mr-4">
-                        <span className="material-icons">map</span>
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-lg">No, I know where I'm headed</h3>
-                        <p className="text-gray-600 text-sm">Continue with your selected path</p>
-                      </div>
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${educationType === '2year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === '2year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">menu_book</span>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <h5 className={`font-medium ${educationType === '2year' ? 'text-primary' : ''}`}>2-Year College</h5>
+                      <p className="text-sm text-gray-600">Associate's degree programs</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${educationType === 'vocational' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => selectEducationType('vocational')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${educationType === 'vocational' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${educationType === 'vocational' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">build</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${educationType === 'vocational' ? 'text-primary' : ''}`}>Vocational School</h5>
+                      <p className="text-sm text-gray-600">Specialized training programs</p>
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <div className="flex justify-between mt-6">
@@ -1225,10 +1041,244 @@ const Pathways = () => {
               </div>
             </Step>
           );
+        } else if (selectedPath === 'job') {
+          return (
+            <Step title="What type of job are you looking for?">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div 
+                  className={`border ${jobType === 'fulltime' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setJobType('fulltime')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${jobType === 'fulltime' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${jobType === 'fulltime' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">business_center</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${jobType === 'fulltime' ? 'text-primary' : ''}`}>Full-Time Job</h5>
+                      <p className="text-sm text-gray-600">40+ hours per week</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${jobType === 'parttime' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setJobType('parttime')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${jobType === 'parttime' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${jobType === 'parttime' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">schedule</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${jobType === 'parttime' ? 'text-primary' : ''}`}>Part-Time Job</h5>
+                      <p className="text-sm text-gray-600">Less than 40 hours per week</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${jobType === 'apprenticeship' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setJobType('apprenticeship')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${jobType === 'apprenticeship' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${jobType === 'apprenticeship' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">construction</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${jobType === 'apprenticeship' ? 'text-primary' : ''}`}>Apprenticeship</h5>
+                      <p className="text-sm text-gray-600">On-the-job training</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {jobType && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
+            </Step>
+          );
+        } else if (selectedPath === 'military') {
+          return (
+            <Step title="Which military branch are you interested in?">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div 
+                  className={`border ${militaryBranch === 'army' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setMilitaryBranch('army')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'army' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'army' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">shield</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'army' ? 'text-primary' : ''}`}>Army</h5>
+                      <p className="text-sm text-gray-600">Land-based operations</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'navy' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setMilitaryBranch('navy')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'navy' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'navy' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">sailing</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'navy' ? 'text-primary' : ''}`}>Navy</h5>
+                      <p className="text-sm text-gray-600">Sea-based operations</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'airforce' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setMilitaryBranch('airforce')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'airforce' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'airforce' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">flight</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'airforce' ? 'text-primary' : ''}`}>Air Force</h5>
+                      <p className="text-sm text-gray-600">Air-based operations</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'marines' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setMilitaryBranch('marines')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'marines' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'marines' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">security</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'marines' ? 'text-primary' : ''}`}>Marines</h5>
+                      <p className="text-sm text-gray-600">Amphibious operations</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'coastguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setMilitaryBranch('coastguard')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'coastguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'coastguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">water</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'coastguard' ? 'text-primary' : ''}`}>Coast Guard</h5>
+                      <p className="text-sm text-gray-600">Maritime safety & security</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'spaceguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setMilitaryBranch('spaceguard')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'spaceguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'spaceguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">rocket</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'spaceguard' ? 'text-primary' : ''}`}>Space Force</h5>
+                      <p className="text-sm text-gray-600">Space operations</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {militaryBranch && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
+            </Step>
+          );
+        } else if (selectedPath === 'gap') {
+          return (
+            <Step title="What do you plan to do during your gap year?">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div 
+                  className={`border ${gapYearActivity === 'travel' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setGapYearActivity('travel')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${gapYearActivity === 'travel' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'travel' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">flight_takeoff</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${gapYearActivity === 'travel' ? 'text-primary' : ''}`}>Travel</h5>
+                      <p className="text-sm text-gray-600">Explore new places and cultures</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${gapYearActivity === 'volunteer' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setGapYearActivity('volunteer')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${gapYearActivity === 'volunteer' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'volunteer' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">volunteer_activism</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${gapYearActivity === 'volunteer' ? 'text-primary' : ''}`}>Volunteer</h5>
+                      <p className="text-sm text-gray-600">Give back to the community</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${gapYearActivity === 'work' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setGapYearActivity('work')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${gapYearActivity === 'work' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'work' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">payments</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${gapYearActivity === 'work' ? 'text-primary' : ''}`}>Work</h5>
+                      <p className="text-sm text-gray-600">Save money for future plans</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${gapYearActivity === 'other' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => setGapYearActivity('other')}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${gapYearActivity === 'other' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'other' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">more_horiz</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${gapYearActivity === 'other' ? 'text-primary' : ''}`}>Other Activities</h5>
+                      <p className="text-sm text-gray-600">Learn new skills, pursue hobbies</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {gapYearActivity && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button onClick={handleNext}>Next Step</Button>
+                </div>
+              )}
+            </Step>
+          );
         }
-      }
+        return null;
       
-      case 4: {
+      case 4:
         // Do you have a specific school in mind?
         if (isEducationPath(selectedPath) && educationType) {
           // Set a different title based on whether we came from guided or direct path
@@ -1341,10 +1391,8 @@ const Pathways = () => {
             </Step>
           );
         }
-        return null;
-      }
       
-      case 5: {
+      case 5:
         // Field of Study selection step
         if (isEducationPath(selectedPath)) {
           return (
@@ -1555,9 +1603,8 @@ const Pathways = () => {
             </Step>
           );
         }
-      }
       
-      case 6: {
+      case 6:
         // Profession selection step
         if (isEducationPath(selectedPath) && selectedFieldOfStudy) {
           return (
@@ -1609,19 +1656,25 @@ const Pathways = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-8">
-                          <p className="text-gray-600">No career paths found for this field of study. Try selecting a different field.</p>
+                        <div className="text-center py-6 border rounded-lg mb-6">
+                          <p className="text-gray-500">No career paths found for this field of study</p>
                         </div>
                       )}
                       
-                      <div className="flex justify-between">
+                      <div className="flex justify-between mt-6">
                         <Button variant="outline" onClick={handleBack}>Back</Button>
                         {selectedProfession && (
                           <Button 
-                            className="bg-green-500 hover:bg-green-600 text-white"
-                            onClick={() => navigate('/calculator')}
+                            className="bg-green-500 hover:bg-green-600"
+                            onClick={() => {
+                              // Pass the complete narrative to the calculator via localStorage
+                              localStorage.setItem('userPathwayNarrative', userJourney);
+                              
+                              // Redirect to calculator
+                              navigate('/calculator');
+                            }}
                           >
-                            Continue to Financial Planner
+                            Create Financial Plan
                           </Button>
                         )}
                       </div>
@@ -1632,39 +1685,55 @@ const Pathways = () => {
             </Step>
           );
         }
-        return null;
-      }
       
-      default: {
-        return (
-          <Step 
-            title="Let's get started" 
-            subtitle="We'll help you explore options and make plans"
-          >
-            <div className="text-center py-8">
-              <Button 
-                onClick={() => setCurrentStep(1)}
-                className="bg-primary"
-              >
-                Start Exploration
-              </Button>
-            </div>
-          </Step>
-        );
-      }
+      default:
+        return null;
     }
   };
   
   return (
-    <div className="container max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Pathway Explorer</h1>
-        <p className="text-gray-600">Discover your post-high school options</p>
+    <div className="max-w-4xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-display font-semibold text-gray-800">Explore Your Pathways</h1>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleStartOver}
+          className="flex items-center gap-1"
+        >
+          <span className="material-icons text-sm">refresh</span>
+          Start Over
+        </Button>
       </div>
       
-      <div className="bg-white rounded-lg shadow-md p-6">
-        {renderCurrentStep()}
+      {/* Step indicator */}
+      <div className="flex items-center mb-8">
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          1
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          2
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 3 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          3
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 4 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 4 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          4
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 5 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 5 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          5
+        </div>
+        <div className={`h-1 flex-1 ${currentStep >= 6 ? 'bg-primary' : 'bg-gray-200'}`}></div>
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 6 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
+          6
+        </div>
       </div>
+      
+      {renderCurrentStep()}
     </div>
   );
 };
