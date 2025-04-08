@@ -646,7 +646,7 @@ const Pathways = () => {
           );
         }
       
-      case 3: {
+      case 3:
         // When starting over, make sure to reset the guidedPathComplete flag
         if (currentStep === 3 && guidedPathComplete && !needsGuidance) {
           // Reset the guidedPathComplete flag when explicitly returning to step 3 in direct path
@@ -1145,7 +1145,7 @@ const Pathways = () => {
                 </Step>
               );
               
-            default: {
+            default:
               return (
                 <Step 
                   title="Let's explore your options" 
@@ -1161,7 +1161,6 @@ const Pathways = () => {
                   </div>
                 </Step>
               );
-            }
           }
         } else {
           return (
@@ -1217,7 +1216,6 @@ const Pathways = () => {
             </Step>
           );
         }
-      }
       
       case 4: {
         // Do you have a specific school in mind?
@@ -1626,7 +1624,7 @@ const Pathways = () => {
         return null;
       }
       
-      default: {
+      default:
         return (
           <Step 
             title="Let's get started" 
@@ -1642,7 +1640,6 @@ const Pathways = () => {
             </div>
           </Step>
         );
-      }
     }
   };
   
