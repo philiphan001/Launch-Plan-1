@@ -197,9 +197,7 @@ const Pathways = () => {
   
   // This function restarts just the current exploration method
   const handleRestartExploration = () => {
-    // Reset the game by incrementing the counter to force a component re-mount
-    setResetCounter(prev => prev + 1);
-    
+    // First reset the state before updating the counter to avoid race conditions
     // Reset result states based on the current exploration method
     if (explorationMethod === 'swipe') {
       setSwipeResults({});
@@ -226,7 +224,12 @@ const Pathways = () => {
       setCurrentStep(3);
     }
     
-    console.log('Resetting exploration with new resetCounter:', resetCounter + 1);
+    // Reset the game by incrementing the counter to force a component re-mount
+    // Do this last to ensure the state changes above are processed first
+    setTimeout(() => {
+      setResetCounter(prev => prev + 1);
+      console.log('Resetting exploration with new resetCounter:', resetCounter + 1);
+    }, 50);
   };
   
   const renderCurrentStep = () => {
