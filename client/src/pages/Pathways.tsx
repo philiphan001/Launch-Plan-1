@@ -840,6 +840,29 @@ const Pathways = () => {
             return avatarPreferences;
           };
           
+          // If the exploration method is 'swipe', we need to check if we have swipe results
+          // If no swipe results yet, show the swipe cards component first
+          if (explorationMethod === 'swipe' && Object.keys(swipeResults).length === 0) {
+            return (
+              <Step 
+                title="Find Your Perfect Path" 
+                subtitle="Swipe through cards to tell us what you like and don't like"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <SwipeableScenarios 
+                      onComplete={(results) => {
+                        setSwipeResults(results);
+                        // Don't automatically move to the next step
+                        // Let this same case 3 handle it with the swipe results
+                      }} 
+                    />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
           // Determine which results to use based on the exploration method
           let preferences: Record<string, boolean>;
           
