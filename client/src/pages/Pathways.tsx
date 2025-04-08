@@ -110,17 +110,19 @@ const Pathways = () => {
     enabled: searchQuery.length > 2,
   });
   
-  // Query to get all fields of study
+  // Query to get all fields of study - using the main career paths endpoint
   const { data: fieldsOfStudy = [], isLoading: isLoadingAllPaths } = useQuery({
-    queryKey: ['/api/career-paths/fields'],
+    queryKey: ['/api/career-paths'],
     select: (data: unknown) => 
       Array.from(new Set((data as CareerPath[]).map(path => path.field_of_study))).sort(),
   });
   
   // Query to get career paths for a specific field
   const { data: fieldCareerPaths = [], isLoading: isLoadingFieldPaths } = useQuery({
-    queryKey: ['/api/career-paths/by-field', selectedFieldOfStudy],
+    queryKey: ['/api/career-paths/field', selectedFieldOfStudy],
     enabled: !!selectedFieldOfStudy,
+    queryFn: () => 
+      fetch(`/api/career-paths/field/${selectedFieldOfStudy}`).then(res => res.json()),
   });
   
   const handleNext = () => {
