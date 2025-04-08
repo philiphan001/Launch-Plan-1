@@ -196,40 +196,58 @@ const Pathways = () => {
   const [resetCounter, setResetCounter] = useState(0);
   
   // This function restarts just the current exploration method
+  // This function completely resets and remounts the active game component
   const handleRestartExploration = () => {
-    // First reset the state before updating the counter to avoid race conditions
-    // Reset result states based on the current exploration method
-    if (explorationMethod === 'swipe') {
-      setSwipeResults({});
-    } else if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
-      setWheelResults({});
-    } else if (explorationMethod === 'avatar') {
-      setAvatarResults({});
-    } else if (explorationMethod === 'quickSpin') {
-      setQuickSpinResults({
-        superpower: '',
-        ideal_day: '',
-        values: '',
-        activities: '',
-        feelings: '',
-        location: '',
-        team_role: '',
-        wildcard: ''
-      });
-    }
+    console.log('handleRestartExploration called - current resetCounter:', resetCounter);
+    
+    // Store the current exploration method to ensure we're operating on the right game
+    const currentMethod = explorationMethod;
     
     // If we're on the recommendations step, go back to the game step (3)
-    // Otherwise stay on the current step
     if (currentStep >= 4) {
       setCurrentStep(3);
     }
     
-    // Reset the game by incrementing the counter to force a component re-mount
-    // Do this last to ensure the state changes above are processed first
+    // Use a two-step approach: first unmount the component by setting a special value,
+    // then remount it with a new key in the next render cycle
+    
+    // Step 1: Set exploration method to null temporarily to unmount the component
+    setExplorationMethod(null);
+    
+    // Step 2: After a short delay, restore the exploration method and increment the reset counter
     setTimeout(() => {
-      setResetCounter(prev => prev + 1);
-      console.log('Resetting exploration with new resetCounter:', resetCounter + 1);
-    }, 50);
+      // Reset result states based on the previously active game
+      if (currentMethod === 'swipe') {
+        setSwipeResults({});
+      } else if (currentMethod === 'wheel' || currentMethod === 'advancedWheel') {
+        setWheelResults({});
+      } else if (currentMethod === 'avatar') {
+        setAvatarResults({});
+      } else if (currentMethod === 'quickSpin') {
+        setQuickSpinResults({
+          superpower: '',
+          ideal_day: '',
+          values: '',
+          activities: '',
+          feelings: '',
+          location: '',
+          team_role: '',
+          wildcard: ''
+        });
+      }
+      
+      // Increment counter to ensure we get a new key when the component remounts
+      setResetCounter(prev => {
+        const newCounter = prev + 1;
+        console.log('Incrementing resetCounter from', prev, 'to', newCounter);
+        return newCounter;
+      });
+      
+      // Restore the exploration method to remount the component
+      setExplorationMethod(currentMethod);
+      
+      console.log('Game reset complete - exploration method restored to:', currentMethod);
+    }, 100);
   };
   
   const renderCurrentStep = () => {

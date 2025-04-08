@@ -25,9 +25,19 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   
   // Reset state when resetKey changes
   useEffect(() => {
+    console.log('SwipeableScenarios: resetKey changed to', resetKey);
+    // Completely reset the component state
     setCurrentIndex(0);
     setResults({});
     cardControls.set({ x: 0, rotate: 0, opacity: 1 });
+    
+    // Force a repaint of the component
+    const timer = setTimeout(() => {
+      console.log('SwipeableScenarios: Delayed reset complete');
+      cardControls.set({ x: 0, rotate: 0, opacity: 1 });
+    }, 50);
+    
+    return () => clearTimeout(timer);
   }, [resetKey, cardControls]);
   
   const scenarios: Scenario[] = [
