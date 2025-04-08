@@ -521,6 +521,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get career paths", error: error instanceof Error ? error.message : String(error) });
     }
   });
+  
+  app.get("/api/career-paths/fields", async (req: Request, res: Response) => {
+    try {
+      const careerPaths = await activeStorage.getAllCareerPaths();
+      res.json(careerPaths);
+    } catch (error) {
+      console.error("Error fetching career paths for fields:", error);
+      res.status(500).json({ message: "Failed to get career paths", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
 
   app.get("/api/career-paths/field/:fieldOfStudy", async (req: Request, res: Response) => {
     try {
