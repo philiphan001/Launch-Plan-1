@@ -431,84 +431,9 @@ const Pathways = () => {
                 </Card>
               </Step>
             );
-          } else if (explorationMethod === 'wheel') {
-            return (
-              <Step 
-                title="Spin the Wheel of Identity" 
-                subtitle="Discover what matters most to you through fun prompts and questions"
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <IdentityWheel 
-                      key={`wheel-${resetCounter}`}
-                      resetKey={resetCounter}
-                      onComplete={(results) => {
-                        setWheelResults(results);
-                        handleNext();
-                      }}
-                    />
-                    <div className="flex justify-center mt-6">
-                      <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">sports_esports</span>
-                        Play Game Again
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Step>
-            );
-          } else if (explorationMethod === 'advancedWheel') {
-            return (
-              <Step 
-                title="Spin the Advanced Identity Wheel" 
-                subtitle="Explore deeper aspects of your identity with fun prompts and mini-games"
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <AdvancedWheel 
-                      key={`advanced-wheel-${resetCounter}`}
-                      resetKey={resetCounter}
-                      onComplete={(results) => {
-                        setWheelResults(results);
-                        handleNext();
-                      }}
-                    />
-                    <div className="flex justify-center mt-6">
-                      <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">sports_esports</span>
-                        Play Game Again
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Step>
-            );
-          } else if (explorationMethod === 'avatar') {
-            return (
-              <Step 
-                title="Create Your Future Self" 
-                subtitle="Design an avatar that represents who you want to become"
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <AvatarCreator 
-                      key={`avatar-${resetCounter}`}
-                      resetKey={resetCounter}
-                      onComplete={(results) => {
-                        setAvatarResults(results);
-                        handleNext();
-                      }}
-                    />
-                    <div className="flex justify-center mt-6">
-                      <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">sports_esports</span>
-                        Play Game Again
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Step>
-            );
+          // The wheel case is now handled with the conditional rendering check below
+          // The advancedWheel case is now handled with the conditional rendering check below
+          // The avatar case is now handled with the conditional rendering check below
           // The quickSpin case is now handled with the conditional rendering check above
           }
         } else {
@@ -953,6 +878,102 @@ const Pathways = () => {
                         setQuickSpinResults(results);
                         // Don't automatically move to the next step
                         // Let this same case 3 handle it with the quickSpin results
+                      }}
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
+          // If the exploration method is 'wheel', check if we have wheel results
+          // If no wheel results yet, show the Identity Wheel component first
+          if (explorationMethod === 'wheel' && 
+              (!wheelResults || Object.keys(wheelResults).length === 0)) {
+            return (
+              <Step 
+                title="Spin the Wheel of Identity" 
+                subtitle="Discover what matters most to you through fun prompts and questions"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <IdentityWheel 
+                      key={`wheel-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setWheelResults(results);
+                        // Don't automatically move to the next step
+                        // Let this same case 3 handle it with the wheel results
+                      }}
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
+          // If the exploration method is 'advancedWheel', check if we have wheel results
+          // If no wheel results yet, show the Advanced Wheel component first
+          if (explorationMethod === 'advancedWheel' && 
+              (!wheelResults || Object.keys(wheelResults).length === 0)) {
+            return (
+              <Step 
+                title="Spin the Advanced Identity Wheel" 
+                subtitle="Explore deeper aspects of your identity with fun prompts and mini-games"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <AdvancedWheel 
+                      key={`advanced-wheel-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setWheelResults(results);
+                        // Don't automatically move to the next step
+                        // Let this same case 3 handle it with the wheel results
+                      }}
+                    />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
+          // If the exploration method is 'avatar', check if we have avatar results
+          // If no avatar results yet, show the Avatar Creator component first
+          if (explorationMethod === 'avatar' && 
+              (!avatarResults || Object.keys(avatarResults).length === 0)) {
+            return (
+              <Step 
+                title="Create Your Future Self" 
+                subtitle="Design an avatar that represents who you want to become"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <AvatarCreator 
+                      key={`avatar-${resetCounter}`}
+                      resetKey={resetCounter}
+                      onComplete={(results) => {
+                        setAvatarResults(results);
+                        // Don't automatically move to the next step
+                        // Let this same case 3 handle it with the avatar results
                       }}
                     />
                     <div className="flex justify-center mt-6">
