@@ -1619,7 +1619,18 @@ const Pathways = () => {
   
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Explore Your Pathways</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-display font-semibold text-gray-800">Explore Your Pathways</h1>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleStartOver}
+          className="flex items-center gap-1"
+        >
+          <span className="material-icons text-sm">refresh</span>
+          Reset
+        </Button>
+      </div>
       
       {/* Step indicator */}
       <div className="flex items-center mb-8">
