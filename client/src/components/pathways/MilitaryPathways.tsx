@@ -25,105 +25,158 @@ export const MilitaryPathway: React.FC<MilitaryPathwayProps> = ({
               <h3 className="text-xl font-semibold mb-4">Military Career Path: Army</h3>
               
               <div className="relative bg-white p-6 rounded-lg border shadow-sm">
-                {/* First step box */}
-                <div className="mx-auto w-64 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                  <p className="font-medium">Enlistment</p>
-                  <p className="text-sm text-gray-600">After High School</p>
-                </div>
-                
-                {/* Arrow down */}
-                <div className="flex justify-center mb-4">
-                  <span className="material-icons text-gray-400">arrow_downward</span>
-                </div>
-                
-                {/* Second step box */}
-                <div className="mx-auto w-64 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                  <p className="font-medium">Basic Training</p>
-                  <p className="text-sm text-gray-600">(Boot Camp)</p>
-                  <p className="text-sm text-gray-600">8-13 weeks</p>
-                </div>
-                
-                {/* Arrow down */}
-                <div className="flex justify-center mb-4">
-                  <span className="material-icons text-gray-400">arrow_downward</span>
-                </div>
-                
-                {/* Third step box */}
-                <div className="mx-auto w-64 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                  <p className="font-medium">Advanced Training</p>
-                  <p className="text-sm text-gray-600">(AIT/Technical School)</p>
-                  <p className="text-sm text-gray-600">Specialized Skills</p>
-                </div>
-                
-                {/* Branching paths */}
-                <div className="flex justify-center mb-2">
-                  <div className="flex items-center">
-                    <div className="w-32 border-b border-gray-400"></div>
-                    <span className="material-icons text-gray-400 mx-2">call_split</span>
-                    <div className="w-32 border-b border-gray-400"></div>
+                {/* Path Visualization - Enhanced Flow Chart */}
+                <div className="flex flex-col items-center">
+                  {/* First Step Box */}
+                  <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                    <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                      <p className="text-xs font-semibold">STEP 1</p>
+                    </div>
+                    <p className="font-semibold text-blue-900">Enlistment</p>
+                    <p className="text-sm text-gray-600 mt-1">After High School</p>
                   </div>
-                </div>
-                
-                {/* Two paths side by side */}
-                <div className="flex justify-center gap-20 mb-4">
-                  <div>
-                    <div className="w-48 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                      <p className="font-medium">Education Options</p>
-                      <p className="text-sm text-gray-600">While Serving</p>
+                  
+                  {/* Arrow down with service agreement note */}
+                  <div className="flex flex-col items-center justify-center my-4 relative">
+                    <div className="h-8 w-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                      <span className="material-icons text-sm">arrow_downward</span>
                     </div>
-                    
-                    {/* Branching education options */}
-                    <div className="flex justify-center mb-2">
-                      <div className="flex items-center">
-                        <div className="w-5 border-b border-gray-400"></div>
-                        <span className="material-icons text-gray-400 mx-2">call_split</span>
-                        <div className="w-5 border-b border-gray-400"></div>
+                    <div className="absolute -right-40 top-0 bg-yellow-50 border border-yellow-200 p-2 rounded text-xs max-w-[200px]">
+                      <p className="font-semibold text-yellow-800">Service Agreement</p>
+                      <p className="text-gray-700">Typically 4-6 year commitment</p>
+                    </div>
+                  </div>
+                  
+                  {/* Second Step Box */}
+                  <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                    <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                      <p className="text-xs font-semibold">STEP 2</p>
+                    </div>
+                    <p className="font-semibold text-blue-900">Basic Training</p>
+                    <p className="text-sm text-gray-600 mt-1">(Boot Camp)</p>
+                    <p className="text-sm text-gray-600">8-13 weeks</p>
+                  </div>
+                  
+                  {/* Arrow down */}
+                  <div className="flex flex-col items-center justify-center my-4">
+                    <div className="h-8 w-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                      <span className="material-icons text-sm">arrow_downward</span>
+                    </div>
+                  </div>
+                  
+                  {/* Third Step Box */}
+                  <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                    <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                      <p className="text-xs font-semibold">STEP 3</p>
+                    </div>
+                    <p className="font-semibold text-blue-900">Advanced Training</p>
+                    <p className="text-sm text-gray-600 mt-1">(AIT/Technical School)</p>
+                    <p className="text-sm text-gray-600">Specialized Skills</p>
+                  </div>
+                  
+                  {/* Decision Point - Career Path Decision */}
+                  <div className="flex flex-col items-center justify-center my-6">
+                    <div className="h-8 w-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-yellow-400 h-8 w-8 flex items-center justify-center text-white">
+                      <span className="material-icons text-sm">fork_right</span>
+                    </div>
+                    <div className="py-1 px-3 bg-yellow-100 border border-yellow-200 rounded-lg text-xs text-yellow-800 font-medium mt-1">
+                      Career Path Decision Point
+                    </div>
+                  </div>
+                  
+                  {/* Branching paths with improved visualization */}
+                  <div className="flex items-center justify-center mb-6 w-full">
+                    <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-gray-400 h-5 w-5 flex items-center justify-center text-white mx-4">
+                      <span className="material-icons text-xs">call_split</span>
+                    </div>
+                    <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                  </div>
+                  
+                  {/* Two main paths - Military Career vs. Civilian Transition */}
+                  <div className="flex justify-center gap-8 w-full">
+                    {/* Left path - Stay in Military */}
+                    <div className="w-1/2 max-w-xs">
+                      <div className="p-4 border border-green-300 rounded-lg text-center bg-green-50 shadow-sm mb-4">
+                        <div className="bg-green-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                          <p className="text-xs font-semibold">OPTION A</p>
+                        </div>
+                        <p className="font-semibold text-green-900">Continue Military Career</p>
+                        <p className="text-xs text-gray-600 mt-1">20+ year career path</p>
+                      </div>
+                      
+                      {/* Military career sub-options */}
+                      <div className="flex justify-center mb-2">
+                        <div className="h-6 w-0.5 bg-gray-400"></div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="p-3 border border-green-200 rounded-lg text-center bg-green-50 text-sm shadow-sm">
+                          <p className="font-semibold text-green-800">Advancement Opportunities</p>
+                          <p className="text-xs text-gray-600 mt-1">Promotions & Leadership Roles</p>
+                        </div>
+                        
+                        <div className="p-3 border border-blue-200 rounded-lg text-center bg-blue-50 text-sm shadow-sm">
+                          <p className="font-semibold text-blue-800">Education While Serving</p>
+                          <p className="text-xs text-gray-600 mt-1">Tuition Assistance & Online Classes</p>
+                        </div>
+                        
+                        <div className="p-3 border border-purple-200 rounded-lg text-center bg-purple-50 text-sm shadow-sm">
+                          <p className="font-semibold text-purple-800">Retirement Benefits</p>
+                          <p className="text-xs text-gray-600 mt-1">Pension after 20+ years service</p>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="flex justify-between gap-2">
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">Tuition Assistance</p>
+                    {/* Right path - Transition to Civilian */}
+                    <div className="w-1/2 max-w-xs">
+                      <div className="p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm mb-4">
+                        <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                          <p className="text-xs font-semibold">OPTION B</p>
+                        </div>
+                        <p className="font-semibold text-blue-900">Transition to Civilian Life</p>
+                        <p className="text-xs text-gray-600 mt-1">After your service commitment</p>
                       </div>
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">Online Classes</p>
+                      
+                      {/* Civilian path sub-options */}
+                      <div className="flex justify-center mb-2">
+                        <div className="h-6 w-0.5 bg-gray-400"></div>
                       </div>
-                    </div>
-                    
-                    <div className="flex justify-center mt-2">
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">CLEP Exams</p>
+                      
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="p-3 border border-orange-200 rounded-lg text-center bg-orange-50 text-sm shadow-sm">
+                          <p className="font-semibold text-orange-800">GI Bill Education Benefits</p>
+                          <p className="text-xs text-gray-600 mt-1">Funding for college/university</p>
+                        </div>
+                        
+                        <div className="p-3 border border-indigo-200 rounded-lg text-center bg-indigo-50 text-sm shadow-sm">
+                          <p className="font-semibold text-indigo-800">Civilian Career Paths</p>
+                          <p className="text-xs text-gray-600 mt-1">Using military skills & training</p>
+                        </div>
+                        
+                        <div className="p-3 border border-red-200 rounded-lg text-center bg-red-50 text-sm shadow-sm">
+                          <p className="font-semibold text-red-800">Veterans Benefits</p>
+                          <p className="text-xs text-gray-600 mt-1">Healthcare, home loans & more</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="w-48 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                      <p className="font-medium">Career Outcomes</p>
-                    </div>
-                    
-                    {/* Branching career outcomes */}
-                    <div className="flex justify-center mb-2">
-                      <div className="flex items-center">
-                        <div className="w-5 border-b border-gray-400"></div>
-                        <span className="material-icons text-gray-400 mx-2">call_split</span>
-                        <div className="w-5 border-b border-gray-400"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between gap-2">
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">Military Career</p>
-                      </div>
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">Civilian Transition</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-center mt-2">
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">GI Bill Education</p>
-                      </div>
+                  {/* Pathway Connections - Button to explore education/career options */}
+                  <div className="mt-8 flex flex-col items-center">
+                    <div className="text-xs text-gray-500 mb-2">Want to explore post-service options in detail?</div>
+                    <div className="flex space-x-4">
+                      <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 text-xs">
+                        <span className="material-icons text-xs mr-1">school</span>
+                        Explore Education Pathways
+                      </Button>
+                      <Button variant="outline" size="sm" className="border-green-300 text-green-700 text-xs">
+                        <span className="material-icons text-xs mr-1">work</span>
+                        Explore Career Options
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -138,14 +191,24 @@ export const MilitaryPathway: React.FC<MilitaryPathwayProps> = ({
                 <Tabs defaultValue="getting-started">
                   <TabsList className="w-full">
                     <TabsTrigger value="getting-started" className="flex-1">Getting Started</TabsTrigger>
-                    <TabsTrigger value="education" className="flex-1">Education Options</TabsTrigger>
-                    <TabsTrigger value="career" className="flex-1">Career Paths</TabsTrigger>
+                    <TabsTrigger value="military-career" className="flex-1">Military Career</TabsTrigger>
+                    <TabsTrigger value="civilian-path" className="flex-1">Civilian Path</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="getting-started" className="p-4 space-y-4">
+                    <div className="mb-4 flex items-center">
+                      <div className="bg-blue-600 rounded-full w-6 h-6 flex items-center justify-center mr-2">
+                        <p className="text-white text-xs font-bold">1</p>
+                      </div>
+                      <h3 className="font-semibold text-blue-900">Initial Training Path</h3>
+                    </div>
+                    
                     <Card className="border-green-100">
                       <CardContent className="pt-4">
                         <h4 className="font-medium">Enlistment After High School</h4>
+                        <p className="text-sm text-gray-600 mt-2">
+                          <strong>Requirements:</strong> High school diploma/GED, pass ASVAB test, meet physical standards, age 17-35.
+                        </p>
                         <p className="text-sm text-gray-600 mt-2">
                           The process begins with connecting with a recruiter and going through the Military Entrance Processing Station (MEPS) which includes aptitude tests, medical exams, and career counseling.
                         </p>
@@ -154,77 +217,158 @@ export const MilitaryPathway: React.FC<MilitaryPathwayProps> = ({
                     
                     <Card className="border-green-100">
                       <CardContent className="pt-4">
-                        <h4 className="font-medium">Basic Training (Boot Camp) 8-13 weeks</h4>
+                        <h4 className="font-medium">Basic Combat Training (BCT) - 10 weeks</h4>
                         <p className="text-sm text-gray-600 mt-2">
-                          Army Basic Combat Training (BCT) is a 10-week course that challenges you mentally and physically. You'll learn military skills, Army values, and build physical fitness.
+                          Army Basic Combat Training is a 10-week course at locations like Fort Jackson, SC or Fort Leonard Wood, MO. You'll learn military procedures, weapons training, field tactics, physical fitness, and Army values.
                         </p>
                       </CardContent>
                     </Card>
                     
                     <Card className="border-green-100">
                       <CardContent className="pt-4">
-                        <h4 className="font-medium">Advanced Training (AIT/Technical School)</h4>
+                        <h4 className="font-medium">Advanced Individual Training (AIT)</h4>
                         <p className="text-sm text-gray-600 mt-2">
-                          After Basic Training, you'll attend Advanced Individual Training (AIT) to learn the specialized skills needed for your Military Occupational Specialty (MOS). Length varies from 4 weeks to over a year depending on specialization.
+                          AIT teaches the specialized skills needed for your Military Occupational Specialty (MOS). Training length varies from 4 weeks to over a year depending on your MOS.
+                        </p>
+                        <div className="mt-2 bg-blue-50 p-2 rounded-md">
+                          <p className="text-xs font-medium text-blue-800">Popular Army Career Fields:</p>
+                          <ul className="text-xs text-gray-700 mt-1 pl-4 list-disc">
+                            <li>Combat Arms (Infantry, Artillery, Armor)</li>
+                            <li>Intelligence & Communications</li>
+                            <li>Engineering & Mechanical Maintenance</li>
+                            <li>Medical & Healthcare</li>
+                            <li>Logistics & Transportation</li>
+                          </ul>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="military-career" className="p-4 space-y-4">
+                    <div className="mb-4 flex items-center">
+                      <div className="bg-green-600 rounded-full w-6 h-6 flex items-center justify-center mr-2">
+                        <p className="text-white text-xs font-bold">A</p>
+                      </div>
+                      <h3 className="font-semibold text-green-900">Military Career Path</h3>
+                    </div>
+                    
+                    <Card className="border-green-100">
+                      <CardContent className="pt-4">
+                        <h4 className="font-medium">Rank Advancement</h4>
+                        <p className="text-sm text-gray-600 mt-2">
+                          Progress from enlisted ranks (E-1 to E-9) over your career through promotion boards, time in service, and leadership positions. Each promotion brings higher pay and responsibilities.
+                        </p>
+                        <div className="flex justify-between items-center mt-2 bg-gray-50 p-2 rounded-md">
+                          <div className="text-center">
+                            <p className="text-xs font-semibold">E-1</p>
+                            <p className="text-xs text-gray-500">Private</p>
+                          </div>
+                          <span className="text-gray-400">→</span>
+                          <div className="text-center">
+                            <p className="text-xs font-semibold">E-5</p>
+                            <p className="text-xs text-gray-500">Sergeant</p>
+                          </div>
+                          <span className="text-gray-400">→</span>
+                          <div className="text-center">
+                            <p className="text-xs font-semibold">E-8/E-9</p>
+                            <p className="text-xs text-gray-500">Master Sergeant/SGM</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-green-100">
+                      <CardContent className="pt-4">
+                        <h4 className="font-medium">Education While Serving</h4>
+                        <p className="text-sm text-gray-600 mt-2">
+                          The Army offers multiple paths for continuing education:
+                        </p>
+                        <ul className="text-sm text-gray-600 mt-1 pl-4 list-disc">
+                          <li><strong>Tuition Assistance:</strong> Up to $4,000 annually for college courses</li>
+                          <li><strong>Credentialing Programs:</strong> Earn civilian certifications related to your MOS</li>
+                          <li><strong>Green to Gold:</strong> Program for enlisted soldiers to earn degrees and commissions as officers</li>
+                        </ul>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="border-green-100">
+                      <CardContent className="pt-4">
+                        <h4 className="font-medium">Retirement Benefits</h4>
+                        <p className="text-sm text-gray-600 mt-2">
+                          After 20+ years of service, qualify for:
+                        </p>
+                        <ul className="text-sm text-gray-600 mt-1 pl-4 list-disc">
+                          <li>Monthly retirement pay for life</li>
+                          <li>TRICARE health coverage for you and your family</li>
+                          <li>Commissary and exchange privileges</li>
+                          <li>VA benefits and services</li>
+                        </ul>
+                        <p className="text-xs mt-2 text-gray-500 italic">
+                          Note: Newer service members use the Blended Retirement System (BRS) which includes a Thrift Savings Plan with military contributions.
                         </p>
                       </CardContent>
                     </Card>
                   </TabsContent>
                   
-                  <TabsContent value="education" className="p-4 space-y-4">
-                    <Card className="border-blue-100">
+                  <TabsContent value="civilian-path" className="p-4 space-y-4">
+                    <div className="mb-4 flex items-center">
+                      <div className="bg-blue-600 rounded-full w-6 h-6 flex items-center justify-center mr-2">
+                        <p className="text-white text-xs font-bold">B</p>
+                      </div>
+                      <h3 className="font-semibold text-blue-900">Transition to Civilian Life</h3>
+                    </div>
+                    
+                    <Card className="border-orange-100">
                       <CardContent className="pt-4">
-                        <h4 className="font-medium">Tuition Assistance</h4>
+                        <h4 className="font-medium">GI Bill Education Benefits</h4>
                         <p className="text-sm text-gray-600 mt-2">
-                          The Army offers Tuition Assistance (TA) that can pay up to 100% of tuition costs for courses taken during off-duty hours, up to $4,000 per fiscal year.
+                          After completing your service, the Post-9/11 GI Bill provides:
                         </p>
+                        <ul className="text-sm text-gray-600 mt-1 pl-4 list-disc">
+                          <li>Full tuition at public state universities</li>
+                          <li>Monthly housing allowance based on school location</li>
+                          <li>Annual book/supplies stipend up to $1,000</li>
+                          <li>Up to 36 months of benefits (4 academic years)</li>
+                        </ul>
+                        <div className="mt-2 bg-yellow-50 p-2 rounded-md text-xs">
+                          <p className="font-medium text-yellow-800">Connect to Education Pathway:</p>
+                          <p className="text-gray-700">After military service, you can use your GI Bill to pursue higher education options including 4-year universities, community colleges, or vocational training programs.</p>
+                        </div>
                       </CardContent>
                     </Card>
                     
-                    <Card className="border-blue-100">
+                    <Card className="border-indigo-100">
                       <CardContent className="pt-4">
-                        <h4 className="font-medium">Online/Evening Classes</h4>
+                        <h4 className="font-medium">Civilian Career Opportunities</h4>
                         <p className="text-sm text-gray-600 mt-2">
-                          Many service members pursue education through online programs or evening classes at colleges located near military installations that accommodate military schedules.
+                          Military experience translates well to many civilian career fields:
                         </p>
+                        <ul className="text-sm text-gray-600 mt-1 pl-4 list-disc">
+                          <li><strong>Law Enforcement/Security:</strong> Police, federal agencies, private security</li>
+                          <li><strong>Technical Fields:</strong> IT, cybersecurity, equipment maintenance</li>
+                          <li><strong>Healthcare:</strong> Medical technicians, healthcare administration</li>
+                          <li><strong>Logistics:</strong> Supply chain management, transportation</li>
+                          <li><strong>Leadership Roles:</strong> Project management, team supervision</li>
+                        </ul>
+                        <div className="mt-2 bg-purple-50 p-2 rounded-md text-xs">
+                          <p className="font-medium text-purple-800">Connect to Career Pathway:</p>
+                          <p className="text-gray-700">Your military training and experience provide valuable skills for civilian careers. Transition services will help you translate military experience to civilian job qualifications.</p>
+                        </div>
                       </CardContent>
                     </Card>
                     
-                    <Card className="border-blue-100">
+                    <Card className="border-red-100">
                       <CardContent className="pt-4">
-                        <h4 className="font-medium">CLEP/DANTES Exams</h4>
+                        <h4 className="font-medium">Transition Support Programs</h4>
                         <p className="text-sm text-gray-600 mt-2">
-                          These programs allow service members to earn college credit by testing out of subjects they already know, accelerating degree completion and reducing costs.
+                          The Army provides extensive transition support:
                         </p>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="career" className="p-4 space-y-4">
-                    <Card className="border-purple-100">
-                      <CardContent className="pt-4">
-                        <h4 className="font-medium">Military Career Advancement</h4>
-                        <p className="text-sm text-gray-600 mt-2">
-                          Service members can pursue a full military career with promotions, leadership opportunities, and specialized training. Career soldiers can retire after 20 years with pension and benefits.
-                        </p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="border-purple-100">
-                      <CardContent className="pt-4">
-                        <h4 className="font-medium">Civilian Transition</h4>
-                        <p className="text-sm text-gray-600 mt-2">
-                          Military experience provides valuable skills for civilian careers. The Army offers transition assistance programs to help soldiers translate their military skills for civilian employers.
-                        </p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="border-purple-100">
-                      <CardContent className="pt-4">
-                        <h4 className="font-medium">GI Bill Education</h4>
-                        <p className="text-sm text-gray-600 mt-2">
-                          The Post-9/11 GI Bill provides education benefits for service members who have served on active duty for 90 days or more. Benefits can include full tuition at public universities, housing allowance, and book stipends.
-                        </p>
+                        <ul className="text-sm text-gray-600 mt-1 pl-4 list-disc">
+                          <li><strong>Transition Assistance Program (TAP):</strong> Career workshops, resume building, interview skills</li>
+                          <li><strong>VA Benefits Briefings:</strong> Education on available healthcare and benefit programs</li>
+                          <li><strong>Career Skills Programs:</strong> Training and internships with civilian employers before separation</li>
+                          <li><strong>Hiring Preferences:</strong> Federal job preferences for veterans</li>
+                        </ul>
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -243,93 +387,158 @@ export const MilitaryPathway: React.FC<MilitaryPathwayProps> = ({
               <h3 className="text-xl font-semibold mb-4">Military Career Path: Navy</h3>
               
               <div className="relative bg-white p-6 rounded-lg border shadow-sm">
-                {/* First step box */}
-                <div className="mx-auto w-64 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                  <p className="font-medium">Enlistment</p>
-                  <p className="text-sm text-gray-600">After High School</p>
-                </div>
-                
-                {/* Arrow down */}
-                <div className="flex justify-center mb-4">
-                  <span className="material-icons text-gray-400">arrow_downward</span>
-                </div>
-                
-                {/* Second step box */}
-                <div className="mx-auto w-64 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                  <p className="font-medium">Basic Training</p>
-                  <p className="text-sm text-gray-600">(Boot Camp)</p>
-                  <p className="text-sm text-gray-600">8 weeks</p>
-                </div>
-                
-                {/* Arrow down */}
-                <div className="flex justify-center mb-4">
-                  <span className="material-icons text-gray-400">arrow_downward</span>
-                </div>
-                
-                {/* Third step box */}
-                <div className="mx-auto w-64 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                  <p className="font-medium">Advanced Training</p>
-                  <p className="text-sm text-gray-600">("A" School)</p>
-                  <p className="text-sm text-gray-600">Specialized Rating Skills</p>
-                </div>
-                
-                {/* Branching paths */}
-                <div className="flex justify-center mb-2">
-                  <div className="flex items-center">
-                    <div className="w-32 border-b border-gray-400"></div>
-                    <span className="material-icons text-gray-400 mx-2">call_split</span>
-                    <div className="w-32 border-b border-gray-400"></div>
+                {/* Path Visualization - Enhanced Flow Chart */}
+                <div className="flex flex-col items-center">
+                  {/* First Step Box */}
+                  <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                    <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                      <p className="text-xs font-semibold">STEP 1</p>
+                    </div>
+                    <p className="font-semibold text-blue-900">Enlistment</p>
+                    <p className="text-sm text-gray-600 mt-1">After High School</p>
                   </div>
-                </div>
-                
-                {/* Two paths side by side */}
-                <div className="flex justify-center gap-20 mb-4">
-                  <div>
-                    <div className="w-48 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                      <p className="font-medium">Education Options</p>
-                      <p className="text-sm text-gray-600">While Serving</p>
+                  
+                  {/* Arrow down with service agreement note */}
+                  <div className="flex flex-col items-center justify-center my-4 relative">
+                    <div className="h-8 w-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                      <span className="material-icons text-sm">arrow_downward</span>
                     </div>
-                    
-                    {/* Branching education options */}
-                    <div className="flex justify-center mb-2">
-                      <div className="flex items-center">
-                        <div className="w-5 border-b border-gray-400"></div>
-                        <span className="material-icons text-gray-400 mx-2">call_split</span>
-                        <div className="w-5 border-b border-gray-400"></div>
+                    <div className="absolute -right-40 top-0 bg-yellow-50 border border-yellow-200 p-2 rounded text-xs max-w-[200px]">
+                      <p className="font-semibold text-yellow-800">Service Agreement</p>
+                      <p className="text-gray-700">Typically 4-6 year commitment</p>
+                    </div>
+                  </div>
+                  
+                  {/* Second Step Box */}
+                  <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                    <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                      <p className="text-xs font-semibold">STEP 2</p>
+                    </div>
+                    <p className="font-semibold text-blue-900">Recruit Training</p>
+                    <p className="text-sm text-gray-600 mt-1">(Boot Camp)</p>
+                    <p className="text-sm text-gray-600">8 weeks at Great Lakes</p>
+                  </div>
+                  
+                  {/* Arrow down */}
+                  <div className="flex flex-col items-center justify-center my-4">
+                    <div className="h-8 w-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                      <span className="material-icons text-sm">arrow_downward</span>
+                    </div>
+                  </div>
+                  
+                  {/* Third Step Box */}
+                  <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                    <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                      <p className="text-xs font-semibold">STEP 3</p>
+                    </div>
+                    <p className="font-semibold text-blue-900">Advanced Training</p>
+                    <p className="text-sm text-gray-600 mt-1">("A" School)</p>
+                    <p className="text-sm text-gray-600">Rating-Specific Training</p>
+                  </div>
+                  
+                  {/* Decision Point - Career Path Decision */}
+                  <div className="flex flex-col items-center justify-center my-6">
+                    <div className="h-8 w-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-yellow-400 h-8 w-8 flex items-center justify-center text-white">
+                      <span className="material-icons text-sm">fork_right</span>
+                    </div>
+                    <div className="py-1 px-3 bg-yellow-100 border border-yellow-200 rounded-lg text-xs text-yellow-800 font-medium mt-1">
+                      Career Path Decision Point
+                    </div>
+                  </div>
+                  
+                  {/* Branching paths with improved visualization */}
+                  <div className="flex items-center justify-center mb-6 w-full">
+                    <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                    <div className="rounded-full bg-gray-400 h-5 w-5 flex items-center justify-center text-white mx-4">
+                      <span className="material-icons text-xs">call_split</span>
+                    </div>
+                    <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                  </div>
+                  
+                  {/* Two main paths - Navy Career vs. Civilian Transition */}
+                  <div className="flex justify-center gap-8 w-full">
+                    {/* Left path - Stay in Navy */}
+                    <div className="w-1/2 max-w-xs">
+                      <div className="p-4 border border-green-300 rounded-lg text-center bg-green-50 shadow-sm mb-4">
+                        <div className="bg-green-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                          <p className="text-xs font-semibold">OPTION A</p>
+                        </div>
+                        <p className="font-semibold text-green-900">Navy Career</p>
+                        <p className="text-xs text-gray-600 mt-1">Sea/shore rotations</p>
+                      </div>
+                      
+                      {/* Navy career sub-options */}
+                      <div className="flex justify-center mb-2">
+                        <div className="h-6 w-0.5 bg-gray-400"></div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="p-3 border border-green-200 rounded-lg text-center bg-green-50 text-sm shadow-sm">
+                          <p className="font-semibold text-green-800">Sea Duty Assignments</p>
+                          <p className="text-xs text-gray-600 mt-1">Ships, Submarines, Aircraft</p>
+                        </div>
+                        
+                        <div className="p-3 border border-blue-200 rounded-lg text-center bg-blue-50 text-sm shadow-sm">
+                          <p className="font-semibold text-blue-800">Navy College Program</p>
+                          <p className="text-xs text-gray-600 mt-1">Education while serving</p>
+                        </div>
+                        
+                        <div className="p-3 border border-purple-200 rounded-lg text-center bg-purple-50 text-sm shadow-sm">
+                          <p className="font-semibold text-purple-800">Advancement</p>
+                          <p className="text-xs text-gray-600 mt-1">E-1 to E-9 progression</p>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="flex justify-between gap-2">
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">Navy College Program</p>
+                    {/* Right path - Transition to Civilian */}
+                    <div className="w-1/2 max-w-xs">
+                      <div className="p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm mb-4">
+                        <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                          <p className="text-xs font-semibold">OPTION B</p>
+                        </div>
+                        <p className="font-semibold text-blue-900">Civilian Transition</p>
+                        <p className="text-xs text-gray-600 mt-1">After your service commitment</p>
                       </div>
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">NCPACE Courses</p>
+                      
+                      {/* Civilian path sub-options */}
+                      <div className="flex justify-center mb-2">
+                        <div className="h-6 w-0.5 bg-gray-400"></div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 gap-2">
+                        <div className="p-3 border border-orange-200 rounded-lg text-center bg-orange-50 text-sm shadow-sm">
+                          <p className="font-semibold text-orange-800">GI Bill Education</p>
+                          <p className="text-xs text-gray-600 mt-1">College degree funding</p>
+                        </div>
+                        
+                        <div className="p-3 border border-indigo-200 rounded-lg text-center bg-indigo-50 text-sm shadow-sm">
+                          <p className="font-semibold text-indigo-800">Maritime Industry</p>
+                          <p className="text-xs text-gray-600 mt-1">Shipping, ports, offshore</p>
+                        </div>
+                        
+                        <div className="p-3 border border-red-200 rounded-lg text-center bg-red-50 text-sm shadow-sm">
+                          <p className="font-semibold text-red-800">Technical Careers</p>
+                          <p className="text-xs text-gray-600 mt-1">Engineering, electronics, IT</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div>
-                    <div className="w-48 p-3 border rounded-lg text-center mb-4 bg-blue-50">
-                      <p className="font-medium">Career Outcomes</p>
-                    </div>
-                    
-                    {/* Branching career outcomes */}
-                    <div className="flex justify-center mb-2">
-                      <div className="flex items-center">
-                        <div className="w-5 border-b border-gray-400"></div>
-                        <span className="material-icons text-gray-400 mx-2">call_split</span>
-                        <div className="w-5 border-b border-gray-400"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between gap-2">
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">Navy Leadership</p>
-                      </div>
-                      <div className="w-32 p-2 border rounded-lg text-center text-xs bg-green-50">
-                        <p className="font-medium">Maritime Industry</p>
-                      </div>
+                  {/* Pathway Connections - Button to explore education/career options */}
+                  <div className="mt-8 flex flex-col items-center">
+                    <div className="text-xs text-gray-500 mb-2">Want to explore post-service options in detail?</div>
+                    <div className="flex space-x-4">
+                      <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 text-xs">
+                        <span className="material-icons text-xs mr-1">school</span>
+                        Explore Education Pathways
+                      </Button>
+                      <Button variant="outline" size="sm" className="border-green-300 text-green-700 text-xs">
+                        <span className="material-icons text-xs mr-1">work</span>
+                        Explore Career Options
+                      </Button>
                     </div>
                   </div>
                 </div>
