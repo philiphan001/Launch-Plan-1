@@ -112,7 +112,7 @@ const CollegeDiscovery = ({
   
   // Fetch user's favorite colleges
   const { data: favoriteColleges = [] } = useQuery<FavoriteCollege[]>({
-    queryKey: ['/api/favorites/colleges', temporaryUserId],
+    queryKey: ['/api/favorites/colleges', userId],
     staleTime: 60 * 1000, // 1 minute
   });
   
@@ -126,11 +126,11 @@ const CollegeDiscovery = ({
     mutationFn: (collegeId: number) => 
       apiRequest('/api/favorites/colleges', {
         method: 'POST',
-        body: JSON.stringify({ userId: temporaryUserId, collegeId }),
+        body: JSON.stringify({ userId, collegeId }),
         headers: { 'Content-Type': 'application/json' }
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', temporaryUserId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', userId] });
       toast({
         title: "College added to favorites",
         description: "You can view your favorite colleges in the settings page.",
@@ -154,7 +154,7 @@ const CollegeDiscovery = ({
         method: 'DELETE'
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', temporaryUserId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', userId] });
       toast({
         title: "College removed from favorites",
         description: "The college has been removed from your favorites.",
