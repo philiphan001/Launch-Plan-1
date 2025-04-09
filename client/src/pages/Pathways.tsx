@@ -72,8 +72,10 @@ const Pathways = () => {
   const [userJourney, setUserJourney] = useState<string>("After high school, I am interested in...");
   const [specificSchool, setSpecificSchool] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [careerSearchQuery, setCareerSearchQuery] = useState<string>('');
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
+  const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
   
   // This function will set the education type and advance to the specific school question
   const selectEducationType = (type: EducationType) => {
@@ -120,7 +122,30 @@ const Pathways = () => {
   // Fetch career paths for a specific field when selected
   const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery<CareerPath[]>({
     queryKey: ['/api/career-paths/field', selectedFieldOfStudy],
+    queryFn: async () => {
+      if (!selectedFieldOfStudy) return [];
+      console.log(`Fetching career paths for field: ${selectedFieldOfStudy}`);
+      const response = await fetch(`/api/career-paths/field/${encodeURIComponent(selectedFieldOfStudy)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch career paths');
+      }
+      return response.json();
+    },
     enabled: !!selectedFieldOfStudy && (currentStep === 5 || currentStep === 6)
+  });
+  
+  // Fetch all careers for global search
+  const { data: allCareers } = useQuery<any[]>({
+    queryKey: ['/api/careers'],
+    queryFn: async () => {
+      console.log('Fetching all careers for search');
+      const response = await fetch('/api/careers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch careers');
+      }
+      return response.json();
+    },
+    enabled: currentStep === 5 || currentStep === 6
   });
   
   // School search query using our new college search API with education type filter
@@ -1754,44 +1779,76 @@ const Pathways = () => {
                               </span>
                               <Input 
                                 id="career-search"
-                                placeholder="Enter your own career choice" 
+                                placeholder="Search for a career" 
                                 className="pl-9 flex-1 w-full"
+                                value={careerSearchQuery}
                                 onChange={(e) => {
                                   const searchTerm = e.target.value.trim().toLowerCase();
-                                  // Filter the careers based on search term
-                                  if (fieldCareerPaths && searchTerm) {
-                                    // Client-side filtering implementation
-                                    const filteredPaths = fieldCareerPaths.filter((path: CareerPath) => 
-                                      path.career_title.toLowerCase().includes(searchTerm)
-                                    );
-                                    
-                                    // Update state to show filtered results
-                                    setFilteredCareerPaths(filteredPaths);
+                                  setCareerSearchQuery(e.target.value);
+                                  
+                                  if (searchTerm) {
+                                    if (allCareers && Array.isArray(allCareers)) {
+                                      // Always search from all careers
+                                      console.log('Searching all careers:', searchTerm);
+                                      const filteredCareers = allCareers
+                                        .filter((career: any) => 
+                                          career.title?.toLowerCase().includes(searchTerm)
+                                        )
+                                        .map((career: any, index: number) => ({
+                                          id: career.id || index,
+                                          field_of_study: globalCareerSearch ? 
+                                                          (career.category || career.field || "General") : 
+                                                          selectedFieldOfStudy || "General",
+                                          career_title: career.title,
+                                          option_rank: career.rank || index + 1
+                                        }));
+                                      
+                                      // If global search is disabled, only show careers that match the selected field
+                                      // or show all if global search is enabled
+                                      const finalFilteredCareers = globalCareerSearch ? 
+                                        filteredCareers : 
+                                        filteredCareers.filter(c => 
+                                          !selectedFieldOfStudy || 
+                                          c.field_of_study.toLowerCase() === selectedFieldOfStudy.toLowerCase()
+                                        );
+                                      
+                                      setFilteredCareerPaths(finalFilteredCareers);
+                                    } else {
+                                      console.error('Could not search careers: allCareers is not available');
+                                    }
                                   } else {
-                                    // If search is empty, show all careers
+                                    // Clear filtered paths when search is empty
                                     setFilteredCareerPaths(null);
                                   }
                                 }}
                               />
                             </div>
-                            <Button 
-                              type="button"
-                              onClick={() => {
-                                const input = document.getElementById('career-search') as HTMLInputElement;
-                                if (input && input.value.trim()) {
-                                  const searchCareer = input.value.trim();
-                                  setSelectedProfession(searchCareer);
-                                  
-                                  // Complete the narrative with the searched career
-                                  const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${searchCareer}.`;
-                                  setUserJourney(narrative);
-                                  localStorage.setItem('userPathwayNarrative', narrative);
-                                }
-                              }}
-                              className="bg-orange-500 hover:bg-orange-600 text-white"
-                            >
-                              Use Custom Career
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button 
+                                type="button"
+                                onClick={() => {
+                                  if (careerSearchQuery.trim()) {
+                                    setSelectedProfession(careerSearchQuery.trim());
+                                    
+                                    // Complete the narrative with the searched career
+                                    const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${careerSearchQuery.trim()}.`;
+                                    setUserJourney(narrative);
+                                    localStorage.setItem('userPathwayNarrative', narrative);
+                                  }
+                                }}
+                                className="bg-orange-500 hover:bg-orange-600 text-white"
+                              >
+                                Use Custom Career
+                              </Button>
+                              <Button 
+                                type="button"
+                                onClick={() => setGlobalCareerSearch(!globalCareerSearch)}
+                                variant="outline"
+                                className={globalCareerSearch ? "bg-blue-100" : ""}
+                              >
+                                {globalCareerSearch ? "Searching All Fields" : "Search All Fields"}
+                              </Button>
+                            </div>
                           </div>
                           <p className="text-xs text-gray-500 mt-2">
                             Don't see your preferred career? Enter it yourself, and we'll generate a custom financial plan.
@@ -1868,10 +1925,8 @@ const Pathways = () => {
                             onClick={() => {
                               // Clear the search
                               setFilteredCareerPaths(null);
-                              const searchInput = document.getElementById('career-search') as HTMLInputElement;
-                              if (searchInput) {
-                                searchInput.value = '';
-                              }
+                              setCareerSearchQuery('');
+                              setGlobalCareerSearch(false);
                             }}
                           >
                             <span className="material-icons text-sm mr-1">clear</span>
