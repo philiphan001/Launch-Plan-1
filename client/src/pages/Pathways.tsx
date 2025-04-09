@@ -1468,6 +1468,11 @@ const Pathways = () => {
                         <Select 
                           value={selectedFieldOfStudy || ""}
                           onValueChange={(value) => {
+                            // Handle custom input option
+                            if (value === "custom") {
+                              return; // Don't set the field of study yet, as we'll use the custom input
+                            }
+                            
                             setSelectedFieldOfStudy(value);
                             
                             // Complete the narrative with the field of study
@@ -1487,6 +1492,7 @@ const Pathways = () => {
                             <SelectValue placeholder="Select a field of study" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="custom">Enter my own field of study...</SelectItem>
                             {fieldsOfStudy.map((field) => (
                               <SelectItem key={field} value={field}>
                                 {field}
@@ -1494,6 +1500,50 @@ const Pathways = () => {
                             ))}
                           </SelectContent>
                         </Select>
+                        
+                        {/* Custom field of study input */}
+                        {selectedFieldOfStudy === "custom" && (
+                          <div className="mt-3">
+                            <label htmlFor="custom-field" className="block text-sm font-medium mb-2">Enter your field of study</label>
+                            <div className="flex gap-2">
+                              <Input 
+                                id="custom-field"
+                                placeholder="e.g. Digital Media, Astronomy, etc." 
+                                className="flex-1"
+                                onChange={(e) => {
+                                  const customField = e.target.value;
+                                  if (customField.trim()) {
+                                    // Only update when there's actual content
+                                    if (specificSchool) {
+                                      setUserJourney(`After high school, I am interested in attending ${specificSchool} where I am interested in studying ${customField}.`);
+                                    } else {
+                                      const schoolType = educationType === '4year' ? 'a 4-year college' : 
+                                        educationType === '2year' ? 'a 2-year college' : 'a vocational school';
+                                      setUserJourney(`After high school, I am interested in attending ${schoolType} where I am interested in studying ${customField}.`);
+                                    }
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  // When user leaves the field, set the custom field of study
+                                  if (e.target.value.trim()) {
+                                    setSelectedFieldOfStudy(e.target.value);
+                                  }
+                                }}
+                              />
+                              <Button 
+                                type="button"
+                                onClick={() => {
+                                  const input = document.getElementById('custom-field') as HTMLInputElement;
+                                  if (input && input.value.trim()) {
+                                    setSelectedFieldOfStudy(input.value);
+                                  }
+                                }}
+                              >
+                                Set
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
                       {selectedFieldOfStudy && (
@@ -1677,6 +1727,65 @@ const Pathways = () => {
                     <>
                       <h3 className="text-lg font-medium mb-4">Careers in {selectedFieldOfStudy}</h3>
                       
+                      <div className="mb-6">
+                        <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                          <h4 className="text-sm font-semibold mb-2 flex items-center">
+                            <span className="material-icons mr-1 text-blue-500 text-sm">search</span>
+                            Custom Career Search
+                          </h4>
+                          <div className="flex gap-2">
+                            <Input 
+                              id="custom-career"
+                              placeholder="Enter your own career choice" 
+                              className="flex-1"
+                              onChange={(e) => {
+                                // Do not set profession here yet until user confirms
+                              }}
+                            />
+                            <Button 
+                              type="button"
+                              onClick={() => {
+                                const input = document.getElementById('custom-career') as HTMLInputElement;
+                                if (input && input.value.trim()) {
+                                  const customCareer = input.value.trim();
+                                  setSelectedProfession(customCareer);
+                                  
+                                  // Complete the narrative with the custom career
+                                  const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${customCareer}.`;
+                                  setUserJourney(narrative);
+                                  localStorage.setItem('userPathwayNarrative', narrative);
+                                }
+                              }}
+                              className="bg-orange-500 hover:bg-orange-600 text-white"
+                            >
+                              Use Custom Career
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Don't see your preferred career? Enter it yourself, and we'll generate a custom financial plan.
+                          </p>
+                        </div>
+                      
+                        {selectedProfession && (
+                          <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg mb-4">
+                            <div>
+                              <p className="font-medium">Selected Career:</p>
+                              <p>{selectedProfession}</p>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedProfession(null);
+                              }}
+                            >
+                              Change
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <h4 className="text-md font-medium mb-4">Available Career Options:</h4>
                       {fieldCareerPaths && Array.isArray(fieldCareerPaths) && fieldCareerPaths.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                           {fieldCareerPaths.map((path: CareerPath) => (
@@ -1687,15 +1796,9 @@ const Pathways = () => {
                                 setSelectedProfession(path.career_title);
                                 
                                 // Complete the narrative with the selected profession
-                                setUserJourney(`After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${path.career_title}.`);
-                                
-                                // Store the narrative in localStorage for use in the calculator
-                                localStorage.setItem('userPathwayNarrative', userJourney);
-                                
-                                // Delay navigation to give visual feedback that the option was selected
-                                setTimeout(() => {
-                                  navigate('/calculator');
-                                }, 500);
+                                const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${path.career_title}.`;
+                                setUserJourney(narrative);
+                                localStorage.setItem('userPathwayNarrative', narrative);
                               }}
                             >
                               <CardContent className="p-4">
@@ -1715,6 +1818,45 @@ const Pathways = () => {
                       ) : (
                         <div className="text-center py-6 border rounded-lg mb-6">
                           <p className="text-gray-500">No career paths found for this field of study</p>
+                        </div>
+                      )}
+                      
+                      {/* Save to Profile section */}
+                      {selectedProfession && (
+                        <div className="mb-6 p-4 border border-green-100 bg-green-50 rounded-lg">
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1 text-green-600">
+                              <span className="material-icons">bookmark</span>
+                            </div>
+                            <div>
+                              <h4 className="text-md font-medium text-green-700 mb-1">Save Your Pathway</h4>
+                              <p className="text-sm text-green-600 mb-3">
+                                Save this pathway to your profile for future reference and easy comparison.
+                              </p>
+                              <div className="flex gap-2">
+                                <Button 
+                                  className="bg-green-600 hover:bg-green-700"
+                                  onClick={() => {
+                                    // In a real implementation, this would call an API to save to user profile
+                                    // For now, we'll just show a success message using localStorage
+                                    localStorage.setItem('savedPathway', JSON.stringify({
+                                      educationType,
+                                      school: specificSchool || null,
+                                      fieldOfStudy: selectedFieldOfStudy,
+                                      profession: selectedProfession,
+                                      narrative: userJourney
+                                    }));
+                                    
+                                    // Update UI to show it was saved
+                                    alert("Your pathway has been saved to your profile!");
+                                  }}
+                                >
+                                  <span className="material-icons text-sm mr-1">bookmark_add</span>
+                                  Save to Profile
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       )}
                       
