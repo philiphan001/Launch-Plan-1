@@ -49,6 +49,15 @@ const Step = ({ children, title, subtitle }: StepProps) => (
 );
 
 const Pathways = () => {
+  // Helper function to format salary with commas and currency symbol
+  const formatSalary = (salary: number): string => {
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      maximumFractionDigits: 0 
+    }).format(salary);
+  };
+  
   const [, navigate] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPath, setSelectedPath] = useState<PathChoice | null>(null);
@@ -135,7 +144,7 @@ const Pathways = () => {
   });
   
   // Fetch all careers for global search
-  const { data: allCareers } = useQuery<any[]>({
+  const { data: allCareers, isLoading: isLoadingAllCareers } = useQuery<any[]>({
     queryKey: ['/api/careers'],
     queryFn: async () => {
       console.log('Fetching all careers for search');
@@ -145,7 +154,7 @@ const Pathways = () => {
       }
       return response.json();
     },
-    enabled: currentStep === 5 || currentStep === 6
+    enabled: (selectedPath === 'job' && currentStep === 3) || currentStep === 5 || currentStep === 6
   });
   
   // School search query using our new college search API with education type filter
@@ -1127,7 +1136,7 @@ const Pathways = () => {
         } else if (selectedPath === 'job') {
           return (
             <Step title="What type of job are you looking for?">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div 
                   className={`border ${jobType === 'fulltime' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
                   onClick={() => setJobType('fulltime')}
@@ -1175,10 +1184,163 @@ const Pathways = () => {
               </div>
               
               {jobType && (
-                <div className="flex justify-between mt-6">
-                  <Button variant="outline" onClick={handleBack}>Back</Button>
-                  <Button onClick={handleNext}>Next Step</Button>
-                </div>
+                <>
+                  <div className="mt-4 mb-6">
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                      <h4 className="text-sm font-semibold mb-2 flex items-center">
+                        <span className="material-icons mr-1 text-blue-500 text-sm">work</span>
+                        Career Search
+                      </h4>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <span className="material-icons text-sm">search</span>
+                          </span>
+                          <Input 
+                            type="text" 
+                            placeholder="Search for careers or occupations..." 
+                            value={careerSearchQuery}
+                            onChange={(e) => {
+                              setCareerSearchQuery(e.target.value);
+                              // Set a narrative if they select a career
+                              if (e.target.value.trim()) {
+                                setUserJourney(`After high school, I am interested in finding a ${
+                                  jobType === 'fulltime' ? 'full-time job' : 
+                                  jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
+                                } as a ${e.target.value.trim()}.`);
+                              }
+                            }}
+                            className="pl-9 flex-1 w-full"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Search for careers that interest you. You can search for specific job titles or broader categories.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {careerSearchQuery.length > 2 && (
+                    <>
+                      <h4 className="text-md font-medium mb-4">
+                        {isLoadingAllCareers ? 'Searching...' : 'Career Search Results:'}
+                      </h4>
+                      
+                      {isLoadingAllCareers ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-4 text-gray-600">Searching careers...</p>
+                        </div>
+                      ) : allCareers && allCareers.length > 0 ? (
+                        <div className="space-y-4 mb-6">
+                          {/* Filter careers that match the query AND job type */}
+                          {allCareers
+                            .filter(career => {
+                              // Match search query
+                              const matchesQuery = 
+                                (career.title && career.title.toLowerCase().includes(careerSearchQuery.toLowerCase())) || 
+                                (career.description && career.description.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                (career.alias1 && career.alias1.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                (career.alias2 && career.alias2.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                (career.alias3 && career.alias3.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                (career.alias4 && career.alias4.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                (career.alias5 && career.alias5.toLowerCase().includes(careerSearchQuery.toLowerCase()));
+                              
+                              // Match job type (this could be expanded with more accurate filtering)
+                              // For now, we'll simplify by assuming category or education hints at job type
+                              const matchesJobType = 
+                                jobType === 'fulltime' ? true : // most careers are full-time eligible
+                                jobType === 'parttime' ? 
+                                  career.category?.toLowerCase().includes('service') || 
+                                  career.category?.toLowerCase().includes('retail') ||
+                                  career.category?.toLowerCase().includes('food') ||
+                                  career.category?.toLowerCase().includes('hospitality') : 
+                                jobType === 'apprenticeship' ?
+                                  career.category?.toLowerCase().includes('trade') ||
+                                  career.category?.toLowerCase().includes('construction') ||
+                                  career.category?.toLowerCase().includes('manufacturing') ||
+                                  career.education?.toLowerCase().includes('vocational') ||
+                                  career.education?.toLowerCase().includes('certificate') : 
+                                true;
+                              
+                              return matchesQuery && matchesJobType;
+                            })
+                            .slice(0, 5) // Limit results to 5
+                            .map(career => (
+                              <Card 
+                                key={career.id} 
+                                className="border cursor-pointer transition-all hover:shadow-md hover:scale-105"
+                                onClick={() => {
+                                  setSelectedProfession(career.title);
+                                  setCareerSearchQuery(career.title);
+                                  
+                                  // Update narrative
+                                  setUserJourney(`After high school, I am interested in finding a ${
+                                    jobType === 'fulltime' ? 'full-time job' : 
+                                    jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
+                                  } as a ${career.title}.`);
+                                  
+                                  // Move to next step if there's one
+                                  // handleNext();
+                                }}
+                              >
+                                <CardContent className="p-4">
+                                  <div className="flex items-center">
+                                    <div className="rounded-full bg-primary h-10 w-10 flex items-center justify-center text-white mr-3 flex-shrink-0">
+                                      <span className="material-icons text-sm">work</span>
+                                    </div>
+                                    <div>
+                                      <h5 className="font-medium">{career.title}</h5>
+                                      <p className="text-sm text-gray-600">
+                                        {career.category || 'General'}
+                                        {career.salary ? ` • ${formatSalary(career.salary)}` : ''}
+                                      </p>
+                                      {career.growth_rate && (
+                                        <Badge variant="outline" className="mt-1">
+                                          {career.growth_rate === 'fast' ? 'Growing Fast' : 
+                                           career.growth_rate === 'average' ? 'Stable Growth' : 'Slow Growth'}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          
+                          {/* Clear Search button */}
+                          <div className="flex justify-center">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setCareerSearchQuery('');
+                              }}
+                            >
+                              <span className="material-icons text-sm mr-1">clear</span>
+                              Clear Search
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 border rounded-lg mb-6">
+                          <p className="text-gray-500">
+                            No careers found matching your search.
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  
+                  <div className="flex justify-between mt-6">
+                    <Button variant="outline" onClick={handleBack}>Back</Button>
+                    <Button 
+                      onClick={handleNext}
+                      className="bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      Next Step
+                    </Button>
+                  </div>
+                </>
               )}
             </Step>
           );
