@@ -1469,7 +1469,7 @@ export const MilitaryPathway: React.FC<MilitaryPathwayProps> = ({
     );
   }
   // Render Space Force pathway 
-  else if (militaryBranch === 'spaceforce') {
+  else if (militaryBranch === 'spaceguard') {
     return (
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row gap-8">
