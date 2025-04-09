@@ -119,7 +119,7 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     variant="outline" 
                     size="sm" 
                     className="border-green-300 text-green-700"
-                    onClick={() => handleSelectPathway('work')}
+                    onClick={() => handleSelectPathway('job')}
                   >
                     <span className="material-icons text-xs mr-1">work</span>
                     Career
@@ -290,11 +290,11 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     <div className="bg-emerald-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
                       <p className="text-xs font-semibold">OPTION 1</p>
                     </div>
-                    <p className="font-semibold text-emerald-900">Domestic Service Programs</p>
-                    <p className="text-sm text-gray-600 mt-1">AmeriCorps, City Year, conservation projects</p>
+                    <p className="font-semibold text-emerald-900">Local Community Service</p>
+                    <p className="text-sm text-gray-600 mt-1">Volunteer with organizations in your area</p>
                     <div className="flex justify-center mt-3">
-                      <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full mr-1">Social Impact</span>
-                      <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">Teamwork</span>
+                      <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full mr-1">Community Impact</span>
+                      <span className="inline-block bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full">Local Networks</span>
                     </div>
                   </div>
                   
@@ -303,11 +303,11 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
                       <p className="text-xs font-semibold">OPTION 2</p>
                     </div>
-                    <p className="font-semibold text-blue-900">International Service</p>
-                    <p className="text-sm text-gray-600 mt-1">Peace Corps, UN Volunteers, NGOs</p>
+                    <p className="font-semibold text-blue-900">National Service Programs</p>
+                    <p className="text-sm text-gray-600 mt-1">AmeriCorps, City Year, or similar programs</p>
                     <div className="flex justify-center mt-3">
-                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1">Cultural Exchange</span>
-                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Global Issues</span>
+                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1">Structured</span>
+                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Education Award</span>
                     </div>
                   </div>
                   
@@ -316,11 +316,11 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     <div className="bg-purple-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
                       <p className="text-xs font-semibold">OPTION 3</p>
                     </div>
-                    <p className="font-semibold text-purple-900">Field-Related Volunteering</p>
-                    <p className="text-sm text-gray-600 mt-1">Align with future education/career interests</p>
+                    <p className="font-semibold text-purple-900">International Volunteering</p>
+                    <p className="text-sm text-gray-600 mt-1">Service projects abroad</p>
                     <div className="flex justify-center mt-3">
-                      <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full mr-1">Career Exploration</span>
-                      <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Skill Building</span>
+                      <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full mr-1">Global Perspective</span>
+                      <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Cultural Exchange</span>
                     </div>
                   </div>
                 </div>
@@ -357,7 +357,7 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     variant="outline" 
                     size="sm" 
                     className="border-green-300 text-green-700"
-                    onClick={() => handleSelectPathway('work')}
+                    onClick={() => handleSelectPathway('job')}
                   >
                     <span className="material-icons text-xs mr-1">work</span>
                     Career
@@ -389,29 +389,29 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                 </TabsList>
                 
                 <TabsContent value="planning" className="p-4 space-y-4">
-                  <Card className="border-emerald-100">
+                  <Card className="border-blue-100">
                     <CardContent className="pt-4">
                       <h4 className="font-medium">Finding Opportunities</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Research established volunteer programs, application deadlines, and requirements. Consider both formal programs and independent opportunities with local organizations.
+                        Research volunteer organizations that align with your interests, skills, and values. Consider program length, location, and any associated costs.
                       </p>
                     </CardContent>
                   </Card>
                   
-                  <Card className="border-emerald-100">
+                  <Card className="border-blue-100">
                     <CardContent className="pt-4">
-                      <h4 className="font-medium">Skills & Interests</h4>
+                      <h4 className="font-medium">Application Timeline</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Identify volunteer positions that align with your skills and interests. Consider how these experiences might connect to your future education or career goals.
+                        Programs like AmeriCorps have specific application deadlines, often 6-8 months before start dates. International programs may require even longer lead times.
                       </p>
                     </CardContent>
                   </Card>
                   
-                  <Card className="border-emerald-100">
+                  <Card className="border-blue-100">
                     <CardContent className="pt-4">
                       <h4 className="font-medium">Financial Planning</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Research stipends, housing, and living costs associated with your volunteer position. Some positions offer modest compensation while others may require you to cover expenses.
+                        Research stipends, housing allowances, or education awards offered. For unpaid opportunities, create a budget for living expenses during your service period.
                       </p>
                     </CardContent>
                   </Card>
@@ -422,7 +422,7 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     <CardContent className="pt-4">
                       <h4 className="font-medium">Skill Development</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Gain practical skills in leadership, communication, problem-solving, and teamwork. Develop specialized abilities related to your volunteer work.
+                        Gain practical experience in leadership, teamwork, communication, problem-solving, and specific skills related to your volunteer work.
                       </p>
                     </CardContent>
                   </Card>
@@ -431,16 +431,16 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     <CardContent className="pt-4">
                       <h4 className="font-medium">Career Exploration</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Test potential career interests in a low-risk environment. Build professional connections and references that can help with future opportunities.
+                        Test potential career interests in a low-risk environment. Develop professional connections that can lead to recommendations or future opportunities.
                       </p>
                     </CardContent>
                   </Card>
                   
                   <Card className="border-green-100">
                     <CardContent className="pt-4">
-                      <h4 className="font-medium">College Applications</h4>
+                      <h4 className="font-medium">Personal Growth & Purpose</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Volunteer experiences can strengthen college applications and scholarship essays. Many schools value meaningful gap year experiences.
+                        Develop empathy, cultural awareness, and a sense of purpose. Volunteering can provide meaning and direction that helps clarify your future goals.
                       </p>
                     </CardContent>
                   </Card>
@@ -449,9 +449,9 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                 <TabsContent value="considerations" className="p-4 space-y-4">
                   <Card className="border-amber-100">
                     <CardContent className="pt-4">
-                      <h4 className="font-medium">Program Legitimacy</h4>
+                      <h4 className="font-medium">Program Reputation</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Research the reputation and impact of volunteer organizations. Seek programs that create sustainable, positive change rather than those that may do more harm than good.
+                        Research organizations thoroughly, especially international ones. Look for reviews, clear mission statements, and transparency about how your contribution helps.
                       </p>
                     </CardContent>
                   </Card>
@@ -460,7 +460,7 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     <CardContent className="pt-4">
                       <h4 className="font-medium">Time Commitment</h4>
                       <p className="text-sm text-gray-600 mt-2">
-                        Consider the length of commitment required. Some programs expect a full year, while others offer shorter-term opportunities.
+                        Some programs require full-time commitments of 6-12 months. Consider how this fits with your other gap year goals and future education plans.
                       </p>
                     </CardContent>
                   </Card>
@@ -492,245 +492,7 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
       </div>
     );
   }
-  // Render Work pathway
-  else if (activity === 'work') {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Left side: Visualization */}
-          <div className="md:w-1/2">
-            <h3 className="text-xl font-semibold mb-4">Gap Year Pathway: Work</h3>
-            
-            <div className="relative bg-white p-6 rounded-lg border shadow-sm">
-              {/* Path Visualization */}
-              <div className="flex flex-col items-center">
-                {/* First Step Box */}
-                <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
-                  <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
-                    <p className="text-xs font-semibold">STEP 1</p>
-                  </div>
-                  <p className="font-semibold text-blue-900">Gap Year: Work</p>
-                  <p className="text-sm text-gray-600 mt-1">Save money for future plans</p>
-                </div>
-                
-                {/* Arrow down */}
-                <div className="flex flex-col items-center justify-center my-4">
-                  <div className="h-8 w-0.5 bg-gray-400"></div>
-                  <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
-                    <span className="material-icons text-sm">arrow_downward</span>
-                  </div>
-                </div>
-                
-                {/* Work Options Box */}
-                <div className="grid grid-cols-1 gap-4 w-full max-w-md">
-                  {/* Option 1 */}
-                  <div className="p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm cursor-pointer hover:bg-blue-100 transition-colors">
-                    <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
-                      <p className="text-xs font-semibold">OPTION 1</p>
-                    </div>
-                    <p className="font-semibold text-blue-900">Full-Time Employment</p>
-                    <p className="text-sm text-gray-600 mt-1">Entry-level positions in various fields</p>
-                    <div className="flex justify-center mt-3">
-                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1">Maximum Savings</span>
-                      <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Experience</span>
-                    </div>
-                  </div>
-                  
-                  {/* Option 2 */}
-                  <div className="p-4 border border-green-300 rounded-lg text-center bg-green-50 shadow-sm cursor-pointer hover:bg-green-100 transition-colors">
-                    <div className="bg-green-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
-                      <p className="text-xs font-semibold">OPTION 2</p>
-                    </div>
-                    <p className="font-semibold text-green-900">Apprenticeship/Internship</p>
-                    <p className="text-sm text-gray-600 mt-1">Career-focused learning opportunities</p>
-                    <div className="flex justify-center mt-3">
-                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-1">Skill Building</span>
-                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Connections</span>
-                    </div>
-                  </div>
-                  
-                  {/* Option 3 */}
-                  <div className="p-4 border border-orange-300 rounded-lg text-center bg-orange-50 shadow-sm cursor-pointer hover:bg-orange-100 transition-colors">
-                    <div className="bg-orange-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
-                      <p className="text-xs font-semibold">OPTION 3</p>
-                    </div>
-                    <p className="font-semibold text-orange-900">Entrepreneurship</p>
-                    <p className="text-sm text-gray-600 mt-1">Start a small business or freelance work</p>
-                    <div className="flex justify-center mt-3">
-                      <span className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full mr-1">Independence</span>
-                      <span className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">Business Skills</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Arrow down */}
-                <div className="flex flex-col items-center justify-center my-4">
-                  <div className="h-8 w-0.5 bg-gray-400"></div>
-                  <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
-                    <span className="material-icons text-sm">arrow_downward</span>
-                  </div>
-                </div>
-                
-                {/* Next Steps - Path After Gap Year */}
-                <div className="w-64 p-4 border border-purple-300 rounded-lg text-center bg-purple-50 shadow-sm mb-4">
-                  <div className="bg-purple-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
-                    <p className="text-xs font-semibold">AFTER GAP YEAR</p>
-                  </div>
-                  <p className="font-semibold text-purple-900">What's Your Plan?</p>
-                  <p className="text-sm text-gray-600 mt-1">Choose your next step</p>
-                </div>
-                
-                {/* Pathway Connections - Button to explore education/career options */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-md">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-blue-300 text-blue-700"
-                    onClick={() => handleSelectPathway('education')}
-                  >
-                    <span className="material-icons text-xs mr-1">school</span>
-                    Education
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-green-300 text-green-700"
-                    onClick={() => handleSelectPathway('work')}
-                  >
-                    <span className="material-icons text-xs mr-1">work</span>
-                    Continue Working
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="border-amber-300 text-amber-700"
-                    onClick={() => handleSelectPathway('military')}
-                  >
-                    <span className="material-icons text-xs mr-1">shield</span>
-                    Military
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Right side: Information tabs */}
-          <div className="md:w-1/2">
-            <h3 className="text-xl font-semibold mb-4">Your Working Gap Year</h3>
-            
-            <div className="border rounded-lg">
-              <Tabs defaultValue="planning">
-                <TabsList className="w-full">
-                  <TabsTrigger value="planning" className="flex-1">Planning</TabsTrigger>
-                  <TabsTrigger value="benefits" className="flex-1">Benefits</TabsTrigger>
-                  <TabsTrigger value="considerations" className="flex-1">Considerations</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="planning" className="p-4 space-y-4">
-                  <Card className="border-blue-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Job Search Strategy</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Identify potential industries and positions that match your skills and interests. Prepare a resume and practice interview skills. Network with family, friends, and community members.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-blue-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Financial Goals</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Set specific savings targets for your gap year. Create a budget that balances living expenses with saving for education or other future plans.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-blue-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Skill Development</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Identify skills you want to develop during your work experience. Look for positions or responsibilities that will help you grow in these areas.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="benefits" className="p-4 space-y-4">
-                  <Card className="border-green-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Financial Independence</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Build savings for college tuition, avoid or reduce student loans, and learn practical money management skills through real-world experience.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-green-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Professional Experience</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Develop workplace skills, build your resume, and gain references that will be valuable throughout your career. Learn about professional environments and expectations.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-green-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Career Exploration</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Gain practical insight into potential career fields. This first-hand experience can help confirm interests or redirect your focus before investing in education.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="considerations" className="p-4 space-y-4">
-                  <Card className="border-amber-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Long-term Planning</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Balance immediate employment needs with long-term career goals. Consider how this work experience fits into your broader educational and career plans.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-amber-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Education Timing</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        If planning to attend college later, research application deadlines and maintain connections with teachers for recommendations. Some schools offer deferred admission.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border-amber-100">
-                    <CardContent className="pt-4">
-                      <h4 className="font-medium">Opportunity Cost</h4>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Consider both the financial benefits of working now and the potential advantages of completing education earlier. Balance immediate income with long-term earning potential.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={handleBack}>
-            <span className="material-icons mr-2">arrow_back</span>
-            Back
-          </Button>
-          <Button className="bg-green-500 hover:bg-green-600" onClick={handleNext}>
-            Continue
-            <span className="material-icons ml-2">arrow_forward</span>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  // Render Other Activities pathway
+  // Render Other Activities pathway  
   else if (activity === 'other') {
     return (
       <div className="space-y-6">
@@ -833,7 +595,7 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
                     variant="outline" 
                     size="sm" 
                     className="border-green-300 text-green-700"
-                    onClick={() => handleSelectPathway('work')}
+                    onClick={() => handleSelectPathway('job')}
                   >
                     <span className="material-icons text-xs mr-1">work</span>
                     Career
@@ -969,7 +731,7 @@ export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
     );
   }
   
-  // Default return
+  // Default view when no specific activity is selected
   return (
     <div className="p-8 text-center">
       <div className="text-lg font-medium mb-4">Please select a gap year activity to view its pathway.</div>

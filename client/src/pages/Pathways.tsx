@@ -1516,25 +1516,6 @@ const Pathways = () => {
                 </div>
                 
                 <div 
-                  className={`border ${gapYearActivity === 'work' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setGapYearActivity('work');
-                    setUserJourney("After high school, I am interested in taking a gap year to work and save money for future plans.");
-                    handleNext(); // Auto-advance
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${gapYearActivity === 'work' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'work' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">payments</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${gapYearActivity === 'work' ? 'text-primary' : ''}`}>Work</h5>
-                      <p className="text-sm text-gray-600">Save money for future plans</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
                   className={`border ${gapYearActivity === 'other' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
                   onClick={() => {
                     setGapYearActivity('other');
