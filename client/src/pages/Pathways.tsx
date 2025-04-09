@@ -13,6 +13,7 @@ import AdvancedWheel from "@/components/pathways/AdvancedWheel";
 import AvatarCreator from "@/components/pathways/AvatarCreator";
 import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
 import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
+import { GapYearPathway } from "@/components/pathways/GapYearPathways";
 import { useLocation } from "wouter";
 
 type PathChoice = "education" | "job" | "military" | "gap";
@@ -1478,7 +1479,11 @@ const Pathways = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div 
                   className={`border ${gapYearActivity === 'travel' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setGapYearActivity('travel')}
+                  onClick={() => {
+                    setGapYearActivity('travel');
+                    setUserJourney("After high school, I am interested in taking a gap year to travel and explore new places and cultures.");
+                    handleNext(); // Auto-advance
+                  }}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${gapYearActivity === 'travel' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'travel' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -1493,7 +1498,11 @@ const Pathways = () => {
                 
                 <div 
                   className={`border ${gapYearActivity === 'volunteer' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setGapYearActivity('volunteer')}
+                  onClick={() => {
+                    setGapYearActivity('volunteer');
+                    setUserJourney("After high school, I am interested in taking a gap year to volunteer and give back to the community.");
+                    handleNext(); // Auto-advance
+                  }}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${gapYearActivity === 'volunteer' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'volunteer' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -1508,7 +1517,11 @@ const Pathways = () => {
                 
                 <div 
                   className={`border ${gapYearActivity === 'work' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setGapYearActivity('work')}
+                  onClick={() => {
+                    setGapYearActivity('work');
+                    setUserJourney("After high school, I am interested in taking a gap year to work and save money for future plans.");
+                    handleNext(); // Auto-advance
+                  }}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${gapYearActivity === 'work' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'work' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -1523,7 +1536,11 @@ const Pathways = () => {
                 
                 <div 
                   className={`border ${gapYearActivity === 'other' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setGapYearActivity('other')}
+                  onClick={() => {
+                    setGapYearActivity('other');
+                    setUserJourney("After high school, I am interested in taking a gap year to learn new skills and pursue my personal interests and hobbies.");
+                    handleNext(); // Auto-advance
+                  }}
                 >
                   <div className="flex items-center">
                     <div className={`rounded-full ${gapYearActivity === 'other' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'other' ? 'text-white' : 'text-gray-600'} mr-3`}>
@@ -1560,6 +1577,37 @@ const Pathways = () => {
                 militaryBranch={militaryBranch || 'army'}
                 handleBack={handleBack}
                 handleNext={handleNext}
+              />
+            </Step>
+          );
+        }
+        // Gap year pathway diagram
+        else if (selectedPath === 'gap' && gapYearActivity) {
+          return (
+            <Step 
+              title={userJourney} 
+              subtitle={`Gap year pathway for ${gapYearActivity.charAt(0).toUpperCase()}${gapYearActivity.slice(1)} activities`}
+            >
+              <GapYearPathway 
+                activity={gapYearActivity}
+                handleBack={handleBack}
+                handleNext={handleNext}
+                handleSelectPathway={(pathway: string) => {
+                  // This function will handle transitioning to a new pathway after gap year
+                  if (pathway === 'education') {
+                    setSelectedPath('education');
+                    setEducationType('4year'); // Default to 4-year college
+                    setCurrentStep(4); // Go to education path
+                  } else if (pathway === 'job') {
+                    setSelectedPath('job');
+                    setJobType('fulltime'); // Default to full-time job
+                    setCurrentStep(3); // Go to job type selection
+                  } else if (pathway === 'military') {
+                    setSelectedPath('military');
+                    setMilitaryBranch('army'); // Default to Army
+                    setCurrentStep(3); // Go to military branch selection
+                  }
+                }}
               />
             </Step>
           );
