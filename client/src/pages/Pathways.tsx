@@ -1380,75 +1380,131 @@ const Pathways = () => {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="mb-4">
-                    <p className="text-gray-600 mb-2">Search for your school:</p>
-                    <div className="flex items-center space-x-2">
-                      <Input 
-                        type="text" 
-                        placeholder="Type school name..." 
-                        value={searchQuery}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          setSearchQuery(e.target.value);
-                          setHasSpecificSchool(true);
-                        }}
-                        className="flex-1"
-                      />
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                      <h4 className="text-sm font-semibold mb-2 flex items-center">
+                        <span className="material-icons mr-1 text-blue-500 text-sm">school</span>
+                        School Search
+                      </h4>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <span className="material-icons text-sm">search</span>
+                          </span>
+                          <Input 
+                            type="text" 
+                            placeholder="Search for your school..." 
+                            value={searchQuery}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              setSearchQuery(e.target.value);
+                              setHasSpecificSchool(true);
+                            }}
+                            className="pl-9 flex-1 w-full"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Search for your preferred school. You can type the name of any college or university.
+                      </p>
                     </div>
                   </div>
                   
                   {searchQuery.length > 2 && (
-                    <div className="border rounded-lg divide-y max-h-60 overflow-y-auto">
+                    <>
+                      <h4 className="text-md font-medium mb-4">
+                        {isLoadingSearch ? 'Searching...' : 'School Search Results:'}
+                      </h4>
+                      
                       {isLoadingSearch ? (
-                        <div className="p-4 text-center">
-                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
-                          <p className="text-sm text-gray-500">Searching schools...</p>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-4 text-gray-600">Searching schools...</p>
                         </div>
                       ) : searchResults && Array.isArray(searchResults) && searchResults.length > 0 ? (
-                        searchResults.map((school: any) => (
-                          <div 
-                            key={school.id} 
-                            className="p-3 hover:bg-blue-50 cursor-pointer transition-colors"
-                            onClick={() => {
-                              setSpecificSchool(school.name);
-                              setSearchQuery('');
-                              
-                              // Update the narrative to include the selected school
-                              const schoolType = educationType === '4year' ? 'attending' : 
-                                                educationType === '2year' ? 'attending' : 
-                                                'attending';
-                              setUserJourney(`After high school, I am interested in ${schoolType} ${school.name} where I am interested in studying...`);
-                              
-                              // Automatically proceed to field of study step
-                              handleNext();
-                            }}
-                          >
-                            <p className="font-medium">{school.name}</p>
-                            <p className="text-sm text-gray-600">{school.city}, {school.state}</p>
-                          </div>
-                        ))
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          {searchResults.map((school: any) => (
+                            <Card 
+                              key={school.id} 
+                              className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${specificSchool === school.name ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                              onClick={() => {
+                                setSpecificSchool(school.name);
+                                
+                                // Update the narrative to include the selected school
+                                const schoolType = educationType === '4year' ? 'attending' : 
+                                                  educationType === '2year' ? 'attending' : 
+                                                  'attending';
+                                setUserJourney(`After high school, I am interested in ${schoolType} ${school.name} where I am interested in studying...`);
+                                
+                                // Automatically proceed to field of study step
+                                handleNext();
+                              }}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-center">
+                                  <div className={`rounded-full ${specificSchool === school.name ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${specificSchool === school.name ? 'text-white' : 'text-gray-600'} mr-3 flex-shrink-0`}>
+                                    <span className="material-icons text-sm">school</span>
+                                  </div>
+                                  <div>
+                                    <h5 className={`font-medium ${specificSchool === school.name ? 'text-primary' : ''}`}>{school.name}</h5>
+                                    <p className="text-sm text-gray-600">{school.city}, {school.state}</p>
+                                    {(school.rank && school.rank > 0) && (
+                                      <Badge variant="outline" className="mt-1">Rank: {school.rank}</Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
                       ) : (
-                        <div className="p-3 text-center text-gray-500">
-                          {searchQuery.length > 0 ? 'No schools found. Try a different search term.' : 'Type to search for schools'}
+                        <div className="text-center py-6 border rounded-lg mb-6">
+                          <p className="text-gray-500">
+                            {searchQuery.length > 0 ? 'No schools found matching your search.' : 'Type to search for schools'}
+                          </p>
                         </div>
                       )}
-                    </div>
+                      
+                      {/* Clear Search button */}
+                      <div className="flex justify-center mb-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSearchQuery('');
+                          }}
+                        >
+                          <span className="material-icons text-sm mr-1">clear</span>
+                          Clear Search
+                        </Button>
+                      </div>
+                    </>
                   )}
                   
                   {specificSchool && (
-                    <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg">
-                      <div>
-                        <p className="font-medium">Selected School:</p>
-                        <p>{specificSchool}</p>
+                    <div className="mb-6 p-4 border border-green-100 bg-green-50 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1 text-green-600">
+                          <span className="material-icons">school</span>
+                        </div>
+                        <div>
+                          <h4 className="text-md font-medium text-green-700 mb-1">Selected School</h4>
+                          <p className="text-sm text-green-600 mb-3">
+                            {specificSchool}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSpecificSchool('');
+                                setSearchQuery('');
+                              }}
+                            >
+                              <span className="material-icons text-sm mr-1">edit</span>
+                              Change
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setSpecificSchool('');
-                          setSearchQuery('');
-                        }}
-                      >
-                        Change
-                      </Button>
                     </div>
                   )}
                   
