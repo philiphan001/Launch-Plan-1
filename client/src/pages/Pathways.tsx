@@ -73,6 +73,7 @@ const Pathways = () => {
   const [specificSchool, setSpecificSchool] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
+  const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   
   // This function will set the education type and advance to the specific school question
   const selectEducationType = (type: EducationType) => {
@@ -1747,24 +1748,42 @@ const Pathways = () => {
                             Custom Career Search
                           </h4>
                           <div className="flex gap-2">
-                            <Input 
-                              id="custom-career"
-                              placeholder="Enter your own career choice" 
-                              className="flex-1"
-                              onChange={(e) => {
-                                // Do not set profession here yet until user confirms
-                              }}
-                            />
+                            <div className="relative flex-1">
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                <span className="material-icons text-sm">search</span>
+                              </span>
+                              <Input 
+                                id="career-search"
+                                placeholder="Enter your own career choice" 
+                                className="pl-9 flex-1 w-full"
+                                onChange={(e) => {
+                                  const searchTerm = e.target.value.trim().toLowerCase();
+                                  // Filter the careers based on search term
+                                  if (fieldCareerPaths && searchTerm) {
+                                    // Client-side filtering implementation
+                                    const filteredPaths = fieldCareerPaths.filter((path: CareerPath) => 
+                                      path.career_title.toLowerCase().includes(searchTerm)
+                                    );
+                                    
+                                    // Update state to show filtered results
+                                    setFilteredCareerPaths(filteredPaths);
+                                  } else {
+                                    // If search is empty, show all careers
+                                    setFilteredCareerPaths(null);
+                                  }
+                                }}
+                              />
+                            </div>
                             <Button 
                               type="button"
                               onClick={() => {
-                                const input = document.getElementById('custom-career') as HTMLInputElement;
+                                const input = document.getElementById('career-search') as HTMLInputElement;
                                 if (input && input.value.trim()) {
-                                  const customCareer = input.value.trim();
-                                  setSelectedProfession(customCareer);
+                                  const searchCareer = input.value.trim();
+                                  setSelectedProfession(searchCareer);
                                   
-                                  // Complete the narrative with the custom career
-                                  const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${customCareer}.`;
+                                  // Complete the narrative with the searched career
+                                  const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${searchCareer}.`;
                                   setUserJourney(narrative);
                                   localStorage.setItem('userPathwayNarrative', narrative);
                                 }
@@ -1798,10 +1817,14 @@ const Pathways = () => {
                         )}
                       </div>
                       
-                      <h4 className="text-md font-medium mb-4">Available Career Options:</h4>
-                      {fieldCareerPaths && Array.isArray(fieldCareerPaths) && fieldCareerPaths.length > 0 ? (
+                      <h4 className="text-md font-medium mb-4">
+                        {filteredCareerPaths ? 'Search Results:' : 'Available Career Options:'}
+                      </h4>
+                      
+                      {/* Display either filtered careers or all careers */}
+                      {(filteredCareerPaths?.length || fieldCareerPaths?.length) ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                          {fieldCareerPaths.map((path: CareerPath) => (
+                          {(filteredCareerPaths || fieldCareerPaths || []).map((path: CareerPath) => (
                             <Card 
                               key={path.id} 
                               className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
@@ -1830,7 +1853,30 @@ const Pathways = () => {
                         </div>
                       ) : (
                         <div className="text-center py-6 border rounded-lg mb-6">
-                          <p className="text-gray-500">No career paths found for this field of study</p>
+                          <p className="text-gray-500">
+                            {filteredCareerPaths ? 'No careers found matching your search.' : 'No career paths found for this field of study'}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Show a "Clear Search" button when filtered */}
+                      {filteredCareerPaths && (
+                        <div className="flex justify-center mb-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              // Clear the search
+                              setFilteredCareerPaths(null);
+                              const searchInput = document.getElementById('career-search') as HTMLInputElement;
+                              if (searchInput) {
+                                searchInput.value = '';
+                              }
+                            }}
+                          >
+                            <span className="material-icons text-sm mr-1">clear</span>
+                            Clear Search
+                          </Button>
                         </div>
                       )}
                       
