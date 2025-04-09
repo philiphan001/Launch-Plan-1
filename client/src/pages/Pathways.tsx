@@ -1465,51 +1465,67 @@ const Pathways = () => {
                     <>
                       <div className="mb-6">
                         <label htmlFor="field-select" className="block text-sm font-medium mb-2">Field of Study</label>
-                        <Select 
-                          value={selectedFieldOfStudy || ""}
-                          onValueChange={(value) => {
-                            // Handle custom input option
-                            if (value === "custom") {
-                              return; // Don't set the field of study yet, as we'll use the custom input
-                            }
-                            
-                            setSelectedFieldOfStudy(value);
-                            
-                            // Complete the narrative with the field of study
-                            if (specificSchool) {
-                              setUserJourney(`After high school, I am interested in attending ${specificSchool} where I am interested in studying ${value}.`);
-                            } else {
-                              const schoolType = educationType === '4year' ? 'a 4-year college' : 
-                                educationType === '2year' ? 'a 2-year college' : 'a vocational school';
-                              setUserJourney(`After high school, I am interested in attending ${schoolType} where I am interested in studying ${value}.`);
-                            }
-                            
-                            console.log(`Selected field of study: ${value}`);
-                            // Career paths will automatically load due to the useQuery dependency
-                          }}
-                        >
-                          <SelectTrigger id="field-select" className="w-full">
-                            <SelectValue placeholder="Select a field of study" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="custom">Enter my own field of study...</SelectItem>
-                            {fieldsOfStudy.map((field) => (
-                              <SelectItem key={field} value={field}>
-                                {field}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                         
-                        {/* Custom field of study input */}
-                        {selectedFieldOfStudy === "custom" && (
-                          <div className="mt-3">
-                            <label htmlFor="custom-field" className="block text-sm font-medium mb-2">Enter your field of study</label>
+                        {/* Add a state to track if we're in custom input mode */}
+                        {!selectedFieldOfStudy || selectedFieldOfStudy !== "custom" ? (
+                          <>
+                            <Select 
+                              value={selectedFieldOfStudy || ""}
+                              onValueChange={(value) => {
+                                // Handle custom input option
+                                if (value === "custom") {
+                                  setSelectedFieldOfStudy("custom");
+                                  return;
+                                }
+                                
+                                setSelectedFieldOfStudy(value);
+                                
+                                // Complete the narrative with the field of study
+                                if (specificSchool) {
+                                  setUserJourney(`After high school, I am interested in attending ${specificSchool} where I am interested in studying ${value}.`);
+                                } else {
+                                  const schoolType = educationType === '4year' ? 'a 4-year college' : 
+                                    educationType === '2year' ? 'a 2-year college' : 'a vocational school';
+                                  setUserJourney(`After high school, I am interested in attending ${schoolType} where I am interested in studying ${value}.`);
+                                }
+                                
+                                console.log(`Selected field of study: ${value}`);
+                                // Career paths will automatically load due to the useQuery dependency
+                              }}
+                            >
+                              <SelectTrigger id="field-select" className="w-full">
+                                <SelectValue placeholder="Select a field of study" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="custom">Enter my own field of study...</SelectItem>
+                                {fieldsOfStudy.map((field) => (
+                                  <SelectItem key={field} value={field}>
+                                    {field}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </>
+                        ) : (
+                          // Custom field of study input (shown when "custom" is selected)
+                          <div className="mt-2">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-blue-600 font-medium">Custom Field of Study</span>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setSelectedFieldOfStudy("")}
+                                className="text-xs"
+                              >
+                                Back to List
+                              </Button>
+                            </div>
                             <div className="flex gap-2">
                               <Input 
                                 id="custom-field"
                                 placeholder="e.g. Digital Media, Astronomy, etc." 
                                 className="flex-1"
+                                autoFocus
                                 onChange={(e) => {
                                   const customField = e.target.value;
                                   if (customField.trim()) {
@@ -1521,12 +1537,6 @@ const Pathways = () => {
                                         educationType === '2year' ? 'a 2-year college' : 'a vocational school';
                                       setUserJourney(`After high school, I am interested in attending ${schoolType} where I am interested in studying ${customField}.`);
                                     }
-                                  }
-                                }}
-                                onBlur={(e) => {
-                                  // When user leaves the field, set the custom field of study
-                                  if (e.target.value.trim()) {
-                                    setSelectedFieldOfStudy(e.target.value);
                                   }
                                 }}
                               />
@@ -1542,6 +1552,9 @@ const Pathways = () => {
                                 Set
                               </Button>
                             </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                              Enter your field of study and click "Set" to continue
+                            </p>
                           </div>
                         )}
                       </div>
