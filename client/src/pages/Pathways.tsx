@@ -1347,148 +1347,131 @@ const Pathways = () => {
           );
         } else if (selectedPath === 'military') {
           // First step: choose military branch
-          if (currentStep === 3) {
-            return (
-              <Step title="Which military branch are you interested in?">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div 
-                    className={`border ${militaryBranch === 'army' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                    onClick={() => {
-                      setMilitaryBranch('army');
-                      setUserJourney("After high school, I am interested in joining the Army...");
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className={`rounded-full ${militaryBranch === 'army' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'army' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                        <span className="material-icons text-sm">shield</span>
-                      </div>
-                      <div>
-                        <h5 className={`font-medium ${militaryBranch === 'army' ? 'text-primary' : ''}`}>Army</h5>
-                        <p className="text-sm text-gray-600">Land-based operations</p>
-                      </div>
+          return (
+            <Step title="Which military branch are you interested in?">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div 
+                  className={`border ${militaryBranch === 'army' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setMilitaryBranch('army');
+                    setUserJourney("After high school, I am interested in joining the Army...");
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'army' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'army' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">shield</span>
                     </div>
-                  </div>
-                  
-                  <div 
-                    className={`border ${militaryBranch === 'navy' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                    onClick={() => {
-                      setMilitaryBranch('navy');
-                      setUserJourney("After high school, I am interested in joining the Navy...");
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className={`rounded-full ${militaryBranch === 'navy' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'navy' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                        <span className="material-icons text-sm">sailing</span>
-                      </div>
-                      <div>
-                        <h5 className={`font-medium ${militaryBranch === 'navy' ? 'text-primary' : ''}`}>Navy</h5>
-                        <p className="text-sm text-gray-600">Sea-based operations</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className={`border ${militaryBranch === 'airforce' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                    onClick={() => {
-                      setMilitaryBranch('airforce');
-                      setUserJourney("After high school, I am interested in joining the Air Force...");
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className={`rounded-full ${militaryBranch === 'airforce' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'airforce' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                        <span className="material-icons text-sm">flight</span>
-                      </div>
-                      <div>
-                        <h5 className={`font-medium ${militaryBranch === 'airforce' ? 'text-primary' : ''}`}>Air Force</h5>
-                        <p className="text-sm text-gray-600">Air-based operations</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className={`border ${militaryBranch === 'marines' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                    onClick={() => {
-                      setMilitaryBranch('marines');
-                      setUserJourney("After high school, I am interested in joining the Marines...");
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className={`rounded-full ${militaryBranch === 'marines' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'marines' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                        <span className="material-icons text-sm">security</span>
-                      </div>
-                      <div>
-                        <h5 className={`font-medium ${militaryBranch === 'marines' ? 'text-primary' : ''}`}>Marines</h5>
-                        <p className="text-sm text-gray-600">Amphibious operations</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className={`border ${militaryBranch === 'coastguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                    onClick={() => {
-                      setMilitaryBranch('coastguard');
-                      setUserJourney("After high school, I am interested in joining the Coast Guard...");
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className={`rounded-full ${militaryBranch === 'coastguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'coastguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                        <span className="material-icons text-sm">water</span>
-                      </div>
-                      <div>
-                        <h5 className={`font-medium ${militaryBranch === 'coastguard' ? 'text-primary' : ''}`}>Coast Guard</h5>
-                        <p className="text-sm text-gray-600">Maritime safety & security</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div 
-                    className={`border ${militaryBranch === 'spaceguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                    onClick={() => {
-                      setMilitaryBranch('spaceguard');
-                      setUserJourney("After high school, I am interested in joining the Space Force...");
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <div className={`rounded-full ${militaryBranch === 'spaceguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'spaceguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                        <span className="material-icons text-sm">rocket</span>
-                      </div>
-                      <div>
-                        <h5 className={`font-medium ${militaryBranch === 'spaceguard' ? 'text-primary' : ''}`}>Space Force</h5>
-                        <p className="text-sm text-gray-600">Space operations</p>
-                      </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'army' ? 'text-primary' : ''}`}>Army</h5>
+                      <p className="text-sm text-gray-600">Land-based operations</p>
                     </div>
                   </div>
                 </div>
                 
-                {militaryBranch && (
-                  <div className="flex justify-between mt-6">
-                    <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button 
-                      onClick={handleNext}
-                      className="bg-green-500 hover:bg-green-600 text-white"
-                    >
-                      Next Step
-                    </Button>
+                <div 
+                  className={`border ${militaryBranch === 'navy' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setMilitaryBranch('navy');
+                    setUserJourney("After high school, I am interested in joining the Navy...");
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'navy' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'navy' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">sailing</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'navy' ? 'text-primary' : ''}`}>Navy</h5>
+                      <p className="text-sm text-gray-600">Sea-based operations</p>
+                    </div>
                   </div>
-                )}
-              </Step>
-            );
-          } 
-          // Second step (step 4): Military Career Path Diagram using our component
-          else if (currentStep === 4) {
-            return (
-              <Step 
-                title={userJourney} 
-                subtitle={`Military career pathway for the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)}`}
-              >
-                <MilitaryPathway 
-                  militaryBranch={militaryBranch || 'army'}
-                  handleBack={handleBack}
-                  handleNext={handleNext}
-                />
-              </Step>
-            );
-          }
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'airforce' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setMilitaryBranch('airforce');
+                    setUserJourney("After high school, I am interested in joining the Air Force...");
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'airforce' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'airforce' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">flight</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'airforce' ? 'text-primary' : ''}`}>Air Force</h5>
+                      <p className="text-sm text-gray-600">Air-based operations</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'marines' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setMilitaryBranch('marines');
+                    setUserJourney("After high school, I am interested in joining the Marines...");
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'marines' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'marines' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">security</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'marines' ? 'text-primary' : ''}`}>Marines</h5>
+                      <p className="text-sm text-gray-600">Amphibious operations</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'coastguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setMilitaryBranch('coastguard');
+                    setUserJourney("After high school, I am interested in joining the Coast Guard...");
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'coastguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'coastguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">water</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'coastguard' ? 'text-primary' : ''}`}>Coast Guard</h5>
+                      <p className="text-sm text-gray-600">Maritime safety & security</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`border ${militaryBranch === 'spaceguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setMilitaryBranch('spaceguard');
+                    setUserJourney("After high school, I am interested in joining the Space Force...");
+                  }}
+                >
+                  <div className="flex items-center">
+                    <div className={`rounded-full ${militaryBranch === 'spaceguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'spaceguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">rocket</span>
+                    </div>
+                    <div>
+                      <h5 className={`font-medium ${militaryBranch === 'spaceguard' ? 'text-primary' : ''}`}>Space Force</h5>
+                      <p className="text-sm text-gray-600">Space operations</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {militaryBranch && (
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                  <Button 
+                    onClick={handleNext}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    Next Step
+                  </Button>
+                </div>
+              )}
+            </Step>
+          );
         } else if (selectedPath === 'gap') {
           return (
             <Step title="What do you plan to do during your gap year?">
@@ -1566,8 +1549,23 @@ const Pathways = () => {
         return null;
       
       case 4:
+        // Military career path diagram
+        if (selectedPath === 'military' && militaryBranch) {
+          return (
+            <Step 
+              title={userJourney} 
+              subtitle={`Military career pathway for the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)}`}
+            >
+              <MilitaryPathway 
+                militaryBranch={militaryBranch || 'army'}
+                handleBack={handleBack}
+                handleNext={handleNext}
+              />
+            </Step>
+          );
+        }
         // Do you have a specific school in mind?
-        if (isEducationPath(selectedPath) && educationType) {
+        else if (isEducationPath(selectedPath) && educationType) {
           // Set a different title based on whether we came from guided or direct path
           const stepTitle = guidedPathComplete 
             ? userJourney
