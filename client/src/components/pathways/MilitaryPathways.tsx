@@ -1184,6 +1184,574 @@ export const MilitaryPathway: React.FC<MilitaryPathwayProps> = ({
       </div>
     );
   }
+  // Render Coast Guard pathway
+  else if (militaryBranch === 'coastguard') {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Left side: Flow chart diagram */}
+          <div className="md:w-1/2">
+            <h3 className="text-xl font-semibold mb-4">Military Career Path: Coast Guard</h3>
+            
+            <div className="relative bg-white p-6 rounded-lg border shadow-sm">
+              {/* Path Visualization - Enhanced Flow Chart */}
+              <div className="flex flex-col items-center">
+                {/* First Step Box */}
+                <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                  <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                    <p className="text-xs font-semibold">STEP 1</p>
+                  </div>
+                  <p className="font-semibold text-blue-900">Enlistment</p>
+                  <p className="text-sm text-gray-600 mt-1">After High School</p>
+                </div>
+                
+                {/* Arrow down with service agreement note */}
+                <div className="flex flex-col items-center justify-center my-4 relative">
+                  <div className="h-8 w-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                    <span className="material-icons text-sm">arrow_downward</span>
+                  </div>
+                  <div className="absolute -right-40 top-0 bg-yellow-50 border border-yellow-200 p-2 rounded text-xs max-w-[200px]">
+                    <p className="font-semibold text-yellow-800">Service Agreement</p>
+                    <p className="text-gray-700">Typically 4-year commitment</p>
+                  </div>
+                </div>
+                
+                {/* Second Step Box */}
+                <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                  <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                    <p className="text-xs font-semibold">STEP 2</p>
+                  </div>
+                  <p className="font-semibold text-blue-900">Basic Training</p>
+                  <p className="text-sm text-gray-600 mt-1">(Boot Camp)</p>
+                  <p className="text-sm text-gray-600">8 weeks at Cape May, NJ</p>
+                </div>
+                
+                {/* Arrow down */}
+                <div className="flex flex-col items-center justify-center my-4">
+                  <div className="h-8 w-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                    <span className="material-icons text-sm">arrow_downward</span>
+                  </div>
+                </div>
+                
+                {/* Third Step Box */}
+                <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                  <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                    <p className="text-xs font-semibold">STEP 3</p>
+                  </div>
+                  <p className="font-semibold text-blue-900">Rate Training</p>
+                  <p className="text-sm text-gray-600 mt-1">(A School)</p>
+                  <p className="text-sm text-gray-600">Specialized job training</p>
+                </div>
+                
+                {/* Decision Point - Career Path Decision */}
+                <div className="flex flex-col items-center justify-center my-6">
+                  <div className="h-8 w-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-yellow-400 h-8 w-8 flex items-center justify-center text-white">
+                    <span className="material-icons text-sm">fork_right</span>
+                  </div>
+                  <div className="py-1 px-3 bg-yellow-100 border border-yellow-200 rounded-lg text-xs text-yellow-800 font-medium mt-1">
+                    Career Path Decision Point
+                  </div>
+                </div>
+                
+                {/* Branching paths with improved visualization */}
+                <div className="flex items-center justify-center mb-6 w-full">
+                  <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-gray-400 h-5 w-5 flex items-center justify-center text-white mx-4">
+                    <span className="material-icons text-xs">call_split</span>
+                  </div>
+                  <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                </div>
+                
+                {/* Two main paths - Coast Guard Career vs. Civilian Transition */}
+                <div className="flex justify-center gap-8 w-full">
+                  {/* Left path - Stay in Coast Guard */}
+                  <div className="w-1/2 max-w-xs">
+                    <div className="p-4 border border-green-300 rounded-lg text-center bg-green-50 shadow-sm mb-4">
+                      <div className="bg-green-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                        <p className="text-xs font-semibold">OPTION A</p>
+                      </div>
+                      <p className="font-semibold text-green-900">Coast Guard Career</p>
+                      <p className="text-xs text-gray-600 mt-1">20+ year career path</p>
+                    </div>
+                    
+                    {/* Coast Guard career sub-options */}
+                    <div className="flex justify-center mb-2">
+                      <div className="h-6 w-0.5 bg-gray-400"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="p-3 border border-green-200 rounded-lg text-center bg-green-50 text-sm shadow-sm">
+                        <p className="font-semibold text-green-800">Leadership Path</p>
+                        <p className="text-xs text-gray-600 mt-1">Petty Officer to Chief</p>
+                      </div>
+                      
+                      <div className="p-3 border border-blue-200 rounded-lg text-center bg-blue-50 text-sm shadow-sm">
+                        <p className="font-semibold text-blue-800">Advanced Training</p>
+                        <p className="text-xs text-gray-600 mt-1">Search & Rescue, Maritime Law</p>
+                      </div>
+                      
+                      <div className="p-3 border border-purple-200 rounded-lg text-center bg-purple-50 text-sm shadow-sm">
+                        <p className="font-semibold text-purple-800">Career Specialization</p>
+                        <p className="text-xs text-gray-600 mt-1">Homeland Security roles</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Right path - Transition to Civilian */}
+                  <div className="w-1/2 max-w-xs">
+                    <div className="p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm mb-4">
+                      <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                        <p className="text-xs font-semibold">OPTION B</p>
+                      </div>
+                      <p className="font-semibold text-blue-900">Civilian Transition</p>
+                      <p className="text-xs text-gray-600 mt-1">After your service commitment</p>
+                    </div>
+                    
+                    {/* Civilian path sub-options */}
+                    <div className="flex justify-center mb-2">
+                      <div className="h-6 w-0.5 bg-gray-400"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="p-3 border border-orange-200 rounded-lg text-center bg-orange-50 text-sm shadow-sm">
+                        <p className="font-semibold text-orange-800">GI Bill Education</p>
+                        <p className="text-xs text-gray-600 mt-1">College funding benefits</p>
+                      </div>
+                      
+                      <div className="p-3 border border-indigo-200 rounded-lg text-center bg-indigo-50 text-sm shadow-sm">
+                        <p className="font-semibold text-indigo-800">Maritime Industry</p>
+                        <p className="text-xs text-gray-600 mt-1">Shipping, ports, safety</p>
+                      </div>
+                      
+                      <div className="p-3 border border-red-200 rounded-lg text-center bg-red-50 text-sm shadow-sm">
+                        <p className="font-semibold text-red-800">Law Enforcement</p>
+                        <p className="text-xs text-gray-600 mt-1">Federal, state, local agencies</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Pathway Connections - Button to explore education/career options */}
+                <div className="mt-8 flex flex-col items-center">
+                  <div className="text-xs text-gray-500 mb-2">Want to explore post-service options in detail?</div>
+                  <div className="flex space-x-4">
+                    <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 text-xs">
+                      <span className="material-icons text-xs mr-1">school</span>
+                      Explore Education Pathways
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-green-300 text-green-700 text-xs">
+                      <span className="material-icons text-xs mr-1">work</span>
+                      Explore Career Options
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right side: Information tabs */}
+          <div className="md:w-1/2">
+            <h3 className="text-xl font-semibold mb-4">Steps in Your Journey</h3>
+            
+            <div className="border rounded-lg">
+              <Tabs defaultValue="getting-started">
+                <TabsList className="w-full">
+                  <TabsTrigger value="getting-started" className="flex-1">Getting Started</TabsTrigger>
+                  <TabsTrigger value="education" className="flex-1">Education Options</TabsTrigger>
+                  <TabsTrigger value="career" className="flex-1">Career Paths</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="getting-started" className="p-4 space-y-4">
+                  <Card className="border-green-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Enlistment After High School</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Begin by meeting with a Coast Guard recruiter who will guide you through the ASVAB test, medical screening, and preparation for basic training. The process is selective as the Coast Guard is the smallest military branch.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-green-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Basic Training - 8 weeks</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Coast Guard basic training takes place at Cape May, New Jersey. You'll learn seamanship, maritime law, firefighting, water rescue, and other specialized skills unique to the Coast Guard's mission.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-green-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">A School (Rate Training)</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Following basic training, you'll attend specialized training for your assigned rate (job specialty). The Coast Guard offers career paths in maritime enforcement, engineering, operations, and more.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="education" className="p-4 space-y-4">
+                  <Card className="border-blue-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Tuition Assistance Program</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        The Coast Guard offers tuition assistance for active duty members, helping pay for college courses at accredited institutions during off-duty hours.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-blue-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Coast Guard Institute</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        The Coast Guard Institute helps members with their educational needs, including degree programs, testing services, and credit for military training and experience.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-blue-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Leadership Development</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Throughout your Coast Guard career, you'll have opportunities for leadership training and advancement, including potential selection for officer training programs.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="career" className="p-4 space-y-4">
+                  <Card className="border-purple-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Coast Guard Career</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        A long-term Coast Guard career offers advancement through the enlisted ranks and specialized roles in maritime safety, security, and emergency response operations.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-purple-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Maritime Industry</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Coast Guard experience is highly valued in maritime safety, port operations, shipping, and commercial vessel industries, with many veterans moving to these sectors.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-purple-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Law Enforcement & Emergency Services</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        The Coast Guard's focus on maritime law enforcement and search and rescue operations makes veterans excellent candidates for positions in law enforcement, emergency management, and homeland security.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={handleBack}>
+            <span className="material-icons mr-2">arrow_back</span>
+            Back
+          </Button>
+          <Button className="bg-green-500 hover:bg-green-600" onClick={handleNext}>
+            Continue
+            <span className="material-icons ml-2">arrow_forward</span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  // Render Space Force pathway 
+  else if (militaryBranch === 'spaceforce') {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Left side: Flow chart diagram */}
+          <div className="md:w-1/2">
+            <h3 className="text-xl font-semibold mb-4">Military Career Path: Space Force</h3>
+            
+            <div className="relative bg-white p-6 rounded-lg border shadow-sm">
+              {/* Path Visualization - Enhanced Flow Chart */}
+              <div className="flex flex-col items-center">
+                {/* First Step Box */}
+                <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                  <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                    <p className="text-xs font-semibold">STEP 1</p>
+                  </div>
+                  <p className="font-semibold text-blue-900">Enlistment</p>
+                  <p className="text-sm text-gray-600 mt-1">After High School</p>
+                </div>
+                
+                {/* Arrow down with service agreement note */}
+                <div className="flex flex-col items-center justify-center my-4 relative">
+                  <div className="h-8 w-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                    <span className="material-icons text-sm">arrow_downward</span>
+                  </div>
+                  <div className="absolute -right-40 top-0 bg-yellow-50 border border-yellow-200 p-2 rounded text-xs max-w-[200px]">
+                    <p className="font-semibold text-yellow-800">Service Agreement</p>
+                    <p className="text-gray-700">Typically 4-6 year commitment</p>
+                  </div>
+                </div>
+                
+                {/* Second Step Box */}
+                <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                  <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                    <p className="text-xs font-semibold">STEP 2</p>
+                  </div>
+                  <p className="font-semibold text-blue-900">Basic Military Training</p>
+                  <p className="text-sm text-gray-600 mt-1">(BMT)</p>
+                  <p className="text-sm text-gray-600">8.5 weeks at Lackland AFB</p>
+                </div>
+                
+                {/* Arrow down */}
+                <div className="flex flex-col items-center justify-center my-4">
+                  <div className="h-8 w-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-gray-200 h-6 w-6 flex items-center justify-center text-gray-600">
+                    <span className="material-icons text-sm">arrow_downward</span>
+                  </div>
+                </div>
+                
+                {/* Third Step Box */}
+                <div className="w-64 p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm">
+                  <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                    <p className="text-xs font-semibold">STEP 3</p>
+                  </div>
+                  <p className="font-semibold text-blue-900">Technical Training</p>
+                  <p className="text-sm text-gray-600 mt-1">(SFSC Training)</p>
+                  <p className="text-sm text-gray-600">Space Force Specialty Code</p>
+                </div>
+                
+                {/* Decision Point - Career Path Decision */}
+                <div className="flex flex-col items-center justify-center my-6">
+                  <div className="h-8 w-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-yellow-400 h-8 w-8 flex items-center justify-center text-white">
+                    <span className="material-icons text-sm">fork_right</span>
+                  </div>
+                  <div className="py-1 px-3 bg-yellow-100 border border-yellow-200 rounded-lg text-xs text-yellow-800 font-medium mt-1">
+                    Career Path Decision Point
+                  </div>
+                </div>
+                
+                {/* Branching paths with improved visualization */}
+                <div className="flex items-center justify-center mb-6 w-full">
+                  <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                  <div className="rounded-full bg-gray-400 h-5 w-5 flex items-center justify-center text-white mx-4">
+                    <span className="material-icons text-xs">call_split</span>
+                  </div>
+                  <div className="w-1/3 h-0.5 bg-gray-400"></div>
+                </div>
+                
+                {/* Two main paths - Space Force Career vs. Civilian Transition */}
+                <div className="flex justify-center gap-8 w-full">
+                  {/* Left path - Stay in Space Force */}
+                  <div className="w-1/2 max-w-xs">
+                    <div className="p-4 border border-green-300 rounded-lg text-center bg-green-50 shadow-sm mb-4">
+                      <div className="bg-green-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                        <p className="text-xs font-semibold">OPTION A</p>
+                      </div>
+                      <p className="font-semibold text-green-900">Space Force Career</p>
+                      <p className="text-xs text-gray-600 mt-1">20+ year career path</p>
+                    </div>
+                    
+                    {/* Space Force career sub-options */}
+                    <div className="flex justify-center mb-2">
+                      <div className="h-6 w-0.5 bg-gray-400"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="p-3 border border-green-200 rounded-lg text-center bg-green-50 text-sm shadow-sm">
+                        <p className="font-semibold text-green-800">Specialized Positions</p>
+                        <p className="text-xs text-gray-600 mt-1">Space operations, cyber defense</p>
+                      </div>
+                      
+                      <div className="p-3 border border-blue-200 rounded-lg text-center bg-blue-50 text-sm shadow-sm">
+                        <p className="font-semibold text-blue-800">Advanced Education</p>
+                        <p className="text-xs text-gray-600 mt-1">STEM degrees and certifications</p>
+                      </div>
+                      
+                      <div className="p-3 border border-purple-200 rounded-lg text-center bg-purple-50 text-sm shadow-sm">
+                        <p className="font-semibold text-purple-800">Leadership Track</p>
+                        <p className="text-xs text-gray-600 mt-1">Supervisory & command roles</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Right path - Transition to Civilian */}
+                  <div className="w-1/2 max-w-xs">
+                    <div className="p-4 border border-blue-300 rounded-lg text-center bg-blue-50 shadow-sm mb-4">
+                      <div className="bg-blue-600 text-white py-1 px-2 rounded-t-md -mt-4 mb-2 mx-auto inline-block">
+                        <p className="text-xs font-semibold">OPTION B</p>
+                      </div>
+                      <p className="font-semibold text-blue-900">Civilian Transition</p>
+                      <p className="text-xs text-gray-600 mt-1">After your service commitment</p>
+                    </div>
+                    
+                    {/* Civilian path sub-options */}
+                    <div className="flex justify-center mb-2">
+                      <div className="h-6 w-0.5 bg-gray-400"></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="p-3 border border-orange-200 rounded-lg text-center bg-orange-50 text-sm shadow-sm">
+                        <p className="font-semibold text-orange-800">GI Bill Education</p>
+                        <p className="text-xs text-gray-600 mt-1">College funding benefits</p>
+                      </div>
+                      
+                      <div className="p-3 border border-indigo-200 rounded-lg text-center bg-indigo-50 text-sm shadow-sm">
+                        <p className="font-semibold text-indigo-800">Aerospace Industry</p>
+                        <p className="text-xs text-gray-600 mt-1">Space companies, satellite operations</p>
+                      </div>
+                      
+                      <div className="p-3 border border-red-200 rounded-lg text-center bg-red-50 text-sm shadow-sm">
+                        <p className="font-semibold text-red-800">Tech & Cybersecurity</p>
+                        <p className="text-xs text-gray-600 mt-1">High-demand tech careers</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Pathway Connections - Button to explore education/career options */}
+                <div className="mt-8 flex flex-col items-center">
+                  <div className="text-xs text-gray-500 mb-2">Want to explore post-service options in detail?</div>
+                  <div className="flex space-x-4">
+                    <Button variant="outline" size="sm" className="border-blue-300 text-blue-700 text-xs">
+                      <span className="material-icons text-xs mr-1">school</span>
+                      Explore Education Pathways
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-green-300 text-green-700 text-xs">
+                      <span className="material-icons text-xs mr-1">work</span>
+                      Explore Career Options
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right side: Information tabs */}
+          <div className="md:w-1/2">
+            <h3 className="text-xl font-semibold mb-4">Steps in Your Journey</h3>
+            
+            <div className="border rounded-lg">
+              <Tabs defaultValue="getting-started">
+                <TabsList className="w-full">
+                  <TabsTrigger value="getting-started" className="flex-1">Getting Started</TabsTrigger>
+                  <TabsTrigger value="education" className="flex-1">Education Options</TabsTrigger>
+                  <TabsTrigger value="career" className="flex-1">Career Paths</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="getting-started" className="p-4 space-y-4">
+                  <Card className="border-green-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Enlistment After High School</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Begin with meeting a Space Force recruiter who will guide you through the application process. As the newest and most technical branch, Space Force is highly selective with a focus on STEM aptitude.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-green-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Basic Military Training (BMT)</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Space Force guardians attend Air Force Basic Military Training at Lackland AFB in Texas. This 8.5-week program builds military discipline while preparing you for specialized technical training.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-green-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Technical Training & Specialization</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        After BMT, you'll receive specialized training in your Space Force Specialty Code (SFSC). Key career fields include space operations, intelligence, cyber operations, and engineering.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="education" className="p-4 space-y-4">
+                  <Card className="border-blue-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Technology Education Programs</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        The Space Force emphasizes continuous education in STEM fields with special programs for computer science, engineering, and space-related disciplines.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-blue-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Tuition Assistance & Scholarships</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Space Force members can access tuition assistance for college courses and specialized technical certifications while serving, with additional scholarships for in-demand fields.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-blue-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Space Professional Development</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Throughout your career, you'll have access to specialized training in emerging space technology, satellite operations, and cybersecurity through Space Force professional development programs.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="career" className="p-4 space-y-4">
+                  <Card className="border-purple-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Space Force Career</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        A Space Force career offers progression through technical specializations in space operations, cyber defense, and intelligence with leadership opportunities in this cutting-edge branch.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-purple-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Space Industry</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Space Force skills are in high demand at aerospace companies, satellite operations firms, and commercial space ventures, with many guardians transitioning to roles at SpaceX, Blue Origin, and other industry leaders.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-purple-100">
+                    <CardContent className="pt-4">
+                      <h4 className="font-medium">Technology & Cybersecurity</h4>
+                      <p className="text-sm text-gray-600 mt-2">
+                        The technical training received in the Space Force makes veterans highly sought after in technology fields, particularly cybersecurity, network operations, and systems engineering.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={handleBack}>
+            <span className="material-icons mr-2">arrow_back</span>
+            Back
+          </Button>
+          <Button className="bg-green-500 hover:bg-green-600" onClick={handleNext}>
+            Continue
+            <span className="material-icons ml-2">arrow_forward</span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
   // Default return (shouldn't reach this if valid branch is provided)
   return (
     <div className="p-8 text-center">
