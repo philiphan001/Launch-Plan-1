@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AuthProps } from '@/interfaces/auth';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -59,8 +60,18 @@ interface CareerTimeline {
   timeline: CareerTimelineStep[];
 }
 
-const CareerBuilder: React.FC = () => {
-  const userId = 1; // Default user ID
+interface CareerBuilderProps extends AuthProps {}
+
+const CareerBuilder: React.FC<CareerBuilderProps> = ({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}) => {
+  const userId = user?.id || 1; // Use authenticated user ID or fallback to default
   const [selectedCareer, setSelectedCareer] = useState<Career | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [loadingTimeline, setLoadingTimeline] = useState(false);

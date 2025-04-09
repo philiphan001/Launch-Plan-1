@@ -7,10 +7,30 @@ import CareerExplorationCard from "@/components/dashboard/CareerExplorationCard"
 import CollegeDiscoveryCard from "@/components/dashboard/CollegeDiscoveryCard";
 import PathwaysSection from "@/components/dashboard/PathwaysSection";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const Dashboard = () => {
-  const [username, setUsername] = useState("Philip");
+import { User, AuthProps } from "@/interfaces/auth";
+
+interface DashboardProps extends AuthProps {}
+
+const Dashboard = ({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: DashboardProps) => {
+  // Use the user's name from props if available, otherwise use a default
+  const [username, setUsername] = useState(user?.name || "User");
+  
+  // Update username when user changes
+  useEffect(() => {
+    if (user?.name) {
+      setUsername(user.name);
+    }
+  }, [user]);
 
   // Example of how we would fetch dashboard data
   const { data: dashboardData, isLoading } = useQuery({

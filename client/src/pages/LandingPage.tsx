@@ -16,7 +16,19 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function LandingPage() {
+import { User, AuthProps } from "@/interfaces/auth";
+
+interface LandingPageProps extends AuthProps {}
+
+export default function LandingPage({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: LandingPageProps) {
   const [_, setLocation] = useLocation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);

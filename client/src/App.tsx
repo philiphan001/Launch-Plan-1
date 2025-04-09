@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import Dashboard from "@/pages/Dashboard";
 import FinancialProjections from "@/pages/FinancialProjections";
@@ -15,8 +16,124 @@ import SignupPage from "@/pages/SignupPage";
 import NotFound from "@/pages/not-found";
 import AppShell from "@/components/ui/layout/AppShell";
 
+import { User, AuthProps } from "@/interfaces/auth";
+
 function App() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  
+  // On mount, check localStorage for user data
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      setIsAuthenticated(true);
+      setIsFirstTimeUser(parsedUser.isFirstTimeUser);
+    }
+  }, []);
+  
+  // Handle navigation based on auth status
+  useEffect(() => {
+    // If at root path '/' and logged in, redirect appropriately
+    if (location === '/') {
+      if (isAuthenticated) {
+        // First-time users go to Pathways, returning users go to Dashboard
+        setLocation(isFirstTimeUser ? '/pathways' : '/dashboard');
+      }
+    } 
+    // If trying to access dashboard as first-time user, redirect to pathways
+    else if (location === '/dashboard' && isAuthenticated && isFirstTimeUser) {
+      setLocation('/pathways');
+    }
+    // If trying to access protected routes while not authenticated
+    else if (!isAuthenticated && 
+        !["/", "/login", "/signup"].includes(location)) {
+      setLocation('/login');
+    }
+  }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
+  
+  // Auth context values and functions
+  const login = async (email: string, password: string) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create mock user
+      const mockUser: User = {
+        id: 1,
+        name: email.split('@')[0],
+        email,
+        isFirstTimeUser: false // Returning users aren't first-time users
+      };
+      
+      setUser(mockUser);
+      setIsAuthenticated(true);
+      setIsFirstTimeUser(false);
+      
+      localStorage.setItem('user', JSON.stringify(mockUser));
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+  
+  const signup = async (name: string, email: string, password: string) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Create mock user
+      const mockUser: User = {
+        id: Date.now(),
+        name,
+        email,
+        isFirstTimeUser: true // New users are first-time users
+      };
+      
+      setUser(mockUser);
+      setIsAuthenticated(true);
+      setIsFirstTimeUser(true);
+      
+      localStorage.setItem('user', JSON.stringify(mockUser));
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
+  };
+  
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+    setIsFirstTimeUser(false);
+    localStorage.removeItem('user');
+    setLocation('/');
+  };
+  
+  const completeOnboarding = () => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        isFirstTimeUser: false
+      };
+      setUser(updatedUser);
+      setIsFirstTimeUser(false);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+  
+  // Provide auth values to pages via props
+  const authProps = {
+    user,
+    isAuthenticated,
+    isFirstTimeUser,
+    login,
+    signup,
+    logout,
+    completeOnboarding
+  };
   
   // Check if the current route should be displayed within the AppShell
   const isPublicRoute = ["/", "/login", "/signup"].includes(location);
@@ -25,27 +142,53 @@ function App() {
   if (isPublicRoute) {
     return (
       <Switch>
-        <Route path="/" component={LandingPage} />
-        <Route path="/login" component={LoginPage} />
-        <Route path="/signup" component={SignupPage} />
+        <Route path="/">
+          {() => <LandingPage {...authProps} />}
+        </Route>
+        <Route path="/login">
+          {() => <LoginPage {...authProps} />}
+        </Route>
+        <Route path="/signup">
+          {() => <SignupPage {...authProps} />}
+        </Route>
       </Switch>
     );
   }
   
   // Routes that should be displayed within the AppShell layout
   return (
-    <AppShell>
+    <AppShell logout={logout} user={user}>
       <Switch>
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/projections" component={FinancialProjections} />
-        <Route path="/careers" component={CareerExploration} />
-        <Route path="/career-builder" component={CareerBuilder} />
-        <Route path="/colleges" component={CollegeDiscovery} />
-        <Route path="/calculator" component={NetPriceCalculator} />
-        <Route path="/pathways" component={Pathways} />
-        <Route path="/profile" component={Profile} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/explore" component={Pathways} />
+        <Route path="/dashboard">
+          {() => <Dashboard {...authProps} />}
+        </Route>
+        <Route path="/projections">
+          {() => <FinancialProjections {...authProps} />}
+        </Route>
+        <Route path="/careers">
+          {() => <CareerExploration {...authProps} />}
+        </Route>
+        <Route path="/career-builder">
+          {() => <CareerBuilder {...authProps} />}
+        </Route>
+        <Route path="/colleges">
+          {() => <CollegeDiscovery {...authProps} />}
+        </Route>
+        <Route path="/calculator">
+          {() => <NetPriceCalculator {...authProps} />}
+        </Route>
+        <Route path="/pathways">
+          {() => <Pathways {...authProps} />}
+        </Route>
+        <Route path="/profile">
+          {() => <Profile {...authProps} />}
+        </Route>
+        <Route path="/settings">
+          {() => <Settings {...authProps} />}
+        </Route>
+        <Route path="/explore">
+          {() => <Pathways {...authProps} />}
+        </Route>
         
         {/* Redirect /assumptions to /settings with assumptions tab */}
         <Route path="/assumptions">
@@ -54,7 +197,9 @@ function App() {
             return null;
           }}
         </Route>
-        <Route component={NotFound} />
+        <Route>
+          {() => <NotFound />}
+        </Route>
       </Switch>
     </AppShell>
   );

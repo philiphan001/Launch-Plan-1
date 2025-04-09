@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AuthProps } from "@/interfaces/auth";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,17 @@ type FavoriteCollege = {
   createdAt: string;
 };
 
-const CollegeDiscovery = () => {
+interface CollegeDiscoveryProps extends AuthProps {}
+
+const CollegeDiscovery = ({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: CollegeDiscoveryProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location] = useLocation();
@@ -89,9 +100,8 @@ const CollegeDiscovery = () => {
     window.history.pushState({}, '', newUrl);
   };
   
-  // For demo purposes, we'll use a temporary userId
-  // In a real application, this would come from auth
-  const temporaryUserId = 1;
+  // Use authenticated user ID from props, or fallback to a default if not available
+  const userId = user?.id || 1;
   
   // Fetch colleges from API
   const { data: colleges = [], isLoading, isError } = useQuery<College[]>({

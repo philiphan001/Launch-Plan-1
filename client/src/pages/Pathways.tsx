@@ -50,7 +50,19 @@ const Step = ({ children, title, subtitle }: StepProps) => (
   </div>
 );
 
-const Pathways = () => {
+import { User, AuthProps } from "@/interfaces/auth";
+
+interface PathwaysProps extends AuthProps {}
+
+const Pathways = ({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: PathwaysProps) => {
   // Helper function to format salary with commas and currency symbol
   const formatSalary = (salary: number): string => {
     return new Intl.NumberFormat('en-US', { 

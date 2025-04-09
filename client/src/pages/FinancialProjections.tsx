@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { AuthProps } from "@/interfaces/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
@@ -135,7 +136,17 @@ interface FinancialProfile {
   otherDebtAmount: number | null;
 }
 
-const FinancialProjections = () => {
+interface FinancialProjectionsProps extends AuthProps {}
+
+const FinancialProjections = ({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: FinancialProjectionsProps) => {
   // Temporary user ID for demo purposes
   const userId = 1;
 

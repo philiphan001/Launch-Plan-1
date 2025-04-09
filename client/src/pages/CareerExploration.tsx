@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AuthProps } from "@/interfaces/auth";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,17 @@ interface FavoriteCareer {
   career?: Career;
 }
 
-const CareerExploration = () => {
+interface CareerExplorationProps extends AuthProps {}
+
+const CareerExploration = ({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: CareerExplorationProps) => {
   // User ID - hardcoded for demo, in real app would come from auth
   const userId = 1;
   

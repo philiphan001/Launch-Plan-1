@@ -8,7 +8,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 
-export default function LoginPage() {
+import { User, AuthProps } from "@/interfaces/auth";
+
+interface LoginPageProps extends AuthProps {}
+
+export default function LoginPage({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: LoginPageProps) {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -41,19 +53,17 @@ export default function LoginPage() {
       return;
     }
     
-    // In a real application, this is where you would authenticate with your backend
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await login(formData.email, formData.password);
       
-      // For now, we'll just simulate success and navigate to the dashboard
       toast({
         title: "Login successful!",
         description: "Welcome back to Launch Plan.",
       });
       
+      // Returning users go to dashboard
       setLocation('/dashboard');
     } catch (error) {
       toast({

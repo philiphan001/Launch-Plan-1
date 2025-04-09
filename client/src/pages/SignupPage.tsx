@@ -7,7 +7,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 
-export default function SignupPage() {
+import { User, AuthProps } from "@/interfaces/auth";
+
+interface SignupPageProps extends AuthProps {}
+
+export default function SignupPage({
+  user,
+  isAuthenticated,
+  isFirstTimeUser,
+  login,
+  signup,
+  logout,
+  completeOnboarding
+}: SignupPageProps) {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -46,20 +58,18 @@ export default function SignupPage() {
       return;
     }
     
-    // In a real application, this is where you would send the registration data to your backend
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await signup(formData.name, formData.email, formData.password);
       
-      // For now, we'll just simulate success and navigate to the dashboard
       toast({
         title: "Account created!",
         description: "Welcome to Launch Plan. Your account has been created successfully.",
       });
       
-      setLocation('/dashboard');
+      // First time users go to pathways
+      setLocation('/pathways');
     } catch (error) {
       toast({
         title: "Error creating account",
