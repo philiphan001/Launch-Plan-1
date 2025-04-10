@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SavedCalculationsSection from "@/components/profile/SavedCalculationsSection";
+import { AuthProps } from "@/interfaces/auth";
 
 // Types for the favorites
 type FavoriteCollege = {
@@ -38,7 +39,9 @@ type FavoriteCareer = {
   };
 };
 
-const Profile = () => {
+interface ProfileProps extends AuthProps {}
+
+const Profile = (props: ProfileProps) => {
   const { toast } = useToast();
   
   // User info state

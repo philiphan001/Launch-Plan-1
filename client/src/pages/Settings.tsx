@@ -11,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SavedCalculationsSection from "@/components/profile/SavedCalculationsSection";
 import LaunchPlanAssumptionsCard from "@/components/assumptions/LaunchPlanAssumptionsCard";
 import { Rocket } from "lucide-react";
+import { AuthProps } from "@/interfaces/auth";
 
 // Types for the favorites
 type FavoriteCollege = {
@@ -40,7 +41,9 @@ type FavoriteCareer = {
   };
 };
 
-const Settings = () => {
+interface SettingsProps extends AuthProps {}
+
+const Settings = (props: SettingsProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("financial");
   
