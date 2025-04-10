@@ -538,46 +538,73 @@ const Pathways = ({
                   </div>
                 </div>
                 
+                {/* Job pathway card */}
                 <div 
-                  className={`border ${selectedPath === 'job' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  className={`group cursor-pointer transition-all duration-300 rounded-lg overflow-hidden shadow-md hover:shadow-xl relative h-64 ${selectedPath === 'job' ? 'ring-2 ring-green-400' : ''}`}
                   onClick={() => {
                     handlePathSelect('job');
                     handleNext(); // Auto-progress to next step
                   }}
                 >
-                  <div className={`rounded-full ${selectedPath === 'job' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'job' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
-                    <span className="material-icons">work</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/90 to-green-600/90 transform transition-all duration-300 group-hover:scale-105"></div>
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] group-hover:backdrop-blur-0 transition-all duration-300"></div>
+                  <div className="relative h-full flex flex-col items-center justify-center p-6 text-white">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4 shadow-glow transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
+                      <span className="material-icons text-2xl">work</span>
+                    </div>
+                    <h3 className="text-xl font-display font-bold mb-2">Get a Job</h3>
+                    <p className="text-white/80 text-center">Enter the workforce and gain valuable experience and financial independence</p>
+                    
+                    <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <span className="material-icons">arrow_forward</span>
+                    </div>
                   </div>
-                  <h5 className={`font-medium ${selectedPath === 'job' ? 'text-primary' : ''}`}>Get a Job</h5>
-                  <p className="text-sm text-gray-600 mt-1">Enter the workforce</p>
                 </div>
                 
+                {/* Military pathway card */}
                 <div 
-                  className={`border ${selectedPath === 'military' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  className={`group cursor-pointer transition-all duration-300 rounded-lg overflow-hidden shadow-md hover:shadow-xl relative h-64 ${selectedPath === 'military' ? 'ring-2 ring-green-400' : ''}`}
                   onClick={() => {
                     handlePathSelect('military');
                     handleNext(); // Auto-progress to next step
                   }}
                 >
-                  <div className={`rounded-full ${selectedPath === 'military' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'military' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
-                    <span className="material-icons">military_tech</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-600/90 to-gray-700/90 transform transition-all duration-300 group-hover:scale-105"></div>
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] group-hover:backdrop-blur-0 transition-all duration-300"></div>
+                  <div className="relative h-full flex flex-col items-center justify-center p-6 text-white">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4 shadow-glow transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
+                      <span className="material-icons text-2xl">military_tech</span>
+                    </div>
+                    <h3 className="text-xl font-display font-bold mb-2">Join Military</h3>
+                    <p className="text-white/80 text-center">Serve your country while gaining skills, discipline, and educational benefits</p>
+                    
+                    <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <span className="material-icons">arrow_forward</span>
+                    </div>
                   </div>
-                  <h5 className={`font-medium ${selectedPath === 'military' ? 'text-primary' : ''}`}>Join Military</h5>
-                  <p className="text-sm text-gray-600 mt-1">Serve in armed forces</p>
                 </div>
                 
+                {/* Gap Year pathway card */}
                 <div 
-                  className={`border ${selectedPath === 'gap' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  className={`group cursor-pointer transition-all duration-300 rounded-lg overflow-hidden shadow-md hover:shadow-xl relative h-64 ${selectedPath === 'gap' ? 'ring-2 ring-green-400' : ''}`}
                   onClick={() => {
                     handlePathSelect('gap');
                     handleNext(); // Auto-progress to next step
                   }}
                 >
-                  <div className={`rounded-full ${selectedPath === 'gap' ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${selectedPath === 'gap' ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
-                    <span className="material-icons">explore</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/90 to-violet-600/90 transform transition-all duration-300 group-hover:scale-105"></div>
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] group-hover:backdrop-blur-0 transition-all duration-300"></div>
+                  <div className="relative h-full flex flex-col items-center justify-center p-6 text-white">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4 shadow-glow transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
+                      <span className="material-icons text-2xl">explore</span>
+                    </div>
+                    <h3 className="text-xl font-display font-bold mb-2">Take a Gap Year</h3>
+                    <p className="text-white/80 text-center">Explore the world, volunteer, or work before deciding your long-term path</p>
+                    
+                    <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <span className="material-icons">arrow_forward</span>
+                    </div>
                   </div>
-                  <h5 className={`font-medium ${selectedPath === 'gap' ? 'text-primary' : ''}`}>Take a Gap Year</h5>
-                  <p className="text-sm text-gray-600 mt-1">Explore before deciding</p>
                 </div>
               </div>
               
