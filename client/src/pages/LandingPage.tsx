@@ -337,19 +337,6 @@ export default function LandingPage({
                 </span>
                 <span className="absolute inset-0 bg-gradient-to-r from-green-600 to-green-700 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
               </Button>
-              
-              <Button 
-                onClick={() => setLocation('/explore')}
-                variant="outline" 
-                size="lg" 
-                className="group relative overflow-hidden bg-transparent border-2 border-orange-500 text-orange-400 hover:text-white px-8 py-6 text-lg rounded-xl"
-              >
-                <span className="relative z-10 flex items-center">
-                  Help Me With Ideas
-                  <Lightbulb className="ml-2 group-hover:rotate-12 transition-transform" />
-                </span>
-                <span className="absolute inset-0 bg-gradient-to-r from-orange-600 to-orange-500 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-              </Button>
             </motion.div>
             
             {/* Scroll indicator */}
@@ -759,7 +746,7 @@ export default function LandingPage({
                 className="group relative overflow-hidden bg-white text-blue-600 hover:text-blue-700 px-10 py-6 text-xl rounded-xl shadow-lg"
               >
                 <span className="relative z-10 flex items-center font-bold">
-                  Create Free Account
+                  Get Started
                   <Zap className="ml-2 group-hover:rotate-12 transition-transform" />
                 </span>
               </Button>
@@ -767,7 +754,7 @@ export default function LandingPage({
             
             <p className="mt-8 text-white/80 flex items-center justify-center gap-2">
               <span className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-sm">✓</span>
-              No credit card required • Start planning in minutes
+              Start planning your future in minutes
             </p>
           </motion.div>
         </div>
