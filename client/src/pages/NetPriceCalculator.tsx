@@ -532,77 +532,6 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
         <div className="md:col-span-1">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">My Favorite Schools</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="college">Choose from your favorite schools</Label>
-                  {isLoadingFavorites ? (
-                    <div className="flex items-center mt-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading favorite colleges...
-                    </div>
-                  ) : favoriteCollegesList.length === 0 ? (
-                    <div className="mt-2 text-sm text-muted-foreground space-y-3">
-                      <p>You haven't added any colleges to your favorites yet.</p>
-                      <div className="flex items-center">
-                        <Link to="/colleges" className="text-primary flex items-center">
-                          <Search className="h-4 w-4 mr-1" /> Browse colleges and add favorites
-                        </Link>
-                      </div>
-                    </div>
-                  ) : (
-                    <Select 
-                      value={selectedCollegeId?.toString()} 
-                      onValueChange={(value) => setSelectedCollegeId(parseInt(value, 10))}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select a college" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {processedColleges.map((college: College) => (
-                          <SelectItem key={college.id} value={college.id.toString()}>
-                            {college.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-                
-                {selectedCollege && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600">{selectedCollege.name}</p>
-                      <div className="flex items-center space-x-1 text-xs text-gray-500">
-                        <span>{selectedCollege.location}</span>
-                        <span>•</span>
-                        <span>{selectedCollege.type}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="inState">Are you an in-state student?</Label>
-                      <div className="flex items-center space-x-2">
-                        <Switch 
-                          id="inState" 
-                          checked={isInState} 
-                          onCheckedChange={setIsInState}
-                          disabled={!selectedCollege.type.includes("Public")}
-                        />
-                        <span className="text-sm text-gray-600">{isInState ? "Yes" : "No"}</span>
-                      </div>
-                      {!selectedCollege.type.includes("Public") && (
-                        <p className="text-xs text-gray-500">This only applies to public institutions</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="mt-4">
-            <CardContent className="pt-6">
               <h3 className="text-lg font-medium mb-4">Your Information</h3>
               
               <div className="space-y-4">
@@ -843,12 +772,52 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
           
           <Card className="mt-4">
             <CardContent className="pt-6">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Location:</span> {selectedCollege.location}
-              </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Type:</span> {selectedCollege.type}
-              </p>
+              <h3 className="text-lg font-medium mb-4">My Favorite Schools</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="college">Choose from your favorite schools</Label>
+                  {isLoadingFavorites ? (
+                    <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading favorite colleges...
+                    </div>
+                  ) : favoriteCollegesList.length === 0 ? (
+                    <div className="mt-2 text-sm text-muted-foreground space-y-3">
+                      <p>You haven't added any colleges to your favorites yet.</p>
+                      <div className="flex items-center">
+                        <Link to="/colleges" className="text-primary flex items-center">
+                          <Search className="h-4 w-4 mr-1" /> Browse colleges and add favorites
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <Select 
+                      value={selectedCollegeId?.toString()} 
+                      onValueChange={(value) => setSelectedCollegeId(parseInt(value, 10))}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue placeholder="Select a college" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {processedColleges.map((college: College) => (
+                          <SelectItem key={college.id} value={college.id.toString()}>
+                            {college.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                
+                {selectedCollege && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Location:</span> {selectedCollege.location}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Type:</span> {selectedCollege.type}
+                      </p>
                       
                       {/* Show in-state badge for public colleges if the user is in-state */}
                       {selectedCollege.type.includes("Public") && userState && (
