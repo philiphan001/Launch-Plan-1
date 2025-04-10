@@ -156,7 +156,11 @@ const FinancialProjections = ({
   const [startingSavings, setStartingSavings] = useState<number>(5000);
   const [income, setIncome] = useState<number>(40000);
   const [expenses, setExpenses] = useState<number>(35000);
-  const [incomeGrowth, setIncomeGrowth] = useState<number>(3);
+  // Get income growth rate from localStorage (set by IncomeGrowthWidget)
+  const [incomeGrowth, setIncomeGrowth] = useState<number>(() => {
+    const savedGrowthRate = window.localStorage.getItem('income-growth-rate');
+    return savedGrowthRate ? parseFloat(savedGrowthRate) : 3.0;
+  });
   const [studentLoanDebt, setStudentLoanDebt] = useState<number>(0);
   const [financialAdvice, setFinancialAdvice] = useState<FinancialAdvice[]>([]);
   
@@ -411,6 +415,27 @@ const FinancialProjections = ({
   const [emergencyFundAmount, setEmergencyFundAmount] = useState<number>(10000); // Default: $10,000
   const [personalLoanTermYears, setPersonalLoanTermYears] = useState<number>(5); // Default: 5 years
   const [personalLoanInterestRate, setPersonalLoanInterestRate] = useState<number>(8.0); // Default: 8.0% annual interest
+  
+  // Listen for income growth rate changes from the Assumptions page
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedRate = window.localStorage.getItem('income-growth-rate');
+      if (savedRate) {
+        const parsedRate = parseFloat(savedRate);
+        if (!isNaN(parsedRate)) {
+          setIncomeGrowth(parsedRate);
+        }
+      }
+    };
+    
+    // Set up event listener for storage changes
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
   
   // Get assumptions with a dedicated query for retirement calculations
   const { data: assumptionsData } = useQuery({
