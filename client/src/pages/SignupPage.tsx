@@ -68,6 +68,7 @@ export default function SignupPage({
         description: "Welcome to Launch Plan. Your account has been created successfully.",
       });
       
+      console.log("SignupPage: User authenticated, redirecting to pathways");
       // First time users go to pathways
       setLocation('/pathways');
     } catch (error) {

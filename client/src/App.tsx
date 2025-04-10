@@ -37,22 +37,32 @@ function App() {
   
   // Handle navigation based on auth status
   useEffect(() => {
+    console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
+    
     // If at root path '/' and logged in, redirect appropriately
     if (location === '/') {
       if (isAuthenticated) {
         // First-time users go to Pathways, returning users go to Dashboard
-        setLocation(isFirstTimeUser ? '/pathways' : '/dashboard');
+        const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
+        console.log(`Redirecting from / to ${destination} based on first-time status`);
+        setLocation(destination);
       }
     } 
     // If trying to access dashboard as first-time user, redirect to pathways
     else if (location === '/dashboard' && isAuthenticated && isFirstTimeUser) {
+      console.log("First-time user trying to access dashboard, redirecting to pathways");
       setLocation('/pathways');
     }
     // If trying to access protected routes while not authenticated
     else if (!isAuthenticated && 
         !["/", "/login", "/signup"].includes(location)) {
-      console.log("Redirecting to login from:", location);
+      console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
       setLocation('/login');
+    }
+    // After signup or login, we should be authenticated but might get bounced by the redirection logic
+    else if (isAuthenticated && ["/login", "/signup"].includes(location)) {
+      console.log("User is authenticated but on login/signup page, redirecting to appropriate page");
+      setLocation(isFirstTimeUser ? '/pathways' : '/dashboard');
     }
   }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
   
