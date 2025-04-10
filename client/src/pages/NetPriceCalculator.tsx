@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, DollarSign, Check, X, Search, Home, Building, Save } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
+import { AuthProps } from "@/interfaces/auth";
 import PriceCharts from "@/components/calculator/PriceCharts";
 import {
   Dialog,
@@ -81,7 +82,9 @@ interface CollegeCalculation {
   includedInProjection?: boolean;
 }
 
-const NetPriceCalculator = () => {
+interface NetPriceCalculatorProps extends AuthProps {}
+
+const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   const { toast } = useToast();
   const [selectedCollegeId, setSelectedCollegeId] = useState<number | null>(null);
   const [zipCode, setZipCode] = useState("");
