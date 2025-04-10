@@ -51,6 +51,7 @@ function App() {
     // If trying to access protected routes while not authenticated
     else if (!isAuthenticated && 
         !["/", "/login", "/signup"].includes(location)) {
+      console.log("Redirecting to login from:", location);
       setLocation('/login');
     }
   }, [location, isAuthenticated, isFirstTimeUser, setLocation]);

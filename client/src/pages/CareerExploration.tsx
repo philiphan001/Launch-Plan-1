@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 
 interface Career {
@@ -231,13 +232,15 @@ const CareerExploration = ({
     }
   };
 
+  const [_, setLocation] = useLocation();
+  
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-display font-semibold text-gray-800">Career Exploration</h1>
         <Button 
           className="flex items-center bg-green-600 text-white hover:bg-green-700" 
-          onClick={() => window.location.href = "/career-builder"}
+          onClick={() => setLocation("/career-builder")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
