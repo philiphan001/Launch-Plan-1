@@ -43,10 +43,12 @@ interface CareerPath {
 }
 
 const Step = ({ children, title, subtitle }: StepProps) => (
-  <div className="mb-6">
-    <h4 className="text-gray-800 font-medium mb-1">{title}</h4>
-    {subtitle && <p className="text-sm text-gray-500 mb-3">{subtitle}</p>}
-    {children}
+  <div className="mb-8 animate-fadeIn">
+    <h3 className="text-2xl font-display font-bold text-primary mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">{title}</h3>
+    {subtitle && <p className="text-base text-gray-600 mb-4 max-w-2xl">{subtitle}</p>}
+    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-100 shadow-sm">
+      {children}
+    </div>
   </div>
 );
 
@@ -2304,45 +2306,52 @@ const Pathways = ({
   };
   
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-display font-semibold text-gray-800">Explore Your Pathways</h1>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleStartOver}
-          className="flex items-center gap-1"
-        >
-          <span className="material-icons text-sm">refresh</span>
-          Start Over
-        </Button>
+    <div className="max-w-5xl mx-auto">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/90 to-primary-dark shadow-lg mb-8 p-8">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTYwMCAwdjYwMEgwVjBaIi8+PHBhdGggc3Ryb2tlPSIjZmZmZmZmMTAiIGZpbGw9Im5vbmUiIGQ9Ik02MDAgMEgwdjYwMGg2MDBWMFoiLz48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTAgMzAwaDYwME0zMDAgMHY2MDAiLz48cGF0aCBkPSJNMCAwdjYwMGw2MDAtNjAwSDBaIiBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik02MDAgMHY2MDBMODAwIDYwMFYwSDYwMFoiIHN0cm9rZT0iI2ZmZmZmZjEwIiBmaWxsPSJub25lIi8+PC9zdmc+')]"></div>
+        
+        <div className="relative flex flex-col md:flex-row justify-between items-center gap-6 text-white">
+          <div className="flex-1">
+            <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">Explore Your Pathways</h1>
+            <p className="text-white/80 text-lg max-w-xl">
+              Chart your course to an empowered future by making informed choices that align with your unique talents and aspirations.
+            </p>
+          </div>
+          <div>
+            <Button 
+              variant="outline" 
+              onClick={handleStartOver}
+              className="bg-white/10 hover:bg-white/20 border-white/20 text-white shadow-glow flex items-center gap-2 transition-all transform hover:scale-105"
+            >
+              <span className="material-icons">refresh</span>
+              Start Over
+            </Button>
+          </div>
+        </div>
       </div>
       
-      {/* Step indicator */}
-      <div className="flex items-center mb-8">
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-          1
-        </div>
-        <div className={`h-1 flex-1 ${currentStep >= 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-          2
-        </div>
-        <div className={`h-1 flex-1 ${currentStep >= 3 ? 'bg-primary' : 'bg-gray-200'}`}></div>
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-          3
-        </div>
-        <div className={`h-1 flex-1 ${currentStep >= 4 ? 'bg-primary' : 'bg-gray-200'}`}></div>
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 4 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-          4
-        </div>
-        <div className={`h-1 flex-1 ${currentStep >= 5 ? 'bg-primary' : 'bg-gray-200'}`}></div>
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 5 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-          5
-        </div>
-        <div className={`h-1 flex-1 ${currentStep >= 6 ? 'bg-primary' : 'bg-gray-200'}`}></div>
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${currentStep >= 6 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'}`}>
-          6
-        </div>
+      {/* Step indicator - More dynamic and engaging */}
+      <div className="flex items-center justify-between mb-10 relative">
+        <div className="absolute h-1 bg-gradient-to-r from-gray-200 via-gray-200 to-gray-200 left-0 right-0 top-1/2 -translate-y-1/2 z-0"></div>
+        <div className={`absolute h-1 bg-gradient-to-r from-green-500 via-cyan-500 to-blue-500 left-0 right-0 top-1/2 -translate-y-1/2 z-0 transition-all duration-500 ease-in-out`} 
+          style={{ width: `${(currentStep - 1) * 20}%` }}></div>
+        
+        {[1, 2, 3, 4, 5, 6].map((step) => (
+          <div key={step} className="z-10 flex flex-col items-center">
+            <div 
+              className={`h-12 w-12 rounded-full flex items-center justify-center shadow-md transition-all duration-300 
+              ${currentStep >= step 
+                ? 'bg-gradient-to-br from-green-400 to-blue-500 text-white scale-110' 
+                : 'bg-white text-gray-500 border border-gray-200'}`}
+            >
+              {step}
+            </div>
+            <div className={`mt-2 text-xs font-medium transition-all duration-300 ${currentStep >= step ? 'text-primary' : 'text-gray-400'}`}>
+              Step {step}
+            </div>
+          </div>
+        ))}
       </div>
       
       {renderCurrentStep()}
