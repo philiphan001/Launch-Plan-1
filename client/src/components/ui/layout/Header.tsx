@@ -21,14 +21,6 @@ const Header = ({ user, logout }: HeaderProps) => {
           <Link href="/dashboard">
             <h1 className="text-xl font-display font-semibold cursor-pointer">Launch Plan</h1>
           </Link>
-          <div className="ml-6 flex items-center">
-            <Link href="/">
-              <span className="flex items-center space-x-1 hover:bg-primary-dark px-3 py-1 rounded cursor-pointer">
-                <span className="material-icons text-sm">home</span>
-                <span className="hidden md:inline">Home</span>
-              </span>
-            </Link>
-          </div>
         </div>
         <div className="flex items-center space-x-4">
           {user && (

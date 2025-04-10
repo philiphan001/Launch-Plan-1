@@ -37,15 +37,20 @@ function App() {
   
   // Handle navigation based on auth status
   useEffect(() => {
-    // Always allow access to landing page at '/' regardless of auth status
-    
+    // If at root path '/' and logged in, redirect appropriately
+    if (location === '/') {
+      if (isAuthenticated) {
+        // First-time users go to Pathways, returning users go to Dashboard
+        setLocation(isFirstTimeUser ? '/pathways' : '/dashboard');
+      }
+    } 
     // If trying to access dashboard as first-time user, redirect to pathways
-    if (location === '/dashboard' && isAuthenticated && isFirstTimeUser) {
+    else if (location === '/dashboard' && isAuthenticated && isFirstTimeUser) {
       setLocation('/pathways');
     }
     // If trying to access protected routes while not authenticated
     else if (!isAuthenticated && 
-        !["/", "/landing", "/login", "/signup"].includes(location)) {
+        !["/", "/login", "/signup"].includes(location)) {
       setLocation('/login');
     }
   }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
@@ -131,16 +136,13 @@ function App() {
   };
   
   // Check if the current route should be displayed within the AppShell
-  const isPublicRoute = ["/", "/landing", "/login", "/signup"].includes(location);
+  const isPublicRoute = ["/", "/login", "/signup"].includes(location);
   
   // Routes that should be displayed without the AppShell layout
   if (isPublicRoute) {
     return (
       <Switch>
         <Route path="/">
-          {() => <LandingPage {...authProps} />}
-        </Route>
-        <Route path="/landing">
           {() => <LandingPage {...authProps} />}
         </Route>
         <Route path="/login">
