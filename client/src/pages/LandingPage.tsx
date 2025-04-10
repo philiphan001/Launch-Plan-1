@@ -56,6 +56,12 @@ export default function LandingPage({
   // Tutorial slides content
   const tutorialSlides = [
     {
+      title: "Our Vision",
+      description: "Launch Plan was born from the idea that visualizing your financial future leads to better decisions today. What do you aspire to do? Where do you want to live? We help create a vision of your future self to guide your choices now.",
+      icon: <Sparkles className="w-20 h-20 text-indigo-400" />,
+      color: "bg-gradient-to-br from-indigo-400/50 to-indigo-600/90"
+    },
+    {
       title: "Discover Your Path",
       description: "Explore diverse education and career paths with personalized financial insights.",
       icon: <Compass className="w-20 h-20 text-green-400" />,
