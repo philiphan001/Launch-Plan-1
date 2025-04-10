@@ -82,8 +82,8 @@ export default function LandingPage({
       color: "bg-gradient-to-br from-blue-400/50 to-blue-600/90"
     },
     {
-      title: "Track Financial Health",
-      description: "Monitor your net worth growth, cash flow, savings projections, and debt reduction with interactive graphs and dashboards.",
+      title: "Visualize Financial Impact",
+      description: "See how today's decisions shape your future net worth, cash flow, savings growth, and debt reduction through interactive projections and visualizations.",
       content: (
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
@@ -98,7 +98,7 @@ export default function LandingPage({
               </div>
               <div className="absolute top-2 left-2 text-xs font-bold text-white">Net Worth</div>
             </div>
-            <div className="text-xs text-center mt-1 text-white/80">Growing Assets</div>
+            <div className="text-xs text-center mt-1 text-white/80">See Your Wealth Growth</div>
           </div>
           <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
             <div className="h-20 bg-gradient-to-r from-blue-500/70 to-blue-300/70 rounded-md relative overflow-hidden">
@@ -114,7 +114,7 @@ export default function LandingPage({
               </div>
               <div className="absolute top-2 left-2 text-xs font-bold text-white">Cash Flow</div>
             </div>
-            <div className="text-xs text-center mt-1 text-white/80">Monthly Balance</div>
+            <div className="text-xs text-center mt-1 text-white/80">Predict Financial Stability</div>
           </div>
           <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
             <div className="h-20 bg-gradient-to-r from-purple-500/70 to-purple-300/70 rounded-md relative overflow-hidden">
@@ -127,7 +127,7 @@ export default function LandingPage({
               </div>
               <div className="absolute top-2 left-2 text-xs font-bold text-white">Debt Ratio</div>
             </div>
-            <div className="text-xs text-center mt-1 text-white/80">Decreasing Over Time</div>
+            <div className="text-xs text-center mt-1 text-white/80">Project Debt Reduction</div>
           </div>
           <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
             <div className="h-20 bg-gradient-to-r from-orange-500/70 to-orange-300/70 rounded-md relative overflow-hidden">
@@ -142,7 +142,7 @@ export default function LandingPage({
               </div>
               <div className="absolute top-2 left-2 text-xs font-bold text-white">Savings</div>
             </div>
-            <div className="text-xs text-center mt-1 text-white/80">Future Growth</div>
+            <div className="text-xs text-center mt-1 text-white/80">Plan Future Security</div>
           </div>
         </div>
       ),
