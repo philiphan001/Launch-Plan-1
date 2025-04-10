@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { 
@@ -26,6 +26,14 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { User, AuthProps } from "@/interfaces/auth";
+
+interface TutorialSlide {
+  title: string;
+  description: string;
+  icon: ReactNode;
+  color: string;
+  content?: ReactNode;
+}
 
 interface LandingPageProps extends AuthProps {}
 
@@ -72,6 +80,74 @@ export default function LandingPage({
       description: "See the financial impact of different life decisions with interactive projections.",
       icon: <LineChart className="w-20 h-20 text-blue-400" />,
       color: "bg-gradient-to-br from-blue-400/50 to-blue-600/90"
+    },
+    {
+      title: "Track Financial Health",
+      description: "Monitor your net worth growth, cash flow, savings projections, and debt reduction with interactive graphs and dashboards.",
+      content: (
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
+            <div className="h-20 bg-gradient-to-r from-green-500/70 to-green-300/70 rounded-md relative overflow-hidden">
+              <div className="absolute bottom-0 left-0 right-0">
+                <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-12">
+                  <path 
+                    fill="rgba(52, 211, 153, 0.8)" 
+                    d="M0 20 Q25 5 50 12 T100 8 V20 H0" 
+                  />
+                </svg>
+              </div>
+              <div className="absolute top-2 left-2 text-xs font-bold text-white">Net Worth</div>
+            </div>
+            <div className="text-xs text-center mt-1 text-white/80">Growing Assets</div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
+            <div className="h-20 bg-gradient-to-r from-blue-500/70 to-blue-300/70 rounded-md relative overflow-hidden">
+              <div className="absolute bottom-0 left-0 right-0">
+                <div className="flex justify-between h-16 items-end px-1">
+                  <div className="w-2 h-10 bg-blue-200/90 rounded-t"></div>
+                  <div className="w-2 h-14 bg-blue-200/90 rounded-t"></div>
+                  <div className="w-2 h-8 bg-blue-200/90 rounded-t"></div>
+                  <div className="w-2 h-12 bg-blue-200/90 rounded-t"></div>
+                  <div className="w-2 h-9 bg-blue-200/90 rounded-t"></div>
+                  <div className="w-2 h-13 bg-blue-200/90 rounded-t"></div>
+                </div>
+              </div>
+              <div className="absolute top-2 left-2 text-xs font-bold text-white">Cash Flow</div>
+            </div>
+            <div className="text-xs text-center mt-1 text-white/80">Monthly Balance</div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
+            <div className="h-20 bg-gradient-to-r from-purple-500/70 to-purple-300/70 rounded-md relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full border-4 border-purple-200/30 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full border-4 border-purple-200/60 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-purple-200/80"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute top-2 left-2 text-xs font-bold text-white">Debt Ratio</div>
+            </div>
+            <div className="text-xs text-center mt-1 text-white/80">Decreasing Over Time</div>
+          </div>
+          <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm border border-white/20">
+            <div className="h-20 bg-gradient-to-r from-orange-500/70 to-orange-300/70 rounded-md relative overflow-hidden">
+              <div className="absolute inset-0">
+                <div className="flex flex-col h-full justify-end">
+                  <div className="flex items-end h-16">
+                    <div className="w-1/3 h-1/4 bg-orange-200/80"></div>
+                    <div className="w-1/3 h-2/4 bg-orange-200/80"></div>
+                    <div className="w-1/3 h-3/4 bg-orange-200/80"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute top-2 left-2 text-xs font-bold text-white">Savings</div>
+            </div>
+            <div className="text-xs text-center mt-1 text-white/80">Future Growth</div>
+          </div>
+        </div>
+      ),
+      icon: <BarChart className="w-20 h-20 text-cyan-400" />,
+      color: "bg-gradient-to-br from-cyan-400/50 to-cyan-600/90"
     },
     {
       title: "Compare Career Paths",
@@ -429,32 +505,37 @@ export default function LandingPage({
                         <p className="text-xl text-white/90 mb-6">
                           {tutorialSlides[currentSlide].description}
                         </p>
-                        <Button 
-                          className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white"
-                          onClick={handleGetStarted}
-                        >
-                          Explore This Feature <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="flex justify-center items-center order-1 md:order-2">
-                        <div className="relative">
-                          <div className="absolute inset-0 blur-3xl bg-white/20 rounded-full"></div>
-                          <motion.div
-                            animate={{ 
-                              y: [0, -10, 0],
-                              rotate: [0, 5, 0]
-                            }}
-                            transition={{
-                              duration: 4,
-                              repeat: Infinity,
-                              repeatType: "mirror"
-                            }}
-                            className="relative bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-xl"
+                        {tutorialSlides[currentSlide].content}
+                        {!tutorialSlides[currentSlide].content && (
+                          <Button 
+                            className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white"
+                            onClick={handleGetStarted}
                           >
-                            {tutorialSlides[currentSlide].icon}
-                          </motion.div>
-                        </div>
+                            Explore This Feature <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
+                      {!tutorialSlides[currentSlide].content && (
+                        <div className="flex justify-center items-center order-1 md:order-2">
+                          <div className="relative">
+                            <div className="absolute inset-0 blur-3xl bg-white/20 rounded-full"></div>
+                            <motion.div
+                              animate={{ 
+                                y: [0, -10, 0],
+                                rotate: [0, 5, 0]
+                              }}
+                              transition={{
+                                duration: 4,
+                                repeat: Infinity,
+                                repeatType: "mirror"
+                              }}
+                              className="relative bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-xl"
+                            >
+                              {tutorialSlides[currentSlide].icon}
+                            </motion.div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 </AnimatePresence>
