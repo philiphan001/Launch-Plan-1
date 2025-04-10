@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Info, RotateCcw } from 'lucide-react';
-import { DEMO_USER_ID } from '@/lib/constants';
+// Using a fixed demo user ID
+const DEMO_USER_ID = 1;
 
 const IncomeGrowthWidget = () => {
   const [growthRate, setGrowthRate] = useState<number>(3.0);

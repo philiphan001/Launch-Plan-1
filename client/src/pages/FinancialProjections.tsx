@@ -1429,17 +1429,7 @@ const FinancialProjections = ({
                 )}
               </div>
               
-              <div>
-                <Label>Income Growth Rate: {incomeGrowth}%</Label>
-                <Slider
-                  value={[incomeGrowth]}
-                  onValueChange={(value) => setIncomeGrowth(value[0])}
-                  min={0}
-                  max={10}
-                  step={0.5}
-                  className="mt-2"
-                />
-              </div>
+              {/* Income Growth Rate moved to General Assumptions */}
               
               <div className="mt-6 pt-4 border-t border-gray-200">
                 <h4 className="text-md font-semibold mb-2">Advanced Settings</h4>

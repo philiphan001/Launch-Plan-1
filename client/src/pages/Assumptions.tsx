@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import LaunchPlanAssumptionsCard from "@/components/assumptions/LaunchPlanAssumptionsCard";
 import RetirementGrowthWidget from "@/components/financial/RetirementGrowthWidget";
 import RetirementContributionWidget from "@/components/financial/RetirementContributionWidget";
+import IncomeGrowthWidget from "@/components/financial/IncomeGrowthWidget";
 
 // Hard-coding user ID for demo purposes
 const DEMO_USER_ID = 1;
@@ -318,16 +319,26 @@ const AssumptionsPage = () => {
                   {/* Tab content for different assumption categories */}
                   {["general", "marriage", "housing", "car", "children", "education"].map((category) => (
                     <TabsContent key={category} value={category} className="mt-0">
-                      {/* Special widgets for retirement in the general category */}
+                      {/* Special widgets for retirement and income in the general category */}
                       {category === "general" && (
-                        <div className="mb-8">
-                          <h3 className="text-lg font-medium mb-4">Retirement Settings</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <RetirementContributionWidget />
-                            <RetirementGrowthWidget />
+                        <>
+                          <div className="mb-8">
+                            <h3 className="text-lg font-medium mb-4">Income Settings</h3>
+                            <div className="grid grid-cols-1 gap-6">
+                              <IncomeGrowthWidget />
+                            </div>
+                            <div className="border-t my-6"></div>
                           </div>
-                          <div className="border-t my-6"></div>
-                        </div>
+                          
+                          <div className="mb-8">
+                            <h3 className="text-lg font-medium mb-4">Retirement Settings</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <RetirementContributionWidget />
+                              <RetirementGrowthWidget />
+                            </div>
+                            <div className="border-t my-6"></div>
+                          </div>
+                        </>
                       )}
                       
                       <div className="space-y-6">
