@@ -299,39 +299,60 @@ const Pathways = ({
     switch (currentStep) {
       case 1:
         return (
-          <Step title="How would you like to plan your future?">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${needsGuidance === false ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+          <Step 
+            title="How would you like to plan your future?" 
+            subtitle="Your journey to an empowered future begins with understanding your current direction"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
+              <div 
+                className={`group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative ${needsGuidance === false ? 'ring-4 ring-green-400 ring-opacity-50' : ''}`}
                 onClick={() => {
                   setNeedsGuidance(false);
                   handleNext(); // Automatically proceed to next step
                 }}
               >
-                <CardContent className="p-6 text-center">
-                  <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
-                    <span className="material-icons text-2xl">map</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-green-400/90 to-blue-500/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] group-hover:backdrop-blur-[0px] transition-all duration-300"></div>
+                <div className="relative p-8 text-center text-white z-10">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-5 shadow-glow transform transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
+                    <span className="material-icons text-3xl">map</span>
                   </div>
-                  <h3 className="text-lg font-medium mb-2">I know what I want to do</h3>
-                  <p className="text-sm text-gray-600">I have a clear path in mind after high school</p>
-                </CardContent>
-              </Card>
+                  <h3 className="text-2xl font-display font-bold mb-3 text-white">I know what I want to do</h3>
+                  <p className="text-white/80 mb-4">I have a clear path in mind after high school and want to see where it leads</p>
+                  <div className="py-1 px-4 bg-white/20 rounded-full w-fit mx-auto backdrop-blur-sm text-sm font-medium">
+                    Direct Path
+                  </div>
+                  
+                  <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <span className="material-icons text-xl">arrow_forward</span>
+                  </div>
+                </div>
+              </div>
               
-              <Card 
-                className={`cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary ${needsGuidance === true ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+              <div 
+                className={`group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative ${needsGuidance === true ? 'ring-4 ring-green-400 ring-opacity-50' : ''}`}
                 onClick={() => {
                   setNeedsGuidance(true);
                   handleNext(); // Automatically proceed to next step
                 }}
               >
-                <CardContent className="p-6 text-center">
-                  <div className="rounded-full bg-orange-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
-                    <span className="material-icons text-2xl">help_outline</span>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/90 to-purple-600/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] group-hover:backdrop-blur-[0px] transition-all duration-300"></div>
+                <div className="relative p-8 text-center text-white z-10">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-5 shadow-glow transform transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
+                    <span className="material-icons text-3xl">explore</span>
                   </div>
-                  <h3 className="text-lg font-medium mb-2">Help me with ideas</h3>
-                  <p className="text-sm text-gray-600">I'm not sure what I want to do after high school</p>
-                </CardContent>
-              </Card>
+                  <h3 className="text-2xl font-display font-bold mb-3 text-white">Help me explore options</h3>
+                  <p className="text-white/80 mb-4">I'm open to discovering possibilities that align with my interests and values</p>
+                  <div className="py-1 px-4 bg-white/20 rounded-full w-fit mx-auto backdrop-blur-sm text-sm font-medium">
+                    Guided Discovery
+                  </div>
+                  
+                  <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <span className="material-icons text-xl">arrow_forward</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </Step>
         );
@@ -489,20 +510,32 @@ const Pathways = ({
           }
         } else {
           return (
-            <Step title="What would you like to do after high school?">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Step 
+              title="What would you like to do after high school?" 
+              subtitle="Choose your path to begin visualizing where it might lead you"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Education pathway card */}
                 <div 
-                  className={`border ${isEducationPath(selectedPath) ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 text-center`}
+                  className={`group cursor-pointer transition-all duration-300 rounded-lg overflow-hidden shadow-md hover:shadow-xl relative h-64 ${isEducationPath(selectedPath) ? 'ring-2 ring-green-400' : ''}`}
                   onClick={() => {
                     handlePathSelect('education');
                     handleNext(); // Auto-progress to next step
                   }}
                 >
-                  <div className={`rounded-full ${isEducationPath(selectedPath) ? 'bg-primary' : 'bg-gray-200'} h-12 w-12 flex items-center justify-center ${isEducationPath(selectedPath) ? 'text-white' : 'text-gray-600'} mx-auto mb-3`}>
-                    <span className="material-icons">school</span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/90 to-cyan-600/90 transform transition-all duration-300 group-hover:scale-105"></div>
+                  <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] group-hover:backdrop-blur-0 transition-all duration-300"></div>
+                  <div className="relative h-full flex flex-col items-center justify-center p-6 text-white">
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full h-16 w-16 flex items-center justify-center mx-auto mb-4 shadow-glow transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
+                      <span className="material-icons text-2xl">school</span>
+                    </div>
+                    <h3 className="text-xl font-display font-bold mb-2">Continue Education</h3>
+                    <p className="text-white/80 text-center">Pursue higher education to unlock academic and career opportunities</p>
+                    
+                    <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <span className="material-icons">arrow_forward</span>
+                    </div>
                   </div>
-                  <h5 className={`font-medium ${isEducationPath(selectedPath) ? 'text-primary' : ''}`}>Continue Education</h5>
-                  <p className="text-sm text-gray-600 mt-1">Pursue college or other learning</p>
                 </div>
                 
                 <div 
