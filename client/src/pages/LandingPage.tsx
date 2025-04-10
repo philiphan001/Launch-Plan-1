@@ -216,7 +216,7 @@ export default function LandingPage({
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="block"
                 >
-                  Design Your Path
+                  Empowering
                 </motion.span>
                 <motion.span
                   initial={{ opacity: 0, y: 20 }}
@@ -224,7 +224,7 @@ export default function LandingPage({
                   transition={{ duration: 0.5, delay: 0.4 }}
                   className="block"
                 >
-                  <span className="text-white">With</span> Launch Plan
+                  <span className="text-white">Your</span> Future Self
                 </motion.span>
               </h1>
               
@@ -234,7 +234,7 @@ export default function LandingPage({
                 transition={{ duration: 0.8, delay: 0.6 }}
                 className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10"
               >
-                Visualize your future, make informed decisions, and build a life path that aligns with your goals and dreams
+                Make informed decisions today that will create the confident, financially secure future version of you
               </motion.p>
             </motion.div>
             
