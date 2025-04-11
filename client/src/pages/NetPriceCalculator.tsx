@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, DollarSign, Check, X, Search, Home, Building, Save } from "lucide-react";
+import { Loader2, DollarSign, Check, X, Search, Home, Building, Save, ChevronDown, ChevronUp } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import { AuthProps } from "@/interfaces/auth";
@@ -23,6 +23,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface College {
   id: number;
