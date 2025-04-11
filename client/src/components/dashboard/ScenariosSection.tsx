@@ -134,49 +134,56 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
 
   // Get the net worth at specific age for a scenario
   const getNetWorthAtAge = (scenario: ScenarioData, targetAge: number): number => {
-    // Find the index of the age in the ages array
-    const ageIndex = scenario.projectionData.ages.findIndex(age => age === targetAge);
-    
-    // If the exact age exists in our data, use that value
-    if (ageIndex !== -1) {
-      return scenario.projectionData.netWorth[ageIndex];
-    }
-    
-    // If the target age is smaller than the first age in our data
-    if (targetAge < scenario.projectionData.ages[0]) {
-      return scenario.projectionData.netWorth[0]; // Return the first value
-    }
-    
-    // If the target age is larger than the last age in our data
-    if (targetAge > scenario.projectionData.ages[scenario.projectionData.ages.length - 1]) {
-      return scenario.projectionData.netWorth[scenario.projectionData.netWorth.length - 1]; // Return the last value
-    }
-    
-    // Find the closest ages before and after the target and interpolate
-    let lowerIndex = 0;
-    for (let i = 0; i < scenario.projectionData.ages.length; i++) {
-      if (scenario.projectionData.ages[i] <= targetAge) {
-        lowerIndex = i;
-      } else {
-        break;
+    try {
+      // Find the index of the age in the ages array
+      const ageIndex = scenario.projectionData.ages.findIndex(age => age === targetAge);
+      
+      // If the exact age exists in our data, use that value
+      if (ageIndex !== -1) {
+        return scenario.projectionData.netWorth[ageIndex] || 0;
       }
+      
+      // If the target age is smaller than the first age in our data
+      if (targetAge < scenario.projectionData.ages[0]) {
+        return scenario.projectionData.netWorth[0] || 0; // Return the first value
+      }
+      
+      // If the target age is larger than the last age in our data
+      if (targetAge > scenario.projectionData.ages[scenario.projectionData.ages.length - 1]) {
+        return scenario.projectionData.netWorth[scenario.projectionData.netWorth.length - 1] || 0; // Return the last value
+      }
+      
+      // Find the closest ages before and after the target and interpolate
+      let lowerIndex = 0;
+      for (let i = 0; i < scenario.projectionData.ages.length; i++) {
+        if (scenario.projectionData.ages[i] <= targetAge) {
+          lowerIndex = i;
+        } else {
+          break;
+        }
+      }
+      
+      const upperIndex = lowerIndex + 1;
+      
+      // If we're at the last age, just return that value
+      if (upperIndex >= scenario.projectionData.ages.length) {
+        return scenario.projectionData.netWorth[lowerIndex] || 0;
+      }
+      
+      // Calculate the net worth using linear interpolation
+      const lowerAge = scenario.projectionData.ages[lowerIndex];
+      const upperAge = scenario.projectionData.ages[upperIndex];
+      const lowerValue = scenario.projectionData.netWorth[lowerIndex] || 0;
+      const upperValue = scenario.projectionData.netWorth[upperIndex] || 0;
+      
+      // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
+      const interpolatedValue = lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
+      
+      return isNaN(interpolatedValue) ? 0 : interpolatedValue;
+    } catch (error) {
+      console.error("Error calculating net worth at age", error);
+      return 0; // Return 0 as fallback to ensure containers remain visible
     }
-    
-    const upperIndex = lowerIndex + 1;
-    
-    // If we're at the last age, just return that value
-    if (upperIndex >= scenario.projectionData.ages.length) {
-      return scenario.projectionData.netWorth[lowerIndex];
-    }
-    
-    // Calculate the net worth using linear interpolation
-    const lowerAge = scenario.projectionData.ages[lowerIndex];
-    const upperAge = scenario.projectionData.ages[upperIndex];
-    const lowerValue = scenario.projectionData.netWorth[lowerIndex];
-    const upperValue = scenario.projectionData.netWorth[upperIndex];
-    
-    // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
-    return lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
   };
 
   // Get the age range across all scenarios
