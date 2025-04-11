@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import ScenarioCard, { ScenarioData } from "./ScenarioCard";
 import {
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ScenariosSectionProps {
   userId?: number;
@@ -32,6 +34,8 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   const [compareOpen, setCompareOpen] = useState(false);
   const [scenariosToCompare, setScenariosToCompare] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState("recent");
+  const [ageSliderValue, setAgeSliderValue] = useState<number>(30); // Default age of 30
+  const [useAgeSlider, setUseAgeSlider] = useState<boolean>(false);
 
   // Fetch user scenarios
   const { data: scenarios = [], isLoading } = useQuery<ScenarioData[]>({
@@ -127,8 +131,66 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
     setCompareOpen(true);
   };
 
+  // Get the net worth at specific age for a scenario
+  const getNetWorthAtAge = (scenario: ScenarioData, targetAge: number): number => {
+    // Find the index of the age in the ages array
+    const ageIndex = scenario.projectionData.ages.findIndex(age => age === targetAge);
+    
+    // If the exact age exists in our data, use that value
+    if (ageIndex !== -1) {
+      return scenario.projectionData.netWorth[ageIndex];
+    }
+    
+    // If the target age is smaller than the first age in our data
+    if (targetAge < scenario.projectionData.ages[0]) {
+      return scenario.projectionData.netWorth[0]; // Return the first value
+    }
+    
+    // If the target age is larger than the last age in our data
+    if (targetAge > scenario.projectionData.ages[scenario.projectionData.ages.length - 1]) {
+      return scenario.projectionData.netWorth[scenario.projectionData.netWorth.length - 1]; // Return the last value
+    }
+    
+    // Find the closest ages before and after the target and interpolate
+    let lowerIndex = 0;
+    for (let i = 0; i < scenario.projectionData.ages.length; i++) {
+      if (scenario.projectionData.ages[i] <= targetAge) {
+        lowerIndex = i;
+      } else {
+        break;
+      }
+    }
+    
+    const upperIndex = lowerIndex + 1;
+    
+    // If we're at the last age, just return that value
+    if (upperIndex >= scenario.projectionData.ages.length) {
+      return scenario.projectionData.netWorth[lowerIndex];
+    }
+    
+    // Calculate the net worth using linear interpolation
+    const lowerAge = scenario.projectionData.ages[lowerIndex];
+    const upperAge = scenario.projectionData.ages[upperIndex];
+    const lowerValue = scenario.projectionData.netWorth[lowerIndex];
+    const upperValue = scenario.projectionData.netWorth[upperIndex];
+    
+    // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
+    return lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
+  };
+
+  // Get the age range across all scenarios
+  const allAges = scenarios.flatMap(scenario => scenario.projectionData.ages);
+  const minAge = Math.min(...allAges);
+  const maxAge = Math.max(...allAges);
+
+  // Sort scenarios based on selected criteria
   const sortedScenarios = [...(scenarios || [])].sort((a, b) => {
-    if (sortBy === "netWorth") {
+    if (useAgeSlider) {
+      // Sort by net worth at the specific age selected by the slider
+      const aNetWorthAtAge = getNetWorthAtAge(a, ageSliderValue);
+      const bNetWorthAtAge = getNetWorthAtAge(b, ageSliderValue);
+      return bNetWorthAtAge - aNetWorthAtAge; // Highest first
+    } else if (sortBy === "netWorth") {
       const aMaxNetWorth = Math.max(...a.projectionData.netWorth);
       const bMaxNetWorth = Math.max(...b.projectionData.netWorth);
       return bMaxNetWorth - aMaxNetWorth; // Highest first
@@ -150,7 +212,15 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-display font-semibold text-gray-800">Saved Scenarios</h2>
         <div className="flex items-center space-x-3">
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select 
+            value={sortBy} 
+            onValueChange={(value) => {
+              setSortBy(value);
+              if (value !== "ageSlider") {
+                setUseAgeSlider(false);
+              }
+            }}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -159,6 +229,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               <SelectItem value="netWorth">Highest Net Worth</SelectItem>
               <SelectItem value="income">Highest Income</SelectItem>
               <SelectItem value="expenses">Lowest Expenses</SelectItem>
+              <SelectItem value="ageSlider">By Age</SelectItem>
             </SelectContent>
           </Select>
           
@@ -175,6 +246,57 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           </Button>
         </div>
       </div>
+      
+      {/* Age slider section - only show when "By Age" sort is selected */}
+      {sortBy === "ageSlider" && scenarios.length > 0 && (
+        <Card className="mb-6 bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center mb-2">
+              <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+              <h3 className="text-lg font-medium text-gray-800">Age Comparison Slider</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Move the slider to see how scenarios compare at different ages. Scenarios will automatically 
+              re-order based on net worth at the selected age.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center">
+              <div className="flex-1">
+                <Slider
+                  defaultValue={[30]}
+                  min={minAge}
+                  max={maxAge}
+                  step={1}
+                  value={[ageSliderValue]}
+                  onValueChange={(values) => {
+                    setAgeSliderValue(values[0]);
+                    setUseAgeSlider(true);
+                  }}
+                  className="py-4"
+                />
+                <div className="flex justify-between text-sm text-gray-500 mt-1">
+                  <span>Age {minAge}</span>
+                  <span>Age {maxAge}</span>
+                </div>
+              </div>
+              
+              <div className="text-center px-6 py-3 bg-white border border-gray-200 rounded-lg">
+                <div className="text-sm text-gray-500">Selected Age</div>
+                <div className="text-3xl font-bold text-blue-600">{ageSliderValue}</div>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-sm text-gray-600">
+              <p>
+                <strong>What this shows:</strong> Net worth rankings based on projections at age {ageSliderValue}.
+                {allAges.includes(ageSliderValue) ? 
+                  " This age appears directly in the data." : 
+                  " This age is calculated through interpolation between existing data points."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -202,6 +324,8 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               index={index}
               onViewDetails={handleViewDetails}
               onEdit={handleEditScenario}
+              ageSliderActive={useAgeSlider}
+              ageSliderValue={ageSliderValue}
             />
           ))}
         </div>

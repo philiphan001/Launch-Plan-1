@@ -28,13 +28,69 @@ interface ScenarioCardProps {
   index: number;
   onViewDetails: (scenario: ScenarioData) => void;
   onEdit: (scenario: ScenarioData) => void;
+  ageSliderActive?: boolean;
+  ageSliderValue?: number;
 }
 
-const ScenarioCard = ({ scenario, index, onViewDetails, onEdit }: ScenarioCardProps) => {
+const ScenarioCard = ({ 
+  scenario, 
+  index, 
+  onViewDetails, 
+  onEdit,
+  ageSliderActive = false,
+  ageSliderValue = 30
+}: ScenarioCardProps) => {
   const netWorthChartRef = useRef<HTMLCanvasElement>(null);
   const cashFlowChartRef = useRef<HTMLCanvasElement>(null);
   const netWorthChartInstance = useRef<any>(null);
   const cashFlowChartInstance = useRef<any>(null);
+  
+  // Function to get net worth at specific age
+  const getNetWorthAtAge = (targetAge: number): number => {
+    // Find the index of the age in the ages array
+    const ageIndex = scenario.projectionData.ages.findIndex(age => age === targetAge);
+    
+    // If the exact age exists in our data, use that value
+    if (ageIndex !== -1) {
+      return scenario.projectionData.netWorth[ageIndex];
+    }
+    
+    // If the target age is smaller than the first age in our data
+    if (targetAge < scenario.projectionData.ages[0]) {
+      return scenario.projectionData.netWorth[0]; // Return the first value
+    }
+    
+    // If the target age is larger than the last age in our data
+    if (targetAge > scenario.projectionData.ages[scenario.projectionData.ages.length - 1]) {
+      return scenario.projectionData.netWorth[scenario.projectionData.netWorth.length - 1]; // Return the last value
+    }
+    
+    // Find the closest ages before and after the target and interpolate
+    let lowerIndex = 0;
+    for (let i = 0; i < scenario.projectionData.ages.length; i++) {
+      if (scenario.projectionData.ages[i] <= targetAge) {
+        lowerIndex = i;
+      } else {
+        break;
+      }
+    }
+    
+    const upperIndex = lowerIndex + 1;
+    
+    // If we're at the last age, just return that value
+    if (upperIndex >= scenario.projectionData.ages.length) {
+      return scenario.projectionData.netWorth[lowerIndex];
+    }
+    
+    // Calculate the net worth using linear interpolation
+    const lowerAge = scenario.projectionData.ages[lowerIndex];
+    const upperAge = scenario.projectionData.ages[upperIndex];
+    const lowerValue = scenario.projectionData.netWorth[lowerIndex];
+    const upperValue = scenario.projectionData.netWorth[upperIndex];
+    
+    // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
+    return lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
+  };
   
   // Create color variants for different cards
   const colorVariants = [
@@ -72,7 +128,8 @@ const ScenarioCard = ({ scenario, index, onViewDetails, onEdit }: ScenarioCardPr
         const cashFlowData = {
           ages: scenario.projectionData.ages,
           income: scenario.projectionData.income,
-          expenses: scenario.projectionData.expenses
+          expenses: scenario.projectionData.expenses,
+          netWorth: scenario.projectionData.netWorth // Add netWorth to satisfy type requirement
         };
         
         cashFlowChartInstance.current = createMainProjectionChart(ctx, cashFlowData, "income");
@@ -150,10 +207,26 @@ const ScenarioCard = ({ scenario, index, onViewDetails, onEdit }: ScenarioCardPr
               <canvas ref={netWorthChartRef}></canvas>
             </div>
             <div className="mt-2 text-center">
-              <div className="text-xl font-semibold">
-                ${Math.max(...scenario.projectionData.netWorth).toLocaleString()}
-              </div>
-              <div className="text-sm text-gray-500">Projected Net Worth</div>
+              {ageSliderActive ? (
+                <>
+                  <div className="text-xl font-semibold text-blue-600">
+                    ${getNetWorthAtAge(ageSliderValue).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-500">Net Worth at Age {ageSliderValue}</div>
+                  <div className="text-xs text-blue-500 mt-1">
+                    {scenario.projectionData.ages.includes(ageSliderValue) ? 
+                      "(Exact data point)" : 
+                      "(Interpolated value)"}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-xl font-semibold">
+                    ${Math.max(...scenario.projectionData.netWorth).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-500">Projected Peak Net Worth</div>
+                </>
+              )}
             </div>
           </TabsContent>
           
