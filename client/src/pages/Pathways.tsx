@@ -2367,14 +2367,14 @@ const Pathways = ({
   
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/90 to-primary-dark shadow-lg mb-8 p-8">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTYwMCAwdjYwMEgwVjBaIi8+PHBhdGggc3Ryb2tlPSIjZmZmZmZmMTAiIGZpbGw9Im5vbmUiIGQ9Ik02MDAgMEgwdjYwMGg2MDBWMFoiLz48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTAgMzAwaDYwME0zMDAgMHY2MDAiLz48cGF0aCBkPSJNMCAwdjYwMGw2MDAtNjAwSDBaIiBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik02MDAgMHY2MDBMODAwIDYwMFYwSDYwMFoiIHN0cm9rZT0iI2ZmZmZmZjEwIiBmaWxsPSJub25lIi8+PC9zdmc+')]"></div>
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/70 to-primary-dark/70 shadow-sm mb-6 p-4">
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500"></div>
+        <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTYwMCAwdjYwMEgwVjBaIi8+PHBhdGggc3Ryb2tlPSIjZmZmZmZmMTAiIGZpbGw9Im5vbmUiIGQ9Ik02MDAgMEgwdjYwMGg2MDBWMFoiLz48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTAgMzAwaDYwME0zMDAgMHY2MDAiLz48cGF0aCBkPSJNMCAwdjYwMGw2MDAtNjAwSDBaIiBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik02MDAgMHY2MDBMODAwIDYwMFYwSDYwMFoiIHN0cm9rZT0iI2ZmZmZmZjEwIiBmaWxsPSJub25lIi8+PC9zdmc+')]"></div>
         
-        <div className="relative flex flex-col md:flex-row justify-between items-center gap-6 text-white">
+        <div className="relative flex flex-col md:flex-row justify-between items-center gap-4 text-white">
           <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-display font-bold mb-2">Explore Your Pathways</h1>
-            <p className="text-white/80 text-lg max-w-xl">
+            <h1 className="text-xl md:text-2xl font-display font-medium mb-1">Explore Your Pathways</h1>
+            <p className="text-white/80 text-sm max-w-xl">
               Chart your course to an empowered future by making informed choices that align with your unique talents and aspirations.
             </p>
           </div>
@@ -2382,9 +2382,9 @@ const Pathways = ({
             <Button 
               variant="outline" 
               onClick={handleStartOver}
-              className="bg-white/10 hover:bg-white/20 border-white/20 text-white shadow-glow flex items-center gap-2 transition-all transform hover:scale-105"
+              className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-sm shadow-sm flex items-center gap-1 transition-all"
             >
-              <span className="material-icons">refresh</span>
+              <span className="material-icons text-sm">refresh</span>
               Start Over
             </Button>
           </div>
