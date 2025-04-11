@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import ScenarioCard, { ScenarioData } from "./ScenarioCard";
+import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -322,7 +323,13 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          layout
+          transition={{
+            layout: { type: "spring", bounce: 0.3, duration: 0.7 }
+          }}
+        >
           {sortedScenarios.map((scenario, index) => (
             <ScenarioCard
               key={scenario.id}
@@ -334,7 +341,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               ageSliderValue={ageSliderValue}
             />
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* Scenario Details Dialog */}
