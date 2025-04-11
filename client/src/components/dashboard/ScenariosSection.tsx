@@ -189,7 +189,13 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
       // Sort by net worth at the specific age selected by the slider
       const aNetWorthAtAge = getNetWorthAtAge(a, ageSliderValue);
       const bNetWorthAtAge = getNetWorthAtAge(b, ageSliderValue);
-      return bNetWorthAtAge - aNetWorthAtAge; // Highest first
+      
+      // Apply a small random factor to make shuffling more apparent when values are close
+      const randomFactor = 0.0001; // Very small factor to just create visual separation
+      const aRandom = aNetWorthAtAge * (1 + Math.random() * randomFactor);
+      const bRandom = bNetWorthAtAge * (1 + Math.random() * randomFactor);
+      
+      return bRandom - aRandom; // Highest first with minor random variation
     } else if (sortBy === "netWorth") {
       const aMaxNetWorth = Math.max(...a.projectionData.netWorth);
       const bMaxNetWorth = Math.max(...b.projectionData.netWorth);

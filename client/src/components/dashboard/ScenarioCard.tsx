@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRef, useEffect } from "react";
 import { createMainProjectionChart } from "@/lib/charts";
 import { Button } from "@/components/ui/button";
-import { BarChart, Eye, Pencil, Calculator } from "lucide-react";
+import { BarChart, Eye, Pencil, Calculator, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 
 export interface ScenarioData {
   id: number;
@@ -148,110 +149,131 @@ const ScenarioCard = ({
   }, [scenario]);
 
   return (
-    <Card className={`overflow-hidden border ${colorClass}`}>
-      <CardHeader className="bg-white pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg font-medium">{scenario.title}</CardTitle>
-            <p className="text-sm text-gray-500 mt-1">{scenario.description}</p>
+    <motion.div
+      layout
+      layoutId={`scenario-${scenario.id}`}
+      initial={{ opacity: 0.8, scale: 0.95 }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1,
+        transition: {
+          type: "spring",
+          stiffness: 100,
+          damping: 15,
+          duration: 0.5
+        }
+      }}
+      style={{ 
+        zIndex: ageSliderActive ? 1000 - getNetWorthAtAge(ageSliderValue) : 1,
+        transition: "all 0.5s ease-in-out" 
+      }}
+      className="h-full"
+    >
+      <Card className={`overflow-hidden border ${colorClass} h-full transition-all duration-300`}>
+        <CardHeader className="bg-white pb-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-lg font-medium">{scenario.title}</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">{scenario.description}</p>
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="outline" size="sm" onClick={() => onEdit(scenario)}>
+                <Pencil className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => onViewDetails(scenario)}>
+                <Eye className="h-4 w-4 mr-1" />
+                Details
+              </Button>
+            </div>
           </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={() => onEdit(scenario)}>
-              <Pencil className="h-4 w-4 mr-1" />
-              Edit
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onViewDetails(scenario)}>
-              <Eye className="h-4 w-4 mr-1" />
-              Details
-            </Button>
+          
+          <div className="flex flex-wrap gap-2 mt-3">
+            {scenario.tags.education && (
+              <Badge variant="secondary" className="flex items-center">
+                <span className="material-icons text-xs mr-1">school</span>
+                {scenario.tags.education}
+              </Badge>
+            )}
+            {scenario.tags.career && (
+              <Badge variant="secondary" className="flex items-center">
+                <span className="material-icons text-xs mr-1">work</span>
+                {scenario.tags.career}
+              </Badge>
+            )}
+            {scenario.tags.location && (
+              <Badge variant="secondary" className="flex items-center">
+                <span className="material-icons text-xs mr-1">location_on</span>
+                {scenario.tags.location}
+              </Badge>
+            )}
           </div>
-        </div>
+        </CardHeader>
         
-        <div className="flex flex-wrap gap-2 mt-3">
-          {scenario.tags.education && (
-            <Badge variant="secondary" className="flex items-center">
-              <span className="material-icons text-xs mr-1">school</span>
-              {scenario.tags.education}
-            </Badge>
-          )}
-          {scenario.tags.career && (
-            <Badge variant="secondary" className="flex items-center">
-              <span className="material-icons text-xs mr-1">work</span>
-              {scenario.tags.career}
-            </Badge>
-          )}
-          {scenario.tags.location && (
-            <Badge variant="secondary" className="flex items-center">
-              <span className="material-icons text-xs mr-1">location_on</span>
-              {scenario.tags.location}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      
-      <CardContent className="p-4">
-        <Tabs defaultValue="netWorth">
-          <TabsList className="mb-2 grid w-full grid-cols-2">
-            <TabsTrigger value="netWorth" className="flex items-center">
-              <BarChart className="h-4 w-4 mr-1" />
-              Net Worth
-            </TabsTrigger>
-            <TabsTrigger value="cashFlow" className="flex items-center">
-              <Calculator className="h-4 w-4 mr-1" />
-              Cash Flow
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="netWorth" className="mt-0">
-            <div className="h-56">
-              <canvas ref={netWorthChartRef}></canvas>
-            </div>
-            <div className="mt-2 text-center">
-              {ageSliderActive ? (
-                <>
-                  <div className="text-xl font-semibold text-blue-600">
-                    ${getNetWorthAtAge(ageSliderValue).toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-500">Net Worth at Age {ageSliderValue}</div>
-                  <div className="text-xs text-blue-500 mt-1">
-                    {scenario.projectionData.ages.includes(ageSliderValue) ? 
-                      "(Exact data point)" : 
-                      "(Interpolated value)"}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-xl font-semibold">
-                    ${Math.max(...scenario.projectionData.netWorth).toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-500">Projected Peak Net Worth</div>
-                </>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="cashFlow" className="mt-0">
-            <div className="h-56">
-              <canvas ref={cashFlowChartRef}></canvas>
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-center">
-              <div>
-                <div className="text-green-600 text-lg font-semibold">
-                  ${scenario.projectionData.income[scenario.projectionData.income.length - 1].toLocaleString()}
-                </div>
-                <div className="text-sm text-gray-500">Annual Income</div>
+        <CardContent className="p-4">
+          <Tabs defaultValue="netWorth">
+            <TabsList className="mb-2 grid w-full grid-cols-2">
+              <TabsTrigger value="netWorth" className="flex items-center">
+                <BarChart className="h-4 w-4 mr-1" />
+                Net Worth
+              </TabsTrigger>
+              <TabsTrigger value="cashFlow" className="flex items-center">
+                <Calculator className="h-4 w-4 mr-1" />
+                Cash Flow
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="netWorth" className="mt-0">
+              <div className="h-56">
+                <canvas ref={netWorthChartRef}></canvas>
               </div>
-              <div>
-                <div className="text-red-600 text-lg font-semibold">
-                  ${scenario.projectionData.expenses[scenario.projectionData.expenses.length - 1].toLocaleString()}
-                </div>
-                <div className="text-sm text-gray-500">Annual Expenses</div>
+              <div className="mt-2 text-center">
+                {ageSliderActive ? (
+                  <>
+                    <div className="text-xl font-semibold text-blue-600">
+                      ${getNetWorthAtAge(ageSliderValue).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-500">Net Worth at Age {ageSliderValue}</div>
+                    <div className="text-xs text-blue-500 mt-1">
+                      {scenario.projectionData.ages.includes(ageSliderValue) ? 
+                        "(Exact data point)" : 
+                        "(Interpolated value)"}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-xl font-semibold">
+                      ${Math.max(...scenario.projectionData.netWorth).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-500">Projected Peak Net Worth</div>
+                  </>
+                )}
               </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+            </TabsContent>
+            
+            <TabsContent value="cashFlow" className="mt-0">
+              <div className="h-56">
+                <canvas ref={cashFlowChartRef}></canvas>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-center">
+                <div>
+                  <div className="text-green-600 text-lg font-semibold">
+                    ${scenario.projectionData.income[scenario.projectionData.income.length - 1].toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-500">Annual Income</div>
+                </div>
+                <div>
+                  <div className="text-red-600 text-lg font-semibold">
+                    ${scenario.projectionData.expenses[scenario.projectionData.expenses.length - 1].toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-500">Annual Expenses</div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
