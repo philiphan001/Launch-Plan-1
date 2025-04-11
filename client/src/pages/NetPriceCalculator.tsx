@@ -112,6 +112,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   const [userState, setUserState] = useState<string | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [calculationName, setCalculationName] = useState("");
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   
   // Temporary user ID for demo purposes - would normally come from auth context
   const userId = 1;
@@ -537,7 +538,27 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
         <div className="md:col-span-1">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Your Information</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Your Information</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                  className="h-8 px-2 text-gray-500 hover:text-gray-700"
+                >
+                  {showAdvancedOptions ? (
+                    <div className="flex items-center">
+                      <span className="text-xs mr-1">Less Options</span>
+                      <ChevronUp className="h-4 w-4" />
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <span className="text-xs mr-1">More Options</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </div>
+                  )}
+                </Button>
+              </div>
               
               <div className="space-y-4">
                 <div>
@@ -624,112 +645,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                   )}
                 </div>
                 
-                <div>
-                  <Label htmlFor="investmentAssets" className="flex justify-between">
-                    <span>Investment Assets</span>
-                    {estimatedInvestments !== null && (
-                      <span className="text-xs text-muted-foreground">
-                        {usingEstimatedInvestments ? (
-                          <span className="flex items-center text-primary">
-                            <Check className="h-3 w-3 mr-1" /> Using zip code estimate
-                          </span>
-                        ) : (
-                          <Button
-                            variant="link"
-                            className="p-0 h-auto text-xs"
-                            onClick={() => {
-                              setInvestmentAssets(estimatedInvestments.toString());
-                              setUsingEstimatedInvestments(true);
-                            }}
-                          >
-                            Use zip code estimate (${estimatedInvestments.toLocaleString()})
-                          </Button>
-                        )}
-                      </span>
-                    )}
-                  </Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input 
-                      id="investmentAssets" 
-                      placeholder={estimatedInvestments ? estimatedInvestments.toString() : "e.g. 50000"}
-                      value={investmentAssets}
-                      onChange={(e) => {
-                        setInvestmentAssets(e.target.value);
-                        if (usingEstimatedInvestments) {
-                          setUsingEstimatedInvestments(false);
-                        }
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Stocks, bonds, retirement accounts, etc.
-                  </p>
-                </div>
-                
-                <div>
-                  <Label>Home Ownership</Label>
-                  <RadioGroup 
-                    value={homeOwnership} 
-                    onValueChange={(value) => setHomeOwnership(value as "own" | "rent")}
-                    className="mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="own" id="own_home" />
-                      <Label htmlFor="own_home">Own Home</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="rent" id="rent_home" />
-                      <Label htmlFor="rent_home">Rent</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                {homeOwnership === "own" && (
-                  <div>
-                    <Label htmlFor="homeValue" className="flex justify-between">
-                      <span>Home Value</span>
-                      {estimatedHomeValue !== null && (
-                        <span className="text-xs text-muted-foreground">
-                          {usingEstimatedHomeValue ? (
-                            <span className="flex items-center text-primary">
-                              <Check className="h-3 w-3 mr-1" /> Using zip code estimate
-                            </span>
-                          ) : (
-                            <Button
-                              variant="link"
-                              className="p-0 h-auto text-xs"
-                              onClick={() => {
-                                setHomeValue(estimatedHomeValue.toString());
-                                setUsingEstimatedHomeValue(true);
-                              }}
-                            >
-                              Use zip code estimate (${estimatedHomeValue.toLocaleString()})
-                            </Button>
-                          )}
-                        </span>
-                      )}
-                    </Label>
-                    <div className="flex items-center mt-1">
-                      <span className="mr-2">$</span>
-                      <Input 
-                        id="homeValue" 
-                        placeholder={estimatedHomeValue ? estimatedHomeValue.toString() : "e.g. 350000"}
-                        value={homeValue}
-                        onChange={(e) => {
-                          setHomeValue(e.target.value);
-                          if (usingEstimatedHomeValue) {
-                            setUsingEstimatedHomeValue(false);
-                          }
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Estimated market value of your home
-                    </p>
-                  </div>
-                )}
-                
+                {/* Essential field - Household Size */}
                 <div>
                   <Label htmlFor="householdSize">Household Size</Label>
                   <Select 
@@ -750,27 +666,159 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                   </Select>
                 </div>
                 
-                <div>
-                  <Label>Household Structure</Label>
-                  <RadioGroup 
-                    value={householdStructure} 
-                    onValueChange={setHouseholdStructure}
-                    className="mt-2"
+                {/* Show advanced fields toggle button */}
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full flex justify-between items-center"
+                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="two_parents" id="two_parents" />
-                      <Label htmlFor="two_parents">Two Parents</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="single_parent" id="single_parent" />
-                      <Label htmlFor="single_parent">Single Parent</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="independent" id="independent" />
-                      <Label htmlFor="independent">Independent Student</Label>
-                    </div>
-                  </RadioGroup>
+                    <span>Advanced Details {showAdvancedOptions ? "↑" : "↓"}</span>
+                    {showAdvancedOptions ? 
+                      <ChevronUp className="h-4 w-4 ml-2" /> : 
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    }
+                  </Button>
                 </div>
+                
+                {/* Collapsible section for advanced fields */}
+                <Collapsible open={showAdvancedOptions} className="pt-1">
+                  <CollapsibleContent className="space-y-4">
+                    {/* Advanced field - Investment Assets */}
+                    <div>
+                      <Label htmlFor="investmentAssets" className="flex justify-between">
+                        <span>Investment Assets</span>
+                        {estimatedInvestments !== null && (
+                          <span className="text-xs text-muted-foreground">
+                            {usingEstimatedInvestments ? (
+                              <span className="flex items-center text-primary">
+                                <Check className="h-3 w-3 mr-1" /> Using zip code estimate
+                              </span>
+                            ) : (
+                              <Button
+                                variant="link"
+                                className="p-0 h-auto text-xs"
+                                onClick={() => {
+                                  setInvestmentAssets(estimatedInvestments.toString());
+                                  setUsingEstimatedInvestments(true);
+                                }}
+                              >
+                                Use zip code estimate (${estimatedInvestments.toLocaleString()})
+                              </Button>
+                            )}
+                          </span>
+                        )}
+                      </Label>
+                      <div className="flex items-center mt-1">
+                        <span className="mr-2">$</span>
+                        <Input 
+                          id="investmentAssets" 
+                          placeholder={estimatedInvestments ? estimatedInvestments.toString() : "e.g. 50000"}
+                          value={investmentAssets}
+                          onChange={(e) => {
+                            setInvestmentAssets(e.target.value);
+                            if (usingEstimatedInvestments) {
+                              setUsingEstimatedInvestments(false);
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Stocks, bonds, retirement accounts, etc.
+                      </p>
+                    </div>
+                    
+                    {/* Advanced field - Home Ownership */}
+                    <div>
+                      <Label>Home Ownership</Label>
+                      <RadioGroup 
+                        value={homeOwnership} 
+                        onValueChange={(value) => setHomeOwnership(value as "own" | "rent")}
+                        className="mt-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="own" id="own_home" />
+                          <Label htmlFor="own_home">Own Home</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="rent" id="rent_home" />
+                          <Label htmlFor="rent_home">Rent</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    {/* Advanced field - Home Value (conditional) */}
+                    {homeOwnership === "own" && (
+                      <div>
+                        <Label htmlFor="homeValue" className="flex justify-between">
+                          <span>Home Value</span>
+                          {estimatedHomeValue !== null && (
+                            <span className="text-xs text-muted-foreground">
+                              {usingEstimatedHomeValue ? (
+                                <span className="flex items-center text-primary">
+                                  <Check className="h-3 w-3 mr-1" /> Using zip code estimate
+                                </span>
+                              ) : (
+                                <Button
+                                  variant="link"
+                                  className="p-0 h-auto text-xs"
+                                  onClick={() => {
+                                    setHomeValue(estimatedHomeValue.toString());
+                                    setUsingEstimatedHomeValue(true);
+                                  }}
+                                >
+                                  Use zip code estimate (${estimatedHomeValue.toLocaleString()})
+                                </Button>
+                              )}
+                            </span>
+                          )}
+                        </Label>
+                        <div className="flex items-center mt-1">
+                          <span className="mr-2">$</span>
+                          <Input 
+                            id="homeValue" 
+                            placeholder={estimatedHomeValue ? estimatedHomeValue.toString() : "e.g. 350000"}
+                            value={homeValue}
+                            onChange={(e) => {
+                              setHomeValue(e.target.value);
+                              if (usingEstimatedHomeValue) {
+                                setUsingEstimatedHomeValue(false);
+                              }
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Estimated market value of your home
+                        </p>
+                      </div>
+                    )}
+                    
+                    {/* Advanced field - Household Structure */}
+                    <div>
+                      <Label>Household Structure</Label>
+                      <RadioGroup 
+                        value={householdStructure} 
+                        onValueChange={setHouseholdStructure}
+                        className="mt-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="two_parents" id="two_parents" />
+                          <Label htmlFor="two_parents">Two Parents</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="single_parent" id="single_parent" />
+                          <Label htmlFor="single_parent">Single Parent</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="independent" id="independent" />
+                          <Label htmlFor="independent">Independent Student</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </CardContent>
           </Card>
