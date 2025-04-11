@@ -285,9 +285,20 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   useEffect(() => {
     if (selectedCollege && userState) {
       const collegeState = selectedCollege.state;
-      setIsInState(userState.toUpperCase() === collegeState.toUpperCase());
+      const userStateUpper = userState.toUpperCase().trim();
+      const collegeStateUpper = collegeState.toUpperCase().trim();
+      
+      // Debug info
+      console.log(`Comparing states - User state: ${userStateUpper}, College state: ${collegeStateUpper}`);
+      
+      // Check if the states match exactly
+      const isMatch = userStateUpper === collegeStateUpper;
+      console.log(`In-state status: ${isMatch}`);
+      
+      // Update the in-state status
+      setIsInState(isMatch);
     }
-  }, [selectedCollege, userState]);
+  }, [selectedCollege, userState, zipCode]);
   
   const calculateNetPrice = () => {
     if (!selectedCollege || !householdIncome) return null;
@@ -888,7 +899,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                       
                       {/* Show in-state badge for public colleges if the user is in-state */}
                       {selectedCollege.type.includes("Public") && userState && (
-                        <div className="flex items-center mt-1">
+                        <div className="flex flex-col space-y-1 mt-1">
                           <span className="text-xs px-2 py-1 rounded-full bg-gray-100 flex items-center">
                             {isInState ? (
                               <>
@@ -901,6 +912,9 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                 <span className="text-destructive">Out-of-state tuition applies</span>
                               </>
                             )}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            Your state: {userState} | College state: {selectedCollege.state}
                           </span>
                         </div>
                       )}
