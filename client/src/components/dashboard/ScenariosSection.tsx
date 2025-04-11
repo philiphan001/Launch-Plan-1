@@ -36,7 +36,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   const [scenariosToCompare, setScenariosToCompare] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState("recent");
   const [ageSliderValue, setAgeSliderValue] = useState<number>(30); // Default age of 30
-  const [useAgeSlider, setUseAgeSlider] = useState<boolean>(false);
+  const [useAgeSlider, setUseAgeSlider] = useState<boolean>(true); // Default to active
 
   // Fetch user scenarios
   const { data: scenarios = [], isLoading } = useQuery<ScenarioData[]>({
@@ -252,9 +252,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
             value={sortBy} 
             onValueChange={(value) => {
               setSortBy(value);
-              if (value !== "ageSlider") {
-                setUseAgeSlider(false);
-              }
+              // Age slider always active regardless of sorting option
             }}
           >
             <SelectTrigger className="w-[180px]">
@@ -265,7 +263,6 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               <SelectItem value="netWorth">Highest Net Worth</SelectItem>
               <SelectItem value="income">Highest Income</SelectItem>
               <SelectItem value="expenses">Lowest Expenses</SelectItem>
-              <SelectItem value="ageSlider">By Age</SelectItem>
             </SelectContent>
           </Select>
           
@@ -283,8 +280,8 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
         </div>
       </div>
       
-      {/* Age slider section - only show when "By Age" sort is selected */}
-      {sortBy === "ageSlider" && scenarios.length > 0 && (
+      {/* Age slider section - always visible */}
+      {scenarios.length > 0 && (
         <Card className="mb-6 bg-blue-50 border-blue-200">
           <CardContent className="pt-6">
             <div className="flex items-center mb-2">
