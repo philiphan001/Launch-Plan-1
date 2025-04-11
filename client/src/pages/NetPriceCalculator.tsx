@@ -113,6 +113,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [calculationName, setCalculationName] = useState("");
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [localZipCodeData, setLocalZipCodeData] = useState<ZipCodeIncome | null>(null);
   
   // Temporary user ID for demo purposes - would normally come from auth context
   const userId = 1;
@@ -173,7 +174,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
       setFetchingZipCode(true);
       
       // Clear existing data first to avoid stale information
-      setZipCodeData(null);
+      setLocalZipCodeData(null);
       
       fetch(`/api/zip-code-income/zip/${zip}`)
         .then(response => {
@@ -186,7 +187,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
           console.log('📍 Received zip code data:', data);
           
           // Store complete zip code data
-          setZipCodeData(data);
+          setLocalZipCodeData(data);
           
           // Set income data
           setEstimatedIncome(data.mean_income);
@@ -272,9 +273,12 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     ? processedColleges.find((college: College) => college.id === selectedCollegeId)
     : null;
   
-  // Add an effect to update the UI when zip code income data is available
+  // Add an effect to update the UI when zip code income data is available from React Query
   useEffect(() => {
     if (zipCodeData) {
+      // Synchronize React Query zipCodeData with our local state
+      setLocalZipCodeData(zipCodeData);
+      
       if (zipCodeData.mean_income) {
         setEstimatedIncome(zipCodeData.mean_income);
         setUsingEstimatedIncome(true);
@@ -296,13 +300,38 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     }
   }, [zipCodeData]);
   
+  // Add an effect to update the UI when our local zip code data changes
+  useEffect(() => {
+    if (localZipCodeData) {
+      if (localZipCodeData.mean_income) {
+        setEstimatedIncome(localZipCodeData.mean_income);
+        setUsingEstimatedIncome(true);
+        setHouseholdIncome(localZipCodeData.mean_income.toString());
+      }
+      if (localZipCodeData.estimated_investments) {
+        setEstimatedInvestments(localZipCodeData.estimated_investments);
+        setUsingEstimatedInvestments(true);
+        setInvestmentAssets(localZipCodeData.estimated_investments.toString());
+      }
+      if (localZipCodeData.home_value) {
+        setEstimatedHomeValue(localZipCodeData.home_value);
+        setUsingEstimatedHomeValue(true);
+        setHomeValue(localZipCodeData.home_value.toString());
+      }
+      if (localZipCodeData.state) {
+        setUserState(localZipCodeData.state);
+      }
+    }
+  }, [localZipCodeData]);
+  
   // Initialize in-state status when college or user state changes
   useEffect(() => {
     // Clear debug to keep console clean
     console.clear();
     
     // Display zip code data for debugging
-    console.log('Zip Code Data:', zipCodeData);
+    console.log('Zip Code Data (from React Query):', zipCodeData);
+    console.log('Zip Code Data (local):', localZipCodeData);
     console.log('Current User State:', userState);
 
     if (!selectedCollege) {
@@ -333,7 +362,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
       setIsInState(isMatch);
       console.log(`🏫 College will use ${isMatch ? 'IN-STATE' : 'OUT-OF-STATE'} tuition rates`);
     }
-  }, [selectedCollege, userState, zipCode, zipCodeData]);
+  }, [selectedCollege, userState, zipCode, zipCodeData, localZipCodeData]);
   
   const calculateNetPrice = () => {
     if (!selectedCollege || !householdIncome) return null;
