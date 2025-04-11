@@ -192,34 +192,56 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   const maxAge = Math.max(...allAges);
 
   // Sort scenarios based on selected criteria
-  const sortedScenarios = [...(scenarios || [])].sort((a, b) => {
+  const getSortedScenarios = () => {
+    if (!scenarios || scenarios.length === 0) return [];
+    
+    // Make a shallow copy to avoid mutating the original array
+    const scenariosCopy = [...scenarios];
+    
     if (useAgeSlider) {
-      // Sort by net worth at the specific age selected by the slider
-      const aNetWorthAtAge = getNetWorthAtAge(a, ageSliderValue);
-      const bNetWorthAtAge = getNetWorthAtAge(b, ageSliderValue);
-      
-      // Apply a small random factor to make shuffling more apparent when values are close
-      const randomFactor = 0.0001; // Very small factor to just create visual separation
-      const aRandom = aNetWorthAtAge * (1 + Math.random() * randomFactor);
-      const bRandom = bNetWorthAtAge * (1 + Math.random() * randomFactor);
-      
-      return bRandom - aRandom; // Highest first with minor random variation
+      // Ensure the ageSliderValue is within the valid range before sorting
+      return scenariosCopy.sort((a, b) => {
+        try {
+          // Sort by net worth at the specific age selected by the slider
+          const aNetWorthAtAge = getNetWorthAtAge(a, ageSliderValue);
+          const bNetWorthAtAge = getNetWorthAtAge(b, ageSliderValue);
+          
+          // For debugging
+          console.log(`Age ${ageSliderValue} - Scenario ${a.id}: $${aNetWorthAtAge}, Scenario ${b.id}: $${bNetWorthAtAge}`);
+          
+          // Strict sorting without random factor to ensure consistent order
+          return bNetWorthAtAge - aNetWorthAtAge; 
+        } catch (error) {
+          console.error("Error in sorting by age:", error);
+          return 0; // Don't change order if an error occurs
+        }
+      });
     } else if (sortBy === "netWorth") {
-      const aMaxNetWorth = Math.max(...a.projectionData.netWorth);
-      const bMaxNetWorth = Math.max(...b.projectionData.netWorth);
-      return bMaxNetWorth - aMaxNetWorth; // Highest first
+      return scenariosCopy.sort((a, b) => {
+        const aMaxNetWorth = Math.max(...a.projectionData.netWorth);
+        const bMaxNetWorth = Math.max(...b.projectionData.netWorth);
+        return bMaxNetWorth - aMaxNetWorth; // Highest first
+      });
     } else if (sortBy === "income") {
-      const aLastIncome = a.projectionData.income[a.projectionData.income.length - 1];
-      const bLastIncome = b.projectionData.income[b.projectionData.income.length - 1];
-      return bLastIncome - aLastIncome; // Highest first
+      return scenariosCopy.sort((a, b) => {
+        const aLastIncome = a.projectionData.income[a.projectionData.income.length - 1];
+        const bLastIncome = b.projectionData.income[b.projectionData.income.length - 1];
+        return bLastIncome - aLastIncome; // Highest first
+      });
     } else if (sortBy === "expenses") {
-      const aLastExpenses = a.projectionData.expenses[a.projectionData.expenses.length - 1];
-      const bLastExpenses = b.projectionData.expenses[b.projectionData.expenses.length - 1];
-      return aLastExpenses - bLastExpenses; // Lowest first
+      return scenariosCopy.sort((a, b) => {
+        const aLastExpenses = a.projectionData.expenses[a.projectionData.expenses.length - 1];
+        const bLastExpenses = b.projectionData.expenses[b.projectionData.expenses.length - 1];
+        return aLastExpenses - bLastExpenses; // Lowest first
+      });
     }
+    
     // Default to recent (by ID in our mock data)
-    return b.id - a.id;
-  });
+    return scenariosCopy.sort((a, b) => b.id - a.id);
+  };
+  
+  // Get the sorted scenarios
+  const sortedScenarios = getSortedScenarios();
 
   return (
     <div className="mb-6">
@@ -330,16 +352,10 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           </Button>
         </div>
       ) : (
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          layout
-          transition={{
-            layout: { type: "spring", bounce: 0.3, duration: 0.7 }
-          }}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {sortedScenarios.map((scenario, index) => (
             <ScenarioCard
-              key={scenario.id}
+              key={`${scenario.id}-${ageSliderValue}-${index}`}
               scenario={scenario}
               index={index}
               onViewDetails={handleViewDetails}
@@ -348,7 +364,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               ageSliderValue={ageSliderValue}
             />
           ))}
-        </motion.div>
+        </div>
       )}
 
       {/* Scenario Details Dialog */}

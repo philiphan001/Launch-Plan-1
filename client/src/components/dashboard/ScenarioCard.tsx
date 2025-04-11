@@ -166,14 +166,13 @@ const ScenarioCard = ({
 
   return (
     <motion.div
-      layout
+      key={`scenario-${scenario.id}-${index}`}
+      layout="position"
       layoutId={`scenario-${scenario.id}`}
       initial={{ opacity: 0.8, scale: 0.95 }}
       animate={{ 
         opacity: 1, 
         scale: 1,
-        y: 0,
-        x: 0,
         transition: {
           type: "spring",
           stiffness: 100,
@@ -184,9 +183,6 @@ const ScenarioCard = ({
       whileHover={{ 
         scale: 1.02,
         transition: { duration: 0.2 } 
-      }}
-      style={{ 
-        zIndex: ageSliderActive ? 1000 - getNetWorthAtAge(ageSliderValue) : 1
       }}
       transition={{
         layout: { 
