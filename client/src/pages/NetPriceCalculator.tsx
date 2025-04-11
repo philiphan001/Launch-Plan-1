@@ -171,6 +171,10 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   const fetchIncomeData = (zip: string) => {
     if (zip.length === 5) {
       setFetchingZipCode(true);
+      
+      // Clear existing data first to avoid stale information
+      setZipCodeData(null);
+      
       fetch(`/api/zip-code-income/zip/${zip}`)
         .then(response => {
           if (!response.ok) {
@@ -179,6 +183,11 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
           return response.json();
         })
         .then(data => {
+          console.log('📍 Received zip code data:', data);
+          
+          // Store complete zip code data
+          setZipCodeData(data);
+          
           // Set income data
           setEstimatedIncome(data.mean_income);
           setUsingEstimatedIncome(true);
@@ -196,6 +205,12 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
             setEstimatedHomeValue(data.home_value);
             setUsingEstimatedHomeValue(true);
             setHomeValue(data.home_value.toString());
+          }
+          
+          // CRITICAL FIX: Set the user's state code for in-state tuition determination
+          if (data.state) {
+            console.log(`📍 Setting user state to: "${data.state}" from zip code ${zip}`);
+            setUserState(data.state);
           }
           
           toast({
@@ -281,24 +296,44 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     }
   }, [zipCodeData]);
   
-  // Update in-state status when college or user state changes
+  // Initialize in-state status when college or user state changes
   useEffect(() => {
-    if (selectedCollege && userState) {
-      const collegeState = selectedCollege.state;
-      const userStateUpper = userState.toUpperCase().trim();
-      const collegeStateUpper = collegeState.toUpperCase().trim();
-      
-      // Debug info
-      console.log(`Comparing states - User state: ${userStateUpper}, College state: ${collegeStateUpper}`);
-      
-      // Check if the states match exactly
-      const isMatch = userStateUpper === collegeStateUpper;
-      console.log(`In-state status: ${isMatch}`);
-      
-      // Update the in-state status
-      setIsInState(isMatch);
+    // Clear debug to keep console clean
+    console.clear();
+    
+    // Display zip code data for debugging
+    console.log('Zip Code Data:', zipCodeData);
+    console.log('Current User State:', userState);
+
+    if (!selectedCollege) {
+      console.log('No college selected yet');
+      return;
     }
-  }, [selectedCollege, userState, zipCode]);
+    
+    console.log('Selected College:', selectedCollege.name, selectedCollege.state);
+    
+    // Only proceed if we have both values needed for comparison
+    if (selectedCollege && userState) {
+      // Get state codes and normalize them (trim whitespace, uppercase)
+      const collegeState = selectedCollege.state || '';
+      const userStateNormalized = userState.toUpperCase().trim();
+      const collegeStateNormalized = collegeState.toUpperCase().trim();
+      
+      // Debug information
+      console.log('🔍 State Comparison:');
+      console.log(`- User zip code: ${zipCode}`);
+      console.log(`- User state code (normalized): "${userStateNormalized}"`);
+      console.log(`- College state code (normalized): "${collegeStateNormalized}"`);
+      
+      // Check if the states match 
+      const isMatch = userStateNormalized === collegeStateNormalized;
+      console.log(`✅ In-state match result: ${isMatch ? 'MATCHED' : 'NOT MATCHED'}`);
+      
+      // Force update the in-state status and log it
+      setIsInState(isMatch);
+      console.log(`🏫 College will use ${isMatch ? 'IN-STATE' : 'OUT-OF-STATE'} tuition rates`);
+    }
+  }, [selectedCollege, userState, zipCode, zipCodeData]);
   
   const calculateNetPrice = () => {
     if (!selectedCollege || !householdIncome) return null;
