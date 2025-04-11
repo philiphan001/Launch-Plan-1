@@ -508,6 +508,57 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-2">Net Price Calculator</h1>
       <p className="text-gray-600 mb-6">Find out how much a college will cost after financial aid by entering your information below.</p>
       
+      {/* My Favorite Schools section moved to the top */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-medium mb-4">My Favorite Schools</h3>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="college">Choose from your favorite schools</Label>
+              {isLoadingFavorites ? (
+                <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Loading favorite colleges...
+                </div>
+              ) : favoriteCollegesList.length === 0 ? (
+                <div className="mt-2 text-sm text-muted-foreground space-y-3">
+                  <p>You haven't added any colleges to your favorites yet.</p>
+                  <div className="flex items-center">
+                    <Link to="/colleges" className="text-primary flex items-center">
+                      <Search className="h-4 w-4 mr-1" /> Browse colleges and add favorites
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <Select 
+                  value={selectedCollegeId?.toString()} 
+                  onValueChange={(value) => setSelectedCollegeId(parseInt(value, 10))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a college" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {favoriteCollegesList.map((fav) => (
+                      <SelectItem key={fav.college.id} value={fav.college.id.toString()}>
+                        {fav.college.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            
+            <Button 
+              className="w-full" 
+              disabled={!selectedCollegeId || !zipCode || !householdIncome}
+              onClick={handleCalculate}
+            >
+              Calculate Net Price
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      
       {/* Add Alert explaining the zip code income feature - only shown when we have user data with a zip code */}
       {userData && userData.zipCode && estimatedIncome && (
         <Alert className="mb-6">
