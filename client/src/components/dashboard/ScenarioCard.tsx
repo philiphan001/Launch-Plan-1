@@ -175,20 +175,22 @@ const ScenarioCard = ({
         scale: 1,
         transition: {
           type: "spring",
-          stiffness: 100,
-          damping: 15,
-          duration: 0.5
+          stiffness: 80,
+          damping: 20,
+          duration: 1.0
         }
       }}
       whileHover={{ 
         scale: 1.02,
-        transition: { duration: 0.2 } 
+        transition: { duration: 0.3 } 
       }}
       transition={{
         layout: { 
           type: "spring", 
-          bounce: 0.25,
-          duration: 0.7 
+          bounce: 0.2,
+          duration: 1.0,
+          mass: 1.2,  // More mass makes it feel "weightier"
+          damping: 20 // Higher damping means less oscillation
         }
       }}
       className="h-full"

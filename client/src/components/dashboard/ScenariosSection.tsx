@@ -305,6 +305,11 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                   step={1}
                   value={[ageSliderValue]}
                   onValueChange={(values) => {
+                    // Only update the slider value without triggering re-render
+                    setAgeSliderValue(values[0]);
+                  }}
+                  onValueCommit={(values) => {
+                    // Only after slider is released, update the sort
                     setAgeSliderValue(values[0]);
                     setUseAgeSlider(true);
                   }}
@@ -352,7 +357,12 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          transition={{
+            layout: { type: "spring", bounce: 0.2, duration: 1.2 }
+          }}
+        >
           {sortedScenarios.map((scenario, index) => (
             <ScenarioCard
               key={`${scenario.id}-${ageSliderValue}-${index}`}
@@ -364,7 +374,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               ageSliderValue={ageSliderValue}
             />
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* Scenario Details Dialog */}
