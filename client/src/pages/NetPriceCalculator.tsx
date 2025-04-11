@@ -514,24 +514,38 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-2">Net Price Calculator</h1>
       <p className="text-gray-600 mb-6">Find out how much a college will cost after financial aid by entering your information below.</p>
       
-      {/* Add Alert explaining the zip code income feature - only shown when we have user data with a zip code */}
-      {userData && userData.zipCode && estimatedIncome && (
-        <Alert className="mb-6">
-          <AlertDescription>
-            <div className="flex items-start">
-              <div className="mr-3 mt-0.5 flex-shrink-0">
-                <DollarSign className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Automatic Income Estimation</p>
-                <p className="text-sm text-muted-foreground">
-                  We've automatically used the zip code from your profile ({userData.zipCode}) to estimate your household income based on your area's average. 
-                  You can always adjust this estimate if needed.
+      {/* We've replaced this alert with a more comprehensive version below */}
+      
+      {/* New Alert - Automatic Financial Information Estimation (matching design from image) */}
+      {zipCodeData && zipCodeData.mean_income && (
+        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6 shadow-sm">
+          <div className="flex items-start">
+            <div className="mr-3 flex-shrink-0 mt-0.5">
+              <DollarSign className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-medium text-gray-900">Automatic Income Estimation</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                We've automatically used the zip code from your profile ({zipCode}) to estimate your household income based on your area's average. You can always adjust this estimate if needed.
+              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Estimated income:</span> ${zipCodeData.mean_income.toLocaleString()}
                 </p>
+                {zipCodeData.estimated_investments && (
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">Estimated investments:</span> ${zipCodeData.estimated_investments.toLocaleString()}
+                  </p>
+                )}
+                {zipCodeData.home_value && (
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">Estimated home value:</span> ${zipCodeData.home_value.toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
-          </AlertDescription>
-        </Alert>
+          </div>
+        </div>
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
