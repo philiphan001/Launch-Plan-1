@@ -538,9 +538,9 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                     <SelectValue placeholder="Select a college" />
                   </SelectTrigger>
                   <SelectContent>
-                    {favoriteCollegesList.map((fav) => (
-                      <SelectItem key={fav.college.id} value={fav.college.id.toString()}>
-                        {fav.college.name}
+                    {favoriteCollegesList && favoriteCollegesList.map((fav: any) => (
+                      <SelectItem key={fav.college ? fav.college.id : fav.id} value={fav.college ? fav.college.id.toString() : fav.collegeId.toString()}>
+                        {fav.college ? fav.college.name : fav.name || `College #${fav.collegeId}`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -850,9 +850,9 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                         <SelectValue placeholder="Select a college" />
                       </SelectTrigger>
                       <SelectContent>
-                        {processedColleges.map((college: College) => (
-                          <SelectItem key={college.id} value={college.id.toString()}>
-                            {college.name}
+                        {favoriteCollegesList && favoriteCollegesList.map((fav: any) => (
+                          <SelectItem key={fav.college ? fav.college.id : fav.id} value={fav.college ? fav.college.id.toString() : fav.collegeId.toString()}>
+                            {fav.college ? fav.college.name : fav.name || `College #${fav.collegeId}`}
                           </SelectItem>
                         ))}
                       </SelectContent>
