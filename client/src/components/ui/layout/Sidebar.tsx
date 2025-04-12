@@ -164,32 +164,16 @@ const Sidebar = () => {
                           return (
                             <li key={projection.id} className="mb-1 flex items-center group">
                               <a
-                                href={`/projections?id=${projection.id}`}
+                                href={`/projections?id=${projection.id}&t=${new Date().getTime()}`}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  // Clear the cache for this specific projection before navigating
-                                  queryClient.invalidateQueries({ 
-                                    queryKey: ['/api/financial-projections/detail', projection.id] 
-                                  });
-                                  
-                                  // Also invalidate all projection-related queries to be safe
-                                  queryClient.invalidateQueries({
-                                    queryKey: ['/api/financial-projections']
-                                  });
-                                  
-                                  // Use React navigation with wouter instead of direct browser navigation
-                                  // Add a random component to ensure timestamp is unique
-                                  const timestamp = new Date().getTime() + Math.floor(Math.random() * 1000);
-                                  console.log(`Navigating to projection ${projection.id} with timestamp ${timestamp}`);
-                                  setLocation(`/projections?id=${projection.id}&t=${timestamp}`);
-                                  
-                                  // Refresh saved projections data to ensure we have the latest
-                                  setTimeout(() => {
-                                    console.log("Refreshing saved projections data after navigation");
-                                    fetchSavedProjections();
-                                  }, 100);
+                                  // Force a complete page reload - this is the most reliable way
+                                  // to ensure everything is reset and reloaded properly
+                                  const timestamp = new Date().getTime();
+                                  console.log(`Navigating to projection ${projection.id} with hard reload`);
+                                  window.location.href = `/projections?id=${projection.id}&t=${timestamp}`;
                                 }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 
