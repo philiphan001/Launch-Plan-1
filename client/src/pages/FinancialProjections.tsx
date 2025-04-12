@@ -136,7 +136,9 @@ interface FinancialProfile {
   otherDebtAmount: number | null;
 }
 
-interface FinancialProjectionsProps extends AuthProps {}
+interface FinancialProjectionsProps extends AuthProps {
+  projectionId?: number;
+}
 
 const FinancialProjections = ({
   user,
@@ -145,7 +147,8 @@ const FinancialProjections = ({
   login,
   signup,
   logout,
-  completeOnboarding
+  completeOnboarding,
+  projectionId
 }: FinancialProjectionsProps) => {
   // Temporary user ID for demo purposes
   const userId = 1;
@@ -313,6 +316,18 @@ const FinancialProjections = ({
       if (!response.ok) throw new Error('Failed to fetch saved projections');
       return response.json();
     }
+  });
+  
+  // Fetch specific projection if projectionId is provided
+  const { data: specificProjection, isLoading: isLoadingSpecificProjection } = useQuery({
+    queryKey: ['/api/financial-projections/detail', projectionId],
+    queryFn: async () => {
+      if (!projectionId) return null;
+      const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+      if (!response.ok) throw new Error('Failed to fetch specific projection');
+      return response.json();
+    },
+    enabled: !!projectionId
   });
 
   // Make careers data available globally for Python calculator access
