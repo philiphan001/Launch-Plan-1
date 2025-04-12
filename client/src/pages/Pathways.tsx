@@ -102,6 +102,11 @@ const Pathways = ({
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
   
+  // Location selection state variables
+  const [selectedZipCode, setSelectedZipCode] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<{city: string, state: string} | null>(null);
+  const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
+  
   // This function will set the education type and advance to the specific school question
   const selectEducationType = (type: EducationType) => {
     setEducationType(type);
