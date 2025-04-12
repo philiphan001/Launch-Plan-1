@@ -157,8 +157,13 @@ const Sidebar = () => {
                           
                           return (
                             <li key={projection.id} className="mb-1 flex items-center group">
-                              <Link
-                                href={`/projections?id=${projection.id}`}
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  // Force a hard navigation to completely reset the component state
+                                  window.location.href = `/projections?id=${projection.id}&_=${new Date().getTime()}`;
+                                }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 
                                     ? "text-primary font-medium" 
@@ -166,7 +171,7 @@ const Sidebar = () => {
                                 }`}
                               >
                                 {projection.name}
-                              </Link>
+                              </a>
                               <button
                                 onClick={(e) => handleDeleteProjection(e, projection.id, projection.name)}
                                 className="hidden group-hover:inline-flex text-gray-400 hover:text-red-500 rounded-full p-1"
