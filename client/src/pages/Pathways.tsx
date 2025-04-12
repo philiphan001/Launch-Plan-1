@@ -178,6 +178,21 @@ const Pathways = ({
     enabled: (selectedPath === 'job' && currentStep === 3) || currentStep === 5 || currentStep === 6
   });
   
+  // Fetch location data when zip code is entered
+  const { data: locationData, isLoading: isLoadingLocation } = useQuery({
+    queryKey: ['/api/location-cost-of-living/zip', selectedZipCode],
+    queryFn: async () => {
+      if (!selectedZipCode || selectedZipCode.length !== 5) return null;
+      console.log(`Fetching location data for zip: ${selectedZipCode}`);
+      const response = await fetch(`/api/location-cost-of-living/zip/${selectedZipCode}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch location data');
+      }
+      return response.json();
+    },
+    enabled: !!selectedZipCode && selectedZipCode.length === 5 && currentStep === 7
+  });
+  
   // School search query using our new college search API with education type filter
   const { data: searchResults, isLoading: isLoadingSearch } = useQuery<any[]>({
     queryKey: ['/api/colleges/search', searchQuery, educationType],
@@ -215,6 +230,38 @@ const Pathways = ({
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+  
+  // Function to fetch location data by zip code
+  const fetchLocationByZipCode = async (zipCode: string) => {
+    if (!zipCode || zipCode.length !== 5 || !/^\d+$/.test(zipCode)) {
+      return;
+    }
+    
+    setFetchingLocation(true);
+    
+    try {
+      const response = await fetch(`/api/location-cost-of-living/zip/${zipCode}`);
+      if (response.ok) {
+        const locationData = await response.json();
+        setSelectedLocation({
+          city: locationData.city,
+          state: locationData.state
+        });
+        
+        // Update the narrative to include location
+        const updatedNarrative = `${userJourney} and live in ${locationData.city}, ${locationData.state}.`;
+        setUserJourney(updatedNarrative);
+      } else {
+        // If location not found, clear the location
+        setSelectedLocation(null);
+      }
+    } catch (error) {
+      console.error("Error fetching location data:", error);
+      setSelectedLocation(null);
+    } finally {
+      setFetchingLocation(false);
     }
   };
   
