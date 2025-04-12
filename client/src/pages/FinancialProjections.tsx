@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { AuthProps } from "@/interfaces/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
@@ -46,7 +45,6 @@ import {
   generatePythonCalculatorInput,
   FinancialProjectionData
 } from "@/lib/pythonCalculator";
-import { createTestProjectionData } from "@/lib/testProjectionData";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities" | "cashFlow";
 
@@ -138,9 +136,7 @@ interface FinancialProfile {
   otherDebtAmount: number | null;
 }
 
-interface FinancialProjectionsProps extends AuthProps {
-  projectionId?: number;
-}
+interface FinancialProjectionsProps extends AuthProps {}
 
 const FinancialProjections = ({
   user,
@@ -149,12 +145,10 @@ const FinancialProjections = ({
   login,
   signup,
   logout,
-  completeOnboarding,
-  projectionId
+  completeOnboarding
 }: FinancialProjectionsProps) => {
   // Temporary user ID for demo purposes
   const userId = 1;
-  const [location, setLocation] = useLocation();
 
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
   const [timeframe, setTimeframe] = useState<string>("10 Years");
@@ -178,10 +172,6 @@ const FinancialProjections = ({
   const [taxSectionOpen, setTaxSectionOpen] = useState<boolean>(true);
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
   const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
-  
-  // State for projection name dialog
-  const [projectionNameDialogOpen, setProjectionNameDialogOpen] = useState(false);
-  const [projectionName, setProjectionName] = useState(`Projection - ${new Date().toLocaleDateString()}`);
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
@@ -309,119 +299,6 @@ const FinancialProjections = ({
       if (!response.ok) throw new Error('Failed to fetch careers');
       return response.json();
     }
-  });
-  
-  // Fetch saved financial projections for this user
-  const { data: savedProjections, isLoading: isLoadingSavedProjections } = useQuery({
-    queryKey: ['/api/financial-projections', userId],
-    queryFn: async () => {
-      const response = await fetch(`/api/financial-projections/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch saved projections');
-      return response.json();
-    }
-  });
-  
-  // Define resetAllProjectionData function before using it
-  const resetAllProjectionData = useCallback(() => {
-    console.log("Resetting all projection data states");
-    
-    // Clear projection data completely
-    setProjectionData({
-      ages: [],
-      netWorth: [],
-      savingsValue: [],
-      income: [],
-      expenses: []
-    });
-    
-    // Reset chart if it exists
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-      chartInstance.current = null;
-    }
-  }, []);
-  
-  // Use a state variable to store the current projection ID
-  const [currentProjectionId, setCurrentProjectionId] = useState<number | undefined>(projectionId);
-  
-  // Update currentProjectionId when projectionId changes
-  useEffect(() => {
-    if (projectionId !== currentProjectionId) {
-      console.log(`Projection ID changed from ${currentProjectionId} to ${projectionId}`);
-      
-      // Completely reset UI state before setting the new ID
-      resetAllProjectionData();
-      
-      // Reset other form values to defaults to avoid showing previous projection data
-      setProjectionName("");
-      
-      // Set the new projection ID (this triggers the query in the next render)
-      setCurrentProjectionId(projectionId);
-      
-      console.log(`UI state reset, now setting currentProjectionId to ${projectionId}`);
-    }
-  }, [projectionId, currentProjectionId, resetAllProjectionData]);
-  
-  // Fetch specific projection if currentProjectionId is provided
-  const { data: specificProjection, isLoading: isLoadingSpecificProjection } = useQuery({
-    // Use a unique key with the projection ID to ensure proper cache behavior
-    queryKey: ['/api/financial-projections/detail', currentProjectionId],
-    queryFn: async () => {
-      if (!currentProjectionId) return null;
-      console.log("Fetching projection with ID:", currentProjectionId);
-      
-      // Make a direct fetch with a cache-busting query parameter
-      const timestamp = new Date().getTime();
-      const response = await fetch(`/api/financial-projections/detail/${currentProjectionId}?t=${timestamp}`);
-      
-      if (!response.ok) throw new Error('Failed to fetch specific projection');
-      const data = await response.json();
-      
-      // Add debugging for the projection data
-      try {
-        const projectionData = JSON.parse(data.projection_data);
-        
-        // Check if the projection data has expense breakdowns
-        const hasExpenses = projectionData.expenses && projectionData.expenses.length > 0;
-        const hasHousing = projectionData.housing && projectionData.housing.length > 0;
-        const hasFood = projectionData.food && projectionData.food.length > 0;
-        const hasHealthcare = projectionData.healthcare && projectionData.healthcare.length > 0;
-        const hasTaxes = projectionData.payrollTax && projectionData.payrollTax.length > 0;
-        
-        console.log(`EXPENSE DEBUG - Projection ID ${currentProjectionId} data analysis:`, {
-          totalExpenseEntries: hasExpenses ? projectionData.expenses.length : 0,
-          hasHousingBreakdown: hasHousing,
-          hasFoodBreakdown: hasFood,
-          hasHealthcareBreakdown: hasHealthcare,
-          hasTaxBreakdown: hasTaxes,
-          expenseCategories: Object.keys(projectionData).filter(key => 
-            ['housing', 'transportation', 'food', 'healthcare', 'education', 
-             'entertainment', 'other', 'payrollTax', 'federalTax', 'stateTax'].includes(key)
-          )
-        });
-        
-        // Log sample data for first year
-        if (hasExpenses && projectionData.expenses.length > 1) {
-          console.log("First year expense breakdown:", {
-            totalExpenses: projectionData.expenses[1],
-            housing: hasHousing ? projectionData.housing[1] : 'N/A',
-            food: hasFood ? projectionData.food[1] : 'N/A',
-            healthcare: hasHealthcare ? projectionData.healthcare[1] : 'N/A',
-            payrollTax: hasTaxes ? projectionData.payrollTax[1] : 'N/A'
-          });
-        }
-      } catch (e) {
-        console.error("Error analyzing projection data:", e);
-      }
-      
-      console.log(`Received projection data for ID ${currentProjectionId}:`, data);
-      return data;
-    },
-    enabled: !!currentProjectionId,
-    refetchOnWindowFocus: false,
-    // Use gcTime instead of cacheTime (cacheTime is deprecated in React Query v5)
-    gcTime: 0,
-    staleTime: 0
   });
 
   // Make careers data available globally for Python calculator access
@@ -1292,247 +1169,8 @@ const FinancialProjections = ({
     expenses: [expenses]
   });
   
-  // Effect to handle changes in projectionId
-  useEffect(() => {
-    console.log(`Projection ID changed to: ${projectionId}`);
-    resetAllProjectionData();
-  }, [projectionId, resetAllProjectionData]);
-
-  // Effect to handle loading a specific projection when specificProjection data changes
-  useEffect(() => {
-    const loadProjection = async () => {
-      if (specificProjection && !isLoadingSpecificProjection) {
-        try {
-          console.log("Loading saved projection:", specificProjection);
-          
-          // Destroy the current chart to prepare for new data
-          if (chartInstance.current) {
-            chartInstance.current.destroy();
-            chartInstance.current = null;
-          }
-          
-          // Update form values based on the loaded projection
-          if (specificProjection.startingAge !== undefined) setAge(specificProjection.startingAge);
-          if (specificProjection.startingSavings !== undefined) setStartingSavings(specificProjection.startingSavings);
-          if (specificProjection.income !== undefined) setIncome(specificProjection.income);
-          if (specificProjection.expenses !== undefined) setExpenses(specificProjection.expenses);
-          if (specificProjection.incomeGrowth !== undefined) setIncomeGrowth(specificProjection.incomeGrowth);
-          if (specificProjection.studentLoanDebt !== undefined) setStudentLoanDebt(specificProjection.studentLoanDebt);
-          
-          // Set timeframe based on the saved projection
-          if (specificProjection.timeframe !== undefined) {
-            const savedTimeframe = specificProjection.timeframe;
-            setTimeframe(savedTimeframe === 5 ? "5 Years" : savedTimeframe === 20 ? "20 Years" : "10 Years");
-          }
-          
-          // Set configurable parameters if available in the saved projection
-          if (specificProjection.emergencyFundAmount !== undefined) setEmergencyFundAmount(specificProjection.emergencyFundAmount);
-          if (specificProjection.personalLoanTermYears !== undefined) setPersonalLoanTermYears(specificProjection.personalLoanTermYears);
-          if (specificProjection.personalLoanInterestRate !== undefined) setPersonalLoanInterestRate(specificProjection.personalLoanInterestRate);
-          
-          // Set projection name to the saved name
-          if (specificProjection.name) setProjectionName(specificProjection.name);
-          
-          // Parse and set the projection data
-          if (specificProjection.projectionData) {
-            try {
-              const parsedData = JSON.parse(specificProjection.projectionData);
-              console.log("Successfully parsed projection data, setting state:", parsedData);
-              
-              // Extract and set milestones from the parsed data if available
-              if (parsedData.milestones && Array.isArray(parsedData.milestones)) {
-                console.log("Restoring milestones from saved projection:", parsedData.milestones.length);
-                
-                // Update the milestones in the React Query cache
-                const formattedMilestones = parsedData.milestones.map((m: any) => ({
-                  ...m,
-                  // Ensure date is in correct format if it exists
-                  date: m.date || null
-                }));
-                
-                queryClient.setQueryData(['/api/milestones/user', userId], formattedMilestones);
-                
-                // Now we need to recalculate the projection based on these milestones
-                // This ensures the expenses and other calculations reflect the milestone data
-                if (formattedMilestones.length > 0) {
-                  console.log("Re-running Python calculator with loaded milestones:", formattedMilestones);
-                  
-                  // Get the timeframe from the loaded projection
-                  const projectionYears = specificProjection.timeframe || years;
-                  
-                  // Run the Python calculator with the restored milestones
-                  const calculatorInput = generatePythonCalculatorInput(
-                    age,
-                    projectionYears,
-                    startingSavings,
-                    income, 
-                    incomeGrowth,
-                    studentLoanDebt,
-                    formattedMilestones,
-                    costOfLivingFactor,
-                    locationCostData,
-                    emergencyFundAmount,
-                    personalLoanTermYears,
-                    personalLoanInterestRate,
-                    0.05, // Default retirement rate
-                    0.07  // Default retirement growth rate
-                  );
-                  
-                  // Add the careers data if available
-                  if (careers && careers.length > 0) {
-                    calculatorInput.careersData = careers.map((career: any) => ({
-                      id: career.id,
-                      title: career.title,
-                      median_salary: career.median_salary || 0,
-                      entry_salary: career.entry_salary || 0,
-                      experienced_salary: career.experienced_salary || 0
-                    }));
-                  }
-                  
-                  // We'll try to compute this in the background but will still use the saved projection data
-                  // as the primary source for the UI
-                  calculateFinancialProjection(calculatorInput)
-                    .then(result => {
-                      console.log("Recalculated projection with loaded milestones:", result);
-                      
-                      // Check if we have detailed expense breakdown data in the result
-                      const hasDetailedExpenses = 
-                        result.housing && Array.isArray(result.housing) && 
-                        result.transportation && Array.isArray(result.transportation) &&
-                        result.food && Array.isArray(result.food) &&
-                        result.healthcare && Array.isArray(result.healthcare);
-                      
-                      // Log expense data availability for debugging
-                      console.log("Expense data availability in recalculated result:", {
-                        hasHousing: Array.isArray(result.housing),
-                        housingEntries: Array.isArray(result.housing) ? result.housing.length : 0,
-                        hasTransportation: Array.isArray(result.transportation),
-                        hasFood: Array.isArray(result.food),
-                        hasHealthcare: Array.isArray(result.healthcare)
-                      });
-                      
-                      if (hasDetailedExpenses) {
-                        console.log("Using recalculated data with complete expense breakdown");
-                        
-                        // Add milestones to the result
-                        const resultWithMilestones = {
-                          ...result,
-                          milestones: formattedMilestones
-                        };
-                        
-                        // Use this recalculated version that has complete expense breakdown
-                        setProjectionData(resultWithMilestones);
-                        
-                        // Draw the chart with the newly calculated data
-                        if (chartRef.current) {
-                          const ctx = chartRef.current.getContext("2d");
-                          if (ctx && chartInstance.current) {
-                            chartInstance.current.destroy();
-                            chartInstance.current = createMainProjectionChart(ctx, resultWithMilestones, activeTab);
-                          }
-                        }
-                      } else {
-                        // If the recalculated data doesn't have expense breakdowns,
-                        // try to combine the expense breakdowns from the saved data with
-                        // the newly calculated core financial data
-                        console.log("Recalculated data missing expense categories, merging with saved data");
-                        
-                        const parsedExpenseData = parsedData;
-                        
-                        // Create a merged result with recalculated core financials and original expense breakdowns
-                        const mergedResult = {
-                          ...result, // Use recalculated core financial data (netWorth, income, etc.)
-                          
-                          // Add expense breakdowns from the saved data if they exist
-                          housing: parsedExpenseData.housing || result.housing,
-                          transportation: parsedExpenseData.transportation || result.transportation,
-                          food: parsedExpenseData.food || result.food,
-                          healthcare: parsedExpenseData.healthcare || result.healthcare,
-                          personalInsurance: parsedExpenseData.personalInsurance || result.personalInsurance,
-                          apparel: parsedExpenseData.apparel || result.apparel,
-                          services: parsedExpenseData.services || result.services,
-                          entertainment: parsedExpenseData.entertainment || result.entertainment,
-                          other: parsedExpenseData.other || result.other,
-                          
-                          // Add tax breakdowns from the saved data if they exist
-                          payrollTax: parsedExpenseData.payrollTax || result.payrollTax,
-                          federalTax: parsedExpenseData.federalTax || result.federalTax,
-                          stateTax: parsedExpenseData.stateTax || result.stateTax,
-                          
-                          // Make sure to include milestones
-                          milestones: formattedMilestones
-                        };
-                        
-                        // Update the projection data with the merged result
-                        setProjectionData(mergedResult);
-                        
-                        // Draw the chart with the merged data
-                        if (chartRef.current) {
-                          const ctx = chartRef.current.getContext("2d");
-                          if (ctx && chartInstance.current) {
-                            chartInstance.current.destroy();
-                            chartInstance.current = createMainProjectionChart(ctx, mergedResult, activeTab);
-                          }
-                        }
-                      }
-                    })
-                    .catch(error => {
-                      console.error("Error recalculating with loaded milestones:", error);
-                      
-                      // In case of error, fall back to the saved data
-                      console.log("Error in recalculation, using saved data directly");
-                      setProjectionData(parsedData);
-                      
-                      // Force re-render of the chart
-                      if (chartRef.current) {
-                        const ctx = chartRef.current.getContext("2d");
-                        if (ctx && chartInstance.current) {
-                          chartInstance.current.destroy();
-                          chartInstance.current = createMainProjectionChart(ctx, parsedData, activeTab);
-                        }
-                      }
-                    });
-                }
-              }
-              
-              // Force a delay to ensure the DOM has updated
-              // We'll only use this initially for very old projections without milestones
-              // For newer projections with milestones, we'll use the recalculated data from calculateFinancialProjection
-              setTimeout(() => {
-                // We'll use this as a fallback only if we don't have milestones to recalculate with
-                if (!parsedData.milestones || !Array.isArray(parsedData.milestones) || parsedData.milestones.length === 0) {
-                  console.log("Using saved projection data directly (no milestones to recalculate with)");
-                  setProjectionData(parsedData);
-                  
-                  // Force re-render of the chart
-                  if (chartRef.current) {
-                    const ctx = chartRef.current.getContext("2d");
-                    if (ctx) {
-                      chartInstance.current = createMainProjectionChart(ctx, parsedData, activeTab);
-                    }
-                  }
-                }
-              }, 100);
-            } catch (parseError) {
-              console.error("Error parsing projection data JSON:", parseError);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading saved projection:", error);
-        }
-      }
-    };
-    
-    loadProjection();
-  }, [specificProjection, isLoadingSpecificProjection, activeTab, queryClient, userId]);
-  
   // Update projection data when inputs change
   useEffect(() => {
-    // Skip calculation if we're displaying a saved projection
-    if (projectionId && specificProjection) {
-      return;
-    }
-    
     const updateProjectionData = async () => {
       console.log("Inputs changed, calculating projection data using Python calculator");
       try {
@@ -1569,11 +1207,6 @@ const FinancialProjections = ({
           educationAnnualCost: m.educationAnnualCost || null,
           educationAnnualLoan: m.educationAnnualLoan || null,
           targetOccupation: m.targetOccupation || null,
-          // Add work status fields
-          workStatus: m.workStatus || null,
-          partTimeIncome: m.partTimeIncome || null,
-          returnToSameProfession: m.returnToSameProfession || false,
-          // Other fields
           active: m.active !== undefined ? m.active : true,
           completed: m.completed !== undefined ? m.completed : false,
           details: m.details || {},
@@ -1633,7 +1266,12 @@ const FinancialProjections = ({
             ...m,
             // Ensure yearsAway is a number relative to the start age
             yearsAway: m.yearsAway !== null ? m.yearsAway : 
-              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25)))
+              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25))),
+            // Add fields that TypeScript expects for Milestone type
+            workStatus: m.workStatus || null,
+            partTimeIncome: m.partTimeIncome || null,
+            returnToSameProfession: m.returnToSameProfession || false,
+            details: m.details || {}
           }))
         };
         
@@ -1714,20 +1352,7 @@ const FinancialProjections = ({
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-display font-semibold text-gray-800">
-          {projectionId && specificProjection ? 
-            `Projection: ${specificProjection.name}` : 
-            'Financial Projections'}
-        </h1>
-        {projectionId && specificProjection && (
-          <a href="/projections">
-            <Button variant="outline">
-              Create New Projection
-            </Button>
-          </a>
-        )}
-      </div>
+      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
@@ -1878,111 +1503,58 @@ const FinancialProjections = ({
             
             <Button 
               className="w-full mt-6"
-              onClick={() => {
-                setProjectionName(`Projection - ${new Date().toLocaleDateString()}`);
-                setProjectionNameDialogOpen(true);
+              onClick={async () => {
+                try {
+                  // Adjust income based on location, but we don't need to adjust expenses again
+                  // since they're already adjusted in the UI as part of the expenses state
+                  const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
+                  const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
+                     
+                  const response = await fetch('/api/financial-projections', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      userId,
+                      projectionName: `Projection - ${new Date().toLocaleDateString()}`,
+                      timeframe: years,
+                      startingAge: age,
+                      startingSavings,
+                      income: Math.round(adjustedIncome),
+                      expenses: Math.round(adjustedExpenses),
+                      incomeGrowth,
+                      studentLoanDebt,
+                      projectionData: JSON.stringify(projectionData),
+                      includesCollegeCalculation: !!includedCollegeCalc,
+                      includesCareerCalculation: !!includedCareerCalc,
+                      collegeCalculationId: includedCollegeCalc?.id || null,
+                      careerCalculationId: includedCareerCalc?.id || null,
+                      locationAdjusted: !!locationCostData,
+                      locationZipCode: userData?.zipCode || null,
+                      costOfLivingIndex: locationCostData ? 
+                        locationCostData.income_adjustment_factor || 1.0 : null,
+                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                      // Save the configurable parameters
+                      emergencyFundAmount: emergencyFundAmount,
+                      personalLoanTermYears: personalLoanTermYears,
+                      personalLoanInterestRate: personalLoanInterestRate,
+                    }),
+                  });
+                  
+                  if (response.ok) {
+                    alert('Projection saved successfully!');
+                  } else {
+                    throw new Error('Failed to save projection');
+                  }
+                } catch (error) {
+                  console.error('Error saving projection:', error);
+                  alert('Failed to save projection. Please try again.');
+                }
               }}
             >
               Save Projection
             </Button>
-            
-            <Dialog open={projectionNameDialogOpen} onOpenChange={setProjectionNameDialogOpen}>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Save Financial Projection</DialogTitle>
-                  <DialogDescription>
-                    Give your financial projection a name so you can easily find it later.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex items-center space-x-2 py-4">
-                  <div className="grid flex-1 gap-2">
-                    <Label htmlFor="projectionName" className="sr-only">
-                      Projection Name
-                    </Label>
-                    <Input
-                      id="projectionName"
-                      value={projectionName}
-                      onChange={(e) => setProjectionName(e.target.value)}
-                      placeholder="Enter a name for this projection"
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-                <DialogFooter className="sm:justify-between">
-                  <Button 
-                    variant="secondary"
-                    onClick={() => setProjectionNameDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={async () => {
-                      try {
-                        // Adjust income based on location, but we don't need to adjust expenses again
-                        // since they're already adjusted in the UI as part of the expenses state
-                        const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
-                        const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
-                           
-                        // Ensure milestones are included in projection data
-                        const projectionDataWithMilestones = {
-                          ...projectionData,
-                          milestones: milestones || [] // Ensure milestones are included
-                        };
-                        
-                        console.log("Saving projection with milestones:", milestones?.length || 0);
-                        
-                        const response = await fetch('/api/financial-projections', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            userId,
-                            name: projectionName, // Use the user-specified name
-                            timeframe: years,
-                            startingAge: age,
-                            startingSavings,
-                            income: Math.round(adjustedIncome),
-                            expenses: Math.round(adjustedExpenses),
-                            incomeGrowth,
-                            studentLoanDebt,
-                            projectionData: JSON.stringify(projectionDataWithMilestones), // Save with milestones
-                            includesCollegeCalculation: !!includedCollegeCalc,
-                            includesCareerCalculation: !!includedCareerCalc,
-                            collegeCalculationId: includedCollegeCalc?.id || null,
-                            careerCalculationId: includedCareerCalc?.id || null,
-                            locationAdjusted: !!locationCostData,
-                            locationZipCode: userData?.zipCode || null,
-                            costOfLivingIndex: locationCostData ? 
-                              locationCostData.income_adjustment_factor || 1.0 : null,
-                            incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
-                            // Save the configurable parameters
-                            emergencyFundAmount: emergencyFundAmount,
-                            personalLoanTermYears: personalLoanTermYears,
-                            personalLoanInterestRate: personalLoanInterestRate,
-                          }),
-                        });
-                        
-                        if (response.ok) {
-                          // Close the dialog after successful save
-                          setProjectionNameDialogOpen(false);
-                          // Refresh the list of saved projections
-                          queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
-                          alert('Projection saved successfully!');
-                        } else {
-                          throw new Error('Failed to save projection');
-                        }
-                      } catch (error) {
-                        console.error('Error saving projection:', error);
-                        alert('Failed to save projection. Please try again.');
-                      }
-                    }}
-                  >
-                    Save
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </CardContent>
         </Card>
         

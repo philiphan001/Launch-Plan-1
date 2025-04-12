@@ -39,24 +39,9 @@ function App() {
   useEffect(() => {
     console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
     
-    // Check if we're on a projections page with an ID
-    const isProjectionDetailPage = location.startsWith('/projections/');
-    
-    // Extract projection ID from pathname if on a projection detail page
-    const pathProjectionId = isProjectionDetailPage ? 
-      parseInt(location.split('/')[2]) : null;
-    
-    // Check for projectionId in URL params (for backward compatibility)
-    const urlParams = new URLSearchParams(window.location.search);
-    const queryProjectionId = urlParams.get('projectionId');
-    
     // If at root path '/' and logged in, redirect appropriately
     if (location === '/') {
-      // If there's a projectionId in the URL query params, go to that projection
-      if (queryProjectionId) {
-        console.log(`Found projectionId in URL: ${queryProjectionId}, navigating to projection`);
-        setLocation(`/projections/${queryProjectionId}`);
-      } else if (isAuthenticated) {
+      if (isAuthenticated) {
         // First-time users go to Pathways, returning users go to Dashboard
         const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
         console.log(`Redirecting from / to ${destination} based on first-time status`);
@@ -70,7 +55,7 @@ function App() {
     }
     // If trying to access protected routes while not authenticated
     else if (!isAuthenticated && 
-        !["/", "/login", "/signup"].includes(location) && !location.includes('/projections/')) {
+        !["/", "/login", "/signup"].includes(location)) {
       console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
       setLocation('/login');
     }
@@ -187,12 +172,6 @@ function App() {
       <Switch>
         <Route path="/dashboard">
           {() => <Dashboard {...authProps} />}
-        </Route>
-        <Route path="/projections/:id">
-          {(params) => {
-            console.log("Matched projection ID route with params:", params);
-            return <FinancialProjections {...authProps} projectionId={parseInt(params.id)} />;
-          }}
         </Route>
         <Route path="/projections">
           {() => <FinancialProjections {...authProps} />}

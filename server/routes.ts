@@ -510,18 +510,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get financial projections" });
     }
   });
-  
-  app.get("/api/financial-projections/detail/:id", async (req: Request, res: Response) => {
-    try {
-      const projection = await activeStorage.getFinancialProjection(parseInt(req.params.id));
-      if (!projection) {
-        return res.status(404).json({ message: "Financial projection not found" });
-      }
-      res.json(projection);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to get financial projection" });
-    }
-  });
 
   // Career paths routes
   app.get("/api/career-paths", async (req: Request, res: Response) => {
