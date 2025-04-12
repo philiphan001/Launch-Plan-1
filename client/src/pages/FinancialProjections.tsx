@@ -1395,26 +1395,102 @@ const FinancialProjections = ({
                     .then(result => {
                       console.log("Recalculated projection with loaded milestones:", result);
                       
-                      // Add milestones to the result
-                      const resultWithMilestones = {
-                        ...result,
-                        milestones: formattedMilestones
-                      };
+                      // Check if we have detailed expense breakdown data in the result
+                      const hasDetailedExpenses = 
+                        result.housing && Array.isArray(result.housing) && 
+                        result.transportation && Array.isArray(result.transportation) &&
+                        result.food && Array.isArray(result.food) &&
+                        result.healthcare && Array.isArray(result.healthcare);
                       
-                      // Update the projection data with the new calculation
-                      setProjectionData(resultWithMilestones);
+                      // Log expense data availability for debugging
+                      console.log("Expense data availability in recalculated result:", {
+                        hasHousing: Array.isArray(result.housing),
+                        housingEntries: Array.isArray(result.housing) ? result.housing.length : 0,
+                        hasTransportation: Array.isArray(result.transportation),
+                        hasFood: Array.isArray(result.food),
+                        hasHealthcare: Array.isArray(result.healthcare)
+                      });
                       
-                      // Draw the chart with the new data
-                      if (chartRef.current) {
-                        const ctx = chartRef.current.getContext("2d");
-                        if (ctx && chartInstance.current) {
-                          chartInstance.current.destroy();
-                          chartInstance.current = createMainProjectionChart(ctx, resultWithMilestones, activeTab);
+                      if (hasDetailedExpenses) {
+                        console.log("Using recalculated data with complete expense breakdown");
+                        
+                        // Add milestones to the result
+                        const resultWithMilestones = {
+                          ...result,
+                          milestones: formattedMilestones
+                        };
+                        
+                        // Use this recalculated version that has complete expense breakdown
+                        setProjectionData(resultWithMilestones);
+                        
+                        // Draw the chart with the newly calculated data
+                        if (chartRef.current) {
+                          const ctx = chartRef.current.getContext("2d");
+                          if (ctx && chartInstance.current) {
+                            chartInstance.current.destroy();
+                            chartInstance.current = createMainProjectionChart(ctx, resultWithMilestones, activeTab);
+                          }
+                        }
+                      } else {
+                        // If the recalculated data doesn't have expense breakdowns,
+                        // try to combine the expense breakdowns from the saved data with
+                        // the newly calculated core financial data
+                        console.log("Recalculated data missing expense categories, merging with saved data");
+                        
+                        const parsedExpenseData = parsedData;
+                        
+                        // Create a merged result with recalculated core financials and original expense breakdowns
+                        const mergedResult = {
+                          ...result, // Use recalculated core financial data (netWorth, income, etc.)
+                          
+                          // Add expense breakdowns from the saved data if they exist
+                          housing: parsedExpenseData.housing || result.housing,
+                          transportation: parsedExpenseData.transportation || result.transportation,
+                          food: parsedExpenseData.food || result.food,
+                          healthcare: parsedExpenseData.healthcare || result.healthcare,
+                          personalInsurance: parsedExpenseData.personalInsurance || result.personalInsurance,
+                          apparel: parsedExpenseData.apparel || result.apparel,
+                          services: parsedExpenseData.services || result.services,
+                          entertainment: parsedExpenseData.entertainment || result.entertainment,
+                          other: parsedExpenseData.other || result.other,
+                          
+                          // Add tax breakdowns from the saved data if they exist
+                          payrollTax: parsedExpenseData.payrollTax || result.payrollTax,
+                          federalTax: parsedExpenseData.federalTax || result.federalTax,
+                          stateTax: parsedExpenseData.stateTax || result.stateTax,
+                          
+                          // Make sure to include milestones
+                          milestones: formattedMilestones
+                        };
+                        
+                        // Update the projection data with the merged result
+                        setProjectionData(mergedResult);
+                        
+                        // Draw the chart with the merged data
+                        if (chartRef.current) {
+                          const ctx = chartRef.current.getContext("2d");
+                          if (ctx && chartInstance.current) {
+                            chartInstance.current.destroy();
+                            chartInstance.current = createMainProjectionChart(ctx, mergedResult, activeTab);
+                          }
                         }
                       }
                     })
                     .catch(error => {
                       console.error("Error recalculating with loaded milestones:", error);
+                      
+                      // In case of error, fall back to the saved data
+                      console.log("Error in recalculation, using saved data directly");
+                      setProjectionData(parsedData);
+                      
+                      // Force re-render of the chart
+                      if (chartRef.current) {
+                        const ctx = chartRef.current.getContext("2d");
+                        if (ctx && chartInstance.current) {
+                          chartInstance.current.destroy();
+                          chartInstance.current = createMainProjectionChart(ctx, parsedData, activeTab);
+                        }
+                      }
                     });
                 }
               }
