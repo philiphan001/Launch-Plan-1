@@ -1242,6 +1242,11 @@ useEffect(() => {
   // Only proceed if we have projection data and either it just loaded or the projection ID changed
   if (savedProjection && (!isLoadingSavedProjection || didProjectionChange)) {
     console.log("Loading saved projection:", savedProjection, "ID changed:", didProjectionChange);
+    console.log("Projection has complete data:", 
+      savedProjection.startingAge !== null &&
+      savedProjection.startingSavings !== null &&
+      savedProjection.income !== null && 
+      savedProjection.expenses !== null);
     
     // Create a batch of state updates to be executed together for better performance
     const stateUpdates = () => {
@@ -1250,19 +1255,75 @@ useEffect(() => {
       // Load the projection name
       setProjectionName(savedProjection.name || `Projection - ${new Date().toLocaleDateString()}`);
       
-      // Load basic projection parameters
-      setTimeframe(savedProjection.timeframe ? `${savedProjection.timeframe} Years` : "10 Years");
-      setAge(savedProjection.startingAge || 25);
-      setStartingSavings(savedProjection.startingSavings || 5000);
-      setIncome(savedProjection.income || 40000);
-      setExpenses(savedProjection.expenses || 35000);
-      setIncomeGrowth(savedProjection.incomeGrowth || 3.0);
-      setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
+      // Check if the projection has proper data or if it's an older projection with incomplete data
+      const hasCompleteData = savedProjection.startingAge !== null &&
+                            savedProjection.startingSavings !== null &&
+                            savedProjection.income !== null;
       
-      // Load configurable parameters - use defaults if not present
-      setEmergencyFundAmount(savedProjection.emergencyFundAmount || 10000);
-      setPersonalLoanTermYears(savedProjection.personalLoanTermYears || 5);
-      setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate || 8.0);
+      if (!hasCompleteData) {
+        console.warn("Projection has incomplete data - extracting from projectionData JSON");
+        
+        // For older projections, try to extract data from the projectionData JSON
+        try {
+          const projData = typeof savedProjection.projectionData === 'string' 
+            ? JSON.parse(savedProjection.projectionData) 
+            : savedProjection.projectionData;
+          
+          // Extract data from the JSON
+          const extractedAge = projData.ages && projData.ages.length > 0 ? projData.ages[0] : 25;
+          const extractedSavings = projData.netWorth && projData.netWorth.length > 0 ? projData.netWorth[0] : 5000;
+          const extractedIncome = projData.income && projData.income.length > 1 ? projData.income[1] : 40000;
+          const extractedExpenses = projData.expenses && projData.expenses.length > 1 ? projData.expenses[1] : 35000;
+          
+          // Set extracted values
+          setTimeframe(projData.ages ? `${projData.ages.length - 1} Years` : "10 Years");
+          setAge(extractedAge);
+          setStartingSavings(extractedSavings);
+          setIncome(extractedIncome);
+          setExpenses(extractedExpenses);
+          setIncomeGrowth(3.0); // Default
+          setStudentLoanDebt(0); // Default
+          
+          // Use default configurable parameters
+          setEmergencyFundAmount(10000);
+          setPersonalLoanTermYears(5);
+          setPersonalLoanInterestRate(8.0);
+          
+          console.log("Extracted values from JSON:", {
+            age: extractedAge,
+            savings: extractedSavings,
+            income: extractedIncome,
+            expenses: extractedExpenses
+          });
+        } catch (error) {
+          console.error("Failed to extract data from projectionData JSON:", error);
+          // Fall back to defaults
+          setTimeframe("10 Years");
+          setAge(25);
+          setStartingSavings(5000);
+          setIncome(40000);
+          setExpenses(35000);
+          setIncomeGrowth(3.0);
+          setStudentLoanDebt(0);
+          setEmergencyFundAmount(10000);
+          setPersonalLoanTermYears(5);
+          setPersonalLoanInterestRate(8.0);
+        }
+      } else {
+        // Normal case - use the properly saved values
+        setTimeframe(savedProjection.timeframe ? `${savedProjection.timeframe} Years` : "10 Years");
+        setAge(savedProjection.startingAge || 25);
+        setStartingSavings(savedProjection.startingSavings || 5000);
+        setIncome(savedProjection.income || 40000);
+        setExpenses(savedProjection.expenses || 35000);
+        setIncomeGrowth(savedProjection.incomeGrowth || 3.0);
+        setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
+        
+        // Load configurable parameters - use defaults if not present
+        setEmergencyFundAmount(savedProjection.emergencyFundAmount || 10000);
+        setPersonalLoanTermYears(savedProjection.personalLoanTermYears || 5);
+        setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate || 8.0);
+      }
       
       // Parse the saved projection data
       if (savedProjection.projectionData) {
