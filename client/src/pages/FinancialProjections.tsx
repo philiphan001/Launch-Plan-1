@@ -1198,8 +1198,53 @@ const FinancialProjections = ({
     expenses: [expenses]
   });
   
+  // Effect to handle loading a specific projection when projectionId is provided
+  useEffect(() => {
+    if (specificProjection && !isLoadingSpecificProjection) {
+      try {
+        console.log("Loading saved projection:", specificProjection);
+        
+        // Update form values based on the loaded projection
+        if (specificProjection.startingAge) setAge(specificProjection.startingAge);
+        if (specificProjection.startingSavings) setStartingSavings(specificProjection.startingSavings);
+        if (specificProjection.income) setIncome(specificProjection.income);
+        if (specificProjection.expenses) setExpenses(specificProjection.expenses);
+        if (specificProjection.incomeGrowth) setIncomeGrowth(specificProjection.incomeGrowth);
+        if (specificProjection.studentLoanDebt) setStudentLoanDebt(specificProjection.studentLoanDebt);
+        
+        // Set timeframe based on the saved projection
+        if (specificProjection.timeframe) {
+          const savedTimeframe = specificProjection.timeframe;
+          setTimeframe(savedTimeframe === 5 ? "5 Years" : savedTimeframe === 20 ? "20 Years" : "10 Years");
+        }
+        
+        // Set configurable parameters if available in the saved projection
+        if (specificProjection.emergencyFundAmount) setEmergencyFundAmount(specificProjection.emergencyFundAmount);
+        if (specificProjection.personalLoanTermYears) setPersonalLoanTermYears(specificProjection.personalLoanTermYears);
+        if (specificProjection.personalLoanInterestRate) setPersonalLoanInterestRate(specificProjection.personalLoanInterestRate);
+        
+        // Set projection name to the saved name
+        if (specificProjection.name) setProjectionName(specificProjection.name);
+        
+        // Parse and set the projection data
+        if (specificProjection.projectionData) {
+          const parsedData = JSON.parse(specificProjection.projectionData);
+          setProjectionData(parsedData);
+          console.log("Loaded projection data:", parsedData);
+        }
+      } catch (error) {
+        console.error("Error parsing saved projection data:", error);
+      }
+    }
+  }, [specificProjection, isLoadingSpecificProjection]);
+  
   // Update projection data when inputs change
   useEffect(() => {
+    // Skip calculation if we're displaying a saved projection
+    if (projectionId && specificProjection) {
+      return;
+    }
+    
     const updateProjectionData = async () => {
       console.log("Inputs changed, calculating projection data using Python calculator");
       try {
@@ -1381,7 +1426,21 @@ const FinancialProjections = ({
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-display font-semibold text-gray-800">
+          {projectionId && specificProjection ? 
+            `Projection: ${specificProjection.name}` : 
+            'Financial Projections'}
+        </h1>
+        {projectionId && specificProjection && (
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/projections'}
+          >
+            Create New Projection
+          </Button>
+        )}
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
