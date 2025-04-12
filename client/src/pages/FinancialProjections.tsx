@@ -153,13 +153,21 @@ const FinancialProjections = ({
   // Temporary user ID for demo purposes
   const userId = 1;
   
+  // Setup React Query client first
+  const queryClient = useQueryClient();
+  
   // Get the current location for parsing query parameters
   const [location] = useLocation();
   const projectionId = useMemo(() => {
     // Parse URL query parameters
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
-    return id ? parseInt(id, 10) : null;
+    
+    // Log when projection ID changes
+    const parsedId = id ? parseInt(id, 10) : null;
+    console.log("Projection ID changed to:", parsedId);
+    
+    return parsedId;
   }, [location]);
 
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
@@ -187,9 +195,6 @@ const FinancialProjections = ({
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
-  
-  // Get the query client for invalidating queries
-  const queryClient = useQueryClient();
 
   // Fetch user data to get birth year
   const { data: userData, isLoading: isLoadingUser } = useQuery({
@@ -1182,13 +1187,16 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection } = useQuery(
   queryKey: ['/api/financial-projections/detail', projectionId],
   queryFn: async () => {
     if (!projectionId) return null;
+    console.log("Fetching projection data for ID:", projectionId);
     const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
     if (!response.ok) throw new Error('Failed to fetch saved projection');
     return response.json();
   },
   enabled: !!projectionId,
-  // Only fetch once when component mounts
-  staleTime: Infinity
+  // Reset the staleTime to 0 to always refetch when projectionId changes
+  staleTime: 0, 
+  // Make it refetch when the projectionId changes
+  refetchOnWindowFocus: false
 });
 
 // Load saved projection data when available
