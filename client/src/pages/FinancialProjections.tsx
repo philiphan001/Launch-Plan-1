@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { AuthProps } from "@/interfaces/auth";
+import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
@@ -149,6 +150,15 @@ const FinancialProjections = ({
 }: FinancialProjectionsProps) => {
   // Temporary user ID for demo purposes
   const userId = 1;
+  
+  // Get the current location for parsing query parameters
+  const [location] = useLocation();
+  const projectionId = useMemo(() => {
+    // Parse URL query parameters
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    return id ? parseInt(id, 10) : null;
+  }, [location]);
 
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
   const [timeframe, setTimeframe] = useState<string>("10 Years");
@@ -1162,7 +1172,88 @@ const FinancialProjections = ({
   };
   
   // Create a state for projection data
-  const [projectionData, setProjectionData] = useState<any>({
+  // Add a state for the name of the current projection
+const [projectionName, setProjectionName] = useState<string>(`Projection - ${new Date().toLocaleDateString()}`);
+
+// Fetch saved projection data if an ID is provided
+const { data: savedProjection, isLoading: isLoadingSavedProjection } = useQuery({
+  queryKey: ['/api/financial-projections/detail', projectionId],
+  queryFn: async () => {
+    if (!projectionId) return null;
+    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+    if (!response.ok) throw new Error('Failed to fetch saved projection');
+    return response.json();
+  },
+  enabled: !!projectionId,
+  // Only fetch once when component mounts
+  staleTime: Infinity
+});
+
+// Load saved projection data when available
+useEffect(() => {
+  if (savedProjection && !isLoadingSavedProjection) {
+    console.log("Loading saved projection:", savedProjection);
+    
+    // Load the projection name
+    if (savedProjection.name) {
+      setProjectionName(savedProjection.name);
+    }
+    
+    // Load basic projection parameters
+    if (savedProjection.timeframe) {
+      setTimeframe(`${savedProjection.timeframe} Years`);
+    }
+    
+    if (savedProjection.startingAge) {
+      setAge(savedProjection.startingAge);
+    }
+    
+    if (savedProjection.startingSavings) {
+      setStartingSavings(savedProjection.startingSavings);
+    }
+    
+    if (savedProjection.income) {
+      setIncome(savedProjection.income);
+    }
+    
+    if (savedProjection.expenses) {
+      setExpenses(savedProjection.expenses);
+    }
+    
+    if (savedProjection.incomeGrowth) {
+      setIncomeGrowth(savedProjection.incomeGrowth);
+    }
+    
+    if (savedProjection.studentLoanDebt) {
+      setStudentLoanDebt(savedProjection.studentLoanDebt);
+    }
+    
+    // Load configurable parameters
+    if (savedProjection.emergencyFundAmount) {
+      setEmergencyFundAmount(savedProjection.emergencyFundAmount);
+    }
+    
+    if (savedProjection.personalLoanTermYears) {
+      setPersonalLoanTermYears(savedProjection.personalLoanTermYears);
+    }
+    
+    if (savedProjection.personalLoanInterestRate) {
+      setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate);
+    }
+    
+    // Parse the saved projection data
+    if (savedProjection.projectionData) {
+      try {
+        const parsedData = JSON.parse(savedProjection.projectionData);
+        setProjectionData(parsedData);
+      } catch (error) {
+        console.error("Failed to parse saved projection data:", error);
+      }
+    }
+  }
+}, [savedProjection, isLoadingSavedProjection]);
+
+const [projectionData, setProjectionData] = useState<any>({
     netWorth: [startingSavings],
     ages: [age],
     income: [income],
@@ -1497,6 +1588,17 @@ const FinancialProjections = ({
                     className="mt-2"
                   />
                   <p className="text-xs text-gray-500 mt-1">Applied to negative cash flow scenarios</p>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <Label htmlFor="projectionName">Projection Name</Label>
+                  <Input
+                    id="projectionName"
+                    value={projectionName}
+                    onChange={(e) => setProjectionName(e.target.value)}
+                    placeholder="Enter a name for this projection"
+                    className="mt-2"
+                  />
                 </div>
               </div>
             </div>
