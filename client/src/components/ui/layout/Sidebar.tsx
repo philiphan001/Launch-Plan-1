@@ -162,17 +162,20 @@ const Sidebar = () => {
                           return (
                             <li key={projection.id} className="mb-1 flex items-center group">
                               <a
-                                href="/projections"
+                                href={`/projections?id=${projection.id}`}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  // Use a more reliable method for navigation with query parameters
-                                  const fullUrl = `/projections?id=${projection.id}&t=${new Date().getTime()}`;
-                                  console.log("Navigating to URL:", fullUrl);
+                                  // Use React navigation with wouter instead of direct browser navigation
+                                  const timestamp = new Date().getTime();
+                                  setLocation(`/projections?id=${projection.id}&t=${timestamp}`);
                                   
-                                  // Force a full page reload to clear any cached state
-                                  window.location.href = fullUrl;
+                                  // Refresh saved projections data to ensure we have the latest
+                                  setTimeout(() => {
+                                    console.log("Refreshing saved projections data after navigation");
+                                    fetchSavedProjections();
+                                  }, 100);
                                 }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 

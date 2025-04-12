@@ -1192,8 +1192,8 @@ const FinancialProjections = ({
 const [projectionName, setProjectionName] = useState<string>(`Projection - ${new Date().toLocaleDateString()}`);
 
 // Fetch saved projection data if an ID is provided
-const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError } = useQuery({
-  queryKey: ['/api/financial-projections/detail', projectionId, timestamp], // Include timestamp to force refresh
+const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
+  queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
   queryFn: async () => {
     if (!projectionId) {
       console.log("No projection ID provided, skipping fetch");
@@ -1217,7 +1217,7 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       }
       
       const data = await response.json();
-      console.log("Successfully loaded projection data:", data);
+      console.log("Successfully loaded projection data:", data.id, data.name);
       return data;
     } catch (error) {
       console.error("Error fetching projection:", error);
@@ -1225,7 +1225,9 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
     }
   },
   enabled: !!projectionId, // Only enable this query when we have a projection ID
-  retry: false // Don't retry failed requests
+  retry: false, // Don't retry failed requests
+  staleTime: 0, // Consider data immediately stale to allow refetching
+  cacheTime: 0, // Don't cache results between component mounts
 });
 
 // Create a ref to track previous projection ID
