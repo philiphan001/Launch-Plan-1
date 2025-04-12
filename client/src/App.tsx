@@ -39,16 +39,23 @@ function App() {
   useEffect(() => {
     console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
     
-    // Check if we're trying to navigate to a specific projection via the URL hash
+    // Check if we're on a projections page with an ID
+    const isProjectionDetailPage = location.startsWith('/projections/');
+    
+    // Extract projection ID from pathname if on a projection detail page
+    const pathProjectionId = isProjectionDetailPage ? 
+      parseInt(location.split('/')[2]) : null;
+    
+    // Check for projectionId in URL params (for backward compatibility)
     const urlParams = new URLSearchParams(window.location.search);
-    const projectionId = urlParams.get('projectionId');
+    const queryProjectionId = urlParams.get('projectionId');
     
     // If at root path '/' and logged in, redirect appropriately
     if (location === '/') {
-      // If there's a projectionId in the URL, go to that projection
-      if (projectionId) {
-        console.log(`Found projectionId in URL: ${projectionId}, navigating to projection`);
-        setLocation(`/projections/${projectionId}`);
+      // If there's a projectionId in the URL query params, go to that projection
+      if (queryProjectionId) {
+        console.log(`Found projectionId in URL: ${queryProjectionId}, navigating to projection`);
+        setLocation(`/projections/${queryProjectionId}`);
       } else if (isAuthenticated) {
         // First-time users go to Pathways, returning users go to Dashboard
         const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
@@ -63,7 +70,7 @@ function App() {
     }
     // If trying to access protected routes while not authenticated
     else if (!isAuthenticated && 
-        !["/", "/login", "/signup"].includes(location)) {
+        !["/", "/login", "/signup"].includes(location) && !location.includes('/projections/')) {
       console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
       setLocation('/login');
     }
