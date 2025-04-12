@@ -173,6 +173,10 @@ const FinancialProjections = ({
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
   const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
   
+  // State for projection name dialog
+  const [projectionNameDialogOpen, setProjectionNameDialogOpen] = useState(false);
+  const [projectionName, setProjectionName] = useState(`Projection - ${new Date().toLocaleDateString()}`);
+  
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
   
@@ -297,6 +301,16 @@ const FinancialProjections = ({
     queryFn: async () => {
       const response = await fetch('/api/careers');
       if (!response.ok) throw new Error('Failed to fetch careers');
+      return response.json();
+    }
+  });
+  
+  // Fetch saved financial projections for this user
+  const { data: savedProjections, isLoading: isLoadingSavedProjections } = useQuery({
+    queryKey: ['/api/financial-projections', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/financial-projections/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch saved projections');
       return response.json();
     }
   });
@@ -1503,58 +1517,103 @@ const FinancialProjections = ({
             
             <Button 
               className="w-full mt-6"
-              onClick={async () => {
-                try {
-                  // Adjust income based on location, but we don't need to adjust expenses again
-                  // since they're already adjusted in the UI as part of the expenses state
-                  const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
-                  const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
-                     
-                  const response = await fetch('/api/financial-projections', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      userId,
-                      projectionName: `Projection - ${new Date().toLocaleDateString()}`,
-                      timeframe: years,
-                      startingAge: age,
-                      startingSavings,
-                      income: Math.round(adjustedIncome),
-                      expenses: Math.round(adjustedExpenses),
-                      incomeGrowth,
-                      studentLoanDebt,
-                      projectionData: JSON.stringify(projectionData),
-                      includesCollegeCalculation: !!includedCollegeCalc,
-                      includesCareerCalculation: !!includedCareerCalc,
-                      collegeCalculationId: includedCollegeCalc?.id || null,
-                      careerCalculationId: includedCareerCalc?.id || null,
-                      locationAdjusted: !!locationCostData,
-                      locationZipCode: userData?.zipCode || null,
-                      costOfLivingIndex: locationCostData ? 
-                        locationCostData.income_adjustment_factor || 1.0 : null,
-                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
-                      // Save the configurable parameters
-                      emergencyFundAmount: emergencyFundAmount,
-                      personalLoanTermYears: personalLoanTermYears,
-                      personalLoanInterestRate: personalLoanInterestRate,
-                    }),
-                  });
-                  
-                  if (response.ok) {
-                    alert('Projection saved successfully!');
-                  } else {
-                    throw new Error('Failed to save projection');
-                  }
-                } catch (error) {
-                  console.error('Error saving projection:', error);
-                  alert('Failed to save projection. Please try again.');
-                }
+              onClick={() => {
+                setProjectionName(`Projection - ${new Date().toLocaleDateString()}`);
+                setProjectionNameDialogOpen(true);
               }}
             >
               Save Projection
             </Button>
+            
+            <Dialog open={projectionNameDialogOpen} onOpenChange={setProjectionNameDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Save Financial Projection</DialogTitle>
+                  <DialogDescription>
+                    Give your financial projection a name so you can easily find it later.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center space-x-2 py-4">
+                  <div className="grid flex-1 gap-2">
+                    <Label htmlFor="projectionName" className="sr-only">
+                      Projection Name
+                    </Label>
+                    <Input
+                      id="projectionName"
+                      value={projectionName}
+                      onChange={(e) => setProjectionName(e.target.value)}
+                      placeholder="Enter a name for this projection"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <DialogFooter className="sm:justify-between">
+                  <Button 
+                    variant="secondary"
+                    onClick={() => setProjectionNameDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        // Adjust income based on location, but we don't need to adjust expenses again
+                        // since they're already adjusted in the UI as part of the expenses state
+                        const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
+                        const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
+                           
+                        const response = await fetch('/api/financial-projections', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            userId,
+                            name: projectionName, // Use the user-specified name
+                            timeframe: years,
+                            startingAge: age,
+                            startingSavings,
+                            income: Math.round(adjustedIncome),
+                            expenses: Math.round(adjustedExpenses),
+                            incomeGrowth,
+                            studentLoanDebt,
+                            projectionData: JSON.stringify(projectionData),
+                            includesCollegeCalculation: !!includedCollegeCalc,
+                            includesCareerCalculation: !!includedCareerCalc,
+                            collegeCalculationId: includedCollegeCalc?.id || null,
+                            careerCalculationId: includedCareerCalc?.id || null,
+                            locationAdjusted: !!locationCostData,
+                            locationZipCode: userData?.zipCode || null,
+                            costOfLivingIndex: locationCostData ? 
+                              locationCostData.income_adjustment_factor || 1.0 : null,
+                            incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                            // Save the configurable parameters
+                            emergencyFundAmount: emergencyFundAmount,
+                            personalLoanTermYears: personalLoanTermYears,
+                            personalLoanInterestRate: personalLoanInterestRate,
+                          }),
+                        });
+                        
+                        if (response.ok) {
+                          // Close the dialog after successful save
+                          setProjectionNameDialogOpen(false);
+                          // Refresh the list of saved projections
+                          queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+                          alert('Projection saved successfully!');
+                        } else {
+                          throw new Error('Failed to save projection');
+                        }
+                      } catch (error) {
+                        console.error('Error saving projection:', error);
+                        alert('Failed to save projection. Please try again.');
+                      }
+                    }}
+                  >
+                    Save
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
         
