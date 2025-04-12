@@ -1193,7 +1193,7 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
-  queryKey: ['/api/financial-projections/load-and-calculate', projectionId], // NEW ENDPOINT that calculates fresh data
+  queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
   queryFn: async () => {
     if (!projectionId) {
       console.log("No projection ID provided, skipping fetch");
@@ -1202,47 +1202,25 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
     
     // Add cache-busting timestamp to ensure fresh data
     const cacheBuster = new Date().getTime();
-    console.log(`🚀 USING LOAD-AND-CALCULATE ENDPOINT for ID: ${projectionId} (cache bust: ${cacheBuster})`);
+    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster})`);
     
     try {
-      // This is our NEW specialized endpoint that loads the projection and calculates fresh data
-      const url = `/api/financial-projections/load-and-calculate/${projectionId}?_=${cacheBuster}`;
-      console.log(`Making fetch request to SPECIALIZED endpoint: ${url}`);
+      const url = `/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`;
+      console.log(`Making fetch request to: ${url}`);
       
-      const response = await fetch(url, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
+      const response = await fetch(url);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Failed to fetch and calculate projection data: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Failed to load and calculate projection: ${response.status} ${response.statusText}`);
+        console.error(`Failed to fetch projection data: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Failed to fetch saved projection: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log("✅ FRESH CALCULATE SUCCESS - Loaded projection with calculations:", data.id, data.name);
-      
-      // Handle special property from our new endpoint - the calculation results
-      if (data.calculationResult) {
-        console.log("📊 This includes fresh calculation results from Python calculator");
-        
-        // Combine the projection properties with the calculation results
-        // This ensures we have both original parameters AND fresh calculation results
-        return {
-          ...data,
-          // Override projectionData with newly calculated data
-          projectionData: data.calculationResult,
-          freshlyCalculated: true
-        };
-      }
-      
+      console.log("Successfully loaded projection data:", data.id, data.name);
       return data;
     } catch (error) {
-      console.error("Error fetching projection with fresh calculation:", error);
+      console.error("Error fetching projection:", error);
       throw error;
     }
   },
@@ -1251,7 +1229,7 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
   staleTime: 0, // Consider data immediately stale to allow refetching
   gcTime: 0, // Don't cache results between component mounts (gcTime replaces cacheTime in v5)
   refetchOnMount: true, // Always refetch on component mount
-  refetchOnWindowFocus: false // Don't auto-reload on focus to prevent data loss
+  refetchOnWindowFocus: true // Always refetch when window gains focus
 });
 
 // Create a ref to track previous projection ID
@@ -1267,19 +1245,12 @@ useEffect(() => {
   
   // Only proceed if we have projection data and either it just loaded or the projection ID changed
   if (savedProjection && (!isLoadingSavedProjection || didProjectionChange)) {
-    console.log("Loading saved projection:", savedProjection?.id, savedProjection?.name, "ID changed:", didProjectionChange);
+    console.log("Loading saved projection:", savedProjection, "ID changed:", didProjectionChange);
     console.log("Projection has complete data:", 
       savedProjection.startingAge !== null &&
       savedProjection.startingSavings !== null &&
       savedProjection.income !== null && 
       savedProjection.expenses !== null);
-    
-    // Before applying changes, forcefully clear any existing chart
-    if (chartInstance.current) {
-      console.log("Cleaning up existing chart before loading new projection data");
-      chartInstance.current.destroy();
-      chartInstance.current = null;
-    }
     
     // Create a batch of state updates to be executed together for better performance
     const stateUpdates = () => {
@@ -1422,13 +1393,6 @@ const [projectionData, setProjectionData] = useState<any>(() => {
   // Update projection data when inputs change
   useEffect(() => {
     const updateProjectionData = async () => {
-      // NEW: Skip recalculation if we have a freshly calculated projection from our API endpoint
-      if (savedProjection?.freshlyCalculated) {
-        console.log("📋 SKIPPING RECALCULATION - Using freshly calculated data from API endpoint");
-        console.log("🔒 This projection was already calculated by our specialized endpoint");
-        return; // Exit early - don't override the fresh calculation
-      }
-      
       console.log("Inputs changed, calculating projection data using Python calculator");
       try {
         // Add debugging for any existing milestones of type 'education'
@@ -1586,8 +1550,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
       spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
-      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers, 
-      savedProjection]); // Include savedProjection to check for freshlyCalculated flag
+      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers]); // Include all configurable parameters to ensure recalculation when any of them change
   
   // Generate financial advice based on current financial state
   useEffect(() => {
@@ -1621,31 +1584,14 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     setFinancialAdvice(advice);
   }, [income, expenses, startingSavings, studentLoanDebt, financialProfile, milestones]);
 
-  // OLD APPROACH REMOVED: We now use the load-and-calculate endpoint instead,
-  // which is called via the React Query hook above. This code is no longer needed.
-  // The load-and-calculate endpoint combines both loading the projection data 
-  // and calculating fresh results in a single API call, which is more efficient.
-  
-  // The old approach had several issues:
-  // 1. It would run in parallel with the React Query hook, causing race conditions
-  // 2. It didn't handle the freshlyCalculated flag to prevent recalculations
-  // 3. It duplicated functionality that's now in our specialized endpoint
-
   useEffect(() => {
     if (chartRef.current) {
       const ctx = chartRef.current.getContext("2d");
       if (ctx) {
-        // Always destroy the previous chart instance to ensure clean rendering
+        // Destroy previous chart instance if it exists
         if (chartInstance.current) {
-          console.log("Destroying previous chart instance");
           chartInstance.current.destroy();
-          chartInstance.current = null;
         }
-        
-        // Log the projection data being used for the chart
-        console.log("Creating new chart with projection data:", 
-          projectionId ? `for projection ID: ${projectionId}` : "for new projection",
-          "active tab:", activeTab);
         
         // Create new chart
         chartInstance.current = createMainProjectionChart(ctx, projectionData, activeTab);
@@ -1656,10 +1602,9 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     return () => {
       if (chartInstance.current) {
         chartInstance.current.destroy();
-        chartInstance.current = null;
       }
     };
-  }, [projectionData, activeTab, timeframe, projectionId]); // Added projectionId as a dependency
+  }, [projectionData, activeTab, timeframe]);
 
   return (
     <div className="max-w-7xl mx-auto">

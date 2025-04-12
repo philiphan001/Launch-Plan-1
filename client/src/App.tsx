@@ -196,51 +196,26 @@ function App() {
             const projectionId = params.get('id');
             const timestamp = params.get('t') || Date.now().toString();
             
-            // Important: Force a full garbage collection to clean up any lingering chart instances 
-            // by creating a new function component each time
-            const ProjectionWrapper = () => {
-              // Use useEffect to manually clear chart-related objects from DOM on mount
-              useEffect(() => {
-                console.log("ProjectionWrapper mounted with ID:", projectionId, "at time:", timestamp);
-                
-                // Clean up function to ensure everything is properly destroyed
-                return () => {
-                  console.log("ProjectionWrapper unmounted - cleaning up resources");
-                  
-                  // Find and clean up any existing canvas elements with chart.js data
-                  const canvases = document.querySelectorAll('canvas');
-                  canvases.forEach(canvas => {
-                    // Reset canvas to ensure Chart.js instances are properly removed
-                    const context = canvas.getContext('2d');
-                    if (context) {
-                      context.clearRect(0, 0, canvas.width, canvas.height);
-                    }
-                  });
-                };
-              }, [projectionId, timestamp]);
+            // Log the projection ID detection during routing
+            if (projectionId) {
+              console.log("App.tsx: Creating new FinancialProjections with ID:", projectionId, "timestamp:", timestamp);
               
-              // Create the actual component
-              if (projectionId) {
-                console.log("App.tsx: Creating new FinancialProjections with ID:", projectionId, "timestamp:", timestamp);
-                return <FinancialProjections 
-                  {...authProps} 
-                  key={`projection-${projectionId}-${timestamp}`}
-                  initialProjectionId={Number(projectionId)}
-                />;
-              }
-              
-              // For new projections without ID
-              console.log("App.tsx: Creating new blank FinancialProjections");
+              // Always create a completely new component instance on every render with a unique key
+              // This forces React to unmount and remount the component, clearing all state
               return <FinancialProjections 
                 {...authProps} 
-                key={`new-projection-${timestamp}`}
-                initialProjectionId={undefined}
+                key={`projection-${projectionId}-${timestamp}`}
+                initialProjectionId={Number(projectionId)}
               />;
-            };
+            }
             
-            // Return a new instance of our wrapper component with a unique key
-            // This guarantees unmounting and remounting with each navigation
-            return <ProjectionWrapper key={`wrapper-${projectionId || 'new'}-${timestamp}`} />;
+            // For new projections without ID
+            console.log("App.tsx: Creating new blank FinancialProjections");
+            return <FinancialProjections 
+              {...authProps} 
+              key={`new-projection-${timestamp}`}
+              initialProjectionId={undefined}
+            />;
           }}
         </Route>
         <Route path="/careers">

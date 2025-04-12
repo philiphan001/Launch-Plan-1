@@ -1,7 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface NavItem {
   path: string;
@@ -31,7 +30,6 @@ const Sidebar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [expandProjections, setExpandProjections] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   
   // For demonstration, we'll use userId 1
   const userId = 1;
@@ -164,74 +162,20 @@ const Sidebar = () => {
                           return (
                             <li key={projection.id} className="mb-1 flex items-center group">
                               <a
-                                href="javascript:void(0)"
+                                href={`/projections?id=${projection.id}`}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  console.log("🚀 SIDEBAR: Loading projection with ID:", projection.id);
+                                  console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  // Get current location params to preserve in URL
+                                  // Use React navigation with wouter instead of direct browser navigation
                                   const timestamp = new Date().getTime();
+                                  setLocation(`/projections?id=${projection.id}&t=${timestamp}`);
                                   
-                                  // SPECIAL CASE: Use our new direct calculator endpoint instead
-                                  // This will fetch AND calculate fresh projection data
-                                  console.log(`📊 Using FRESH CALCULATION endpoint for projection ${projection.id}`);
-                                  
-                                  try {
-                                    // Loading toast
-                                    toast({
-                                      title: "Loading projection...",
-                                      description: `Preparing ${projection.name}`,
-                                      variant: "default"
-                                    });
-                                    
-                                    // First invalidate any cached data for this projection
-                                    queryClient.invalidateQueries({ 
-                                      queryKey: ['/api/financial-projections/detail', projection.id]
-                                    });
-                                    
-                                    // Then use our new special endpoint that will recalculate the projection
-                                    fetch(`/api/financial-projections/load-and-calculate/${projection.id}?_=${timestamp}`, {
-                                      headers: {
-                                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                                        'Pragma': 'no-cache'
-                                      }
-                                    })
-                                    .then(response => {
-                                      if (!response.ok) {
-                                        throw new Error(`Failed to load projection: ${response.status}`);
-                                      }
-                                      return response.json();
-                                    })
-                                    .then(data => {
-                                      console.log("✅ FRESH CALCULATION SUCCESS:", data.id, data.name);
-                                      
-                                      // Success toast
-                                      toast({
-                                        title: "Projection loaded",
-                                        description: `Successfully loaded ${data.name}`,
-                                        variant: "default"
-                                      });
-                                      
-                                      // Force a page reload - the cleanest approach
-                                      // This guarantees a complete state reset
-                                      window.location.href = `/projections?id=${projection.id}&t=${timestamp}&fresh=true`;
-                                    })
-                                    .catch(error => {
-                                      console.error("Error loading projection:", error);
-                                      toast({
-                                        title: "Error loading projection",
-                                        description: error.message,
-                                        variant: "destructive"
-                                      });
-                                    });
-                                  } catch (err) {
-                                    console.error("Exception in projection loading:", err);
-                                    toast({
-                                      title: "Error loading projection",
-                                      description: String(err),
-                                      variant: "destructive"
-                                    });
-                                  }
+                                  // Refresh saved projections data to ensure we have the latest
+                                  setTimeout(() => {
+                                    console.log("Refreshing saved projections data after navigation");
+                                    fetchSavedProjections();
+                                  }, 100);
                                 }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 
