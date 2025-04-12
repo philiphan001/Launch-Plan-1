@@ -321,15 +321,17 @@ const FinancialProjections = ({
   });
   
   // Fetch specific projection if projectionId is provided
-  const { data: specificProjection, isLoading: isLoadingSpecificProjection } = useQuery({
+  const { data: specificProjection, isLoading: isLoadingSpecificProjection, refetch: refetchSpecificProjection } = useQuery({
     queryKey: ['/api/financial-projections/detail', projectionId],
     queryFn: async () => {
       if (!projectionId) return null;
+      console.log("Fetching projection with ID:", projectionId);
       const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
       if (!response.ok) throw new Error('Failed to fetch specific projection');
       return response.json();
     },
-    enabled: !!projectionId
+    enabled: !!projectionId,
+    refetchOnWindowFocus: false
   });
 
   // Make careers data available globally for Python calculator access
@@ -1200,7 +1202,15 @@ const FinancialProjections = ({
     expenses: [expenses]
   });
   
-  // Effect to handle loading a specific projection when projectionId is provided
+  // Effect to handle changes in projectionId and refetch data when it changes
+  useEffect(() => {
+    if (projectionId) {
+      console.log(`Projection ID changed to: ${projectionId}, refetching projection data`);
+      refetchSpecificProjection();
+    }
+  }, [projectionId, refetchSpecificProjection]);
+
+  // Effect to handle loading a specific projection when specificProjection data changes
   useEffect(() => {
     const loadProjection = async () => {
       if (specificProjection && !isLoadingSpecificProjection) {
