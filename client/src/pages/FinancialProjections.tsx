@@ -1186,7 +1186,7 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection } = useQuery({
-  queryKey: ['/api/financial-projections/detail', projectionId],
+  queryKey: ['/api/financial-projections/detail', projectionId, timestamp], // Include timestamp to force refresh
   queryFn: async () => {
     if (!projectionId) return null;
     
