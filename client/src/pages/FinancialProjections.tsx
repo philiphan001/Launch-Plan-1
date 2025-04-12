@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { Link } from "wouter";
 import { AuthProps } from "@/interfaces/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
@@ -1200,43 +1201,49 @@ const FinancialProjections = ({
   
   // Effect to handle loading a specific projection when projectionId is provided
   useEffect(() => {
-    if (specificProjection && !isLoadingSpecificProjection) {
-      try {
-        console.log("Loading saved projection:", specificProjection);
-        
-        // Update form values based on the loaded projection
-        if (specificProjection.startingAge) setAge(specificProjection.startingAge);
-        if (specificProjection.startingSavings) setStartingSavings(specificProjection.startingSavings);
-        if (specificProjection.income) setIncome(specificProjection.income);
-        if (specificProjection.expenses) setExpenses(specificProjection.expenses);
-        if (specificProjection.incomeGrowth) setIncomeGrowth(specificProjection.incomeGrowth);
-        if (specificProjection.studentLoanDebt) setStudentLoanDebt(specificProjection.studentLoanDebt);
-        
-        // Set timeframe based on the saved projection
-        if (specificProjection.timeframe) {
-          const savedTimeframe = specificProjection.timeframe;
-          setTimeframe(savedTimeframe === 5 ? "5 Years" : savedTimeframe === 20 ? "20 Years" : "10 Years");
+    const loadProjection = async () => {
+      if (specificProjection && !isLoadingSpecificProjection) {
+        try {
+          console.log("Loading saved projection:", specificProjection);
+          
+          // Update form values based on the loaded projection
+          if (specificProjection.startingAge) setAge(specificProjection.startingAge);
+          if (specificProjection.startingSavings) setStartingSavings(specificProjection.startingSavings);
+          if (specificProjection.income) setIncome(specificProjection.income);
+          if (specificProjection.expenses) setExpenses(specificProjection.expenses);
+          if (specificProjection.incomeGrowth) setIncomeGrowth(specificProjection.incomeGrowth);
+          if (specificProjection.studentLoanDebt) setStudentLoanDebt(specificProjection.studentLoanDebt);
+          
+          // Set timeframe based on the saved projection
+          if (specificProjection.timeframe) {
+            const savedTimeframe = specificProjection.timeframe;
+            setTimeframe(savedTimeframe === 5 ? "5 Years" : savedTimeframe === 20 ? "20 Years" : "10 Years");
+          }
+          
+          // Set configurable parameters if available in the saved projection
+          if (specificProjection.emergencyFundAmount) setEmergencyFundAmount(specificProjection.emergencyFundAmount);
+          if (specificProjection.personalLoanTermYears) setPersonalLoanTermYears(specificProjection.personalLoanTermYears);
+          if (specificProjection.personalLoanInterestRate) setPersonalLoanInterestRate(specificProjection.personalLoanInterestRate);
+          
+          // Set projection name to the saved name
+          if (specificProjection.name) setProjectionName(specificProjection.name);
+          
+          // Parse and set the projection data
+          if (specificProjection.projectionData) {
+            const parsedData = JSON.parse(specificProjection.projectionData);
+            setProjectionData(parsedData);
+            console.log("Loaded projection data:", parsedData);
+          }
+        } catch (error) {
+          console.error("Error parsing saved projection data:", error);
         }
-        
-        // Set configurable parameters if available in the saved projection
-        if (specificProjection.emergencyFundAmount) setEmergencyFundAmount(specificProjection.emergencyFundAmount);
-        if (specificProjection.personalLoanTermYears) setPersonalLoanTermYears(specificProjection.personalLoanTermYears);
-        if (specificProjection.personalLoanInterestRate) setPersonalLoanInterestRate(specificProjection.personalLoanInterestRate);
-        
-        // Set projection name to the saved name
-        if (specificProjection.name) setProjectionName(specificProjection.name);
-        
-        // Parse and set the projection data
-        if (specificProjection.projectionData) {
-          const parsedData = JSON.parse(specificProjection.projectionData);
-          setProjectionData(parsedData);
-          console.log("Loaded projection data:", parsedData);
-        }
-      } catch (error) {
-        console.error("Error parsing saved projection data:", error);
       }
-    }
-  }, [specificProjection, isLoadingSpecificProjection]);
+    };
+    
+    loadProjection();
+    // The empty dependency array ensures this effect only runs once when the component mounts
+    // We'll handle updates through the API fetch triggered by the projectionId
+  }, [projectionId]);
   
   // Update projection data when inputs change
   useEffect(() => {
@@ -1433,11 +1440,14 @@ const FinancialProjections = ({
             'Financial Projections'}
         </h1>
         {projectionId && specificProjection && (
-          <a href="/projections">
-            <Button variant="outline">
-              Create New Projection
-            </Button>
-          </a>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              window.location.href = '/projections';
+            }}
+          >
+            Create New Projection
+          </Button>
         )}
       </div>
       

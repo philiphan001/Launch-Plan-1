@@ -39,9 +39,17 @@ function App() {
   useEffect(() => {
     console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
     
+    // Check if we're trying to navigate to a specific projection via the URL hash
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectionId = urlParams.get('projectionId');
+    
     // If at root path '/' and logged in, redirect appropriately
     if (location === '/') {
-      if (isAuthenticated) {
+      // If there's a projectionId in the URL, go to that projection
+      if (projectionId) {
+        console.log(`Found projectionId in URL: ${projectionId}, navigating to projection`);
+        setLocation(`/projections/${projectionId}`);
+      } else if (isAuthenticated) {
         // First-time users go to Pathways, returning users go to Dashboard
         const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
         console.log(`Redirecting from / to ${destination} based on first-time status`);

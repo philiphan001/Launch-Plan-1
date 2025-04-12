@@ -105,7 +105,7 @@ const Sidebar = () => {
                           </li>
                           {savedProjections.map(projection => (
                             <li className="my-1" key={projection.id}>
-                              <a
+                              <Link
                                 href={`/projections/${projection.id}`}
                                 className={`block py-2 px-2 rounded text-sm truncate ${
                                   location === `/projections/${projection.id}`
@@ -115,7 +115,7 @@ const Sidebar = () => {
                                 title={projection.name}
                               >
                                 {projection.name}
-                              </a>
+                              </Link>
                             </li>
                           ))}
                         </>
