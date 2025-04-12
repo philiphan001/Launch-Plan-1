@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
 import RecommendationEngine from "@/components/pathways/RecommendationEngine";
@@ -112,8 +112,66 @@ const Pathways = ({
     median_income?: number;
   }
   
+  // US states array for dropdown
+  const usStates = [
+    { name: "Alabama", code: "AL" },
+    { name: "Alaska", code: "AK" },
+    { name: "Arizona", code: "AZ" },
+    { name: "Arkansas", code: "AR" },
+    { name: "California", code: "CA" },
+    { name: "Colorado", code: "CO" },
+    { name: "Connecticut", code: "CT" },
+    { name: "Delaware", code: "DE" },
+    { name: "Florida", code: "FL" },
+    { name: "Georgia", code: "GA" },
+    { name: "Hawaii", code: "HI" },
+    { name: "Idaho", code: "ID" },
+    { name: "Illinois", code: "IL" },
+    { name: "Indiana", code: "IN" },
+    { name: "Iowa", code: "IA" },
+    { name: "Kansas", code: "KS" },
+    { name: "Kentucky", code: "KY" },
+    { name: "Louisiana", code: "LA" },
+    { name: "Maine", code: "ME" },
+    { name: "Maryland", code: "MD" },
+    { name: "Massachusetts", code: "MA" },
+    { name: "Michigan", code: "MI" },
+    { name: "Minnesota", code: "MN" },
+    { name: "Mississippi", code: "MS" },
+    { name: "Missouri", code: "MO" },
+    { name: "Montana", code: "MT" },
+    { name: "Nebraska", code: "NE" },
+    { name: "Nevada", code: "NV" },
+    { name: "New Hampshire", code: "NH" },
+    { name: "New Jersey", code: "NJ" },
+    { name: "New Mexico", code: "NM" },
+    { name: "New York", code: "NY" },
+    { name: "North Carolina", code: "NC" },
+    { name: "North Dakota", code: "ND" },
+    { name: "Ohio", code: "OH" },
+    { name: "Oklahoma", code: "OK" },
+    { name: "Oregon", code: "OR" },
+    { name: "Pennsylvania", code: "PA" },
+    { name: "Rhode Island", code: "RI" },
+    { name: "South Carolina", code: "SC" },
+    { name: "South Dakota", code: "SD" },
+    { name: "Tennessee", code: "TN" },
+    { name: "Texas", code: "TX" },
+    { name: "Utah", code: "UT" },
+    { name: "Vermont", code: "VT" },
+    { name: "Virginia", code: "VA" },
+    { name: "Washington", code: "WA" },
+    { name: "West Virginia", code: "WV" },
+    { name: "Wisconsin", code: "WI" },
+    { name: "Wyoming", code: "WY" },
+    { name: "District of Columbia", code: "DC" }
+  ];
+  
   // Location selection state variables
+  const [searchByZip, setSearchByZip] = useState<boolean>(true);
   const [selectedZipCode, setSelectedZipCode] = useState<string>('');
+  const [citySearchQuery, setCitySearchQuery] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLocation, setSelectedLocation] = useState<{city: string, state: string} | null>(null);
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
   
@@ -275,6 +333,55 @@ const Pathways = ({
     }
   };
   
+  // Function to fetch location data by city and state
+  const fetchLocationByCityState = async (city: string, state: string) => {
+    if (!city || !state) {
+      return;
+    }
+    
+    setFetchingLocation(true);
+    
+    try {
+      // Query the API for location by city and state
+      const response = await fetch(`/api/location-cost-of-living/city?city=${encodeURIComponent(city)}&state=${state}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Check if we got results back
+        if (data && data.length > 0) {
+          // Use the first result
+          const locationData = data[0];
+          
+          setSelectedLocation({
+            city: locationData.city,
+            state: locationData.state
+          });
+          
+          // If there's a zip code in the result, store it
+          if (locationData.zip_code) {
+            setSelectedZipCode(locationData.zip_code);
+          }
+          
+          // Update the narrative to include location
+          const updatedNarrative = `${userJourney} and live in ${locationData.city}, ${locationData.state}.`;
+          setUserJourney(updatedNarrative);
+        } else {
+          // No locations found
+          setSelectedLocation(null);
+        }
+      } else {
+        // API error
+        setSelectedLocation(null);
+      }
+    } catch (error) {
+      console.error("Error fetching location data by city/state:", error);
+      setSelectedLocation(null);
+    } finally {
+      setFetchingLocation(false);
+    }
+  };
+  
   const handleStartOver = () => {
     setCurrentStep(1);
     setSelectedPath(null);
@@ -292,7 +399,10 @@ const Pathways = ({
     setGuidedPathComplete(false); // Reset the guided path completion flag
     
     // Reset location selection
+    setSearchByZip(true);
     setSelectedZipCode('');
+    setCitySearchQuery('');
+    setSelectedState('CA');
     setSelectedLocation(null);
     
     // Reset game results
@@ -2519,41 +2629,113 @@ const Pathways = ({
                       </div>
                     </div>
                     
-                    <div className="mb-6">
-                      <label htmlFor="location-zip" className="block text-sm font-medium mb-2">Zip Code</label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="location-zip"
-                          placeholder="Enter zip code (e.g. 90210, 02142, 94103)"
-                          className="flex-1"
-                          value={selectedZipCode}
-                          onChange={(e) => setSelectedZipCode(e.target.value)}
-                          maxLength={5}
-                        />
-                        <Button 
-                          variant="outline" 
-                          className="flex gap-2 items-center"
-                          disabled={selectedZipCode.length !== 5 || fetchingLocation}
-                          onClick={() => fetchLocationByZipCode(selectedZipCode)}
-                        >
-                          {fetchingLocation ? (
-                            <>
-                              <span className="material-icons animate-spin text-sm">refresh</span>
-                              <span>Searching...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span className="material-icons text-sm">search</span>
-                              <span>Find</span>
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      
-                      <p className="text-xs text-gray-500 mt-2">
-                        Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta)
-                      </p>
+                    <div className="flex gap-2 mb-4">
+                      <Button 
+                        variant={searchByZip ? "default" : "outline"}
+                        className={`flex-1 ${searchByZip ? "bg-primary" : ""}`}
+                        onClick={() => setSearchByZip(true)}
+                      >
+                        <span className="flex items-center gap-1">
+                          <span className="material-icons text-sm">pin_drop</span>
+                          Search by Zip Code
+                        </span>
+                      </Button>
+                      <Button 
+                        variant={!searchByZip ? "default" : "outline"} 
+                        className={`flex-1 ${!searchByZip ? "bg-primary" : ""}`}
+                        onClick={() => setSearchByZip(false)}
+                      >
+                        <span className="flex items-center gap-1">
+                          <span className="material-icons text-sm">location_city</span>
+                          Search by City
+                        </span>
+                      </Button>
                     </div>
+                    
+                    {searchByZip ? (
+                      <div className="mb-6">
+                        <label htmlFor="location-zip" className="block text-sm font-medium mb-2">Zip Code</label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="location-zip"
+                            placeholder="Enter zip code (e.g. 90210, 02142, 94103)"
+                            className="flex-1"
+                            value={selectedZipCode}
+                            onChange={(e) => setSelectedZipCode(e.target.value)}
+                            maxLength={5}
+                          />
+                          <Button 
+                            variant="outline" 
+                            className="flex gap-2 items-center"
+                            disabled={selectedZipCode.length !== 5 || fetchingLocation}
+                            onClick={() => fetchLocationByZipCode(selectedZipCode)}
+                          >
+                            {fetchingLocation ? (
+                              <>
+                                <span className="material-icons animate-spin text-sm">refresh</span>
+                                <span>Searching...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="material-icons text-sm">search</span>
+                                <span>Find</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 mt-2">
+                          Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta)
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mb-6">
+                        <label htmlFor="location-city" className="block text-sm font-medium mb-2">City and State</label>
+                        <div className="flex gap-2">
+                          <Input
+                            id="location-city"
+                            placeholder="Enter city name (e.g. San Francisco)"
+                            className="flex-1"
+                            value={citySearchQuery}
+                            onChange={(e) => setCitySearchQuery(e.target.value)}
+                          />
+                          <Select value={selectedState} onValueChange={(value) => setSelectedState(value)}>
+                            <SelectTrigger className="w-[110px]">
+                              <SelectValue placeholder="State" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {usStates.map(state => (
+                                  <SelectItem key={state.code} value={state.code}>{state.code}</SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          <Button 
+                            variant="outline" 
+                            className="flex gap-2 items-center"
+                            disabled={!citySearchQuery || !selectedState || fetchingLocation}
+                            onClick={() => fetchLocationByCityState(citySearchQuery, selectedState)}
+                          >
+                            {fetchingLocation ? (
+                              <>
+                                <span className="material-icons animate-spin text-sm">refresh</span>
+                                <span>Searching...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="material-icons text-sm">search</span>
+                                <span>Find</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 mt-2">
+                          Try popular cities like "San Francisco, CA", "New York, NY", or "Chicago, IL"
+                        </p>
+                      </div>
+                    )}
                     
                     {selectedLocation && (
                       <div className="bg-green-50 border border-green-100 p-4 rounded-lg mb-6">
