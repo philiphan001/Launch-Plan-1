@@ -1224,12 +1224,8 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       throw error;
     }
   },
-  enabled: !!projectionId,
-  // Never use cached data
-  staleTime: 0,
-  // Explicitly force refetch whenever projection ID changes
-  refetchOnMount: 'always',
-  refetchOnWindowFocus: false
+  enabled: !!projectionId, // Only enable this query when we have a projection ID
+  retry: false // Don't retry failed requests
 });
 
 // Create a ref to track previous projection ID

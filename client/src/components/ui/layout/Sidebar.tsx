@@ -153,7 +153,11 @@ const Sidebar = () => {
                           // Extract URL params to determine the active projection
                           const urlParams = new URLSearchParams(window.location.search);
                           const activeId = urlParams.get('id');
-                          const isActive = activeId && parseInt(activeId) === projection.id;
+                          const parsedActiveId = activeId ? parseInt(activeId) : null;
+                          const isActive = parsedActiveId === projection.id;
+                          
+                          // Debug logging for the active projection state
+                          console.log(`Projection ${projection.id} (${projection.name}) - Active ID: ${parsedActiveId} - Is Active: ${isActive}`);
                           
                           return (
                             <li key={projection.id} className="mb-1 flex items-center group">
@@ -161,12 +165,14 @@ const Sidebar = () => {
                                 href="/projections"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  // Use direct browser navigation with different structure
-                                  // First navigate to projections page, then add query params
-                                  window.location.href = `/projections`;
-                                  setTimeout(() => {
-                                    window.location.search = `?id=${projection.id}&t=${new Date().getTime()}`;
-                                  }, 10);
+                                  console.log("Sidebar: Loading projection with ID:", projection.id);
+                                  
+                                  // Use a more reliable method for navigation with query parameters
+                                  const fullUrl = `/projections?id=${projection.id}&t=${new Date().getTime()}`;
+                                  console.log("Navigating to URL:", fullUrl);
+                                  
+                                  // Force a full page reload to clear any cached state
+                                  window.location.href = fullUrl;
                                 }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 

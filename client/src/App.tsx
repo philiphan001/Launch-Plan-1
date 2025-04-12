@@ -198,11 +198,20 @@ function App() {
             // Log the projection ID detection during routing
             if (projectionId) {
               console.log("Loading FinancialProjections with ID:", projectionId);
+              
+              // Add a unique key based on the projection ID to force React to recreate the component
+              return <FinancialProjections 
+                {...authProps} 
+                key={`financial-projection-${projectionId}-${new Date().getTime()}`}
+                initialProjectionId={Number(projectionId)}
+              />;
             }
             
+            // For new projections without ID
             return <FinancialProjections 
               {...authProps} 
-              initialProjectionId={projectionId ? Number(projectionId) : undefined}
+              key="new-financial-projection"
+              initialProjectionId={undefined}
             />;
           }}
         </Route>
