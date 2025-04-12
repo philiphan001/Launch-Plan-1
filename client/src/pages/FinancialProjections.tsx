@@ -1300,6 +1300,19 @@ const FinancialProjections = ({
               const parsedData = JSON.parse(specificProjection.projectionData);
               console.log("Successfully parsed projection data, setting state:", parsedData);
               
+              // Extract and set milestones from the parsed data if available
+              if (parsedData.milestones && Array.isArray(parsedData.milestones)) {
+                console.log("Restoring milestones from saved projection:", parsedData.milestones.length);
+                // Update the milestones in the React Query cache
+                queryClient.setQueryData(['/api/milestones/user', userId], 
+                  parsedData.milestones.map((m: any) => ({
+                    ...m,
+                    // Ensure date is in correct format if it exists
+                    date: m.date || null
+                  }))
+                );
+              }
+              
               // Force a delay to ensure the DOM has updated
               setTimeout(() => {
                 setProjectionData(parsedData);
@@ -1323,7 +1336,7 @@ const FinancialProjections = ({
     };
     
     loadProjection();
-  }, [specificProjection, isLoadingSpecificProjection, activeTab]);
+  }, [specificProjection, isLoadingSpecificProjection, activeTab, queryClient, userId]);
   
   // Update projection data when inputs change
   useEffect(() => {
