@@ -1187,88 +1187,97 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection } = useQuery(
   queryKey: ['/api/financial-projections/detail', projectionId],
   queryFn: async () => {
     if (!projectionId) return null;
-    console.log("Fetching projection data for ID:", projectionId);
-    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+    
+    // Add cache-busting timestamp to ensure fresh data
+    const cacheBuster = new Date().getTime();
+    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster})`);
+    
+    const response = await fetch(`/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`);
     if (!response.ok) throw new Error('Failed to fetch saved projection');
     return response.json();
   },
   enabled: !!projectionId,
-  // Reset the staleTime to 0 to always refetch when projectionId changes
-  staleTime: 0, 
-  // Make it refetch when the projectionId changes
+  // Never use cached data
+  staleTime: 0,
+  // Explicitly force refetch whenever projection ID changes
+  refetchOnMount: 'always',
   refetchOnWindowFocus: false
 });
 
-// Load saved projection data when available
-useEffect(() => {
-  if (savedProjection && !isLoadingSavedProjection) {
-    console.log("Loading saved projection:", savedProjection);
-    
-    // Load the projection name
-    if (savedProjection.name) {
-      setProjectionName(savedProjection.name);
-    }
-    
-    // Load basic projection parameters
-    if (savedProjection.timeframe) {
-      setTimeframe(`${savedProjection.timeframe} Years`);
-    }
-    
-    if (savedProjection.startingAge) {
-      setAge(savedProjection.startingAge);
-    }
-    
-    if (savedProjection.startingSavings) {
-      setStartingSavings(savedProjection.startingSavings);
-    }
-    
-    if (savedProjection.income) {
-      setIncome(savedProjection.income);
-    }
-    
-    if (savedProjection.expenses) {
-      setExpenses(savedProjection.expenses);
-    }
-    
-    if (savedProjection.incomeGrowth) {
-      setIncomeGrowth(savedProjection.incomeGrowth);
-    }
-    
-    if (savedProjection.studentLoanDebt) {
-      setStudentLoanDebt(savedProjection.studentLoanDebt);
-    }
-    
-    // Load configurable parameters
-    if (savedProjection.emergencyFundAmount) {
-      setEmergencyFundAmount(savedProjection.emergencyFundAmount);
-    }
-    
-    if (savedProjection.personalLoanTermYears) {
-      setPersonalLoanTermYears(savedProjection.personalLoanTermYears);
-    }
-    
-    if (savedProjection.personalLoanInterestRate) {
-      setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate);
-    }
-    
-    // Parse the saved projection data
-    if (savedProjection.projectionData) {
-      try {
-        const parsedData = JSON.parse(savedProjection.projectionData);
-        setProjectionData(parsedData);
-      } catch (error) {
-        console.error("Failed to parse saved projection data:", error);
-      }
-    }
-  }
-}, [savedProjection, isLoadingSavedProjection]);
+// Create a ref to track previous projection ID
+const previousProjectionIdRef = useRef<number | null>(null);
 
-const [projectionData, setProjectionData] = useState<any>({
+// Load saved projection data when available - force a hard reset of state when projection ID changes
+useEffect(() => {
+  // First, detect if we've switched to a different projection
+  const didProjectionChange = previousProjectionIdRef.current !== projectionId;
+  
+  // Update the ref
+  previousProjectionIdRef.current = projectionId;
+  
+  // Only proceed if we have projection data and either it just loaded or the projection ID changed
+  if (savedProjection && (!isLoadingSavedProjection || didProjectionChange)) {
+    console.log("Loading saved projection:", savedProjection, "ID changed:", didProjectionChange);
+    
+    // Create a batch of state updates to be executed together for better performance
+    const stateUpdates = () => {
+      // Reset all state values at once
+      
+      // Load the projection name
+      setProjectionName(savedProjection.name || `Projection - ${new Date().toLocaleDateString()}`);
+      
+      // Load basic projection parameters
+      setTimeframe(savedProjection.timeframe ? `${savedProjection.timeframe} Years` : "10 Years");
+      setAge(savedProjection.startingAge || 25);
+      setStartingSavings(savedProjection.startingSavings || 5000);
+      setIncome(savedProjection.income || 40000);
+      setExpenses(savedProjection.expenses || 35000);
+      setIncomeGrowth(savedProjection.incomeGrowth || 3.0);
+      setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
+      
+      // Load configurable parameters - use defaults if not present
+      setEmergencyFundAmount(savedProjection.emergencyFundAmount || 10000);
+      setPersonalLoanTermYears(savedProjection.personalLoanTermYears || 5);
+      setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate || 8.0);
+      
+      // Parse the saved projection data
+      if (savedProjection.projectionData) {
+        try {
+          const parsedData = JSON.parse(savedProjection.projectionData);
+          
+          // Add a key with the current projection ID to force React to treat this as new data
+          // and re-render all dependent components
+          const dataWithKey = {
+            ...parsedData,
+            _key: `projection-${projectionId}-${new Date().getTime()}`
+          };
+          
+          console.log("Setting projection data with key:", dataWithKey._key);
+          setProjectionData(dataWithKey);
+        } catch (error) {
+          console.error("Failed to parse saved projection data:", error);
+        }
+      }
+    };
+    
+    // Execute all state updates as a batch
+    stateUpdates();
+    
+    // Log that state has been completely reset based on the new projection
+    console.log("State reset complete for projection ID:", projectionId);
+  }
+}, [savedProjection, isLoadingSavedProjection, projectionId]);
+
+// Initialize projection data with a key that depends on projectionId to force re-renders
+const [projectionData, setProjectionData] = useState<any>(() => {
+  return {
     netWorth: [startingSavings],
     ages: [age],
     income: [income],
-    expenses: [expenses]
-  });
+    expenses: [expenses],
+    _key: projectionId || 'new' // Add a key to force state change detection
+  };
+});
   
   // Update projection data when inputs change
   useEffect(() => {
