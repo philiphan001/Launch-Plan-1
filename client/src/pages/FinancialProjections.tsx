@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { AuthProps } from "@/interfaces/auth";
 import { Card, CardContent } from "@/components/ui/card";
@@ -320,18 +320,33 @@ const FinancialProjections = ({
     }
   });
   
-  // Fetch specific projection if projectionId is provided
+  // Use a state variable to store the current projection ID and force refetching
+  const [currentProjectionId, setCurrentProjectionId] = useState<number | undefined>(projectionId);
+  
+  // Update currentProjectionId when projectionId changes
+  useEffect(() => {
+    if (projectionId !== currentProjectionId) {
+      console.log(`Projection ID changed from ${currentProjectionId} to ${projectionId}`);
+      setCurrentProjectionId(projectionId);
+    }
+  }, [projectionId, currentProjectionId]);
+  
+  // Fetch specific projection if currentProjectionId is provided (using a unique query key per ID)
   const { data: specificProjection, isLoading: isLoadingSpecificProjection, refetch: refetchSpecificProjection } = useQuery({
-    queryKey: ['/api/financial-projections/detail', projectionId],
+    // Add timestamp to force unique key per render
+    queryKey: ['/api/financial-projections/detail', currentProjectionId, Date.now()],
     queryFn: async () => {
-      if (!projectionId) return null;
-      console.log("Fetching projection with ID:", projectionId);
-      const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+      if (!currentProjectionId) return null;
+      console.log("Fetching projection with ID:", currentProjectionId);
+      
+      // Force a direct fetch every time bypassing the cache completely
+      const response = await fetch(`/api/financial-projections/detail/${currentProjectionId}?t=${Date.now()}`);
       if (!response.ok) throw new Error('Failed to fetch specific projection');
       return response.json();
     },
-    enabled: !!projectionId,
+    enabled: !!currentProjectionId,
     refetchOnWindowFocus: false
+    // Removed staleTime: 0 which was causing an error
   });
 
   // Make careers data available globally for Python calculator access
@@ -1202,13 +1217,31 @@ const FinancialProjections = ({
     expenses: [expenses]
   });
   
-  // Effect to handle changes in projectionId and refetch data when it changes
-  useEffect(() => {
-    if (projectionId) {
-      console.log(`Projection ID changed to: ${projectionId}, refetching projection data`);
-      refetchSpecificProjection();
+  // Force a complete component reset when projectionId changes
+  const resetAllProjectionData = useCallback(() => {
+    console.log("Resetting all projection data states");
+    
+    // Clear projection data completely
+    setProjectionData({
+      ages: [],
+      netWorth: [],
+      savingsValue: [],
+      income: [],
+      expenses: []
+    });
+    
+    // Reset chart if it exists
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+      chartInstance.current = null;
     }
-  }, [projectionId, refetchSpecificProjection]);
+  }, []);
+  
+  // Effect to handle changes in projectionId
+  useEffect(() => {
+    console.log(`Projection ID changed to: ${projectionId}`);
+    resetAllProjectionData();
+  }, [projectionId, resetAllProjectionData]);
 
   // Effect to handle loading a specific projection when specificProjection data changes
   useEffect(() => {
@@ -1216,6 +1249,12 @@ const FinancialProjections = ({
       if (specificProjection && !isLoadingSpecificProjection) {
         try {
           console.log("Loading saved projection:", specificProjection);
+          
+          // Destroy the current chart to prepare for new data
+          if (chartInstance.current) {
+            chartInstance.current.destroy();
+            chartInstance.current = null;
+          }
           
           // Update form values based on the loaded projection
           if (specificProjection.startingAge !== undefined) setAge(specificProjection.startingAge);
@@ -1241,18 +1280,34 @@ const FinancialProjections = ({
           
           // Parse and set the projection data
           if (specificProjection.projectionData) {
-            const parsedData = JSON.parse(specificProjection.projectionData);
-            setProjectionData(parsedData);
-            console.log("Loaded projection data:", parsedData);
+            try {
+              const parsedData = JSON.parse(specificProjection.projectionData);
+              console.log("Successfully parsed projection data, setting state:", parsedData);
+              
+              // Force a delay to ensure the DOM has updated
+              setTimeout(() => {
+                setProjectionData(parsedData);
+                
+                // Force re-render of the chart
+                if (chartRef.current) {
+                  const ctx = chartRef.current.getContext("2d");
+                  if (ctx) {
+                    chartInstance.current = createMainProjectionChart(ctx, parsedData, activeTab);
+                  }
+                }
+              }, 100);
+            } catch (parseError) {
+              console.error("Error parsing projection data JSON:", parseError);
+            }
           }
         } catch (error) {
-          console.error("Error parsing saved projection data:", error);
+          console.error("Error loading saved projection:", error);
         }
       }
     };
     
     loadProjection();
-  }, [specificProjection, isLoadingSpecificProjection]);
+  }, [specificProjection, isLoadingSpecificProjection, activeTab]);
   
   // Update projection data when inputs change
   useEffect(() => {
