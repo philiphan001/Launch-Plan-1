@@ -2391,25 +2391,7 @@ const Pathways = ({
         </div>
       </div>
       
-      {/* Progress indicator - Clean and minimal */}
-      <div className="flex items-center justify-between mb-10 relative">
-        <div className="absolute h-1 bg-gradient-to-r from-gray-200 via-gray-200 to-gray-200 left-0 right-0 top-1/2 -translate-y-1/2 z-0"></div>
-        <div className={`absolute h-1 bg-gradient-to-r from-green-500 via-cyan-500 to-blue-500 left-0 right-0 top-1/2 -translate-y-1/2 z-0 transition-all duration-500 ease-in-out`} 
-          style={{ width: `${(currentStep - 1) * 20}%` }}></div>
-        
-        {[1, 2, 3, 4, 5, 6].map((step) => (
-          <div key={step} className="z-10 flex flex-col items-center">
-            <div 
-              className={`h-10 w-10 rounded-full flex items-center justify-center shadow-md transition-all duration-300 
-              ${currentStep >= step 
-                ? 'bg-gradient-to-br from-green-400 to-blue-500 scale-110' 
-                : 'bg-white border border-gray-200'}`}
-            >
-              {/* No number displayed */}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Progress indicator removed as requested */}
       
       {renderCurrentStep()}
     </div>
