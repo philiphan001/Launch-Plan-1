@@ -1328,7 +1328,15 @@ useEffect(() => {
       // Parse the saved projection data
       if (savedProjection.projectionData) {
         try {
-          const parsedData = JSON.parse(savedProjection.projectionData);
+          // Handle both string and object formats for projectionData
+          let parsedData;
+          if (typeof savedProjection.projectionData === 'string') {
+            console.log("Parsing string projectionData...");
+            parsedData = JSON.parse(savedProjection.projectionData);
+          } else {
+            console.log("Using object projectionData directly...");
+            parsedData = savedProjection.projectionData;
+          }
           
           // Add a key with the current projection ID to force React to treat this as new data
           // and re-render all dependent components
@@ -1341,6 +1349,15 @@ useEffect(() => {
           setProjectionData(dataWithKey);
         } catch (error) {
           console.error("Failed to parse saved projection data:", error);
+          // If we fail to parse, we may need to use the projectionData directly
+          if (typeof savedProjection.projectionData === 'object') {
+            console.log("Using projectionData object directly after parse error");
+            const dataWithKey = {
+              ...savedProjection.projectionData,
+              _key: `projection-${projectionId}-${new Date().getTime()}-recovery`
+            };
+            setProjectionData(dataWithKey);
+          }
         }
       }
     };
