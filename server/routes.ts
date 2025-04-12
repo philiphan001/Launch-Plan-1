@@ -556,22 +556,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const parsed = JSON.parse(projection.projectionData);
           console.log("STRING PARSED SUCCESSFULLY with keys:", Object.keys(parsed));
           console.log("Sample data points (first values):");
-          if (parsed.netWorth) console.log("- netWorth[0]:", parsed.netWorth[0]);
-          if (parsed.income) console.log("- income[0]:", parsed.income[0]);
-          if (parsed.expenses) console.log("- expenses[0]:", parsed.expenses[0]);
-          if (parsed.ages) console.log("- ages[0]:", parsed.ages[0]);
+          if (parsed.netWorth && Array.isArray(parsed.netWorth)) {
+            console.log("- netWorth[0]:", parsed.netWorth[0]);
+          }
+          if (parsed.income && Array.isArray(parsed.income)) {
+            console.log("- income[0]:", parsed.income[0]);
+          }
+          if (parsed.expenses && Array.isArray(parsed.expenses)) {
+            console.log("- expenses[0]:", parsed.expenses[0]);
+          }
+          if (parsed.ages && Array.isArray(parsed.ages)) {
+            console.log("- ages[0]:", parsed.ages[0]);
+          }
         } catch (e) {
           console.log("❌ ERROR PARSING PROJECTION DATA STRING:", e);
         }
       } else {
         console.log("🔢 Projection data is already an OBJECT");
         console.log("Object keys:", Object.keys(projection.projectionData || {}));
+        
+        // Safely handle possible undefined/null projectionData
         const pd = projection.projectionData || {};
         console.log("Sample data points (first values):");
-        if (pd.netWorth) console.log("- netWorth[0]:", pd.netWorth[0]);
-        if (pd.income) console.log("- income[0]:", pd.income[0]);
-        if (pd.expenses) console.log("- expenses[0]:", pd.expenses[0]);
-        if (pd.ages) console.log("- ages[0]:", pd.ages[0]);
+        
+        // Type narrowing to handle possible undefined arrays
+        const netWorth = (pd as any).netWorth;
+        const income = (pd as any).income;
+        const expenses = (pd as any).expenses;
+        const ages = (pd as any).ages;
+        
+        if (netWorth && Array.isArray(netWorth) && netWorth.length > 0) {
+          console.log("- netWorth[0]:", netWorth[0]);
+        }
+        if (income && Array.isArray(income) && income.length > 0) {
+          console.log("- income[0]:", income[0]);
+        }
+        if (expenses && Array.isArray(expenses) && expenses.length > 0) {
+          console.log("- expenses[0]:", expenses[0]);
+        }
+        if (ages && Array.isArray(ages) && ages.length > 0) {
+          console.log("- ages[0]:", ages[0]);
+        }
       }
       console.log("=======================================");
       
@@ -743,6 +768,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SPECIAL ENDPOINT: Load projection by ID and recalculate
+  app.get("/api/financial-projections/load-and-calculate/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log("\n\n🚀 LOADING AND CALCULATING PROJECTION:", id);
+      
+      // Step 1: Get the projection from database
+      const projection = await activeStorage.getFinancialProjection(id);
+      if (!projection) {
+        console.log("⛔ Projection not found with ID:", id);
+        return res.status(404).json({ message: "Projection not found" });
+      }
+      
+      console.log("✅ Found projection:", projection.id, projection.name);
+      console.log("Age:", projection.startingAge);
+      console.log("Income:", projection.income);
+      console.log("Expenses:", projection.expenses);
+      
+      // Step 2: Create calculator input from projection parameters
+      // This converts stored parameters into the format expected by the Python calculator
+      const calculatorInput = {
+        startAge: projection.startingAge || 25,
+        yearsToProject: projection.timeframe || 10,
+        pathType: "baseline",
+        costOfLivingFactor: projection.incomeAdjustmentFactor || 1.0,
+        emergencyFundAmount: projection.emergencyFundAmount || 10000,
+        personalLoanTermYears: projection.personalLoanTermYears || 5,
+        personalLoanInterestRate: projection.personalLoanInterestRate || 8.0,
+        
+        // Assets
+        assets: [
+          {
+            type: "investment",
+            name: "Savings",
+            initialValue: projection.startingSavings || 5000,
+            growthRate: 0.03 // 3% annual growth
+          }
+        ],
+        
+        // Liabilities
+        liabilities: (projection.studentLoanDebt !== null && projection.studentLoanDebt !== undefined && projection.studentLoanDebt > 0) ? [
+          {
+            type: "studentLoan",
+            name: "Student Loan",
+            initialBalance: projection.studentLoanDebt,
+            interestRate: 0.05, // 5% interest rate
+            termYears: 10 // 10 year term
+          }
+        ] : [],
+        
+        // Income sources
+        incomes: [
+          {
+            type: "salary",
+            name: "Primary Income",
+            annualAmount: projection.income || 40000,
+            growthRate: (projection.incomeGrowth || 3.0) / 100, // Convert percentage to decimal
+            startYear: 0
+          }
+        ],
+        
+        // Simplified expenditures approach - we don't have detailed expenses in projection
+        expenditures: [
+          {
+            type: "living",
+            name: "All Expenses",
+            annualAmount: projection.expenses || 35000,
+            inflationRate: 0.03
+          }
+        ],
+        
+        // Empty milestones array - complex milestones are not yet supported in saved projections
+        milestones: []
+      };
+      
+      console.log("📈 Calculator input created from projection parameters");
+      
+      // Step 3: Call the Python calculator
+      console.log("🧮 Calling Python calculator with input parameters...");
+      
+      // Use path.resolve and the current directory for ESM compatibility
+      const pythonScriptPath = path.resolve("server/python/calculator.py");
+      
+      // Check if the Python script exists
+      if (!fs.existsSync(pythonScriptPath)) {
+        return res.status(500).json({ 
+          message: "Financial calculator script not found", 
+          path: pythonScriptPath 
+        });
+      }
+      
+      // Direct Python execution without temporary files
+      const pythonProcess = spawn("python3", [pythonScriptPath], {
+        env: { ...process.env },
+      });
+      
+      let resultData = "";
+      let errorData = "";
+      
+      // Send input data to Python process stdin
+      pythonProcess.stdin.write(JSON.stringify(calculatorInput));
+      pythonProcess.stdin.end();
+      
+      pythonProcess.stdout.on("data", (data) => {
+        resultData += data.toString();
+      });
+      
+      pythonProcess.stderr.on("data", (data) => {
+        errorData += data.toString();
+        console.error("Python stderr:", data.toString());
+      });
+      
+      pythonProcess.on("close", (code) => {
+        if (code !== 0) {
+          console.error("Python script exited with code", code);
+          console.error("Error:", errorData);
+          return res.status(500).json({ 
+            message: "Financial calculation failed", 
+            error: errorData 
+          });
+        }
+        
+        try {
+          // Parse the Python calculator output
+          const calculationResult = JSON.parse(resultData);
+          
+          // Step 4: Create combined response with both projection data and calculation results
+          const combinedResponse = {
+            ...projection,              // Original projection data from database
+            calculationResult,          // Fresh calculation results from Python
+            freshlyCalculated: true,    // Flag indicating this was freshly calculated
+            timestamp: new Date().toISOString() // Timestamp for the calculation
+          };
+          
+          console.log("✅ Successfully calculated and combined results");
+          console.log("🔄 Sending back combined projection + calculation data\n\n");
+          
+          return res.json(combinedResponse);
+        } catch (error) {
+          console.error("Failed to parse Python output:", error);
+          return res.status(500).json({ 
+            message: "Failed to parse calculation results", 
+            error: errorData 
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Error in load-and-calculate endpoint:", error);
+      return res.status(500).json({ 
+        message: "Failed to load and calculate projection", 
+        error: String(error) 
+      });
+    }
+  });
+  
   // Python financial calculator route
   app.post("/api/calculate/financial-projection", async (req: Request, res: Response) => {
     try {

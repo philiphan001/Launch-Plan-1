@@ -167,14 +167,71 @@ const Sidebar = () => {
                                 href="javascript:void(0)"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  console.log("Sidebar: Loading projection with ID:", projection.id);
+                                  console.log("🚀 SIDEBAR: Loading projection with ID:", projection.id);
                                   
-                                  // Simple approach - use reload instead of trying to make React Query work
+                                  // Get current location params to preserve in URL
                                   const timestamp = new Date().getTime();
-                                  console.log(`🔥 Full page reload for projection ${projection.id}`);
                                   
-                                  // Force a complete page reload to clear all state
-                                  window.location.href = `/projections?id=${projection.id}&t=${timestamp}`;
+                                  // SPECIAL CASE: Use our new direct calculator endpoint instead
+                                  // This will fetch AND calculate fresh projection data
+                                  console.log(`📊 Using FRESH CALCULATION endpoint for projection ${projection.id}`);
+                                  
+                                  try {
+                                    // Loading toast
+                                    toast({
+                                      title: "Loading projection...",
+                                      description: `Preparing ${projection.name}`,
+                                      variant: "default"
+                                    });
+                                    
+                                    // First invalidate any cached data for this projection
+                                    queryClient.invalidateQueries({ 
+                                      queryKey: ['/api/financial-projections/detail', projection.id]
+                                    });
+                                    
+                                    // Then use our new special endpoint that will recalculate the projection
+                                    fetch(`/api/financial-projections/load-and-calculate/${projection.id}?_=${timestamp}`, {
+                                      headers: {
+                                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                                        'Pragma': 'no-cache'
+                                      }
+                                    })
+                                    .then(response => {
+                                      if (!response.ok) {
+                                        throw new Error(`Failed to load projection: ${response.status}`);
+                                      }
+                                      return response.json();
+                                    })
+                                    .then(data => {
+                                      console.log("✅ FRESH CALCULATION SUCCESS:", data.id, data.name);
+                                      
+                                      // Success toast
+                                      toast({
+                                        title: "Projection loaded",
+                                        description: `Successfully loaded ${data.name}`,
+                                        variant: "default"
+                                      });
+                                      
+                                      // Force a page reload - the cleanest approach
+                                      // This guarantees a complete state reset
+                                      window.location.href = `/projections?id=${projection.id}&t=${timestamp}&fresh=true`;
+                                    })
+                                    .catch(error => {
+                                      console.error("Error loading projection:", error);
+                                      toast({
+                                        title: "Error loading projection",
+                                        description: error.message,
+                                        variant: "destructive"
+                                      });
+                                    });
+                                  } catch (err) {
+                                    console.error("Exception in projection loading:", err);
+                                    toast({
+                                      title: "Error loading projection",
+                                      description: String(err),
+                                      variant: "destructive"
+                                    });
+                                  }
                                 }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 
