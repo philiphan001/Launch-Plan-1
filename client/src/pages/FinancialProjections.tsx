@@ -1507,7 +1507,8 @@ const FinancialProjections = ({
           <Button 
             variant="outline"
             onClick={() => {
-              setLocation('/projections');
+              // Force a full page reload to the projections page
+              window.location.href = '/projections';
             }}
           >
             Create New Projection

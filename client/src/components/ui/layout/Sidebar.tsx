@@ -107,7 +107,9 @@ const Sidebar = () => {
                             <li className="my-1" key={projection.id}>
                               <div
                                 onClick={() => {
-                                  setLocation(`/projections/${projection.id}`);
+                                  // Force a full page reload by directly setting window.location.href 
+                                  // instead of using client-side routing
+                                  window.location.href = `/projections/${projection.id}`;
                                 }}
                                 className={`block py-2 px-2 rounded text-sm truncate cursor-pointer ${
                                   location === `/projections/${projection.id}`
