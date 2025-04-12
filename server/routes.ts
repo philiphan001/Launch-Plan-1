@@ -529,6 +529,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get financial projection detail" });
     }
   });
+  
+  app.delete("/api/financial-projections/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid projection ID format" });
+      }
+      
+      // Check if projection exists
+      const projection = await activeStorage.getFinancialProjection(id);
+      if (!projection) {
+        return res.status(404).json({ message: "Financial projection not found" });
+      }
+      
+      await activeStorage.deleteFinancialProjection(id);
+      res.status(200).json({ message: "Financial projection deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting financial projection:", error);
+      res.status(500).json({ message: "Failed to delete financial projection" });
+    }
+  });
 
   // Career paths routes
   app.get("/api/career-paths", async (req: Request, res: Response) => {
