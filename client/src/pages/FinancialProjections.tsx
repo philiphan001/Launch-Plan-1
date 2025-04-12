@@ -116,6 +116,8 @@ interface Milestone {
   educationAnnualCost?: number;
   educationAnnualLoan?: number;
   targetOccupation?: string;
+  educationField?: string;
+  targetCareer?: string;
   workStatus?: string; // "no", "part-time", or "full-time"
   partTimeIncome?: number;
   returnToSameProfession?: boolean;

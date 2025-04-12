@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface NavItem {
   path: string;
@@ -24,17 +25,25 @@ const navItems: NavItem[] = [
 ];
 
 const Sidebar = () => {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [savedProjections, setSavedProjections] = useState<FinancialProjection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandProjections, setExpandProjections] = useState(false);
+  const { toast } = useToast();
   
   // For demonstration, we'll use userId 1
   const userId = 1;
   
+  // Automatically expand the projections if we're on the projections page
+  useEffect(() => {
+    if (location.startsWith("/projections")) {
+      setExpandProjections(true);
+    }
+  }, [location]);
+  
   useEffect(() => {
     // Only fetch projections if we're on the projections page or projections are expanded
-    if (location === "/projections" || expandProjections) {
+    if (location.startsWith("/projections") || expandProjections) {
       fetchSavedProjections();
     }
   }, [location, expandProjections]);
@@ -55,6 +64,52 @@ const Sidebar = () => {
       setIsLoading(false);
     }
   };
+  
+  const handleDeleteProjection = async (e: React.MouseEvent, projectionId: number, projectionName: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Confirm before deleting
+    if (!confirm(`Are you sure you want to delete the projection "${projectionName}"?`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/financial-projections/${projectionId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // If we're viewing this projection, redirect to the main projections page
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentId = urlParams.get('id');
+        
+        if (currentId && parseInt(currentId) === projectionId) {
+          setLocation('/projections');
+        }
+        
+        // Refresh the list
+        fetchSavedProjections();
+        
+        toast({
+          title: "Projection deleted",
+          description: `Successfully deleted "${projectionName}"`,
+        });
+      } else {
+        throw new Error("Failed to delete projection");
+      }
+    } catch (error) {
+      console.error("Error deleting projection:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete projection. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Check if we're on a projections page by analyzing the URL
+  const isProjectionsPage = location.startsWith("/projections");
 
   return (
     <aside className="w-16 md:w-64 bg-white shadow-lg flex-shrink-0 sticky top-14 h-[calc(100vh-56px)] overflow-y-auto z-5">
@@ -65,7 +120,7 @@ const Sidebar = () => {
               <Link 
                 href={item.path}
                 className={`flex items-center px-4 py-3 ${
-                  location === item.path
+                  (location === item.path || (item.path === "/projections" && isProjectionsPage))
                     ? "text-primary bg-blue-50 border-l-4 border-primary"
                     : "text-gray-700 hover:bg-gray-100 hover:text-primary"
                 }`}
@@ -94,16 +149,34 @@ const Sidebar = () => {
                       ) : savedProjections.length === 0 ? (
                         <li className="text-sm text-gray-500 pl-4 py-1">No saved projections</li>
                       ) : (
-                        savedProjections.map(projection => (
-                          <li key={projection.id} className="mb-1">
-                            <Link
-                              href={`/projections?id=${projection.id}`}
-                              className="text-sm text-gray-600 hover:text-primary pl-4 py-1 block truncate"
-                            >
-                              {projection.name}
-                            </Link>
-                          </li>
-                        ))
+                        savedProjections.map(projection => {
+                          // Extract URL params to determine the active projection
+                          const urlParams = new URLSearchParams(window.location.search);
+                          const activeId = urlParams.get('id');
+                          const isActive = activeId && parseInt(activeId) === projection.id;
+                          
+                          return (
+                            <li key={projection.id} className="mb-1 flex items-center group">
+                              <Link
+                                href={`/projections?id=${projection.id}`}
+                                className={`text-sm flex-grow truncate pl-4 py-1 block ${
+                                  isActive 
+                                    ? "text-primary font-medium" 
+                                    : "text-gray-600 hover:text-primary"
+                                }`}
+                              >
+                                {projection.name}
+                              </Link>
+                              <button
+                                onClick={(e) => handleDeleteProjection(e, projection.id, projection.name)}
+                                className="hidden group-hover:inline-flex text-gray-400 hover:text-red-500 rounded-full p-1"
+                                title="Delete projection"
+                              >
+                                <span className="material-icons text-sm">delete</span>
+                              </button>
+                            </li>
+                          );
+                        })
                       )}
                     </ul>
                   )}
