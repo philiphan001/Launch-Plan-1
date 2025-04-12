@@ -1303,14 +1303,81 @@ const FinancialProjections = ({
               // Extract and set milestones from the parsed data if available
               if (parsedData.milestones && Array.isArray(parsedData.milestones)) {
                 console.log("Restoring milestones from saved projection:", parsedData.milestones.length);
+                
                 // Update the milestones in the React Query cache
-                queryClient.setQueryData(['/api/milestones/user', userId], 
-                  parsedData.milestones.map((m: any) => ({
-                    ...m,
-                    // Ensure date is in correct format if it exists
-                    date: m.date || null
-                  }))
-                );
+                const formattedMilestones = parsedData.milestones.map((m: any) => ({
+                  ...m,
+                  // Ensure date is in correct format if it exists
+                  date: m.date || null
+                }));
+                
+                queryClient.setQueryData(['/api/milestones/user', userId], formattedMilestones);
+                
+                // Now we need to recalculate the projection based on these milestones
+                // This ensures the expenses and other calculations reflect the milestone data
+                if (formattedMilestones.length > 0) {
+                  console.log("Re-running Python calculator with loaded milestones:", formattedMilestones);
+                  
+                  // Get the timeframe from the loaded projection
+                  const projectionYears = specificProjection.timeframe || years;
+                  
+                  // Run the Python calculator with the restored milestones
+                  const calculatorInput = generatePythonCalculatorInput(
+                    age,
+                    projectionYears,
+                    startingSavings,
+                    income, 
+                    incomeGrowth,
+                    studentLoanDebt,
+                    formattedMilestones,
+                    costOfLivingFactor,
+                    locationCostData,
+                    emergencyFundAmount,
+                    personalLoanTermYears,
+                    personalLoanInterestRate,
+                    0.05, // Default retirement rate
+                    0.07  // Default retirement growth rate
+                  );
+                  
+                  // Add the careers data if available
+                  if (careers && careers.length > 0) {
+                    calculatorInput.careersData = careers.map((career: any) => ({
+                      id: career.id,
+                      title: career.title,
+                      median_salary: career.median_salary || 0,
+                      entry_salary: career.entry_salary || 0,
+                      experienced_salary: career.experienced_salary || 0
+                    }));
+                  }
+                  
+                  // We'll try to compute this in the background but will still use the saved projection data
+                  // as the primary source for the UI
+                  calculateFinancialProjection(calculatorInput)
+                    .then(result => {
+                      console.log("Recalculated projection with loaded milestones:", result);
+                      
+                      // Add milestones to the result
+                      const resultWithMilestones = {
+                        ...result,
+                        milestones: formattedMilestones
+                      };
+                      
+                      // Update the projection data with the new calculation
+                      setProjectionData(resultWithMilestones);
+                      
+                      // Draw the chart with the new data
+                      if (chartRef.current) {
+                        const ctx = chartRef.current.getContext("2d");
+                        if (ctx && chartInstance.current) {
+                          chartInstance.current.destroy();
+                          chartInstance.current = createMainProjectionChart(ctx, resultWithMilestones, activeTab);
+                        }
+                      }
+                    })
+                    .catch(error => {
+                      console.error("Error recalculating with loaded milestones:", error);
+                    });
+                }
               }
               
               // Force a delay to ensure the DOM has updated
@@ -1735,6 +1802,14 @@ const FinancialProjections = ({
                         const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
                         const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
                            
+                        // Ensure milestones are included in projection data
+                        const projectionDataWithMilestones = {
+                          ...projectionData,
+                          milestones: milestones || [] // Ensure milestones are included
+                        };
+                        
+                        console.log("Saving projection with milestones:", milestones?.length || 0);
+                        
                         const response = await fetch('/api/financial-projections', {
                           method: 'POST',
                           headers: {
@@ -1750,7 +1825,7 @@ const FinancialProjections = ({
                             expenses: Math.round(adjustedExpenses),
                             incomeGrowth,
                             studentLoanDebt,
-                            projectionData: JSON.stringify(projectionData),
+                            projectionData: JSON.stringify(projectionDataWithMilestones), // Save with milestones
                             includesCollegeCalculation: !!includedCollegeCalc,
                             includesCareerCalculation: !!includedCareerCalc,
                             collegeCalculationId: includedCollegeCalc?.id || null,
