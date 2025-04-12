@@ -320,7 +320,7 @@ const FinancialProjections = ({
     }
   });
   
-  // Use a state variable to store the current projection ID and force refetching
+  // Use a state variable to store the current projection ID
   const [currentProjectionId, setCurrentProjectionId] = useState<number | undefined>(projectionId);
   
   // Update currentProjectionId when projectionId changes
@@ -328,25 +328,39 @@ const FinancialProjections = ({
     if (projectionId !== currentProjectionId) {
       console.log(`Projection ID changed from ${currentProjectionId} to ${projectionId}`);
       setCurrentProjectionId(projectionId);
+      
+      // Reset the chart and state when projection changes
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+        chartInstance.current = null;
+      }
+      
+      // Reset projection data to force recalculation
+      setProjectionData(null);
     }
   }, [projectionId, currentProjectionId]);
   
-  // Fetch specific projection if currentProjectionId is provided (using a unique query key per ID)
-  const { data: specificProjection, isLoading: isLoadingSpecificProjection, refetch: refetchSpecificProjection } = useQuery({
-    // Add timestamp to force unique key per render
-    queryKey: ['/api/financial-projections/detail', currentProjectionId, Date.now()],
+  // Fetch specific projection if currentProjectionId is provided
+  const { data: specificProjection, isLoading: isLoadingSpecificProjection } = useQuery({
+    // Fixed query key - remove timestamp so we get a cache hit
+    queryKey: ['/api/financial-projections/detail', currentProjectionId],
     queryFn: async () => {
       if (!currentProjectionId) return null;
       console.log("Fetching projection with ID:", currentProjectionId);
       
-      // Force a direct fetch every time bypassing the cache completely
-      const response = await fetch(`/api/financial-projections/detail/${currentProjectionId}?t=${Date.now()}`);
+      // Make a direct fetch with a cache-busting query parameter
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/financial-projections/detail/${currentProjectionId}?t=${timestamp}`);
+      
       if (!response.ok) throw new Error('Failed to fetch specific projection');
-      return response.json();
+      const data = await response.json();
+      console.log(`Received projection data for ID ${currentProjectionId}:`, data);
+      return data;
     },
     enabled: !!currentProjectionId,
-    refetchOnWindowFocus: false
-    // Removed staleTime: 0 which was causing an error
+    refetchOnWindowFocus: false,
+    staleTime: 0, // Consider the data stale immediately
+    cacheTime: 0  // Don't cache the data at all
   });
 
   // Make careers data available globally for Python calculator access
