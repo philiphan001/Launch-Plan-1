@@ -1279,25 +1279,36 @@ const [projectionData, setProjectionData] = useState<any>({
           date: m.date || null,
           yearsAway: m.yearsAway || null,
           financialImpact: m.financialImpact || null,
+          // Required fields for all milestone types to ensure consistency
+          workStatus: m.workStatus || "yes", // Default to working
+          partTimeIncome: m.partTimeIncome || 0,
+          returnToSameProfession: m.returnToSameProfession || false,
+          // Marriage-specific fields
           spouseOccupation: m.spouseOccupation || null,
           spouseIncome: m.spouseIncome || null,
           spouseAssets: m.spouseAssets || null,
           spouseLiabilities: m.spouseLiabilities || null,
+          // Home-specific fields
           homeValue: m.homeValue || null,
           homeDownPayment: m.homeDownPayment || null,
           homeMonthlyPayment: m.homeMonthlyPayment || null,
+          // Car-specific fields
           carValue: m.carValue || null,
           carDownPayment: m.carDownPayment || null,
           carMonthlyPayment: m.carMonthlyPayment || null,
+          // Children-specific fields
           childrenCount: m.childrenCount || null,
           childrenExpensePerYear: m.childrenExpensePerYear || null,
+          // Education-specific fields
           educationCost: m.educationCost || null,
-          // Add education specific fields
           educationType: m.educationType || null,
           educationYears: m.educationYears || null,
           educationAnnualCost: m.educationAnnualCost || null,
           educationAnnualLoan: m.educationAnnualLoan || null,
           targetOccupation: m.targetOccupation || null,
+          educationField: m.educationField || null,
+          targetCareer: m.targetCareer || null,
+          // General fields
           active: m.active !== undefined ? m.active : true,
           completed: m.completed !== undefined ? m.completed : false,
           details: m.details || {},
@@ -1353,17 +1364,41 @@ const [projectionData, setProjectionData] = useState<any>({
         // Add milestones to the projection data (with properly transformed years)
         const resultWithMilestones = {
           ...result,
-          milestones: formattedMilestones.map(m => ({
-            ...m,
-            // Ensure yearsAway is a number relative to the start age
-            yearsAway: m.yearsAway !== null ? m.yearsAway : 
-              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25))),
-            // Add fields that TypeScript expects for Milestone type
-            workStatus: m.workStatus || null,
-            partTimeIncome: m.partTimeIncome || null,
-            returnToSameProfession: m.returnToSameProfession || false,
-            details: m.details || {}
-          }))
+          milestones: formattedMilestones.map(m => {
+            // Create a standardized milestone object with all required fields
+            const standardizedMilestone = {
+              ...m,
+              // Ensure yearsAway is a number relative to the start age
+              yearsAway: m.yearsAway !== null ? m.yearsAway : 
+                (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25))),
+              // Add fields that TypeScript expects for all Milestone types
+              workStatus: m.workStatus || "yes",
+              partTimeIncome: m.partTimeIncome || 0,
+              returnToSameProfession: m.returnToSameProfession || false,
+              details: m.details || {},
+              // Marriage-specific fields
+              spouseOccupation: m.spouseOccupation || "",
+              spouseIncome: m.spouseIncome || 0,
+              spouseAssets: m.spouseAssets || 0,
+              spouseLiabilities: m.spouseLiabilities || 0,
+              // Education-specific fields
+              educationCost: m.educationCost || 0,
+              educationField: m.educationField || "",
+              targetCareer: m.targetCareer || "",
+              // Home-specific fields
+              homeValue: m.homeValue || 0,
+              homeDownPayment: m.homeDownPayment || 0,
+              homeMonthlyPayment: m.homeMonthlyPayment || 0,
+              // Car-specific fields
+              carValue: m.carValue || 0,
+              carDownPayment: m.carDownPayment || 0,
+              carMonthlyPayment: m.carMonthlyPayment || 0,
+              // Children-specific fields
+              childrenCount: m.childrenCount || 0,
+              childrenExpensePerYear: m.childrenExpensePerYear || 0
+            };
+            return standardizedMilestone;
+          })
         };
         
         console.log("Adding milestones to projection data:", {
