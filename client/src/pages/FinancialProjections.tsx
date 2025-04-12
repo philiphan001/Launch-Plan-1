@@ -320,6 +320,26 @@ const FinancialProjections = ({
     }
   });
   
+  // Define resetAllProjectionData function before using it
+  const resetAllProjectionData = useCallback(() => {
+    console.log("Resetting all projection data states");
+    
+    // Clear projection data completely
+    setProjectionData({
+      ages: [],
+      netWorth: [],
+      savingsValue: [],
+      income: [],
+      expenses: []
+    });
+    
+    // Reset chart if it exists
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+      chartInstance.current = null;
+    }
+  }, []);
+  
   // Use a state variable to store the current projection ID
   const [currentProjectionId, setCurrentProjectionId] = useState<number | undefined>(projectionId);
   
@@ -327,22 +347,23 @@ const FinancialProjections = ({
   useEffect(() => {
     if (projectionId !== currentProjectionId) {
       console.log(`Projection ID changed from ${currentProjectionId} to ${projectionId}`);
+      
+      // Completely reset UI state before setting the new ID
+      resetAllProjectionData();
+      
+      // Reset other form values to defaults to avoid showing previous projection data
+      setProjectionName("");
+      
+      // Set the new projection ID (this triggers the query in the next render)
       setCurrentProjectionId(projectionId);
       
-      // Reset the chart and state when projection changes
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-        chartInstance.current = null;
-      }
-      
-      // Reset projection data to force recalculation
-      setProjectionData(null);
+      console.log(`UI state reset, now setting currentProjectionId to ${projectionId}`);
     }
-  }, [projectionId, currentProjectionId]);
+  }, [projectionId, currentProjectionId, resetAllProjectionData]);
   
   // Fetch specific projection if currentProjectionId is provided
   const { data: specificProjection, isLoading: isLoadingSpecificProjection } = useQuery({
-    // Fixed query key - remove timestamp so we get a cache hit
+    // Use a unique key with the projection ID to ensure proper cache behavior
     queryKey: ['/api/financial-projections/detail', currentProjectionId],
     queryFn: async () => {
       if (!currentProjectionId) return null;
@@ -359,8 +380,9 @@ const FinancialProjections = ({
     },
     enabled: !!currentProjectionId,
     refetchOnWindowFocus: false,
-    staleTime: 0, // Consider the data stale immediately
-    cacheTime: 0  // Don't cache the data at all
+    // Use gcTime instead of cacheTime (cacheTime is deprecated in React Query v5)
+    gcTime: 0,
+    staleTime: 0
   });
 
   // Make careers data available globally for Python calculator access
@@ -1231,26 +1253,6 @@ const FinancialProjections = ({
     expenses: [expenses]
   });
   
-  // Force a complete component reset when projectionId changes
-  const resetAllProjectionData = useCallback(() => {
-    console.log("Resetting all projection data states");
-    
-    // Clear projection data completely
-    setProjectionData({
-      ages: [],
-      netWorth: [],
-      savingsValue: [],
-      income: [],
-      expenses: []
-    });
-    
-    // Reset chart if it exists
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-      chartInstance.current = null;
-    }
-  }, []);
-  
   // Effect to handle changes in projectionId
   useEffect(() => {
     console.log(`Projection ID changed to: ${projectionId}`);
@@ -1366,6 +1368,11 @@ const FinancialProjections = ({
           educationAnnualCost: m.educationAnnualCost || null,
           educationAnnualLoan: m.educationAnnualLoan || null,
           targetOccupation: m.targetOccupation || null,
+          // Add work status fields
+          workStatus: m.workStatus || null,
+          partTimeIncome: m.partTimeIncome || null,
+          returnToSameProfession: m.returnToSameProfession || false,
+          // Other fields
           active: m.active !== undefined ? m.active : true,
           completed: m.completed !== undefined ? m.completed : false,
           details: m.details || {},
@@ -1425,12 +1432,7 @@ const FinancialProjections = ({
             ...m,
             // Ensure yearsAway is a number relative to the start age
             yearsAway: m.yearsAway !== null ? m.yearsAway : 
-              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25))),
-            // Add fields that TypeScript expects for Milestone type
-            workStatus: m.workStatus || null,
-            partTimeIncome: m.partTimeIncome || null,
-            returnToSameProfession: m.returnToSameProfession || false,
-            details: m.details || {}
+              (new Date(m.date as string).getFullYear() - (new Date().getFullYear() - (age - 25)))
           }))
         };
         
