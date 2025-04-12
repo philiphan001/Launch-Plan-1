@@ -1245,12 +1245,19 @@ useEffect(() => {
   
   // Only proceed if we have projection data and either it just loaded or the projection ID changed
   if (savedProjection && (!isLoadingSavedProjection || didProjectionChange)) {
-    console.log("Loading saved projection:", savedProjection, "ID changed:", didProjectionChange);
+    console.log("Loading saved projection:", savedProjection?.id, savedProjection?.name, "ID changed:", didProjectionChange);
     console.log("Projection has complete data:", 
       savedProjection.startingAge !== null &&
       savedProjection.startingSavings !== null &&
       savedProjection.income !== null && 
       savedProjection.expenses !== null);
+    
+    // Before applying changes, forcefully clear any existing chart
+    if (chartInstance.current) {
+      console.log("Cleaning up existing chart before loading new projection data");
+      chartInstance.current.destroy();
+      chartInstance.current = null;
+    }
     
     // Create a batch of state updates to be executed together for better performance
     const stateUpdates = () => {
@@ -1588,10 +1595,17 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     if (chartRef.current) {
       const ctx = chartRef.current.getContext("2d");
       if (ctx) {
-        // Destroy previous chart instance if it exists
+        // Always destroy the previous chart instance to ensure clean rendering
         if (chartInstance.current) {
+          console.log("Destroying previous chart instance");
           chartInstance.current.destroy();
+          chartInstance.current = null;
         }
+        
+        // Log the projection data being used for the chart
+        console.log("Creating new chart with projection data:", 
+          projectionId ? `for projection ID: ${projectionId}` : "for new projection",
+          "active tab:", activeTab);
         
         // Create new chart
         chartInstance.current = createMainProjectionChart(ctx, projectionData, activeTab);
@@ -1602,9 +1616,10 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     return () => {
       if (chartInstance.current) {
         chartInstance.current.destroy();
+        chartInstance.current = null;
       }
     };
-  }, [projectionData, activeTab, timeframe]);
+  }, [projectionData, activeTab, timeframe, projectionId]); // Added projectionId as a dependency
 
   return (
     <div className="max-w-7xl mx-auto">

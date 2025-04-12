@@ -180,7 +180,9 @@ const Sidebar = () => {
                                   });
                                   
                                   // Use React navigation with wouter instead of direct browser navigation
-                                  const timestamp = new Date().getTime();
+                                  // Add a random component to ensure timestamp is unique
+                                  const timestamp = new Date().getTime() + Math.floor(Math.random() * 1000);
+                                  console.log(`Navigating to projection ${projection.id} with timestamp ${timestamp}`);
                                   setLocation(`/projections?id=${projection.id}&t=${timestamp}`);
                                   
                                   // Refresh saved projections data to ensure we have the latest
