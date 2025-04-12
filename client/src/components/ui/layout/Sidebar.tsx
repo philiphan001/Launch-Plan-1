@@ -157,8 +157,17 @@ const Sidebar = () => {
                           
                           return (
                             <li key={projection.id} className="mb-1 flex items-center group">
-                              <Link
-                                href={`/projections?id=${projection.id}&t=${new Date().getTime()}`}
+                              <a
+                                href="/projections"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  // Use direct browser navigation with different structure
+                                  // First navigate to projections page, then add query params
+                                  window.location.href = `/projections`;
+                                  setTimeout(() => {
+                                    window.location.search = `?id=${projection.id}&t=${new Date().getTime()}`;
+                                  }, 10);
+                                }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 
                                     ? "text-primary font-medium" 
@@ -166,7 +175,7 @@ const Sidebar = () => {
                                 }`}
                               >
                                 {projection.name}
-                              </Link>
+                              </a>
                               <button
                                 onClick={(e) => handleDeleteProjection(e, projection.id, projection.name)}
                                 className="hidden group-hover:inline-flex text-gray-400 hover:text-red-500 rounded-full p-1"

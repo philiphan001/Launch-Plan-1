@@ -150,7 +150,8 @@ const FinancialProjections = ({
   login,
   signup,
   logout,
-  completeOnboarding
+  completeOnboarding,
+  initialProjectionId
 }: FinancialProjectionsProps) => {
   // Temporary user ID for demo purposes
   const userId = 1;
@@ -167,12 +168,16 @@ const FinancialProjections = ({
     const id = params.get('id');
     const t = params.get('t') || Date.now().toString();
     
-    // Log when projection ID changes
-    const parsedId = id ? parseInt(id, 10) : null;
-    console.log("Projection ID changed to:", parsedId, "with timestamp:", t);
+    // Give priority to initialProjectionId if provided (from App.tsx)
+    const effectiveId = initialProjectionId || (id ? parseInt(id, 10) : null);
     
-    return { projectionId: parsedId, timestamp: t };
-  }, [location]);
+    // Log when projection ID changes
+    console.log("Projection ID changed to:", effectiveId, 
+        initialProjectionId ? "(from initialProjectionId)" : "(from URL)", 
+        "with timestamp:", t);
+    
+    return { projectionId: effectiveId, timestamp: t };
+  }, [location, initialProjectionId]);
 
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
   const [timeframe, setTimeframe] = useState<string>("10 Years");
@@ -1187,18 +1192,37 @@ const FinancialProjections = ({
 const [projectionName, setProjectionName] = useState<string>(`Projection - ${new Date().toLocaleDateString()}`);
 
 // Fetch saved projection data if an ID is provided
-const { data: savedProjection, isLoading: isLoadingSavedProjection } = useQuery({
+const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError } = useQuery({
   queryKey: ['/api/financial-projections/detail', projectionId, timestamp], // Include timestamp to force refresh
   queryFn: async () => {
-    if (!projectionId) return null;
+    if (!projectionId) {
+      console.log("No projection ID provided, skipping fetch");
+      return null;
+    }
     
     // Add cache-busting timestamp to ensure fresh data
     const cacheBuster = new Date().getTime();
     console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster})`);
     
-    const response = await fetch(`/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`);
-    if (!response.ok) throw new Error('Failed to fetch saved projection');
-    return response.json();
+    try {
+      const url = `/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`;
+      console.log(`Making fetch request to: ${url}`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Failed to fetch projection data: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Failed to fetch saved projection: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log("Successfully loaded projection data:", data);
+      return data;
+    } catch (error) {
+      console.error("Error fetching projection:", error);
+      throw error;
+    }
   },
   enabled: !!projectionId,
   // Never use cached data
@@ -1270,7 +1294,12 @@ useEffect(() => {
     // Log that state has been completely reset based on the new projection
     console.log("State reset complete for projection ID:", projectionId);
   }
-}, [savedProjection, isLoadingSavedProjection, projectionId]);
+  
+  // Log any errors that occurred during projection loading
+  if (savedProjectionError) {
+    console.error("Error loading saved projection:", savedProjectionError);
+  }
+}, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId]);
 
 // Initialize projection data with a key that depends on projectionId to force re-renders
 const [projectionData, setProjectionData] = useState<any>(() => {
