@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NavItem {
   path: string;
@@ -30,6 +31,7 @@ const Sidebar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [expandProjections, setExpandProjections] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // For demonstration, we'll use userId 1
   const userId = 1;
@@ -166,6 +168,16 @@ const Sidebar = () => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
+                                  
+                                  // Clear the cache for this specific projection before navigating
+                                  queryClient.invalidateQueries({ 
+                                    queryKey: ['/api/financial-projections/detail', projection.id] 
+                                  });
+                                  
+                                  // Also invalidate all projection-related queries to be safe
+                                  queryClient.invalidateQueries({
+                                    queryKey: ['/api/financial-projections']
+                                  });
                                   
                                   // Use React navigation with wouter instead of direct browser navigation
                                   const timestamp = new Date().getTime();
