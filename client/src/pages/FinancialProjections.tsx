@@ -1619,7 +1619,7 @@ const [projectionData, setProjectionData] = useState<any>({
                     },
                     body: JSON.stringify({
                       userId,
-                      projectionName: `Projection - ${new Date().toLocaleDateString()}`,
+                      projectionName: projectionName,
                       timeframe: years,
                       startingAge: age,
                       startingSavings,
@@ -1646,6 +1646,8 @@ const [projectionData, setProjectionData] = useState<any>({
                   
                   if (response.ok) {
                     alert('Projection saved successfully!');
+                    // Invalidate the financial projections query to refresh the list
+                    queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
                   } else {
                     throw new Error('Failed to save projection');
                   }
