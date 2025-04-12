@@ -39,8 +39,11 @@ function App() {
   useEffect(() => {
     console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
     
-    // If at root path '/' and logged in, redirect appropriately
-    if (location === '/') {
+    // Check if we're navigating with query parameters (like projections?id=123)
+    const hasQueryParams = window.location.search !== '';
+    
+    // If at root path '/' and logged in, redirect appropriately, but only if there are no query parameters
+    if (location === '/' && !hasQueryParams) {
       if (isAuthenticated) {
         // First-time users go to Pathways, returning users go to Dashboard
         const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
@@ -55,7 +58,8 @@ function App() {
     }
     // If trying to access protected routes while not authenticated
     else if (!isAuthenticated && 
-        !["/", "/login", "/signup"].includes(location)) {
+        !["/", "/login", "/signup"].includes(location) &&
+        !(location === '/projections' && window.location.search.includes('id='))) {
       console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
       setLocation('/login');
     }
@@ -147,7 +151,19 @@ function App() {
   };
   
   // Check if the current route should be displayed within the AppShell
+  // Path handling with query parameters
   const isPublicRoute = ["/", "/login", "/signup"].includes(location);
+  
+  // Special handling for the projections route with query parameters
+  const hasQueryParams = window.location.search !== '';
+  if (hasQueryParams && window.location.pathname === '/') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('id')) {
+      console.log("Detected projection ID in query parameters:", params.get('id'));
+      // Force navigation to projections page
+      setLocation(`/projections${window.location.search}`);
+    }
+  }
   
   // Routes that should be displayed without the AppShell layout
   if (isPublicRoute) {
@@ -174,7 +190,21 @@ function App() {
           {() => <Dashboard {...authProps} />}
         </Route>
         <Route path="/projections">
-          {() => <FinancialProjections {...authProps} />}
+          {() => {
+            // Get projection ID from URL query parameters
+            const params = new URLSearchParams(window.location.search);
+            const projectionId = params.get('id');
+            
+            // Log the projection ID detection during routing
+            if (projectionId) {
+              console.log("Loading FinancialProjections with ID:", projectionId);
+            }
+            
+            return <FinancialProjections 
+              {...authProps} 
+              initialProjectionId={projectionId ? Number(projectionId) : undefined}
+            />;
+          }}
         </Route>
         <Route path="/careers">
           {() => <CareerExploration {...authProps} />}

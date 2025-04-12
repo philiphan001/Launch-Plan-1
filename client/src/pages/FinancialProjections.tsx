@@ -139,7 +139,9 @@ interface FinancialProfile {
   otherDebtAmount: number | null;
 }
 
-interface FinancialProjectionsProps extends AuthProps {}
+interface FinancialProjectionsProps extends AuthProps {
+  initialProjectionId?: number;
+}
 
 const FinancialProjections = ({
   user,
