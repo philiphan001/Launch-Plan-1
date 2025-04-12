@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import { useState, useEffect } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -27,7 +27,7 @@ const navItems: NavItem[] = [
 ];
 
 const Sidebar = () => {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [projectionsOpen, setProjectionsOpen] = useState(false);
   
   // Temporary user ID for demo
@@ -107,7 +107,7 @@ const Sidebar = () => {
                             <li className="my-1" key={projection.id}>
                               <div
                                 onClick={() => {
-                                  window.location.href = `/projections/${projection.id}`;
+                                  setLocation(`/projections/${projection.id}`);
                                 }}
                                 className={`block py-2 px-2 rounded text-sm truncate cursor-pointer ${
                                   location === `/projections/${projection.id}`

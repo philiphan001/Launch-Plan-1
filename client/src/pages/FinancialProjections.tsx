@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { AuthProps } from "@/interfaces/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
@@ -153,6 +153,7 @@ const FinancialProjections = ({
 }: FinancialProjectionsProps) => {
   // Temporary user ID for demo purposes
   const userId = 1;
+  const [location, setLocation] = useLocation();
 
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
   const [timeframe, setTimeframe] = useState<string>("10 Years");
@@ -1441,7 +1442,7 @@ const FinancialProjections = ({
           <Button 
             variant="outline"
             onClick={() => {
-              window.location.href = '/projections';
+              setLocation('/projections');
             }}
           >
             Create New Projection
