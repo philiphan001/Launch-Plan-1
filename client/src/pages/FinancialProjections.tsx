@@ -1656,7 +1656,7 @@ const [projectionData, setProjectionData] = useState<any>({
                     },
                     body: JSON.stringify({
                       userId,
-                      projectionName: projectionName,
+                      name: projectionName, // Changed from projectionName to name to match schema
                       timeframe: years,
                       startingAge: age,
                       startingSavings,
