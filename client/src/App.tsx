@@ -194,23 +194,26 @@ function App() {
             // Get projection ID from URL query parameters
             const params = new URLSearchParams(window.location.search);
             const projectionId = params.get('id');
+            const timestamp = params.get('t') || Date.now().toString();
             
             // Log the projection ID detection during routing
             if (projectionId) {
-              console.log("Loading FinancialProjections with ID:", projectionId);
+              console.log("App.tsx: Creating new FinancialProjections with ID:", projectionId, "timestamp:", timestamp);
               
-              // Add a unique key based on the projection ID to force React to recreate the component
+              // Always create a completely new component instance on every render with a unique key
+              // This forces React to unmount and remount the component, clearing all state
               return <FinancialProjections 
                 {...authProps} 
-                key={`financial-projection-${projectionId}-${new Date().getTime()}`}
+                key={`projection-${projectionId}-${timestamp}`}
                 initialProjectionId={Number(projectionId)}
               />;
             }
             
             // For new projections without ID
+            console.log("App.tsx: Creating new blank FinancialProjections");
             return <FinancialProjections 
               {...authProps} 
-              key="new-financial-projection"
+              key={`new-projection-${timestamp}`}
               initialProjectionId={undefined}
             />;
           }}

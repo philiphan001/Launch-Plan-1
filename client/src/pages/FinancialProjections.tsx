@@ -1227,7 +1227,9 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
   enabled: !!projectionId, // Only enable this query when we have a projection ID
   retry: false, // Don't retry failed requests
   staleTime: 0, // Consider data immediately stale to allow refetching
-  cacheTime: 0, // Don't cache results between component mounts
+  gcTime: 0, // Don't cache results between component mounts (gcTime replaces cacheTime in v5)
+  refetchOnMount: true, // Always refetch on component mount
+  refetchOnWindowFocus: true // Always refetch when window gains focus
 });
 
 // Create a ref to track previous projection ID
