@@ -514,38 +514,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/financial-projections/detail/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      console.log("=== SERVER: Fetching financial projection DETAIL with ID:", id, "===");
+      console.log("\n\n🔍 ULTRA DEBUG MODE 🔍");
+      console.log("=== SERVER: Fetching projection with ID:", id, "===");
+      console.log("REQUEST HEADERS:", req.headers);
+      console.log("REQUEST URL:", req.url);
+      console.log("REQUEST QUERY:", req.query);
+      console.log("CALL STACK:", new Error().stack);
       
       if (isNaN(id)) {
-        console.log("SERVER ERROR: Invalid projection ID format");
+        console.log("⛔ SERVER ERROR: Invalid projection ID format ⛔");
         return res.status(400).json({ message: "Invalid projection ID format" });
       }
       
       const projection = await activeStorage.getFinancialProjection(id);
       if (!projection) {
-        console.log("SERVER ERROR: Financial projection not found with ID:", id);
+        console.log("⛔ SERVER ERROR: Financial projection not found with ID:", id, "⛔");
         return res.status(404).json({ message: "Financial projection not found" });
       }
       
-      console.log("=== SERVER: Successfully found projection ===");
+      console.log("✅ SERVER: Successfully found projection ✅");
+      console.log("--- Basic Projection Data ---");
       console.log("ID:", projection.id);
       console.log("Name:", projection.name);
       console.log("Income:", projection.income);
       console.log("Expenses:", projection.expenses);
       console.log("Starting Age:", projection.startingAge);
       console.log("Starting Savings:", projection.startingSavings);
-      console.log("=================================================");
+      console.log("Timeframe:", projection.timeframe);
+      console.log("Income Growth:", projection.incomeGrowth);
+      console.log("Student Loan Debt:", projection.studentLoanDebt);
+      console.log("Emergency Fund Amount:", projection.emergencyFundAmount);
+      console.log("Personal Loan Term Years:", projection.personalLoanTermYears);
+      console.log("Personal Loan Interest Rate:", projection.personalLoanInterestRate);
+      console.log("=======================================");
       
       // Debug projection data structure
+      console.log("--- Projection Data Analysis ---");
       if (typeof projection.projectionData === 'string') {
-        console.log("Projection data is stored as a string (needs parsing)");
+        console.log("📝 Projection data is stored as a STRING (will need parsing)");
+        try {
+          const parsed = JSON.parse(projection.projectionData);
+          console.log("STRING PARSED SUCCESSFULLY with keys:", Object.keys(parsed));
+          console.log("Sample data points (first values):");
+          if (parsed.netWorth) console.log("- netWorth[0]:", parsed.netWorth[0]);
+          if (parsed.income) console.log("- income[0]:", parsed.income[0]);
+          if (parsed.expenses) console.log("- expenses[0]:", parsed.expenses[0]);
+          if (parsed.ages) console.log("- ages[0]:", parsed.ages[0]);
+        } catch (e) {
+          console.log("❌ ERROR PARSING PROJECTION DATA STRING:", e);
+        }
       } else {
-        console.log("Projection data is already an object");
+        console.log("🔢 Projection data is already an OBJECT");
+        console.log("Object keys:", Object.keys(projection.projectionData || {}));
+        const pd = projection.projectionData || {};
+        console.log("Sample data points (first values):");
+        if (pd.netWorth) console.log("- netWorth[0]:", pd.netWorth[0]);
+        if (pd.income) console.log("- income[0]:", pd.income[0]);
+        if (pd.expenses) console.log("- expenses[0]:", pd.expenses[0]);
+        if (pd.ages) console.log("- ages[0]:", pd.ages[0]);
       }
+      console.log("=======================================");
       
+      console.log("🔄 SENDING FULL PROJECTION DATA BACK TO CLIENT");
       res.json(projection);
+      console.log("🏁 FINISH ULTRA DEBUG MODE 🏁\n\n");
     } catch (error) {
-      console.error("Error getting financial projection detail:", error);
+      console.error("💥 ERROR getting financial projection detail:", error);
       res.status(500).json({ message: "Failed to get financial projection detail" });
     }
   });
