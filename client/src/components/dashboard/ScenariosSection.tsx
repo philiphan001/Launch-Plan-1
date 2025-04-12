@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import ScenarioCard, { ScenarioData } from "./ScenarioCard";
 import { motion } from "framer-motion";
 import {
@@ -37,6 +37,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   const [sortBy, setSortBy] = useState("recent");
   const [ageSliderValue, setAgeSliderValue] = useState<number>(30); // Default age of 30
   const [useAgeSlider, setUseAgeSlider] = useState<boolean>(true); // Default to active
+  const [, setLocation] = useLocation(); // Wouter hook for navigation
 
   // Fetch user scenarios
   const { data: scenarios = [], isLoading } = useQuery<ScenarioData[]>({
@@ -127,7 +128,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
     // Navigate to the edit page with correct query parameters
     // Use timestamp to ensure React treats this as a new render
     const timestamp = Date.now();
-    window.location.href = `/projections?id=${scenario.id}&t=${timestamp}`;
+    setLocation(`/projections?id=${scenario.id}&t=${timestamp}`);
     
     // Log that we're navigating to edit
     console.log(`Navigating to edit projection ${scenario.id}`);
@@ -581,8 +582,8 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
             <Button 
               disabled={scenariosToCompare.length < 2} 
               onClick={() => {
-                // In a real app, this would navigate to the comparison page
-                window.location.href = `/projections/compare?ids=${scenariosToCompare.join(',')}`;
+                // Navigate to the comparison page
+                setLocation(`/projections/compare?ids=${scenariosToCompare.join(',')}`);
               }}
             >
               Compare Selected ({scenariosToCompare.length})
