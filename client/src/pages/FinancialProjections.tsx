@@ -46,6 +46,7 @@ import {
   generatePythonCalculatorInput,
   FinancialProjectionData
 } from "@/lib/pythonCalculator";
+import { createTestProjectionData } from "@/lib/testProjectionData";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities" | "cashFlow";
 
@@ -375,6 +376,44 @@ const FinancialProjections = ({
       
       if (!response.ok) throw new Error('Failed to fetch specific projection');
       const data = await response.json();
+      
+      // Add debugging for the projection data
+      try {
+        const projectionData = JSON.parse(data.projection_data);
+        
+        // Check if the projection data has expense breakdowns
+        const hasExpenses = projectionData.expenses && projectionData.expenses.length > 0;
+        const hasHousing = projectionData.housing && projectionData.housing.length > 0;
+        const hasFood = projectionData.food && projectionData.food.length > 0;
+        const hasHealthcare = projectionData.healthcare && projectionData.healthcare.length > 0;
+        const hasTaxes = projectionData.payrollTax && projectionData.payrollTax.length > 0;
+        
+        console.log(`EXPENSE DEBUG - Projection ID ${currentProjectionId} data analysis:`, {
+          totalExpenseEntries: hasExpenses ? projectionData.expenses.length : 0,
+          hasHousingBreakdown: hasHousing,
+          hasFoodBreakdown: hasFood,
+          hasHealthcareBreakdown: hasHealthcare,
+          hasTaxBreakdown: hasTaxes,
+          expenseCategories: Object.keys(projectionData).filter(key => 
+            ['housing', 'transportation', 'food', 'healthcare', 'education', 
+             'entertainment', 'other', 'payrollTax', 'federalTax', 'stateTax'].includes(key)
+          )
+        });
+        
+        // Log sample data for first year
+        if (hasExpenses && projectionData.expenses.length > 1) {
+          console.log("First year expense breakdown:", {
+            totalExpenses: projectionData.expenses[1],
+            housing: hasHousing ? projectionData.housing[1] : 'N/A',
+            food: hasFood ? projectionData.food[1] : 'N/A',
+            healthcare: hasHealthcare ? projectionData.healthcare[1] : 'N/A',
+            payrollTax: hasTaxes ? projectionData.payrollTax[1] : 'N/A'
+          });
+        }
+      } catch (e) {
+        console.error("Error analyzing projection data:", e);
+      }
+      
       console.log(`Received projection data for ID ${currentProjectionId}:`, data);
       return data;
     },
@@ -1381,14 +1420,20 @@ const FinancialProjections = ({
               }
               
               // Force a delay to ensure the DOM has updated
+              // We'll only use this initially for very old projections without milestones
+              // For newer projections with milestones, we'll use the recalculated data from calculateFinancialProjection
               setTimeout(() => {
-                setProjectionData(parsedData);
-                
-                // Force re-render of the chart
-                if (chartRef.current) {
-                  const ctx = chartRef.current.getContext("2d");
-                  if (ctx) {
-                    chartInstance.current = createMainProjectionChart(ctx, parsedData, activeTab);
+                // We'll use this as a fallback only if we don't have milestones to recalculate with
+                if (!parsedData.milestones || !Array.isArray(parsedData.milestones) || parsedData.milestones.length === 0) {
+                  console.log("Using saved projection data directly (no milestones to recalculate with)");
+                  setProjectionData(parsedData);
+                  
+                  // Force re-render of the chart
+                  if (chartRef.current) {
+                    const ctx = chartRef.current.getContext("2d");
+                    if (ctx) {
+                      chartInstance.current = createMainProjectionChart(ctx, parsedData, activeTab);
+                    }
                   }
                 }
               }, 100);
