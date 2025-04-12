@@ -1422,6 +1422,13 @@ const [projectionData, setProjectionData] = useState<any>(() => {
   // Update projection data when inputs change
   useEffect(() => {
     const updateProjectionData = async () => {
+      // NEW: Skip recalculation if we have a freshly calculated projection from our API endpoint
+      if (savedProjection?.freshlyCalculated) {
+        console.log("📋 SKIPPING RECALCULATION - Using freshly calculated data from API endpoint");
+        console.log("🔒 This projection was already calculated by our specialized endpoint");
+        return; // Exit early - don't override the fresh calculation
+      }
+      
       console.log("Inputs changed, calculating projection data using Python calculator");
       try {
         // Add debugging for any existing milestones of type 'education'
@@ -1579,7 +1586,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
       spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
-      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers]); // Include all configurable parameters to ensure recalculation when any of them change
+      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers, 
+      savedProjection]); // Include savedProjection to check for freshlyCalculated flag
   
   // Generate financial advice based on current financial state
   useEffect(() => {
@@ -1613,92 +1621,15 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     setFinancialAdvice(advice);
   }, [income, expenses, startingSavings, studentLoanDebt, financialProfile, milestones]);
 
-  // COMPLETELY NEW APPROACH: Load saved projection and recalculate with Python
-  useEffect(() => {
-    // Only run when we have a projectionId
-    if (projectionId) {
-      console.log("🔄 LOADING SAVED PROJECTION WITH ID:", projectionId);
-      
-      // First, fetch the saved projection parameters
-      const uniqueTimestamp = new Date().getTime();
-      fetch(`/api/financial-projections/detail/${projectionId}?_=${uniqueTimestamp}`, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch projection data: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log("✅ SUCCESSFULLY FETCHED SAVED PROJECTION:", data.id, data.name);
-        
-        // Store the loaded parameters
-        const loadedAge = data.startingAge || 25;
-        const loadedSavings = data.startingSavings || 5000;
-        const loadedIncome = data.income || 40000;
-        const loadedExpenses = data.expenses || 35000;
-        const loadedIncomeGrowth = data.incomeGrowth || 3.0;
-        const loadedStudentLoanDebt = data.studentLoanDebt || 0;
-        const loadedTimeframe = data.timeframe || 10;
-        const loadedEmergencyFundAmount = data.emergencyFundAmount || 10000;
-        const loadedPersonalLoanTermYears = data.personalLoanTermYears || 5;
-        const loadedPersonalLoanInterestRate = data.personalLoanInterestRate || 8.0;
-        
-        // Set UI form values first
-        setAge(loadedAge);
-        setStartingSavings(loadedSavings);
-        setIncome(loadedIncome);
-        setExpenses(loadedExpenses);
-        setIncomeGrowth(loadedIncomeGrowth);
-        setStudentLoanDebt(loadedStudentLoanDebt);
-        setTimeframe(`${loadedTimeframe} Years`);
-        setEmergencyFundAmount(loadedEmergencyFundAmount);
-        setPersonalLoanTermYears(loadedPersonalLoanTermYears);
-        setPersonalLoanInterestRate(loadedPersonalLoanInterestRate);
-        setProjectionName(data.name || "Unnamed Projection");
-        
-        console.log("🧮 RECALCULATING PROJECTION WITH PYTHON BACKEND...");
-        
-        // STEP 2: Generate inputs for the Python calculator
-        const calculatorInput = generatePythonCalculatorInput(
-          loadedAge,
-          loadedTimeframe,
-          loadedSavings,
-          loadedIncome,
-          loadedIncomeGrowth,
-          loadedStudentLoanDebt,
-          (milestones || []) as any[], // Type assertion to avoid type mismatch
-          locationCostData?.income_adjustment_factor || 1.0,
-          locationCostData,
-          loadedEmergencyFundAmount,
-          loadedPersonalLoanTermYears,
-          loadedPersonalLoanInterestRate
-        );
-        
-        console.log("📤 SENDING DATA TO PYTHON CALCULATOR:", calculatorInput);
-        
-        // STEP 3: Call the Python calculator API
-        return calculateFinancialProjection(calculatorInput);
-      })
-      .then(calculationResult => {
-        console.log("📊 RECEIVED FRESH CALCULATION RESULT FROM PYTHON:", calculationResult);
-        
-        // STEP 4: Update the chart with the fresh calculation results
-        setProjectionData(calculationResult);
-        
-        console.log("📈 CHART DATA UPDATED WITH FRESH CALCULATION RESULTS");
-      })
-      .catch(error => {
-        console.error("❌ ERROR IN PROJECTION LOADING/CALCULATION PIPELINE:", error);
-        alert("Failed to load and recalculate projection. Please try again.");
-      });
-    }
-  }, [projectionId, locationCostData, milestones]); // Dependencies include locationCostData and milestones
+  // OLD APPROACH REMOVED: We now use the load-and-calculate endpoint instead,
+  // which is called via the React Query hook above. This code is no longer needed.
+  // The load-and-calculate endpoint combines both loading the projection data 
+  // and calculating fresh results in a single API call, which is more efficient.
+  
+  // The old approach had several issues:
+  // 1. It would run in parallel with the React Query hook, causing race conditions
+  // 2. It didn't handle the freshlyCalculated flag to prevent recalculations
+  // 3. It duplicated functionality that's now in our specialized endpoint
 
   useEffect(() => {
     if (chartRef.current) {
