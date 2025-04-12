@@ -158,16 +158,18 @@ const FinancialProjections = ({
   
   // Get the current location for parsing query parameters
   const [location] = useLocation();
-  const projectionId = useMemo(() => {
+  // This combination of projectionId and timestamp will force a full reset when the URL changes
+  const { projectionId, timestamp } = useMemo(() => {
     // Parse URL query parameters
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
+    const t = params.get('t') || Date.now().toString();
     
     // Log when projection ID changes
     const parsedId = id ? parseInt(id, 10) : null;
-    console.log("Projection ID changed to:", parsedId);
+    console.log("Projection ID changed to:", parsedId, "with timestamp:", t);
     
-    return parsedId;
+    return { projectionId: parsedId, timestamp: t };
   }, [location]);
 
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
