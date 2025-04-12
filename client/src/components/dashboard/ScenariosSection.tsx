@@ -124,8 +124,13 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   };
 
   const handleEditScenario = (scenario: ScenarioData) => {
-    // In a real app, this would navigate to the edit page
-    window.location.href = `/projections/edit/${scenario.id}`;
+    // Navigate to the edit page with correct query parameters
+    // Use timestamp to ensure React treats this as a new render
+    const timestamp = Date.now();
+    window.location.href = `/projections?id=${scenario.id}&t=${timestamp}`;
+    
+    // Log that we're navigating to edit
+    console.log(`Navigating to edit projection ${scenario.id}`);
   };
 
   const handleCompareScenarios = () => {
@@ -273,7 +278,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           )}
           
           <Button asChild className="bg-green-600 hover:bg-green-700">
-            <Link href="/projections/create">
+            <Link href="/projections">
               <PlusCircle className="mr-2 h-4 w-4" /> Create New Scenario
             </Link>
           </Button>
@@ -348,7 +353,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           <h3 className="text-lg font-medium text-gray-800 mb-2">No Scenarios Yet</h3>
           <p className="text-gray-600 mb-4">Create your first financial scenario to start seeing projections</p>
           <Button asChild className="bg-green-600 hover:bg-green-700">
-            <Link href="/projections/create">
+            <Link href="/projections">
               <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Scenario
             </Link>
           </Button>
