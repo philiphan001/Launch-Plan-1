@@ -1193,7 +1193,7 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
-  queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
+  queryKey: ['/api/financial-projections/load-and-calculate', projectionId], // NEW ENDPOINT that calculates fresh data
   queryFn: async () => {
     if (!projectionId) {
       console.log("No projection ID provided, skipping fetch");
@@ -1202,25 +1202,47 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
     
     // Add cache-busting timestamp to ensure fresh data
     const cacheBuster = new Date().getTime();
-    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster})`);
+    console.log(`🚀 USING LOAD-AND-CALCULATE ENDPOINT for ID: ${projectionId} (cache bust: ${cacheBuster})`);
     
     try {
-      const url = `/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`;
-      console.log(`Making fetch request to: ${url}`);
+      // This is our NEW specialized endpoint that loads the projection and calculates fresh data
+      const url = `/api/financial-projections/load-and-calculate/${projectionId}?_=${cacheBuster}`;
+      console.log(`Making fetch request to SPECIALIZED endpoint: ${url}`);
       
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Failed to fetch projection data: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`Failed to fetch saved projection: ${response.status} ${response.statusText}`);
+        console.error(`Failed to fetch and calculate projection data: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Failed to load and calculate projection: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log("Successfully loaded projection data:", data.id, data.name);
+      console.log("✅ FRESH CALCULATE SUCCESS - Loaded projection with calculations:", data.id, data.name);
+      
+      // Handle special property from our new endpoint - the calculation results
+      if (data.calculationResult) {
+        console.log("📊 This includes fresh calculation results from Python calculator");
+        
+        // Combine the projection properties with the calculation results
+        // This ensures we have both original parameters AND fresh calculation results
+        return {
+          ...data,
+          // Override projectionData with newly calculated data
+          projectionData: data.calculationResult,
+          freshlyCalculated: true
+        };
+      }
+      
       return data;
     } catch (error) {
-      console.error("Error fetching projection:", error);
+      console.error("Error fetching projection with fresh calculation:", error);
       throw error;
     }
   },
@@ -1229,7 +1251,7 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
   staleTime: 0, // Consider data immediately stale to allow refetching
   gcTime: 0, // Don't cache results between component mounts (gcTime replaces cacheTime in v5)
   refetchOnMount: true, // Always refetch on component mount
-  refetchOnWindowFocus: true // Always refetch when window gains focus
+  refetchOnWindowFocus: false // Don't auto-reload on focus to prevent data loss
 });
 
 // Create a ref to track previous projection ID
