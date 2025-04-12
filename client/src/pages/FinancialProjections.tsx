@@ -1433,12 +1433,11 @@ const FinancialProjections = ({
             'Financial Projections'}
         </h1>
         {projectionId && specificProjection && (
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.href = '/projections'}
-          >
-            Create New Projection
-          </Button>
+          <a href="/projections">
+            <Button variant="outline">
+              Create New Projection
+            </Button>
+          </a>
         )}
       </div>
       
