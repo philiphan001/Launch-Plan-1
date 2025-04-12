@@ -176,6 +176,9 @@ function App() {
         <Route path="/projections">
           {() => <FinancialProjections {...authProps} />}
         </Route>
+        <Route path="/projections/:id">
+          {(params) => <FinancialProjections {...authProps} projectionId={parseInt(params.id)} />}
+        </Route>
         <Route path="/careers">
           {() => <CareerExploration {...authProps} />}
         </Route>
