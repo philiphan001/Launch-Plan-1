@@ -318,6 +318,21 @@ export class PgStorage implements IStorage {
     return result[0];
   }
   
+  async getLocationCostOfLivingByCityState(city: string, state: string): Promise<LocationCostOfLiving[]> {
+    // Case insensitive search for city and exact match for state code
+    const lowercaseCity = city.toLowerCase();
+    const result = await db.select()
+      .from(locationCostOfLiving)
+      .where(
+        and(
+          eq(locationCostOfLiving.state, state),
+          sql`LOWER(${locationCostOfLiving.city}) LIKE ${`%${lowercaseCity}%`}`
+        )
+      )
+      .limit(10);
+    return result;
+  }
+  
   async getAllLocationCostOfLiving(): Promise<LocationCostOfLiving[]> {
     return await db.select().from(locationCostOfLiving);
   }

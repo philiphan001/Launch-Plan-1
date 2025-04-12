@@ -605,6 +605,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get location cost of living data" });
     }
   });
+  
+  app.get("/api/location-cost-of-living/city", async (req: Request, res: Response) => {
+    try {
+      const { city, state } = req.query;
+      
+      if (!city || !state) {
+        return res.status(400).json({ message: "City and state are required parameters" });
+      }
+      
+      const locations = await activeStorage.getLocationCostOfLivingByCityState(
+        city.toString(),
+        state.toString()
+      );
+      
+      if (!locations || locations.length === 0) {
+        return res.status(404).json({ message: "No locations found for the given city and state" });
+      }
+      
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching location by city/state:", error);
+      res.status(500).json({ message: "Failed to get location data by city/state" });
+    }
+  });
 
   app.get("/api/location-cost-of-living/:id", async (req: Request, res: Response) => {
     try {

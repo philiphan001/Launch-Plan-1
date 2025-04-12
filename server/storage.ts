@@ -637,6 +637,22 @@ export class MemStorage implements IStorage {
     );
   }
   
+  async getLocationCostOfLivingByCityState(city: string, state: string): Promise<LocationCostOfLiving[]> {
+    if (!city || !state) {
+      return [];
+    }
+    
+    const lowercaseCity = city.toLowerCase();
+    return Array.from(this.locationCostOfLivings.values())
+      .filter(location => {
+        // Case insensitive match for city, exact match for state
+        return location.state === state && 
+               location.city && 
+               location.city.toLowerCase().includes(lowercaseCity);
+      })
+      .slice(0, 10); // Limit to 10 results
+  }
+  
   async getAllLocationCostOfLiving(): Promise<LocationCostOfLiving[]> {
     return Array.from(this.locationCostOfLivings.values());
   }
