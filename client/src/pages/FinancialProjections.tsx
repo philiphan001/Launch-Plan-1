@@ -1591,45 +1591,70 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     setFinancialAdvice(advice);
   }, [income, expenses, startingSavings, studentLoanDebt, financialProfile, milestones]);
 
-  // DEBUGGING: Force load saved projections
+  // BYPASS ALL CACHE ISSUES with direct fetch from API
   useEffect(() => {
-    // Check if we have a saved projection and it hasn't been loaded yet
-    if (savedProjection && savedProjection.id && projectionId) {
-      console.log("FORCE LOADING PROJECTION DATA:", savedProjection.id, savedProjection.name);
+    // Only run when we have a projectionId
+    if (projectionId) {
+      console.log("DIRECT FETCH OF PROJECTION DATA FOR ID:", projectionId);
       
-      // Set all form fields from the saved projection
-      setAge(savedProjection.startingAge || 25);
-      setStartingSavings(savedProjection.startingSavings || 5000);
-      setIncome(savedProjection.income || 40000);
-      setExpenses(savedProjection.expenses || 35000);
-      setIncomeGrowth(savedProjection.incomeGrowth || 3.0);
-      setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
-      setTimeframe(`${savedProjection.timeframe || 10} Years`);
-      setEmergencyFundAmount(savedProjection.emergencyFundAmount || 10000);
-      setPersonalLoanTermYears(savedProjection.personalLoanTermYears || 5);
-      setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate || 8.0);
-      
-      // Parse the projectionData
-      try {
-        let parsedData;
-        if (typeof savedProjection.projectionData === 'string') {
-          console.log("Parsing string projectionData...");
-          parsedData = JSON.parse(savedProjection.projectionData);
-        } else {
-          console.log("Using object projectionData directly...");
-          parsedData = savedProjection.projectionData;
+      // Fetch projection data directly, bypassing any caching
+      const uniqueTimestamp = new Date().getTime();
+      fetch(`/api/financial-projections/detail/${projectionId}?_=${uniqueTimestamp}`, {
+        headers: {
+          // Add cache busting headers
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch projection data: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("SUCCESSFULLY FETCHED PROJECTION DATA:", data.id, data.name);
+        
+        // EXPLICITLY SET ALL STATE FROM FETCHED DATA
+        // Set all form fields from the saved projection
+        setAge(data.startingAge || 25);
+        setStartingSavings(data.startingSavings || 5000);
+        setIncome(data.income || 40000);
+        setExpenses(data.expenses || 35000);
+        setIncomeGrowth(data.incomeGrowth || 3.0);
+        setStudentLoanDebt(data.studentLoanDebt || 0);
+        setTimeframe(`${data.timeframe || 10} Years`);
+        setEmergencyFundAmount(data.emergencyFundAmount || 10000);
+        setPersonalLoanTermYears(data.personalLoanTermYears || 5);
+        setPersonalLoanInterestRate(data.personalLoanInterestRate || 8.0);
+        
+        // Parse the projectionData
+        try {
+          let parsedData;
+          if (typeof data.projectionData === 'string') {
+            console.log("Parsing string projectionData...");
+            parsedData = JSON.parse(data.projectionData);
+          } else {
+            console.log("Using object projectionData directly...");
+            parsedData = data.projectionData;
+          }
+          
+          console.log("Setting projection data with forced update");
+          setProjectionData(parsedData);
+        } catch (error) {
+          console.error("Failed to parse projection data", error);
         }
         
-        console.log("Setting projection data with forced update");
-        setProjectionData(parsedData);
-      } catch (error) {
-        console.error("Failed to parse projection data", error);
-      }
-      
-      // Set projection name
-      setProjectionName(savedProjection.name || "Unnamed Projection");
+        // Set projection name
+        setProjectionName(data.name || "Unnamed Projection");
+      })
+      .catch(error => {
+        console.error("Error in direct fetch of projection data:", error);
+        alert("Failed to load projection data. Please try again.");
+      });
     }
-  }, [savedProjection, projectionId]); // This effect will run whenever savedProjection or projectionId changes
+  }, [projectionId]); // This effect will run whenever projectionId changes
 
   useEffect(() => {
     if (chartRef.current) {

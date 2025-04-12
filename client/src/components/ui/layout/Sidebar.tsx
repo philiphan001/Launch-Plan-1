@@ -164,16 +164,24 @@ const Sidebar = () => {
                           return (
                             <li key={projection.id} className="mb-1 flex items-center group">
                               <a
-                                href={`/projections?id=${projection.id}&t=${new Date().getTime()}`}
+                                href="javascript:void(0)"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  // Force a complete page reload - this is the most reliable way
-                                  // to ensure everything is reset and reloaded properly
-                                  const timestamp = new Date().getTime();
-                                  console.log(`Navigating to projection ${projection.id} with hard reload`);
-                                  window.location.href = `/projections?id=${projection.id}&t=${timestamp}`;
+                                  // Generate a unique cache busting key with timestamp and random value
+                                  const uniqueKey = `${new Date().getTime()}_${Math.random().toString(36).substring(2, 15)}`;
+                                  console.log(`Generating unique cache key: ${uniqueKey}`);
+                                  
+                                  // Hard reset all React Query caches before navigating
+                                  queryClient.clear();
+                                  console.log("Cleared all query caches");
+                                  
+                                  // Force a complete page reload with truly unique cache busting parameters
+                                  console.log(`Navigating to projection ${projection.id} with aggressive cache reset`);
+                                  
+                                  // Create the URL with multiple cache busting params
+                                  window.location.href = `/projections?id=${projection.id}&t=${uniqueKey}&nocache=true&cb=${uniqueKey}`;
                                 }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 
