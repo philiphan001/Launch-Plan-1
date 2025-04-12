@@ -2034,33 +2034,19 @@ const Pathways = ({
                       
                       {selectedFieldOfStudy && (
                         <div className="mt-6">
-                          <h4 className="font-medium mb-4">Career Paths in {selectedFieldOfStudy}</h4>
-                          
-                          {isLoadingFieldPaths ? (
-                            <div className="text-center py-4">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                              <p className="mt-2 text-sm text-gray-600">Loading career paths...</p>
+                          <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                            <div className="flex items-start">
+                              <div className="bg-blue-100 rounded-full p-1.5 mt-0.5 mr-3">
+                                <span className="material-icons text-blue-600 text-sm">info</span>
+                              </div>
+                              <div>
+                                <h5 className="font-medium text-blue-800 mb-1">Career Options Coming Up Next</h5>
+                                <p className="text-sm text-blue-700">
+                                  In the next step, you'll see all the career paths available for {selectedFieldOfStudy}.
+                                </p>
+                              </div>
                             </div>
-                          ) : fieldCareerPaths && Array.isArray(fieldCareerPaths) && fieldCareerPaths.length > 0 ? (
-                            <div className="space-y-3">
-                              {fieldCareerPaths.map((path: CareerPath) => (
-                                <Card key={path.id} className="border-gray-200 hover:border-primary transition-colors">
-                                  <CardContent className="p-4">
-                                    <div className="flex items-center">
-                                      <div className="rounded-full bg-primary/10 text-primary h-8 w-8 flex items-center justify-center mr-3 flex-shrink-0">
-                                        <span className="font-medium">{path.option_rank}</span>
-                                      </div>
-                                      <div>
-                                        <h5 className="font-medium">{path.career_title}</h5>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-600 text-sm py-4">No career paths found for this field of study</p>
-                          )}
+                          </div>
                         </div>
                       )}
                       
