@@ -81,6 +81,7 @@ export interface IStorage {
   // Location cost of living methods
   getLocationCostOfLiving(id: number): Promise<LocationCostOfLiving | undefined>;
   getLocationCostOfLivingByZipCode(zipCode: string): Promise<LocationCostOfLiving | undefined>;
+  getLocationCostOfLivingByCityState(city: string, state: string): Promise<LocationCostOfLiving[]>;
   getAllLocationCostOfLiving(): Promise<LocationCostOfLiving[]>;
   createLocationCostOfLiving(locationCostOfLiving: InsertLocationCostOfLiving): Promise<LocationCostOfLiving>;
   
