@@ -188,11 +188,14 @@ function App() {
         <Route path="/dashboard">
           {() => <Dashboard {...authProps} />}
         </Route>
+        <Route path="/projections/:id">
+          {(params) => {
+            console.log("Matched projection ID route with params:", params);
+            return <FinancialProjections {...authProps} projectionId={parseInt(params.id)} />;
+          }}
+        </Route>
         <Route path="/projections">
           {() => <FinancialProjections {...authProps} />}
-        </Route>
-        <Route path="/projections/:id">
-          {(params) => <FinancialProjections {...authProps} projectionId={parseInt(params.id)} />}
         </Route>
         <Route path="/careers">
           {() => <CareerExploration {...authProps} />}
