@@ -105,9 +105,11 @@ const Sidebar = () => {
                           </li>
                           {savedProjections.map(projection => (
                             <li className="my-1" key={projection.id}>
-                              <Link
-                                href={`/projections/${projection.id}`}
-                                className={`block py-2 px-2 rounded text-sm truncate ${
+                              <div
+                                onClick={() => {
+                                  window.location.href = `/projections/${projection.id}`;
+                                }}
+                                className={`block py-2 px-2 rounded text-sm truncate cursor-pointer ${
                                   location === `/projections/${projection.id}`
                                     ? "text-primary bg-blue-50"
                                     : "text-gray-700 hover:bg-gray-100 hover:text-primary"
@@ -115,7 +117,7 @@ const Sidebar = () => {
                                 title={projection.name}
                               >
                                 {projection.name}
-                              </Link>
+                              </div>
                             </li>
                           ))}
                         </>
