@@ -1591,17 +1591,16 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     setFinancialAdvice(advice);
   }, [income, expenses, startingSavings, studentLoanDebt, financialProfile, milestones]);
 
-  // BYPASS ALL CACHE ISSUES with direct fetch from API
+  // COMPLETELY NEW APPROACH: Load saved projection and recalculate with Python
   useEffect(() => {
     // Only run when we have a projectionId
     if (projectionId) {
-      console.log("DIRECT FETCH OF PROJECTION DATA FOR ID:", projectionId);
+      console.log("🔄 LOADING SAVED PROJECTION WITH ID:", projectionId);
       
-      // Fetch projection data directly, bypassing any caching
+      // First, fetch the saved projection parameters
       const uniqueTimestamp = new Date().getTime();
       fetch(`/api/financial-projections/detail/${projectionId}?_=${uniqueTimestamp}`, {
         headers: {
-          // Add cache busting headers
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
@@ -1614,47 +1613,70 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         return response.json();
       })
       .then(data => {
-        console.log("SUCCESSFULLY FETCHED PROJECTION DATA:", data.id, data.name);
+        console.log("✅ SUCCESSFULLY FETCHED SAVED PROJECTION:", data.id, data.name);
         
-        // EXPLICITLY SET ALL STATE FROM FETCHED DATA
-        // Set all form fields from the saved projection
-        setAge(data.startingAge || 25);
-        setStartingSavings(data.startingSavings || 5000);
-        setIncome(data.income || 40000);
-        setExpenses(data.expenses || 35000);
-        setIncomeGrowth(data.incomeGrowth || 3.0);
-        setStudentLoanDebt(data.studentLoanDebt || 0);
-        setTimeframe(`${data.timeframe || 10} Years`);
-        setEmergencyFundAmount(data.emergencyFundAmount || 10000);
-        setPersonalLoanTermYears(data.personalLoanTermYears || 5);
-        setPersonalLoanInterestRate(data.personalLoanInterestRate || 8.0);
+        // Store the loaded parameters
+        const loadedAge = data.startingAge || 25;
+        const loadedSavings = data.startingSavings || 5000;
+        const loadedIncome = data.income || 40000;
+        const loadedExpenses = data.expenses || 35000;
+        const loadedIncomeGrowth = data.incomeGrowth || 3.0;
+        const loadedStudentLoanDebt = data.studentLoanDebt || 0;
+        const loadedTimeframe = data.timeframe || 10;
+        const loadedEmergencyFundAmount = data.emergencyFundAmount || 10000;
+        const loadedPersonalLoanTermYears = data.personalLoanTermYears || 5;
+        const loadedPersonalLoanInterestRate = data.personalLoanInterestRate || 8.0;
         
-        // Parse the projectionData
-        try {
-          let parsedData;
-          if (typeof data.projectionData === 'string') {
-            console.log("Parsing string projectionData...");
-            parsedData = JSON.parse(data.projectionData);
-          } else {
-            console.log("Using object projectionData directly...");
-            parsedData = data.projectionData;
-          }
-          
-          console.log("Setting projection data with forced update");
-          setProjectionData(parsedData);
-        } catch (error) {
-          console.error("Failed to parse projection data", error);
-        }
-        
-        // Set projection name
+        // Set UI form values first
+        setAge(loadedAge);
+        setStartingSavings(loadedSavings);
+        setIncome(loadedIncome);
+        setExpenses(loadedExpenses);
+        setIncomeGrowth(loadedIncomeGrowth);
+        setStudentLoanDebt(loadedStudentLoanDebt);
+        setTimeframe(`${loadedTimeframe} Years`);
+        setEmergencyFundAmount(loadedEmergencyFundAmount);
+        setPersonalLoanTermYears(loadedPersonalLoanTermYears);
+        setPersonalLoanInterestRate(loadedPersonalLoanInterestRate);
         setProjectionName(data.name || "Unnamed Projection");
+        
+        console.log("🧮 RECALCULATING PROJECTION WITH PYTHON BACKEND...");
+        
+        // STEP 2: Generate inputs for the Python calculator
+        const calculatorInput = generatePythonCalculatorInput(
+          loadedAge,
+          loadedTimeframe,
+          loadedSavings,
+          loadedIncome,
+          loadedIncomeGrowth,
+          loadedStudentLoanDebt,
+          (milestones || []) as any[], // Type assertion to avoid type mismatch
+          locationCostData?.income_adjustment_factor || 1.0,
+          locationCostData,
+          loadedEmergencyFundAmount,
+          loadedPersonalLoanTermYears,
+          loadedPersonalLoanInterestRate
+        );
+        
+        console.log("📤 SENDING DATA TO PYTHON CALCULATOR:", calculatorInput);
+        
+        // STEP 3: Call the Python calculator API
+        return calculateFinancialProjection(calculatorInput);
+      })
+      .then(calculationResult => {
+        console.log("📊 RECEIVED FRESH CALCULATION RESULT FROM PYTHON:", calculationResult);
+        
+        // STEP 4: Update the chart with the fresh calculation results
+        setProjectionData(calculationResult);
+        
+        console.log("📈 CHART DATA UPDATED WITH FRESH CALCULATION RESULTS");
       })
       .catch(error => {
-        console.error("Error in direct fetch of projection data:", error);
-        alert("Failed to load projection data. Please try again.");
+        console.error("❌ ERROR IN PROJECTION LOADING/CALCULATION PIPELINE:", error);
+        alert("Failed to load and recalculate projection. Please try again.");
       });
     }
-  }, [projectionId]); // This effect will run whenever projectionId changes
+  }, [projectionId, locationCostData, milestones]); // Dependencies include locationCostData and milestones
 
   useEffect(() => {
     if (chartRef.current) {

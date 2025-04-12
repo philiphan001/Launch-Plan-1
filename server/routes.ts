@@ -514,13 +514,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/financial-projections/detail/:id", async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      console.log("=== SERVER: Fetching financial projection DETAIL with ID:", id, "===");
+      
       if (isNaN(id)) {
+        console.log("SERVER ERROR: Invalid projection ID format");
         return res.status(400).json({ message: "Invalid projection ID format" });
       }
       
       const projection = await activeStorage.getFinancialProjection(id);
       if (!projection) {
+        console.log("SERVER ERROR: Financial projection not found with ID:", id);
         return res.status(404).json({ message: "Financial projection not found" });
+      }
+      
+      console.log("=== SERVER: Successfully found projection ===");
+      console.log("ID:", projection.id);
+      console.log("Name:", projection.name);
+      console.log("Income:", projection.income);
+      console.log("Expenses:", projection.expenses);
+      console.log("Starting Age:", projection.startingAge);
+      console.log("Starting Savings:", projection.startingSavings);
+      console.log("=================================================");
+      
+      // Debug projection data structure
+      if (typeof projection.projectionData === 'string') {
+        console.log("Projection data is stored as a string (needs parsing)");
+      } else {
+        console.log("Projection data is already an object");
       }
       
       res.json(projection);

@@ -169,19 +169,12 @@ const Sidebar = () => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  // Generate a unique cache busting key with timestamp and random value
-                                  const uniqueKey = `${new Date().getTime()}_${Math.random().toString(36).substring(2, 15)}`;
-                                  console.log(`Generating unique cache key: ${uniqueKey}`);
+                                  // Simple approach - use reload instead of trying to make React Query work
+                                  const timestamp = new Date().getTime();
+                                  console.log(`🔥 Full page reload for projection ${projection.id}`);
                                   
-                                  // Hard reset all React Query caches before navigating
-                                  queryClient.clear();
-                                  console.log("Cleared all query caches");
-                                  
-                                  // Force a complete page reload with truly unique cache busting parameters
-                                  console.log(`Navigating to projection ${projection.id} with aggressive cache reset`);
-                                  
-                                  // Create the URL with multiple cache busting params
-                                  window.location.href = `/projections?id=${projection.id}&t=${uniqueKey}&nocache=true&cb=${uniqueKey}`;
+                                  // Force a complete page reload to clear all state
+                                  window.location.href = `/projections?id=${projection.id}&t=${timestamp}`;
                                 }}
                                 className={`text-sm flex-grow truncate pl-4 py-1 block ${
                                   isActive 
