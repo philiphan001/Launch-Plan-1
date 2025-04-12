@@ -102,6 +102,16 @@ const Pathways = ({
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
   
+  // Location data type
+  interface LocationData {
+    zip_code: string;
+    city: string;
+    state: string;
+    county?: string;
+    cost_of_living_index?: number;
+    median_income?: number;
+  }
+  
   // Location selection state variables
   const [selectedZipCode, setSelectedZipCode] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<{city: string, state: string} | null>(null);
@@ -280,6 +290,12 @@ const Pathways = ({
     setSelectedProfession(null);
     setExplorationMethod(null);
     setGuidedPathComplete(false); // Reset the guided path completion flag
+    
+    // Reset location selection
+    setSelectedZipCode('');
+    setSelectedLocation(null);
+    
+    // Reset game results
     setSwipeResults({});
     setWheelResults({});
     setAvatarResults({});
@@ -2464,20 +2480,123 @@ const Pathways = ({
                         {selectedProfession && (
                           <Button 
                             className="bg-green-500 hover:bg-green-600"
-                            onClick={() => {
-                              // Pass the complete narrative to the calculator via localStorage
-                              localStorage.setItem('userPathwayNarrative', userJourney);
-                              
-                              // Redirect to calculator
-                              navigate('/calculator');
-                            }}
+                            onClick={handleNext}
                           >
-                            Create Financial Plan
+                            Next: Choose Location
                           </Button>
                         )}
                       </div>
                     </>
                   )}
+                </CardContent>
+              </Card>
+            </Step>
+          );
+        }
+        
+      case 7:
+        // Location selection step
+        if (isEducationPath(selectedPath) && selectedFieldOfStudy && selectedProfession) {
+          return (
+            <Step title={userJourney} subtitle="Where would you like to live after completing your education?">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium mb-4">Select Your Future Location</h3>
+                    
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                      <div className="flex items-start gap-2">
+                        <div className="text-blue-500 mt-0.5">
+                          <span className="material-icons">place</span>
+                        </div>
+                        <div>
+                          <h4 className="text-md font-medium text-blue-700 mb-1">Where You Live Matters</h4>
+                          <p className="text-sm text-blue-600 mb-2">
+                            Location affects cost of living, career opportunities, and overall quality of life.
+                            Enter a zip code to get location-specific financial projections.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <label htmlFor="location-zip" className="block text-sm font-medium mb-2">Zip Code</label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="location-zip"
+                          placeholder="Enter zip code (e.g. 90210, 02142, 94103)"
+                          className="flex-1"
+                          value={selectedZipCode}
+                          onChange={(e) => setSelectedZipCode(e.target.value)}
+                          maxLength={5}
+                        />
+                        <Button 
+                          variant="outline" 
+                          className="flex gap-2 items-center"
+                          disabled={selectedZipCode.length !== 5 || fetchingLocation}
+                          onClick={() => fetchLocationByZipCode(selectedZipCode)}
+                        >
+                          {fetchingLocation ? (
+                            <>
+                              <span className="material-icons animate-spin text-sm">refresh</span>
+                              <span>Searching...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="material-icons text-sm">search</span>
+                              <span>Find</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      
+                      <p className="text-xs text-gray-500 mt-2">
+                        Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta)
+                      </p>
+                    </div>
+                    
+                    {selectedLocation && (
+                      <div className="bg-green-50 border border-green-100 p-4 rounded-lg mb-6">
+                        <div className="flex items-start gap-2">
+                          <div className="text-green-500 mt-0.5">
+                            <span className="material-icons">check_circle</span>
+                          </div>
+                          <div>
+                            <h4 className="text-md font-medium text-green-700 mb-1">Location Found</h4>
+                            <p className="text-sm text-green-600 mb-2">
+                              {selectedLocation.city}, {selectedLocation.state}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between mt-6">
+                      <Button variant="outline" onClick={handleBack}>Back</Button>
+                      <Button 
+                        className="bg-green-500 hover:bg-green-600"
+                        onClick={() => {
+                          // Update the location in localStorage too if selected
+                          if (selectedLocation) {
+                            localStorage.setItem('selectedLocation', JSON.stringify({
+                              zipCode: selectedZipCode,
+                              city: selectedLocation.city,
+                              state: selectedLocation.state
+                            }));
+                          }
+                          
+                          // Pass the complete narrative to the calculator via localStorage
+                          localStorage.setItem('userPathwayNarrative', userJourney);
+                          
+                          // Redirect to calculator
+                          navigate('/calculator');
+                        }}
+                        disabled={!selectedLocation && selectedZipCode.length === 5}
+                      >
+                        Create Financial Plan
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </Step>
