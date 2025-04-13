@@ -355,8 +355,16 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       if (!title) title = "Get Married";
       type = "marriage";
       
-      const selectedCareer = careers?.find(c => c.title === spouseOccupation);
-      const spouseIncomeValue = selectedCareer ? selectedCareer.salaryMedian || 50000 : spouseIncome;
+      // Safety check for careers data and spouse occupation
+      let spouseIncomeValue = spouseIncome;  // Default to user-entered value
+      
+      // Only try to find a matching career if spouseOccupation is set
+      if (spouseOccupation && careers && careers.length > 0) {
+        const selectedCareer = careers.find(c => c.title === spouseOccupation);
+        if (selectedCareer && selectedCareer.salaryMedian) {
+          spouseIncomeValue = selectedCareer.salaryMedian;
+        }
+      }
       
       const milestoneData = {
         userId,
@@ -364,7 +372,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         title,
         date,
         yearsAway,
-        spouseOccupation,
+        spouseOccupation: spouseOccupation || null,  // Ensure this is never undefined
         spouseIncome: spouseIncomeValue,
         spouseAssets,
         spouseLiabilities,
