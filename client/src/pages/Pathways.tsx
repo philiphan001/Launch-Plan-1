@@ -2831,12 +2831,12 @@ const Pathways = ({
                                 className="pl-9 flex-1 w-full"
                                 value={careerSearchQuery}
                                 onChange={(e) => {
-                                  const searchTerm = e.target.value.trim().toLowerCase();
                                   setCareerSearchQuery(e.target.value);
                                   
-                                  if (searchTerm && searchTerm.length >= 2) {
+                                  // For search term longer than 2 characters
+                                  if (e.target.value.trim() && e.target.value.trim().length >= 2) {
                                     // Use the API-based search function
-                                    searchCareers(searchTerm);
+                                    searchCareers(e.target.value.trim());
                                   } else {
                                     // Clear filtered paths when search is empty
                                     setFilteredCareerPaths(null);
