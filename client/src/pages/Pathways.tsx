@@ -185,6 +185,13 @@ const Pathways = ({
     county?: string;
     cost_of_living_index?: number;
     median_income?: number;
+    income_adjustment_factor?: number;
+    housing?: number;
+    food?: number;
+    transportation?: number;
+    utilities?: number;
+    healthcare?: number;
+    other?: number;
   }
   
   // US states array for dropdown
@@ -247,7 +254,7 @@ const Pathways = ({
   const [selectedZipCode, setSelectedZipCode] = useState<string>('');
   const [citySearchQuery, setCitySearchQuery] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('CA');
-  const [selectedLocation, setSelectedLocation] = useState<{city: string, state: string} | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
   
   // Add location to favorites mutation
@@ -3344,7 +3351,21 @@ const Pathways = ({
                                       // Default values if not available in financial profile
                                       const householdIncome = profile?.householdIncome || 80000;
                                       const householdSize = profile?.householdSize || 4;
-                                      const userZipCode = userData?.zipCode || '00000';
+                                      // Use profile or fetch from localStorage if the user object doesn't have zipCode
+                                      let userZipCode = '00000';
+                                      if (profile?.zip) {
+                                        userZipCode = profile.zip;
+                                      } else {
+                                        try {
+                                          const savedProfile = localStorage.getItem('userProfile');
+                                          if (savedProfile) {
+                                            const parsedProfile = JSON.parse(savedProfile);
+                                            userZipCode = parsedProfile.zipCode || '00000';
+                                          }
+                                        } catch (err) {
+                                          console.error('Error getting zip code from localStorage:', err);
+                                        }
+                                      }
                                       
                                       // Calculate a reasonable net price and loan amount
                                       // These are simplified defaults - in a real app, you'd use
@@ -3413,10 +3434,25 @@ const Pathways = ({
                                         })
                                         .then(res => {
                                           if (!res.ok) throw new Error('Failed to create college calculation');
-                                          console.log('Successfully created college calculation with projection inclusion');
+                                          return res.json();
+                                        })
+                                        .then(data => {
+                                          console.log('Successfully created college calculation with projection inclusion:', data);
+                                          // Show success toast to notify user
+                                          toast({
+                                            title: "College costs calculated",
+                                            description: `College cost calculation for ${specificSchool} has been created and saved to your profile.`,
+                                            variant: "default",
+                                          });
                                         })
                                         .catch(err => {
                                           console.error('Error creating college calculation:', err);
+                                          // Show error toast
+                                          toast({
+                                            title: "Error creating college calculation",
+                                            description: "There was a problem saving your college cost calculation.",
+                                            variant: "destructive",
+                                          });
                                         });
                                     })
                                     .catch(err => {
@@ -3446,7 +3482,9 @@ const Pathways = ({
                                   
                                   if (selectedLocation) {
                                     locationZip = selectedZipCode;
-                                    const locationFactor = selectedLocation.income_adjustment_factor || 1.0;
+                                    // The location might have income_adjustment_factor or we can calculate from cost_of_living_index
+                                    const locationFactor = (selectedLocation as any).income_adjustment_factor || 
+                                                          (selectedLocation.cost_of_living_index ? selectedLocation.cost_of_living_index / 100 : 1.0);
                                     projectedSalary = Math.round(midCareerSalary * locationFactor);
                                     adjustedForLocation = true;
                                   }
@@ -3494,10 +3532,25 @@ const Pathways = ({
                                     })
                                     .then(res => {
                                       if (!res.ok) throw new Error('Failed to create career calculation');
-                                      console.log('Successfully created career calculation with projection inclusion');
+                                      return res.json();
+                                    })
+                                    .then(data => {
+                                      console.log('Successfully created career calculation with projection inclusion:', data);
+                                      // Show success toast to notify user
+                                      toast({
+                                        title: "Career earnings calculated",
+                                        description: `Career earnings calculation for ${selectedProfession} has been created and saved to your profile.`,
+                                        variant: "default",
+                                      });
                                     })
                                     .catch(err => {
                                       console.error('Error creating career calculation:', err);
+                                      // Show error toast
+                                      toast({
+                                        title: "Error creating career calculation",
+                                        description: "There was a problem saving your career earnings calculation.",
+                                        variant: "destructive",
+                                      });
                                     });
                                 })
                                 .catch(err => {
