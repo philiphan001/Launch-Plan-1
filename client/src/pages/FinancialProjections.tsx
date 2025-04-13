@@ -220,6 +220,47 @@ const FinancialProjections = ({
       return response.json() as Promise<User>;
     }
   });
+  
+  // Fetch favorite colleges
+  const { data: favoriteColleges, isLoading: isLoadingFavoriteColleges } = useQuery({
+    queryKey: ['/api/favorites/colleges', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/favorites/colleges/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch favorite colleges');
+      return response.json();
+    },
+    enabled: !!userId && autoGenerate
+  });
+  
+  // Fetch favorite careers
+  const { data: favoriteCareers, isLoading: isLoadingFavoriteCareers } = useQuery({
+    queryKey: ['/api/favorites/careers', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/favorites/careers/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch favorite careers');
+      return response.json();
+    },
+    enabled: !!userId && autoGenerate
+  });
+  
+  // Fetch favorite locations
+  const { data: favoriteLocations, isLoading: isLoadingFavoriteLocations } = useQuery({
+    queryKey: ['/api/favorites/locations', userId],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/favorites/locations/${userId}`);
+        if (!response.ok) {
+          console.error('Failed to fetch favorite locations:', response.status, response.statusText);
+          return [];
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching favorite locations:', error);
+        return [];
+      }
+    },
+    enabled: !!userId && autoGenerate
+  });
 
   // Fetch assumptions for financial calculations
   const { data: assumptions, isLoading: isLoadingAssumptions } = useQuery({
@@ -365,81 +406,18 @@ const FinancialProjections = ({
     },
   });
 
-  // Handle auto-generation of financial projections based on pathway data
+  // Handle auto-generation of financial projections based on pathway data and favorite data
   useEffect(() => {
     if (autoGenerate) {
-      console.log("Auto-generating financial projection from pathway data");
+      console.log("Auto-generating financial projection from pathway and favorite data");
       
       try {
-        console.log("Attempting to load pathway data from localStorage...");
+        console.log("Checking for pathway data from localStorage and favorite data...");
         
-        // Load pathway data from localStorage
-        const pathwayDataStr = localStorage.getItem('pathwayData');
-        if (!pathwayDataStr) {
-          console.error("Auto-generate requested but no pathway data found in localStorage");
-          return;
-        }
-        
-        console.log("Raw pathway data string:", pathwayDataStr);
-        
-        const pathwayData = JSON.parse(pathwayDataStr);
-        console.log("Parsed pathway data:", pathwayData);
-        
-        // Determine initial age based on education path
+        // Determine initial age based on birth year
         let startingAge = 18; // Default starting age after high school
         if (userData?.birthYear) {
           startingAge = new Date().getFullYear() - userData.birthYear;
-        }
-        
-        // Determine education duration based on type
-        let educationYears = 0;
-        let studentLoanAmount = 0;
-        
-        if (pathwayData.educationType === "4year") {
-          educationYears = 4;
-          studentLoanAmount = 30000; // Estimate for 4-year college
-        } else if (pathwayData.educationType === "2year") {
-          educationYears = 2;
-          studentLoanAmount = 15000; // Estimate for 2-year college
-          
-          // If transferring to 4-year, add more years and debt
-          if (pathwayData.transferOption === "yes") {
-            educationYears += 2; // 2 years at transfer institution
-            studentLoanAmount += 20000; // Additional debt from transfer institution
-          }
-        } else if (pathwayData.educationType === "vocational") {
-          educationYears = 2;
-          studentLoanAmount = 12000; // Estimate for vocational school
-        }
-        
-        // Set the student loan debt
-        setStudentLoanDebt(studentLoanAmount);
-        
-        // Determine career income based on selected profession
-        let startingIncome = 40000; // Default starting salary
-        
-        // If we have career data and selected profession, find the salary
-        if (careers && careers.length > 0 && pathwayData.selectedProfession) {
-          const selectedCareer = careers.find((c: any) => 
-            c.title.toLowerCase() === pathwayData.selectedProfession.toLowerCase());
-          
-          if (selectedCareer) {
-            startingIncome = selectedCareer.entry_salary || 
-                             selectedCareer.median_salary || 
-                             40000;
-          }
-        }
-        
-        // Set the income
-        setIncome(startingIncome);
-        
-        // Adjust expenses based on location if available
-        if (pathwayData.location) {
-          // We'll use a simplified approach here - expenses as a percentage of income
-          // In a real implementation, you'd query the location_cost_of_living table
-          setExpenses(Math.round(startingIncome * 0.75));
-        } else {
-          setExpenses(Math.round(startingIncome * 0.7));
         }
         
         // Set the starting age
@@ -451,6 +429,185 @@ const FinancialProjections = ({
         } else {
           setStartingSavings(5000); // Default starting savings
         }
+
+        // First try to load pathway data from localStorage
+        const pathwayDataStr = localStorage.getItem('pathwayData');
+        let pathwayData = null;
+        
+        if (pathwayDataStr) {
+          console.log("Found pathway data in localStorage");
+          pathwayData = JSON.parse(pathwayDataStr);
+          console.log("Parsed pathway data:", pathwayData);
+        } else {
+          console.log("No pathway data in localStorage, using favorite data instead");
+        }
+        
+        // If we have favorite college data, use it for student loans
+        let studentLoanAmount = 0;
+        
+        if (favoriteColleges && favoriteColleges.length > 0) {
+          console.log("Using favorite college data:", favoriteColleges);
+          
+          // Try to find the college in the database
+          if (collegeCalculations && collegeCalculations.length > 0) {
+            // Look for matching college in calculations
+            const favoriteCollegeIds = favoriteColleges.map(fc => fc.collegeId);
+            const matchingCollegeCalc = collegeCalculations.find(calc => 
+              favoriteCollegeIds.includes(calc.collegeId)
+            );
+            
+            if (matchingCollegeCalc) {
+              console.log("Found matching college calculation for favorite:", matchingCollegeCalc);
+              studentLoanAmount = matchingCollegeCalc.studentLoanAmount || 0;
+              
+              // Also update includedInProjection flag if not already set
+              if (!matchingCollegeCalc.includedInProjection) {
+                // This would ideally update the database, but we'll just use the value for now
+                console.log("Setting this college calculation as included in projection");
+              }
+            }
+          }
+          
+          // If no student loan amount found, use an estimate based on college type
+          if (studentLoanAmount === 0) {
+            if (pathwayData?.educationType === "4year") {
+              studentLoanAmount = 30000; // Estimate for 4-year college
+            } else if (pathwayData?.educationType === "2year") {
+              studentLoanAmount = 15000; // Estimate for 2-year college
+              
+              // If transferring to 4-year, add more debt
+              if (pathwayData?.transferOption === "yes") {
+                studentLoanAmount += 20000; // Additional debt from transfer institution
+              }
+            } else if (pathwayData?.educationType === "vocational") {
+              studentLoanAmount = 12000; // Estimate for vocational school
+            } else {
+              // Default if no education type specified
+              studentLoanAmount = 25000;
+            }
+          }
+        } else if (pathwayData) {
+          // If no favorite college but pathway data exists, use that
+          if (pathwayData.educationType === "4year") {
+            studentLoanAmount = 30000; // Estimate for 4-year college
+          } else if (pathwayData.educationType === "2year") {
+            studentLoanAmount = 15000; // Estimate for 2-year college
+            
+            // If transferring to 4-year, add more debt
+            if (pathwayData.transferOption === "yes") {
+              studentLoanAmount += 20000; // Additional debt from transfer institution
+            }
+          } else if (pathwayData.educationType === "vocational") {
+            studentLoanAmount = 12000; // Estimate for vocational school
+          }
+        }
+        
+        // Set the student loan debt
+        setStudentLoanDebt(studentLoanAmount);
+        
+        // Determine career income based on favorite careers or pathway data
+        let startingIncome = 40000; // Default starting salary
+        
+        if (favoriteCareers && favoriteCareers.length > 0) {
+          console.log("Using favorite career data:", favoriteCareers);
+          
+          // Try to find the career in calculations
+          if (careerCalculations && careerCalculations.length > 0) {
+            const favoriteCareerIds = favoriteCareers.map(fc => fc.careerId);
+            const matchingCareerCalc = careerCalculations.find(calc => 
+              favoriteCareerIds.includes(calc.careerId)
+            );
+            
+            if (matchingCareerCalc) {
+              console.log("Found matching career calculation for favorite:", matchingCareerCalc);
+              if (matchingCareerCalc.entryLevelSalary) {
+                startingIncome = matchingCareerCalc.entryLevelSalary;
+              } else {
+                startingIncome = matchingCareerCalc.projectedSalary;
+              }
+              
+              // Also update includedInProjection flag if not already set
+              if (!matchingCareerCalc.includedInProjection) {
+                // This would ideally update the database, but we'll just use the value for now
+                console.log("Setting this career calculation as included in projection");
+              }
+            }
+          }
+          
+          // If still using default income, try to find the career in all careers
+          if (startingIncome === 40000 && careers && careers.length > 0) {
+            const favoriteCareer = favoriteCareers[0]; // Use the first favorite career
+            const careerInfo = careers.find((c: any) => c.id === favoriteCareer.careerId);
+            
+            if (careerInfo) {
+              console.log("Found career info for favorite:", careerInfo);
+              startingIncome = careerInfo.salary_pct_10 || // Use 10th percentile as entry level
+                              careerInfo.salary || 
+                              40000;
+            }
+          }
+        } else if (pathwayData?.selectedProfession && careers && careers.length > 0) {
+          // If no favorite careers but pathway data exists, use selected profession
+          const selectedCareer = careers.find((c: any) => 
+            c.title.toLowerCase() === pathwayData.selectedProfession.toLowerCase());
+          
+          if (selectedCareer) {
+            startingIncome = selectedCareer.salary_pct_10 || 
+                           selectedCareer.salary || 
+                           40000;
+          }
+        }
+        
+        // Set the income
+        setIncome(startingIncome);
+        
+        // Determine location for cost of living adjustments
+        let locationZipCode = userData?.zipCode; // Default to user's location
+        
+        if (favoriteLocations && favoriteLocations.length > 0) {
+          // Use the first favorite location
+          console.log("Using favorite location data:", favoriteLocations);
+          locationZipCode = favoriteLocations[0].zipCode;
+        } else if (pathwayData?.location) {
+          // If no favorite locations but pathway data exists, use that
+          locationZipCode = pathwayData.location;
+        }
+        
+        // If we have a different zip code than the user's profile,
+        // we need to fetch the location cost data for it
+        if (locationZipCode && locationZipCode !== userData?.zipCode) {
+          console.log("Using location zip code for expenses:", locationZipCode);
+          // In a complete implementation, we would fetch the new location cost data here
+          // For simplicity, we'll use a percentage of income based on what we know
+          setExpenses(Math.round(startingIncome * 0.75));
+        } else {
+          // Use the already fetched location cost data if available
+          if (locationCostData) {
+            // Calculate annual expenses directly from monthly cost of living data
+            const monthlyExpenses = (
+              (locationCostData.housing || 0) +
+              (locationCostData.food || 0) +
+              (locationCostData.transportation || 0) +
+              (locationCostData.healthcare || 0) +
+              (locationCostData.personal_insurance || 0) + 
+              (locationCostData.entertainment || 0) +
+              (locationCostData.services || 0) +
+              (locationCostData.apparel || 0) +
+              (locationCostData.other || 0)
+            );
+            
+            // Convert monthly to annual
+            const annualExpenses = monthlyExpenses * 12;
+            
+            // Use the calculated annual expenses, but ensure it's at least 50% of income
+            // as a sanity check (people generally don't spend less than half their income)
+            setExpenses(Math.max(Math.round(annualExpenses), Math.round(startingIncome * 0.5)));
+          } else {
+            // Default if no location data
+            setExpenses(Math.round(startingIncome * 0.7));
+          }
+        }
+        
       } catch (error) {
         console.error("Error auto-generating financial projection:", error);
       }
@@ -487,40 +644,36 @@ const FinancialProjections = ({
           setIncome(includedCareerCalc.projectedSalary);
         }
       }
-    }
-
-    // Set appropriate defaults for expenses based on income and location
-    if (income > 0) {
-      // Base expenses on income (typically 70-80% of income)
-      const baseExpenses = income * 0.75;
       
-      // Apply location adjustment if available
-      if (locationCostData) {
-        // Calculate annual expenses directly from monthly cost of living data
-        // These values are actual dollar amounts from the CSV file
-        const monthlyExpenses = (
-          (locationCostData.housing || 0) +
-          (locationCostData.food || 0) +
-          (locationCostData.transportation || 0) +
-          (locationCostData.healthcare || 0) +
-          (locationCostData.personal_insurance || 0) + 
-          (locationCostData.entertainment || 0) +
-          (locationCostData.services || 0) +
-          (locationCostData.apparel || 0) +
-          (locationCostData.other || 0)
-        );
+      // Set appropriate defaults for expenses based on income and location
+      if (income > 0) {
+        // Base expenses on income (typically 70-80% of income)
+        const baseExpenses = income * 0.75;
         
-        // Convert monthly to annual
-        const annualExpenses = monthlyExpenses * 12;
-        
-        // Make sure we're getting a reasonable result
-
-        
-        // Use the calculated annual expenses, but ensure it's at least 50% of income
-        // as a sanity check (people generally don't spend less than half their income)
-        setExpenses(Math.max(Math.round(annualExpenses), Math.round(income * 0.5)));
-      } else {
-        setExpenses(Math.round(baseExpenses));
+        // Apply location adjustment if available
+        if (locationCostData) {
+          // Calculate annual expenses directly from monthly cost of living data
+          const monthlyExpenses = (
+            (locationCostData.housing || 0) +
+            (locationCostData.food || 0) +
+            (locationCostData.transportation || 0) +
+            (locationCostData.healthcare || 0) +
+            (locationCostData.personal_insurance || 0) + 
+            (locationCostData.entertainment || 0) +
+            (locationCostData.services || 0) +
+            (locationCostData.apparel || 0) +
+            (locationCostData.other || 0)
+          );
+          
+          // Convert monthly to annual
+          const annualExpenses = monthlyExpenses * 12;
+          
+          // Use the calculated annual expenses, but ensure it's at least 50% of income
+          // as a sanity check (people generally don't spend less than half their income)
+          setExpenses(Math.max(Math.round(annualExpenses), Math.round(income * 0.5)));
+        } else {
+          setExpenses(Math.round(baseExpenses));
+        }
       }
     }
   }, [
@@ -531,7 +684,10 @@ const FinancialProjections = ({
     careerCalculations, 
     locationCostData, 
     income, 
-    careers
+    careers,
+    favoriteColleges,
+    favoriteCareers,
+    favoriteLocations
   ]);
   
   // Find the included college and career calculations
