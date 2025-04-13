@@ -28,6 +28,8 @@ type EducationType = "4year" | "2year" | "vocational" | null;
 type JobType = "fulltime" | "parttime" | "apprenticeship" | null;
 type MilitaryBranch = "army" | "navy" | "airforce" | "marines" | "coastguard" | "spaceguard" | null;
 type GapYearActivity = "travel" | "volunteer" | "work" | "other" | null;
+// For the transfer option
+type TransferOption = "yes" | "no" | null;
 
 interface StepProps {
   children: React.ReactNode;
@@ -101,6 +103,10 @@ const Pathways = ({
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
+  
+  // Transfer option for 2-year college path
+  const [transferOption, setTransferOption] = useState<TransferOption>(null);
+  const [transferCollege, setTransferCollege] = useState<string>('');
   
   // Location data type
   interface LocationData {
@@ -397,6 +403,10 @@ const Pathways = ({
     setSelectedProfession(null);
     setExplorationMethod(null);
     setGuidedPathComplete(false); // Reset the guided path completion flag
+    
+    // Reset transfer options for 2-year college
+    setTransferOption(null);
+    setTransferCollege('');
     
     // Reset location selection
     setSearchByZip(true);
