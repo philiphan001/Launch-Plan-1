@@ -2834,36 +2834,9 @@ const Pathways = ({
                                   const searchTerm = e.target.value.trim().toLowerCase();
                                   setCareerSearchQuery(e.target.value);
                                   
-                                  if (searchTerm) {
-                                    if (allCareers && Array.isArray(allCareers)) {
-                                      // Always search from all careers
-                                      console.log('Searching all careers:', searchTerm);
-                                      const filteredCareers = allCareers
-                                        .filter((career: any) => 
-                                          career.title?.toLowerCase().includes(searchTerm)
-                                        )
-                                        .map((career: any, index: number) => ({
-                                          id: career.id || index,
-                                          field_of_study: globalCareerSearch ? 
-                                                          (career.category || career.field || "General") : 
-                                                          selectedFieldOfStudy || "General",
-                                          career_title: career.title,
-                                          option_rank: career.rank || index + 1
-                                        }));
-                                      
-                                      // If global search is disabled, only show careers that match the selected field
-                                      // or show all if global search is enabled
-                                      const finalFilteredCareers = globalCareerSearch ? 
-                                        filteredCareers : 
-                                        filteredCareers.filter(c => 
-                                          !selectedFieldOfStudy || 
-                                          c.field_of_study.toLowerCase() === selectedFieldOfStudy.toLowerCase()
-                                        );
-                                      
-                                      setFilteredCareerPaths(finalFilteredCareers);
-                                    } else {
-                                      console.error('Could not search careers: allCareers is not available');
-                                    }
+                                  if (searchTerm && searchTerm.length >= 2) {
+                                    // Use the API-based search function
+                                    searchCareers(searchTerm);
                                   } else {
                                     // Clear filtered paths when search is empty
                                     setFilteredCareerPaths(null);
