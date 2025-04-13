@@ -117,21 +117,24 @@ const Pathways = ({
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
   
-  // Function to search careers with a given term - enhanced to match Go To Work pathway
+  // Function to search careers with a given term - directly matching Go To Work pathway
   const searchCareers = (searchTerm: string) => {
-    if (!searchTerm.trim()) return;
+    if (!searchTerm.trim()) {
+      setFilteredCareerPaths(null);
+      return;
+    }
     
     const term = searchTerm.trim().toLowerCase();
     console.log('Searching careers with term:', term);
     
-    // If we have all careers data already loaded, use that for more comprehensive searching
+    // EXACTLY matching the Go To Work pathway - filter careers directly from allCareers
     if (allCareers && Array.isArray(allCareers) && allCareers.length > 0) {
-      console.log('Using client-side search with loaded career data');
+      console.log('Filtering careers with exact same logic as Go To Work pathway');
       
-      // Comprehensive search in client-side data (similar to Go To Work pathway)
-      const filteredCareers = allCareers
-        .filter((career: any) => {
-          // Match search query across multiple fields for better results
+      // First get all matching careers with their original properties
+      const matchingCareers = allCareers
+        .filter(career => {
+          // Match search query - EXACT same logic as Go To Work pathway
           const matchesQuery = 
             (career.title && career.title.toLowerCase().includes(term)) || 
             (career.description && career.description.toLowerCase().includes(term)) ||
@@ -140,7 +143,7 @@ const Pathways = ({
             (career.alias3 && career.alias3.toLowerCase().includes(term)) ||
             (career.alias4 && career.alias4.toLowerCase().includes(term)) ||
             (career.alias5 && career.alias5.toLowerCase().includes(term));
-          
+            
           // Filter by field of study if not in global search mode
           if (!globalCareerSearch && selectedFieldOfStudy) {
             return matchesQuery && 
@@ -150,65 +153,36 @@ const Pathways = ({
           
           return matchesQuery;
         })
-        .map((career: any, index: number) => ({
-          id: career.id, // Preserve the actual career ID for proper linking
+        .slice(0, 10); // Limit results like in Go To Work pathway
+      
+      console.log(`Found ${matchingCareers.length} careers matching "${term}" from careers table`);
+      
+      // If we found matches, convert to the CareerPath format and set selectedCareerId
+      if (matchingCareers.length > 0) {
+        // Map to CareerPath format for display
+        const mappedResults = matchingCareers.map((career, index) => ({
+          id: career.id,
           field_of_study: globalCareerSearch ? 
                       (career.category || career.field || "General") : 
                       selectedFieldOfStudy,
           career_title: career.title,
           option_rank: index + 1,
-          // Include additional career data for display
+          // Include original career properties for display
           salary: career.salary,
           description: career.description
         }));
         
-      console.log(`Client-side search found ${filteredCareers.length} careers matching "${term}"`);
-      setFilteredCareerPaths(filteredCareers);
-      
-      // If we found careers, automatically select the first one to ensure an ID is set
-      if (filteredCareers.length > 0) {
-        setSelectedCareerId(filteredCareers[0].id);
-      }
-      return;
-    }
-    
-    // Fallback to API search if client data isn't loaded yet
-    fetch(`/api/careers/search?q=${encodeURIComponent(term)}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Career search API returned status ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        if (Array.isArray(data)) {
-          // Map the API results to our CareerPath format
-          const filteredCareers = data.map((career: any, index: number) => ({
-            id: career.id || index,
-            field_of_study: globalCareerSearch ? 
-                          (career.category || career.field || "General") : 
-                          selectedFieldOfStudy,
-            career_title: career.title,
-            option_rank: index + 1,
-            salary: career.salary,
-            description: career.description
-          }));
-          
-          console.log(`Found ${filteredCareers.length} careers matching "${term}" via API`);
-          setFilteredCareerPaths(filteredCareers);
-          
-          // If we found careers, automatically select the first one to ensure an ID is set
-          if (filteredCareers.length > 0) {
-            setSelectedCareerId(filteredCareers[0].id);
-          }
-        } else {
-          console.error('Career search API did not return an array');
-        }
-      })
-      .catch(error => {
-        console.error('Error searching careers via API:', error);
+        setFilteredCareerPaths(mappedResults);
+        
+        // Auto-select the first career (critical for financial planning)
+        setSelectedCareerId(matchingCareers[0].id);
+      } else {
         setFilteredCareerPaths([]);
-      });
+      }
+    } else {
+      console.log('Career data not loaded yet, cannot search');
+      setFilteredCareerPaths([]);
+    }
   };
   
   // Location data type
