@@ -2585,6 +2585,111 @@ const Pathways = ({
           );
         }
       
+      case 5.6:
+        // Transfer Field of Study selection for 2-year college students
+        if (isEducationPath(selectedPath) && educationType === '2year' && transferOption === 'yes') {
+          return (
+            <Step
+              title={userJourney}
+              subtitle="Select the field of study at your 4-year transfer college"
+            >
+              <Card>
+                <CardContent className="p-6">
+                  <div className="mb-6">
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                      <h4 className="text-lg font-semibold mb-2 flex items-center">
+                        <span className="material-icons mr-2 text-blue-500">school</span>
+                        Choose Your Field of Study at {transferCollege || "Your Transfer College"}
+                      </h4>
+                      <p className="text-gray-700 mb-4">
+                        Your field of study at your transfer college may be different from your community college major. 
+                        This choice will help determine potential career paths after you complete your bachelor's degree.
+                      </p>
+                      
+                      {/* Current 2-year field display */}
+                      <div className="bg-white p-3 rounded-md border border-blue-200 mb-4">
+                        <p className="font-medium text-gray-600">Current 2-Year College Field of Study:</p>
+                        <p className="text-primary font-semibold">{selectedFieldOfStudy}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          You may choose a different field for your bachelor's degree or continue in the same area.
+                        </p>
+                      </div>
+                      
+                      {/* Field of study selector */}
+                      <div className="mt-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Select a field of study for your bachelor's degree:
+                        </label>
+                        
+                        <Select
+                          value={transferFieldOfStudy}
+                          onValueChange={(value) => {
+                            setTransferFieldOfStudy(value);
+                            
+                            // Update the narrative with the new field of study
+                            const updatedNarrative = transferCollege 
+                              ? `After high school, I plan to attend a 2-year college studying ${selectedFieldOfStudy} and then transfer to ${transferCollege} to study ${value} for my bachelor's degree.`
+                              : `After high school, I plan to attend a 2-year college studying ${selectedFieldOfStudy} and then transfer to a 4-year college to study ${value} for my bachelor's degree.`;
+                            
+                            setUserJourney(updatedNarrative);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select a field of study" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="" disabled>Available Fields of Study</SelectItem>
+                              {transferFieldOptions.map((field) => (
+                                <SelectItem key={field} value={field}>
+                                  {field}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        
+                        {/* Show the selected transfer field of study */}
+                        {transferFieldOfStudy && (
+                          <div className="mt-4 bg-green-50 p-3 rounded-md border border-green-200">
+                            <div className="flex items-center">
+                              <div className="rounded-full bg-green-500 h-8 w-8 flex items-center justify-center text-white mr-3">
+                                <span className="material-icons text-sm">check_circle</span>
+                              </div>
+                              <div>
+                                <p className="font-medium">Selected Field at Transfer College:</p>
+                                <p className="text-green-700">{transferFieldOfStudy}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between mt-6">
+                    <Button variant="outline" onClick={handleBack}>Back</Button>
+                    {transferFieldOfStudy && (
+                      <Button 
+                        onClick={() => {
+                          // We use the transfer field of study for career selection
+                          setSelectedFieldOfStudy(transferFieldOfStudy);
+                          
+                          // Move to profession selection step
+                          setCurrentStep(6);
+                        }}
+                        className="bg-green-500 hover:bg-green-600"
+                      >
+                        Next: Choose Career
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </Step>
+          );
+        }
+      
       case 6:
         // Profession selection step
         if (isEducationPath(selectedPath) && selectedFieldOfStudy) {
@@ -2668,7 +2773,7 @@ const Pathways = ({
                                     // Complete the narrative with the searched career
                                     let narrative = '';
                                     if (educationType === '2year' && transferOption === 'yes') {
-                                      narrative = `After high school, I plan to attend a 2-year college and then transfer to ${transferCollege || 'a 4-year college'} where I will study ${selectedFieldOfStudy} to become a ${careerSearchQuery.trim()}.`;
+                                      narrative = `After high school, I plan to attend a 2-year college studying ${selectedFieldOfStudy === transferFieldOfStudy ? selectedFieldOfStudy : selectedFieldOfStudy + " initially"} and then transfer to ${transferCollege || 'a 4-year college'} where I will study ${transferFieldOfStudy} to become a ${careerSearchQuery.trim()}.`;
                                     } else {
                                       narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${careerSearchQuery.trim()}.`;
                                     }
@@ -2731,7 +2836,7 @@ const Pathways = ({
                                 // Complete the narrative with the selected profession
                                 let narrative = '';
                                 if (educationType === '2year' && transferOption === 'yes') {
-                                  narrative = `After high school, I plan to attend a 2-year college and then transfer to ${transferCollege || 'a 4-year college'} where I will study ${selectedFieldOfStudy} to become a ${path.career_title}.`;
+                                  narrative = `After high school, I plan to attend a 2-year college studying ${selectedFieldOfStudy === transferFieldOfStudy ? selectedFieldOfStudy : selectedFieldOfStudy + " initially"} and then transfer to ${transferCollege || 'a 4-year college'} where I will study ${transferFieldOfStudy} to become a ${path.career_title}.`;
                                 } else {
                                   narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${path.career_title}.`;
                                 }
@@ -2804,6 +2909,7 @@ const Pathways = ({
                                       transferOption: educationType === '2year' ? transferOption : null,
                                       transferCollege: (educationType === '2year' && transferOption === 'yes') ? transferCollege : null,
                                       fieldOfStudy: selectedFieldOfStudy,
+                                      transferFieldOfStudy: (educationType === '2year' && transferOption === 'yes') ? transferFieldOfStudy : null,
                                       profession: selectedProfession,
                                       narrative: userJourney
                                     }));
