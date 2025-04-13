@@ -237,6 +237,15 @@ export class PgStorage implements IStorage {
     return await db.select().from(favoriteLocations).where(eq(favoriteLocations.userId, userId));
   }
   
+  async getFavoriteLocationByZipCode(userId: number, zipCode: string): Promise<FavoriteLocation | undefined> {
+    const result = await db.select().from(favoriteLocations)
+      .where(and(
+        eq(favoriteLocations.userId, userId),
+        eq(favoriteLocations.zipCode, zipCode)
+      ));
+    return result[0];
+  }
+  
   async addFavoriteLocation(userId: number, zipCode: string, city?: string, state?: string): Promise<FavoriteLocation> {
     const result = await db.insert(favoriteLocations).values({ 
       userId, 
