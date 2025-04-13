@@ -1459,6 +1459,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete milestone", error: String(error) });
     }
   });
+  
+  // Delete all milestones for a user (for clean slate auto-generation)
+  app.delete("/api/milestones/user/:userId/all", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Get all milestones for the user
+      const milestones = await activeStorage.getMilestonesByUserId(userId);
+      
+      // Delete each milestone
+      for (const milestone of milestones) {
+        await activeStorage.deleteMilestone(milestone.id);
+      }
+      
+      res.status(200).json({ 
+        message: `Successfully deleted all ${milestones.length} milestones for user ${userId}` 
+      });
+    } catch (error) {
+      console.error("Failed to delete all milestones:", error);
+      res.status(500).json({ message: "Failed to delete all milestones", error: String(error) });
+    }
+  });
 
   // Assumption routes
   app.get("/api/assumptions/:id", async (req: Request, res: Response) => {

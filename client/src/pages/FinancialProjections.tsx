@@ -406,6 +406,31 @@ const FinancialProjections = ({
     },
   });
 
+  // Mutation to delete existing milestones when auto-generating a new plan
+  const deleteMilestonesMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      // This will delete all milestones for the user
+      const response = await fetch(`/api/milestones/user/${userId}/all`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        console.error("Failed to delete existing milestones:", response.statusText);
+        return false;
+      }
+      
+      return true;
+    },
+    onSuccess: () => {
+      console.log("Successfully deleted existing milestones");
+      // Invalidate the milestones query to refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/milestones/user', userId] });
+    },
+    onError: (error) => {
+      console.error("Error deleting milestones:", error);
+    }
+  });
+
   // Handle auto-generation of financial projections based on pathway data and favorite data
   useEffect(() => {
     if (autoGenerate) {
@@ -413,6 +438,12 @@ const FinancialProjections = ({
       
       try {
         console.log("Checking for pathway data from localStorage and favorite data...");
+        
+        // Delete existing milestones for a clean slate if user is authenticated
+        if (isAuthenticated && userId) {
+          console.log("Deleting existing milestones for user:", userId);
+          deleteMilestonesMutation.mutate(userId);
+        }
         
         // Determine initial age based on birth year
         let startingAge = 18; // Default starting age after high school
@@ -451,7 +482,7 @@ const FinancialProjections = ({
           // Try to find the college in the database
           if (collegeCalculations && collegeCalculations.length > 0) {
             // Look for matching college in calculations
-            const favoriteCollegeIds = favoriteColleges.map(fc => fc.collegeId);
+            const favoriteCollegeIds = favoriteColleges.map((fc: any) => fc.collegeId);
             const matchingCollegeCalc = collegeCalculations.find(calc => 
               favoriteCollegeIds.includes(calc.collegeId)
             );
@@ -513,7 +544,7 @@ const FinancialProjections = ({
           
           // Try to find the career in calculations
           if (careerCalculations && careerCalculations.length > 0) {
-            const favoriteCareerIds = favoriteCareers.map(fc => fc.careerId);
+            const favoriteCareerIds = favoriteCareers.map((fc: any) => fc.careerId);
             const matchingCareerCalc = careerCalculations.find(calc => 
               favoriteCareerIds.includes(calc.careerId)
             );
@@ -687,7 +718,10 @@ const FinancialProjections = ({
     careers,
     favoriteColleges,
     favoriteCareers,
-    favoriteLocations
+    favoriteLocations,
+    deleteMilestonesMutation,
+    isAuthenticated,
+    userId
   ]);
   
   // Find the included college and career calculations
