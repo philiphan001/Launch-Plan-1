@@ -40,7 +40,6 @@ export interface IStorage {
   // Career methods
   getCareer(id: number): Promise<Career | undefined>;
   getCareers(): Promise<Career[]>;
-  searchCareers(title: string): Promise<Career[]>;
   createCareer(career: InsertCareer): Promise<Career>;
   
   // Favorite college methods
@@ -469,34 +468,6 @@ export class MemStorage implements IStorage {
   
   async getCareers(): Promise<Career[]> {
     return Array.from(this.careers.values());
-  }
-  
-  async searchCareers(title: string): Promise<Career[]> {
-    // Simple case-insensitive title search
-    const searchQuery = title.toLowerCase().trim();
-    return Array.from(this.careers.values()).filter(career => {
-      if (!career.title) return false;
-      // Check for exact match first
-      if (career.title.toLowerCase() === searchQuery) {
-        return true;
-      }
-      
-      // Check for partial match
-      if (career.title.toLowerCase().includes(searchQuery)) {
-        return true;
-      }
-      
-      // Check for aliases
-      for (let i = 1; i <= 5; i++) {
-        const aliasKey = `alias${i}` as keyof Career;
-        const alias = career[aliasKey] as string | null;
-        if (alias && alias.toLowerCase().includes(searchQuery)) {
-          return true;
-        }
-      }
-      
-      return false;
-    });
   }
   
   async createCareer(insertCareer: InsertCareer): Promise<Career> {

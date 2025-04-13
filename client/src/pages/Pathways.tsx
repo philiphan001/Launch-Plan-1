@@ -44,7 +44,6 @@ interface CareerPath {
   field_of_study: string;
   career_title: string;
   option_rank: number;
-  careerId?: number | null; // Reference to matching career in careers table
 }
 
 const Step = ({ children, title, subtitle }: StepProps) => (
@@ -216,21 +215,12 @@ const Pathways = ({
   
   // Add career to favorites mutation
   const addCareerToFavorites = useMutation({
-    mutationFn: async (params: { careerId?: number, careerPathId?: number }) => {
-      const { careerId, careerPathId } = params;
-      
-      console.log(`Adding career to favorites with careerId: ${careerId}, careerPathId: ${careerPathId}`);
-      
-      if (!careerId && !careerPathId) {
-        throw new Error("Either careerId or careerPathId must be provided");
-      }
-      
+    mutationFn: async (careerId: number) => {
       return apiRequest('/api/favorites/careers', {
         method: 'POST',
         body: JSON.stringify({ 
           userId: user?.id || 1, // Use current user ID or default to 1 for demo
-          careerId,
-          careerPathId
+          careerId 
         })
       });
     }
@@ -2885,42 +2875,9 @@ const Pathways = ({
                             <Card 
                               key={path.id} 
                               className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
-                              onClick={async () => {
-                                // Set the profession title
+                              onClick={() => {
                                 setSelectedProfession(path.career_title);
-                                
-                                // Try to use careerId if it exists directly
-                                if (path.careerId) {
-                                  console.log(`Using existing careerId ${path.careerId} from career path`);
-                                  setSelectedCareerId(path.careerId);
-                                } else {
-                                  // Search the careers database for a matching career
-                                  console.log(`Career path ${path.id} doesn't have careerId, searching careers database`);
-                                  try {
-                                    // Search for careers with similar title
-                                    const response = await fetch(`/api/careers/search?query=${encodeURIComponent(path.career_title)}`);
-                                    if (response.ok) {
-                                      const results = await response.json();
-                                      if (results && results.length > 0) {
-                                        // Use the top matching career
-                                        const matchedCareer = results[0];
-                                        console.log(`Found matching career in database: ${matchedCareer.title} (ID: ${matchedCareer.id})`);
-                                        setSelectedCareerId(matchedCareer.id);
-                                      } else {
-                                        // No match found, use the career path ID as fallback
-                                        console.log(`No matching career found in database, using path ID as fallback: ${path.id}`);
-                                        setSelectedCareerId(path.id);
-                                      }
-                                    } else {
-                                      // API error, use path ID as fallback
-                                      console.error('Error searching careers:', response.statusText);
-                                      setSelectedCareerId(path.id);
-                                    }
-                                  } catch (error) {
-                                    console.error('Error searching careers:', error);
-                                    setSelectedCareerId(path.id);
-                                  }
-                                }
+                                setSelectedCareerId(path.id);
                                 
                                 // Complete the narrative with the selected profession
                                 let narrative = '';
@@ -3293,91 +3250,26 @@ const Pathways = ({
                           // Add selected career to favorites if user is authenticated
                           if (isAuthenticated && user && selectedCareerId) {
                             console.log(`Adding career to favorites: ID=${selectedCareerId}, Title=${selectedProfession}`);
-                            
-                            // First try to fetch the career path to check if it has a careerId already
-                            fetch(`/api/career-paths/${selectedCareerId}`)
-                              .then(response => response.json())
-                              .then(careerPath => {
-                                console.log('Career path details:', careerPath);
-                                
-                                // If career path has a careerId set, use it directly
-                                if (careerPath.careerId) {
-                                  console.log(`Career path has careerId=${careerPath.careerId}, using direct career ID`);
-                                  
-                                  // Make a direct API call using the careerId
-                                  fetch('/api/favorites/careers', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ 
-                                      userId: user.id, 
-                                      careerId: careerPath.careerId 
-                                    })
-                                  })
-                                  .then(response => {
-                                    if (response.ok) {
-                                      console.log('Career added to favorites successfully (direct careerId)');
-                                      toast({
-                                        title: "Added to favorites",
-                                        description: `${selectedProfession} has been added to your favorite careers.`,
-                                        variant: "default",
-                                      });
-                                    } else {
-                                      throw new Error('Failed to add career to favorites');
-                                    }
-                                  })
-                                  .catch(error => {
-                                    console.error('Error adding career to favorites (direct careerId):', error);
-                                    toast({
-                                      title: "Error adding to favorites",
-                                      description: "The career could not be added to your favorites. It might already exist in your favorites.",
-                                      variant: "destructive",
-                                    });
-                                  });
-                                } else {
-                                  // Fallback to the original mechanism using careerPathId
-                                  console.log('Career path does not have careerId, using careerPathId for backend lookup');
-                                  addCareerToFavorites.mutate({ careerPathId: selectedCareerId }, {
-                                    onSuccess: () => {
-                                      console.log('Career added to favorites successfully (via careerPathId)');
-                                      toast({
-                                        title: "Added to favorites",
-                                        description: `${selectedProfession} has been added to your favorite careers.`,
-                                        variant: "default",
-                                      });
-                                    },
-                                    onError: (error) => {
-                                      console.error('Failed to add career to favorites (via careerPathId):', error);
-                                      toast({
-                                        title: "Error adding to favorites",
-                                        description: "The career could not be added to your favorites. It might already exist in your favorites.",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  });
-                                }
-                              })
-                              .catch(error => {
-                                console.error('Error fetching career path details:', error);
-                                // Fallback to original method if we can't fetch career path details
-                                addCareerToFavorites.mutate({ careerPathId: selectedCareerId }, {
-                                  onSuccess: () => {
-                                    console.log('Career added to favorites successfully (fallback method)');
-                                    toast({
-                                      title: "Added to favorites",
-                                      description: `${selectedProfession} has been added to your favorite careers.`,
-                                      variant: "default",
-                                    });
-                                  },
-                                  onError: (error) => {
-                                    console.error('Failed to add career to favorites (fallback):', error);
-                                    toast({
-                                      title: "Error adding to favorites",
-                                      description: "The career could not be added to your favorites. It might already exist in your favorites.",
-                                      variant: "destructive",
-                                    });
-                                  }
+                            addCareerToFavorites.mutate(selectedCareerId, {
+                              onSuccess: () => {
+                                console.log('Career added to favorites successfully');
+                                // Show success toast to the user
+                                toast({
+                                  title: "Added to favorites",
+                                  description: `${selectedProfession} has been added to your favorite careers.`,
+                                  variant: "default",
                                 });
-                              });
+                              },
+                              onError: (error) => {
+                                console.error('Failed to add career to favorites:', error);
+                                // Show error toast to the user
+                                toast({
+                                  title: "Error adding to favorites",
+                                  description: "The career could not be added to your favorites. It might already exist in your favorites.",
+                                  variant: "destructive",
+                                });
+                              }
+                            });
                           } else {
                             console.log('Not adding career to favorites. Condition failed:', {
                               isAuthenticated,

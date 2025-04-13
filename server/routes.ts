@@ -254,70 +254,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get careers", error: error instanceof Error ? error.message : String(error) });
     }
   });
-  
-  // Career search endpoint - searches by title with query parameter
-  app.get("/api/careers/search", async (req: Request, res: Response) => {
-    try {
-      const { query } = req.query;
-      
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ message: "Query parameter is required" });
-      }
-      
-      console.log(`Searching careers with query: "${query}"`);
-      
-      // Get all careers 
-      const careers = await activeStorage.getCareers();
-      const queryLower = query.toLowerCase();
-      
-      // First try exact match (case insensitive)
-      let results = careers.filter(career => 
-        career.title.toLowerCase() === queryLower
-      );
-      
-      // If no exact matches, try contains
-      if (results.length === 0) {
-        results = careers.filter(career => 
-          career.title.toLowerCase().includes(queryLower) || 
-          queryLower.includes(career.title.toLowerCase())
-        );
-      }
-      
-      // If still no matches, try checking aliases
-      if (results.length === 0) {
-        results = careers.filter(career => 
-          (career.alias1 && career.alias1.toLowerCase().includes(queryLower)) ||
-          (career.alias2 && career.alias2.toLowerCase().includes(queryLower)) ||
-          (career.alias3 && career.alias3.toLowerCase().includes(queryLower))
-        );
-      }
-      
-      // Sort results by match quality
-      results.sort((a, b) => {
-        // Exact title match gets highest priority
-        if (a.title.toLowerCase() === queryLower) return -1;
-        if (b.title.toLowerCase() === queryLower) return 1;
-        
-        // Then title contains query
-        const aContains = a.title.toLowerCase().includes(queryLower);
-        const bContains = b.title.toLowerCase().includes(queryLower);
-        if (aContains && !bContains) return -1;
-        if (!aContains && bContains) return 1;
-        
-        // Then by title length (shorter = better match)
-        return a.title.length - b.title.length;
-      });
-      
-      // Limit results to top 5
-      const limitedResults = results.slice(0, 5);
-      console.log(`Found ${limitedResults.length} careers matching "${query}"`);
-      
-      res.json(limitedResults);
-    } catch (error) {
-      console.error('Error searching careers:', error);
-      res.status(500).json({ message: "Failed to search careers" });
-    }
-  });
 
   app.get("/api/careers/:id", async (req: Request, res: Response) => {
     try {
@@ -472,15 +408,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/favorites/careers", async (req: Request, res: Response) => {
     try {
-      const { userId, careerId, careerPathId } = req.body;
+      const { userId, careerId } = req.body;
       
-      console.log("Adding career to favorites:", { userId, careerId, careerPathId });
+      console.log("Adding career to favorites:", { userId, careerId });
       
       // Validate required fields
-      if (userId === undefined || (careerId === undefined && careerPathId === undefined)) {
-        return res.status(400).json({ 
-          message: "Missing required fields: userId and either careerId or careerPathId are required" 
-        });
+      if (userId === undefined || careerId === undefined) {
+        return res.status(400).json({ message: "Missing required fields: userId and careerId are required" });
       }
       
       // Verify user exists
@@ -497,50 +431,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // If careerId is provided directly, use it
-      if (careerId !== undefined) {
-        // Check if career exists
-        const career = await activeStorage.getCareer(careerId);
-        if (!career) {
-          return res.status(404).json({ message: `Career with ID ${careerId} not found` });
-        }
+      // Check if career exists
+      const career = await activeStorage.getCareer(careerId);
+      if (!career) {
+        console.log(`Career ID ${careerId} not found in careers table. This might be a career_paths ID which doesn't match.`);
         
-        const favorite = await activeStorage.addFavoriteCareer(userId, careerId);
-        return res.status(201).json(favorite);
-      }
-      
-      // If careerPathId is provided, try to find the career through the career path
-      if (careerPathId !== undefined) {
-        const careerPath = await activeStorage.getCareerPath(careerPathId);
-        if (!careerPath) {
-          return res.status(404).json({ message: `Career path with ID ${careerPathId} not found` });
-        }
-        
-        // If careerPath has a careerId set, use that (after adding the relation to schema)
-        if (careerPath.careerId) {
-          console.log(`Using referenced careerId ${careerPath.careerId} from career path`);
-          const favorite = await activeStorage.addFavoriteCareer(userId, careerPath.careerId);
-          return res.status(201).json(favorite);
-        }
-        
-        // Fallback to searching by title
-        console.log(`Career path careerId not set, searching by title "${careerPath.career_title}"`);
-        const matchingCareers = await activeStorage.searchCareers(careerPath.career_title);
-        if (matchingCareers && matchingCareers.length > 0) {
-          const matchedCareer = matchingCareers[0];
-          console.log(`Found matching career with ID ${matchedCareer.id} and title "${matchedCareer.title}"`);
+        // Try to find corresponding career path
+        const careerPath = await activeStorage.getCareerPath(careerId);
+        if (careerPath) {
+          console.log(`Found career path with title "${careerPath.career_title}". Need to find matching career.`);
           
-          // Use the matched career ID from the careers table
-          const favorite = await activeStorage.addFavoriteCareer(userId, matchedCareer.id);
-          return res.status(201).json(favorite);
+          // Try to find a matching career by title
+          const matchingCareers = await activeStorage.searchCareers(careerPath.career_title);
+          if (matchingCareers && matchingCareers.length > 0) {
+            const matchedCareer = matchingCareers[0];
+            console.log(`Found matching career with ID ${matchedCareer.id} and title "${matchedCareer.title}"`);
+            
+            // Use the matched career ID from the careers table
+            const favorite = await activeStorage.addFavoriteCareer(userId, matchedCareer.id);
+            return res.status(201).json(favorite);
+          }
         }
         
-        return res.status(404).json({ 
-          message: `No matching career found for career path "${careerPath.career_title}"` 
-        });
+        return res.status(404).json({ message: `Career with ID ${careerId} not found` });
       }
       
-      return res.status(400).json({ message: "Either careerId or careerPathId must be provided" });
+      const favorite = await activeStorage.addFavoriteCareer(userId, careerId);
+      res.status(201).json(favorite);
     } catch (error) {
       console.error("Error adding favorite career:", error);
       res.status(500).json({ message: "Failed to add favorite career", error: String(error) });
