@@ -96,6 +96,8 @@ const Pathways = ({
   const [transferOption, setTransferOption] = useState<TransferOption>(null);
   const [transferCollege, setTransferCollege] = useState<string>('');
   const [transferCollegeSearchQuery, setTransferCollegeSearchQuery] = useState<string>('');
+  const [transferFieldOfStudy, setTransferFieldOfStudy] = useState<string>('');
+  const [transferFieldOptions, setTransferFieldOptions] = useState<string[]>([]);
   
   // Track whether the user came through the guided path for proper flow separation
   const [guidedPathComplete, setGuidedPathComplete] = useState<boolean>(false);
@@ -425,6 +427,8 @@ const Pathways = ({
     setTransferOption(null);
     setTransferCollege('');
     setTransferCollegeSearchQuery('');
+    setTransferFieldOfStudy('');
+    setTransferFieldOptions([]);
     
     // Reset location selection
     setSearchByZip(true);
@@ -2555,9 +2559,13 @@ const Pathways = ({
                               : `${userJourney} and plan to transfer to a 4-year college to complete my bachelor's degree.`;
                             setUserJourney(updatedNarrative);
                             
-                            // Since we've already selected field of study for 2-year, continue to profession selection
-                            // No need to ask for field of study again
-                            setCurrentStep(6); // Jump to profession selection step
+                            // After selecting a transfer college, go to new step for choosing field of study at transfer college
+                            setCurrentStep(5.6); // New step for transfer field of study
+                            
+                            // Set transfer field options from global fields
+                            if (fieldsOfStudy && fieldsOfStudy.length > 0) {
+                              setTransferFieldOptions(fieldsOfStudy);
+                            }
                           } else {
                             const updatedNarrative = `${userJourney} and plan to enter the workforce after completing my associate's degree.`;
                             setUserJourney(updatedNarrative);
@@ -2567,7 +2575,7 @@ const Pathways = ({
                         }}
                         className="bg-green-500 hover:bg-green-600"
                       >
-                        {transferOption === 'yes' ? 'Next: Choose Career' : 'Next: Choose Profession'}
+                        {transferOption === 'yes' ? 'Next: Choose Field of Study' : 'Next: Choose Profession'}
                       </Button>
                     )}
                   </div>
