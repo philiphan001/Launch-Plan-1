@@ -79,7 +79,7 @@ const SavedCalculationsSection = () => {
   const userId = 1;
   const queryClient = useQueryClient();
   
-  // Fetch saved college calculations
+  // Fetch saved college calculations with automatic refresh
   const { data: collegeCalculations, isLoading: isLoadingCollegeCalcs, error: collegeError } = useQuery({
     queryKey: ['/api/college-calculations/user', userId],
     queryFn: async () => {
@@ -88,7 +88,10 @@ const SavedCalculationsSection = () => {
         throw new Error('Failed to fetch saved college calculations');
       }
       return response.json() as Promise<CollegeCalculation[]>;
-    }
+    },
+    // Refresh data every 5 seconds to catch new calculations
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true
   });
   
   // Fetch colleges to get their names
@@ -103,7 +106,7 @@ const SavedCalculationsSection = () => {
     }
   });
   
-  // Fetch saved career calculations
+  // Fetch saved career calculations with automatic refresh
   const { data: careerCalculations, isLoading: isLoadingCareerCalcs, error: careerError } = useQuery({
     queryKey: ['/api/career-calculations/user', userId],
     queryFn: async () => {
@@ -112,7 +115,10 @@ const SavedCalculationsSection = () => {
         throw new Error('Failed to fetch saved career calculations');
       }
       return response.json() as Promise<CareerCalculation[]>;
-    }
+    },
+    // Refresh data every 5 seconds to catch new calculations
+    refetchInterval: 5000, 
+    refetchOnWindowFocus: true
   });
   
   // Fetch careers to get their titles

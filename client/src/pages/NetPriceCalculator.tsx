@@ -592,8 +592,10 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
         description: "Your college cost calculation has been saved to your profile.",
       });
       
-      // Invalidate relevant queries
+      // Invalidate relevant queries to ensure the saved calculation appears immediately
       queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
+      // Also invalidate the global college calculations query used in SavedCalculationsSection
+      queryClient.invalidateQueries({ queryKey: ['/api/college-calculations'] });
     },
     onError: (error) => {
       console.error("Error saving calculation:", error);
