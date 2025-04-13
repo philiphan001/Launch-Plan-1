@@ -417,12 +417,17 @@ export const generatePythonCalculatorInput = (
 };
 
 // Call the Python calculator API
-export const calculateFinancialProjection = async (inputData: CalculatorInputData): Promise<FinancialProjectionData> => {
+export const calculateFinancialProjection = async (inputData: CalculatorInputData, autoGenerate: boolean = false): Promise<FinancialProjectionData> => {
   try {
+    // If autoGenerate is true, override any milestones to ensure a clean slate
+    const cleanInput = autoGenerate 
+      ? { ...inputData, milestones: [], autoGenerate: true }
+      : inputData;
+      
     // Enhanced debugging: Focus on milestone data
-    if (inputData.milestones && inputData.milestones.length > 0) {
+    if (cleanInput.milestones && cleanInput.milestones.length > 0) {
       console.log("MILESTONE DEBUG - Before sending to API:", 
-        inputData.milestones.map(milestone => ({
+        cleanInput.milestones.map(milestone => ({
           type: milestone.type,
           year: milestone.year,
           workStatus: milestone.workStatus,
@@ -431,7 +436,7 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       );
     }
     
-    console.log("Sending data to Python calculator:", inputData);
+    console.log("Sending data to Python calculator:", cleanInput);
     
     // Call the Python calculator API
     const response = await fetch('/api/calculate/financial-projection', {
@@ -439,7 +444,7 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(inputData),
+      body: JSON.stringify(cleanInput),
     });
     
     if (!response.ok) {
