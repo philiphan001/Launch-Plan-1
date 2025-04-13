@@ -431,19 +431,34 @@ const FinancialProjections = ({
     }
   });
 
+  // Handle deletion completion effect
+  const [deletionComplete, setDeletionComplete] = useState(false);
+  const [startGeneration, setStartGeneration] = useState(false);
+  
+  // Step 1: When autoGenerate is true, initiate deletion of existing milestones
+  useEffect(() => {
+    if (autoGenerate && isAuthenticated && userId && !deletionComplete && !startGeneration) {
+      console.log("Initiating milestone deletion for user:", userId);
+      deleteMilestonesMutation.mutate(userId);
+      setStartGeneration(true);
+    }
+  }, [autoGenerate, isAuthenticated, userId, deletionComplete, startGeneration, deleteMilestonesMutation]);
+  
+  // Step 2: When deletion is successful, set flag to continue with generation
+  useEffect(() => {
+    if (autoGenerate && startGeneration && !deleteMilestonesMutation.isPending && !deletionComplete) {
+      console.log("Milestone deletion complete, proceeding with financial projection generation");
+      setDeletionComplete(true);
+    }
+  }, [autoGenerate, startGeneration, deleteMilestonesMutation.isPending, deletionComplete]);
+
   // Handle auto-generation of financial projections based on pathway data and favorite data
   useEffect(() => {
-    if (autoGenerate) {
+    if (autoGenerate && (deletionComplete || !isAuthenticated)) {
       console.log("Auto-generating financial projection from pathway and favorite data");
       
       try {
         console.log("Checking for pathway data from localStorage and favorite data...");
-        
-        // Delete existing milestones for a clean slate if user is authenticated
-        if (isAuthenticated && userId) {
-          console.log("Deleting existing milestones for user:", userId);
-          deleteMilestonesMutation.mutate(userId);
-        }
         
         // Determine initial age based on birth year
         let startingAge = 18; // Default starting age after high school
@@ -721,7 +736,8 @@ const FinancialProjections = ({
     favoriteLocations,
     deleteMilestonesMutation,
     isAuthenticated,
-    userId
+    userId,
+    deletionComplete
   ]);
   
   // Find the included college and career calculations
