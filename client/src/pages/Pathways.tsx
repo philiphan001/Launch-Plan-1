@@ -109,8 +109,10 @@ const Pathways = ({
   // This will store the personalized narrative based on user selections
   const [userJourney, setUserJourney] = useState<string>("After high school, I am interested in...");
   const [specificSchool, setSpecificSchool] = useState<string>('');
+  const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [careerSearchQuery, setCareerSearchQuery] = useState<string>('');
+  const [selectedCareerId, setSelectedCareerId] = useState<number | null>(null);
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
