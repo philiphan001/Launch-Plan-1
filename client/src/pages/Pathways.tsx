@@ -454,8 +454,10 @@ const Pathways = ({
     setSelectedFieldOfStudy(null);
     setHasSpecificSchool(null);
     setSpecificSchool('');
+    setSelectedSchoolId(null);
     setSearchQuery('');
     setSelectedProfession(null);
+    setSelectedCareerId(null);
     setExplorationMethod(null);
     setGuidedPathComplete(false); // Reset the guided path completion flag
     
@@ -2064,6 +2066,7 @@ const Pathways = ({
                               className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${specificSchool === school.name ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
                               onClick={() => {
                                 setSpecificSchool(school.name);
+                                setSelectedSchoolId(school.id);
                                 
                                 // Update the narrative to include the selected school
                                 const schoolType = educationType === '4year' ? 'attending' : 
@@ -2868,6 +2871,7 @@ const Pathways = ({
                               className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
                               onClick={() => {
                                 setSelectedProfession(path.career_title);
+                                setSelectedCareerId(path.id);
                                 
                                 // Complete the narrative with the selected profession
                                 let narrative = '';
@@ -3161,7 +3165,7 @@ const Pathways = ({
                           // Store the narrative for the calculator
                           localStorage.setItem('userPathwayNarrative', userJourney);
                           
-                          // Store the location data
+                          // Store the location data and add to favorites
                           if (selectedLocation) {
                             const locationData = {
                               zipCode: selectedZipCode,
@@ -3194,6 +3198,54 @@ const Pathways = ({
                                 }
                               });
                             }
+                          }
+                          
+                          // Add selected college to favorites if user is authenticated
+                          if (isAuthenticated && user && selectedSchoolId) {
+                            addCollegeToFavorites.mutate(selectedSchoolId, {
+                              onSuccess: () => {
+                                console.log('College added to favorites successfully');
+                                // Show success toast to the user
+                                toast({
+                                  title: "Added to favorites",
+                                  description: `${specificSchool} has been added to your favorite colleges.`,
+                                  variant: "default",
+                                });
+                              },
+                              onError: (error) => {
+                                console.error('Failed to add college to favorites:', error);
+                                // Show error toast to the user
+                                toast({
+                                  title: "Error adding to favorites",
+                                  description: "The college could not be added to your favorites. It might already exist in your favorites.",
+                                  variant: "destructive",
+                                });
+                              }
+                            });
+                          }
+                          
+                          // Add selected career to favorites if user is authenticated
+                          if (isAuthenticated && user && selectedCareerId) {
+                            addCareerToFavorites.mutate(selectedCareerId, {
+                              onSuccess: () => {
+                                console.log('Career added to favorites successfully');
+                                // Show success toast to the user
+                                toast({
+                                  title: "Added to favorites",
+                                  description: `${selectedProfession} has been added to your favorite careers.`,
+                                  variant: "default",
+                                });
+                              },
+                              onError: (error) => {
+                                console.error('Failed to add career to favorites:', error);
+                                // Show error toast to the user
+                                toast({
+                                  title: "Error adding to favorites",
+                                  description: "The career could not be added to your favorites. It might already exist in your favorites.",
+                                  variant: "destructive",
+                                });
+                              }
+                            });
                           }
                           
                           // Redirect to the financial projections page with auto-generate flag
