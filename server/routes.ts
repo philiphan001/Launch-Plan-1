@@ -408,13 +408,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/favorites/careers", async (req: Request, res: Response) => {
     try {
-      const { userId, careerId } = req.body;
+      const { userId, careerId, careerPathId } = req.body;
       
-      console.log("Adding career to favorites:", { userId, careerId });
+      console.log("Adding career to favorites:", { userId, careerId, careerPathId });
       
       // Validate required fields
-      if (userId === undefined || careerId === undefined) {
-        return res.status(400).json({ message: "Missing required fields: userId and careerId are required" });
+      if (userId === undefined || (careerId === undefined && careerPathId === undefined)) {
+        return res.status(400).json({ 
+          message: "Missing required fields: userId and either careerId or careerPathId are required" 
+        });
       }
       
       // Verify user exists
@@ -431,33 +433,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check if career exists
-      const career = await activeStorage.getCareer(careerId);
-      if (!career) {
-        console.log(`Career ID ${careerId} not found in careers table. This might be a career_paths ID which doesn't match.`);
-        
-        // Try to find corresponding career path
-        const careerPath = await activeStorage.getCareerPath(careerId);
-        if (careerPath) {
-          console.log(`Found career path with title "${careerPath.career_title}". Need to find matching career.`);
-          
-          // Try to find a matching career by title
-          const matchingCareers = await activeStorage.searchCareers(careerPath.career_title);
-          if (matchingCareers && matchingCareers.length > 0) {
-            const matchedCareer = matchingCareers[0];
-            console.log(`Found matching career with ID ${matchedCareer.id} and title "${matchedCareer.title}"`);
-            
-            // Use the matched career ID from the careers table
-            const favorite = await activeStorage.addFavoriteCareer(userId, matchedCareer.id);
-            return res.status(201).json(favorite);
-          }
+      // If careerId is provided directly, use it
+      if (careerId !== undefined) {
+        // Check if career exists
+        const career = await activeStorage.getCareer(careerId);
+        if (!career) {
+          return res.status(404).json({ message: `Career with ID ${careerId} not found` });
         }
         
-        return res.status(404).json({ message: `Career with ID ${careerId} not found` });
+        const favorite = await activeStorage.addFavoriteCareer(userId, careerId);
+        return res.status(201).json(favorite);
       }
       
-      const favorite = await activeStorage.addFavoriteCareer(userId, careerId);
-      res.status(201).json(favorite);
+      // If careerPathId is provided, try to find the career through the career path
+      if (careerPathId !== undefined) {
+        const careerPath = await activeStorage.getCareerPath(careerPathId);
+        if (!careerPath) {
+          return res.status(404).json({ message: `Career path with ID ${careerPathId} not found` });
+        }
+        
+        // If careerPath has a careerId set, use that (after adding the relation to schema)
+        if (careerPath.careerId) {
+          console.log(`Using referenced careerId ${careerPath.careerId} from career path`);
+          const favorite = await activeStorage.addFavoriteCareer(userId, careerPath.careerId);
+          return res.status(201).json(favorite);
+        }
+        
+        // Fallback to searching by title
+        console.log(`Career path careerId not set, searching by title "${careerPath.career_title}"`);
+        const matchingCareers = await activeStorage.searchCareers(careerPath.career_title);
+        if (matchingCareers && matchingCareers.length > 0) {
+          const matchedCareer = matchingCareers[0];
+          console.log(`Found matching career with ID ${matchedCareer.id} and title "${matchedCareer.title}"`);
+          
+          // Use the matched career ID from the careers table
+          const favorite = await activeStorage.addFavoriteCareer(userId, matchedCareer.id);
+          return res.status(201).json(favorite);
+        }
+        
+        return res.status(404).json({ 
+          message: `No matching career found for career path "${careerPath.career_title}"` 
+        });
+      }
+      
+      return res.status(400).json({ message: "Either careerId or careerPathId must be provided" });
     } catch (error) {
       console.error("Error adding favorite career:", error);
       res.status(500).json({ message: "Failed to add favorite career", error: String(error) });

@@ -348,12 +348,14 @@ export const careerPaths = pgTable("career_paths", {
   field_of_study: text("field_of_study"),
   career_title: text("career_title").notNull(),
   option_rank: integer("option_rank"), // The position/rank of the career option for the field
+  careerId: integer("career_id").references(() => careers.id), // Reference to matching career in careers table
 });
 
 export const insertCareerPathSchema = createInsertSchema(careerPaths).pick({
   field_of_study: true,
   career_title: true,
   option_rank: true,
+  careerId: true,
 });
 
 export type CareerPath = typeof careerPaths.$inferSelect;
