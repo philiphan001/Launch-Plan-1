@@ -162,11 +162,12 @@ const FinancialProjections = ({
   // Get the current location for parsing query parameters
   const [location] = useLocation();
   // This combination of projectionId and timestamp will force a full reset when the URL changes
-  const { projectionId, timestamp } = useMemo(() => {
+  const { projectionId, timestamp, autoGenerate } = useMemo(() => {
     // Parse URL query parameters
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const t = params.get('t') || Date.now().toString();
+    const autoGen = params.get('autoGenerate') === 'true';
     
     // Give priority to initialProjectionId if provided (from App.tsx)
     const effectiveId = initialProjectionId || (id ? parseInt(id, 10) : null);
@@ -174,9 +175,14 @@ const FinancialProjections = ({
     // Log when projection ID changes
     console.log("Projection ID changed to:", effectiveId, 
         initialProjectionId ? "(from initialProjectionId)" : "(from URL)", 
-        "with timestamp:", t);
+        "with timestamp:", t,
+        "autoGenerate:", autoGen);
     
-    return { projectionId: effectiveId, timestamp: t };
+    return { 
+      projectionId: effectiveId, 
+      timestamp: t,
+      autoGenerate: autoGen
+    };
   }, [location, initialProjectionId]);
 
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
@@ -359,36 +365,123 @@ const FinancialProjections = ({
     },
   });
 
-  // Update form values based on user profile and saved calculations
+  // Handle auto-generation of financial projections based on pathway data
   useEffect(() => {
-    // Calculate current age from birth year if available
-    if (userData?.birthYear) {
-      const currentAge = new Date().getFullYear() - userData.birthYear;
-      setAge(currentAge);
-    }
-    
-    // Set initial savings from financial profile
-    if (financialProfile?.savingsAmount) {
-      setStartingSavings(financialProfile.savingsAmount);
-    }
-    
-    // Set student loan debt from college calculations
-    if (collegeCalculations && collegeCalculations.length > 0) {
-      // Find the college calculation that's included in projections
-      const includedCollegeCalc = collegeCalculations.find(calc => calc.includedInProjection);
-      if (includedCollegeCalc) {
-        setStudentLoanDebt(includedCollegeCalc.studentLoanAmount || 0);
+    if (autoGenerate) {
+      console.log("Auto-generating financial projection from pathway data");
+      
+      try {
+        // Load pathway data from localStorage
+        const pathwayDataStr = localStorage.getItem('pathwayData');
+        if (!pathwayDataStr) {
+          console.error("Auto-generate requested but no pathway data found in localStorage");
+          return;
+        }
+        
+        const pathwayData = JSON.parse(pathwayDataStr);
+        console.log("Loaded pathway data:", pathwayData);
+        
+        // Determine initial age based on education path
+        let startingAge = 18; // Default starting age after high school
+        if (userData?.birthYear) {
+          startingAge = new Date().getFullYear() - userData.birthYear;
+        }
+        
+        // Determine education duration based on type
+        let educationYears = 0;
+        let studentLoanAmount = 0;
+        
+        if (pathwayData.educationType === "4year") {
+          educationYears = 4;
+          studentLoanAmount = 30000; // Estimate for 4-year college
+        } else if (pathwayData.educationType === "2year") {
+          educationYears = 2;
+          studentLoanAmount = 15000; // Estimate for 2-year college
+          
+          // If transferring to 4-year, add more years and debt
+          if (pathwayData.transferOption === "yes") {
+            educationYears += 2; // 2 years at transfer institution
+            studentLoanAmount += 20000; // Additional debt from transfer institution
+          }
+        } else if (pathwayData.educationType === "vocational") {
+          educationYears = 2;
+          studentLoanAmount = 12000; // Estimate for vocational school
+        }
+        
+        // Set the student loan debt
+        setStudentLoanDebt(studentLoanAmount);
+        
+        // Determine career income based on selected profession
+        let startingIncome = 40000; // Default starting salary
+        
+        // If we have career data and selected profession, find the salary
+        if (careers && careers.length > 0 && pathwayData.selectedProfession) {
+          const selectedCareer = careers.find((c: any) => 
+            c.title.toLowerCase() === pathwayData.selectedProfession.toLowerCase());
+          
+          if (selectedCareer) {
+            startingIncome = selectedCareer.entry_salary || 
+                             selectedCareer.median_salary || 
+                             40000;
+          }
+        }
+        
+        // Set the income
+        setIncome(startingIncome);
+        
+        // Adjust expenses based on location if available
+        if (pathwayData.location) {
+          // We'll use a simplified approach here - expenses as a percentage of income
+          // In a real implementation, you'd query the location_cost_of_living table
+          setExpenses(Math.round(startingIncome * 0.75));
+        } else {
+          setExpenses(Math.round(startingIncome * 0.7));
+        }
+        
+        // Set the starting age
+        setAge(startingAge);
+        
+        // Set initial savings (could be from profile or default)
+        if (financialProfile?.savingsAmount) {
+          setStartingSavings(financialProfile.savingsAmount);
+        } else {
+          setStartingSavings(5000); // Default starting savings
+        }
+      } catch (error) {
+        console.error("Error auto-generating financial projection:", error);
       }
-    }
-    
-    // Set income from career calculations
-    if (careerCalculations && careerCalculations.length > 0) {
-      // Find the career calculation that's included in projections
-      const includedCareerCalc = careerCalculations.find(calc => calc.includedInProjection);
-      if (includedCareerCalc && includedCareerCalc.entryLevelSalary) {
-        setIncome(includedCareerCalc.entryLevelSalary);
-      } else if (includedCareerCalc) {
-        setIncome(includedCareerCalc.projectedSalary);
+    } else {
+      // Regular initialization logic when not auto-generating
+      
+      // Calculate current age from birth year if available
+      if (userData?.birthYear) {
+        const currentAge = new Date().getFullYear() - userData.birthYear;
+        setAge(currentAge);
+      }
+      
+      // Set initial savings from financial profile
+      if (financialProfile?.savingsAmount) {
+        setStartingSavings(financialProfile.savingsAmount);
+      }
+      
+      // Set student loan debt from college calculations
+      if (collegeCalculations && collegeCalculations.length > 0) {
+        // Find the college calculation that's included in projections
+        const includedCollegeCalc = collegeCalculations.find(calc => calc.includedInProjection);
+        if (includedCollegeCalc) {
+          setStudentLoanDebt(includedCollegeCalc.studentLoanAmount || 0);
+        }
+      }
+      
+      // Set income from career calculations
+      if (careerCalculations && careerCalculations.length > 0) {
+        // Find the career calculation that's included in projections
+        const includedCareerCalc = careerCalculations.find(calc => calc.includedInProjection);
+        if (includedCareerCalc && includedCareerCalc.entryLevelSalary) {
+          setIncome(includedCareerCalc.entryLevelSalary);
+        } else if (includedCareerCalc) {
+          setIncome(includedCareerCalc.projectedSalary);
+        }
       }
     }
 
@@ -426,7 +519,16 @@ const FinancialProjections = ({
         setExpenses(Math.round(baseExpenses));
       }
     }
-  }, [userData, financialProfile, collegeCalculations, careerCalculations, locationCostData, income]);
+  }, [
+    autoGenerate, 
+    userData, 
+    financialProfile, 
+    collegeCalculations, 
+    careerCalculations, 
+    locationCostData, 
+    income, 
+    careers
+  ]);
   
   // Find the included college and career calculations
   const includedCollegeCalc = collegeCalculations?.find(calc => calc.includedInProjection);
