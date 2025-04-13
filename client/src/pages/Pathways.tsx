@@ -117,6 +117,35 @@ const Pathways = ({
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
   
+  // Function to search careers with a given term
+  const searchCareers = (searchTerm: string) => {
+    if (!searchTerm.trim()) return;
+    
+    const term = searchTerm.trim().toLowerCase();
+    console.log('Searching careers with term:', term);
+    
+    if (allCareers && Array.isArray(allCareers)) {
+      // Search from all careers
+      const filteredCareers = allCareers
+        .filter((career: any) => 
+          career.title?.toLowerCase().includes(term)
+        )
+        .map((career: any, index: number) => ({
+          id: career.id || index,
+          field_of_study: globalCareerSearch ? 
+                        (career.category || career.field || "General") : 
+                        selectedFieldOfStudy,
+          career_title: career.title,
+          option_rank: index + 1
+        }));
+      
+      console.log(`Found ${filteredCareers.length} careers matching "${term}"`);
+      setFilteredCareerPaths(filteredCareers);
+    } else {
+      console.error('Could not search careers: allCareers is not available');
+    }
+  };
+  
   // Location data type
   interface LocationData {
     zip_code: string;
@@ -2878,6 +2907,16 @@ const Pathways = ({
                               onClick={() => {
                                 setSelectedProfession(path.career_title);
                                 setSelectedCareerId(path.id);
+                                
+                                // Auto-fill the search box with the selected profession
+                                setCareerSearchQuery(path.career_title);
+                                
+                                // Trigger search for matching careers to help connect with proper career_id
+                                if (!globalCareerSearch) {
+                                  setGlobalCareerSearch(true);
+                                  // Search for matching careers
+                                  searchCareers(path.career_title);
+                                }
                                 
                                 // Complete the narrative with the selected profession
                                 let narrative = '';
