@@ -95,6 +95,7 @@ const Pathways = ({
   // For 2-year college transfer options
   const [transferOption, setTransferOption] = useState<TransferOption>(null);
   const [transferCollege, setTransferCollege] = useState<string>('');
+  const [transferCollegeSearchQuery, setTransferCollegeSearchQuery] = useState<string>('');
   
   // Track whether the user came through the guided path for proper flow separation
   const [guidedPathComplete, setGuidedPathComplete] = useState<boolean>(false);
@@ -282,6 +283,22 @@ const Pathways = ({
     },
     enabled: !!searchQuery && searchQuery.length > 2
   });
+  
+  // Transfer college search query - specifically for 4-year colleges when transferring
+  const { data: transferCollegeResults, isLoading: isLoadingTransferSearch } = useQuery<any[]>({
+    queryKey: ['/api/colleges/search', transferCollegeSearchQuery, '4year'],
+    queryFn: async () => {
+      if (!transferCollegeSearchQuery || transferCollegeSearchQuery.length < 2) return [];
+      const url = `/api/colleges/search?q=${encodeURIComponent(transferCollegeSearchQuery)}&educationType=4year`;
+      console.log(`Searching 4-year colleges for transfer with query: ${transferCollegeSearchQuery}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to search transfer colleges');
+      }
+      return response.json();
+    },
+    enabled: !!transferCollegeSearchQuery && transferCollegeSearchQuery.length > 2 && transferOption === 'yes' && currentStep === 5.5
+  });
 
   const handlePathSelect = (path: PathChoice) => {
     setSelectedPath(path);
@@ -407,6 +424,7 @@ const Pathways = ({
     // Reset transfer options for 2-year college
     setTransferOption(null);
     setTransferCollege('');
+    setTransferCollegeSearchQuery('');
     
     // Reset location selection
     setSearchByZip(true);
@@ -2426,15 +2444,74 @@ const Pathways = ({
                           {transferOption === 'yes' && (
                             <div className="mt-4 ml-13 pl-10">
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Do you have a specific 4-year college in mind?
+                                Find a 4-year college to transfer to:
                               </label>
-                              <div className="flex gap-2">
-                                <Input
-                                  placeholder="Enter college name (optional)"
-                                  value={transferCollege}
-                                  onChange={(e) => setTransferCollege(e.target.value)}
-                                  className="flex-1"
-                                />
+                              
+                              <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-4">
+                                <div className="relative mb-3">
+                                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                                    <span className="material-icons text-sm">search</span>
+                                  </span>
+                                  <Input 
+                                    placeholder="Search for 4-year colleges..." 
+                                    className="pl-9 w-full"
+                                    value={transferCollegeSearchQuery}
+                                    onChange={(e) => setTransferCollegeSearchQuery(e.target.value)}
+                                  />
+                                </div>
+                                
+                                {transferCollege && (
+                                  <div className="flex items-center justify-between bg-white p-3 rounded-lg mb-4">
+                                    <div>
+                                      <p className="font-medium">Selected College:</p>
+                                      <p>{transferCollege}</p>
+                                    </div>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => {
+                                        setTransferCollege('');
+                                      }}
+                                    >
+                                      Change
+                                    </Button>
+                                  </div>
+                                )}
+                                
+                                {isLoadingTransferSearch ? (
+                                  <div className="text-center py-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                                    <p className="mt-2 text-gray-600 text-sm">Searching colleges...</p>
+                                  </div>
+                                ) : transferCollegeResults && Array.isArray(transferCollegeResults) && transferCollegeResults.length > 0 ? (
+                                  <div className="mt-3 max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+                                    {transferCollegeResults.map((college: any) => (
+                                      <div 
+                                        key={college.id} 
+                                        className={`p-3 cursor-pointer transition-all hover:bg-blue-50 border-b last:border-b-0 border-gray-200 ${transferCollege === college.name ? 'bg-blue-50' : ''}`}
+                                        onClick={() => setTransferCollege(college.name)}
+                                      >
+                                        <div className="flex items-center">
+                                          <div className={`rounded-full ${transferCollege === college.name ? 'bg-primary' : 'bg-gray-200'} h-6 w-6 flex items-center justify-center ${transferCollege === college.name ? 'text-white' : 'text-gray-600'} mr-3`}>
+                                            <span className="material-icons text-sm">{transferCollege === college.name ? 'check' : 'school'}</span>
+                                          </div>
+                                          <div>
+                                            <p className="font-medium">{college.name}</p>
+                                            <p className="text-xs text-gray-600">{college.city}, {college.state}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : transferCollegeSearchQuery.length > 2 ? (
+                                  <div className="text-center py-4">
+                                    <p className="text-gray-600 text-sm">No colleges found matching your search.</p>
+                                  </div>
+                                ) : null}
+                                
+                                <p className="text-xs text-gray-500 mt-2">
+                                  You can search for colleges or enter a college name manually.
+                                </p>
                               </div>
                             </div>
                           )}
