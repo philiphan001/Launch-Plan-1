@@ -114,6 +114,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   const [calculationName, setCalculationName] = useState("");
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [localZipCodeData, setLocalZipCodeData] = useState<ZipCodeIncome | null>(null);
+  const [showZipCodeEditor, setShowZipCodeEditor] = useState(false);
   
   // Temporary user ID for demo purposes - would normally come from auth context
   const userId = 1;
