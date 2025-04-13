@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,24 +43,47 @@ interface ProfileProps extends AuthProps {}
 
 const Profile = (props: ProfileProps) => {
   const { toast } = useToast();
-  
-  // User info state
-  const [firstName, setFirstName] = useState("Philip");
-  const [lastName, setLastName] = useState("Han");
-  const [email, setEmail] = useState("philip.han@example.com");
-  const [currentLocation, setCurrentLocation] = useState("Seattle, WA");
-  const [zipCode, setZipCode] = useState("98101");
-  const [birthYear, setBirthYear] = useState(1998);
-  
-  // Financial profile state
-  const [householdIncome, setHouseholdIncome] = useState("75000");
-  const [householdSize, setHouseholdSize] = useState("4");
-  const [savingsAmount, setSavingsAmount] = useState("10000");
-  const [studentLoanAmount, setStudentLoanAmount] = useState("0");
-  const [otherDebtAmount, setOtherDebtAmount] = useState("0");
+  const queryClient = useQueryClient();
   
   // Temporary user ID for demo purposes
   const temporaryUserId = 1;
+  
+  // User info state
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [currentLocation, setCurrentLocation] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [birthYear, setBirthYear] = useState(0);
+  
+  // Financial profile state
+  const [householdIncome, setHouseholdIncome] = useState("");
+  const [householdSize, setHouseholdSize] = useState("");
+  const [savingsAmount, setSavingsAmount] = useState("");
+  const [studentLoanAmount, setStudentLoanAmount] = useState("");
+  const [otherDebtAmount, setOtherDebtAmount] = useState("");
+  
+  // Fetch user data
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/users', temporaryUserId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${temporaryUserId}`);
+      if (!response.ok) throw new Error('Failed to fetch user data');
+      return response.json();
+    }
+  });
+
+  // Update local state when user data is loaded
+  useEffect(() => {
+    if (userData) {
+      setFirstName(userData.firstName || "");
+      setLastName(userData.lastName || "");
+      setEmail(userData.email || "");
+      setCurrentLocation(userData.location || "");
+      setZipCode(userData.zipCode || "");
+      setBirthYear(userData.birthYear || 0);
+    }
+  }, [userData]);
 
   // Fetch favorite colleges
   const { data: favoriteColleges = [], isLoading: isLoadingColleges } = useQuery({
@@ -191,9 +214,6 @@ const Profile = (props: ProfileProps) => {
   const handleSaveFinancial = () => {
     updateFinancialMutation.mutate();
   };
-  
-  // Query client for cache invalidation
-  const queryClient = useQueryClient();
 
   // Remove favorite college mutation
   const removeFavoriteMutation = useMutation({
