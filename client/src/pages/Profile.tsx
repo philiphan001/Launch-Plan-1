@@ -132,6 +132,8 @@ const Profile = (props: ProfileProps) => {
       return await response.json();
     },
     onSuccess: () => {
+      // Invalidate the user data cache to refresh the profile
+      queryClient.invalidateQueries({ queryKey: ['/api/users', temporaryUserId] });
       toast({
         title: "Profile updated",
         description: "Your profile information has been saved.",
