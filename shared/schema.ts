@@ -147,6 +147,23 @@ export const insertFavoriteCareerSchema = createInsertSchema(favoriteCareers).pi
   careerId: true,
 });
 
+// Favorite locations table
+export const favoriteLocations = pgTable("favorite_locations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  zipCode: text("zip_code").notNull(),
+  city: text("city"),
+  state: text("state"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFavoriteLocationSchema = createInsertSchema(favoriteLocations).pick({
+  userId: true,
+  zipCode: true,
+  city: true,
+  state: true,
+});
+
 // Financial projections table
 export const financialProjections = pgTable("financial_projections", {
   id: serial("id").primaryKey(),
@@ -312,6 +329,9 @@ export type InsertFavoriteCollege = z.infer<typeof insertFavoriteCollegeSchema>;
 
 export type FavoriteCareer = typeof favoriteCareers.$inferSelect;
 export type InsertFavoriteCareer = z.infer<typeof insertFavoriteCareerSchema>;
+
+export type FavoriteLocation = typeof favoriteLocations.$inferSelect;
+export type InsertFavoriteLocation = z.infer<typeof insertFavoriteLocationSchema>;
 
 export type FinancialProjection = typeof financialProjections.$inferSelect;
 export type InsertFinancialProjection = z.infer<typeof insertFinancialProjectionSchema>;
