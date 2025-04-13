@@ -154,6 +154,31 @@ export class PgStorage implements IStorage {
     return await db.select().from(careers);
   }
   
+  async searchCareers(query: string): Promise<Career[]> {
+    if (!query || query.length < 2) {
+      return [];
+    }
+    
+    const searchTerm = `%${query.toLowerCase()}%`;
+    
+    // Search for careers by title, description, aliases, and category
+    return await db.select()
+      .from(careers)
+      .where(
+        or(
+          sql`LOWER(${careers.title}) LIKE ${searchTerm}`,
+          sql`LOWER(${careers.description}) LIKE ${searchTerm}`,
+          sql`LOWER(${careers.category}) LIKE ${searchTerm}`,
+          sql`LOWER(${careers.alias1}) LIKE ${searchTerm}`,
+          sql`LOWER(${careers.alias2}) LIKE ${searchTerm}`,
+          sql`LOWER(${careers.alias3}) LIKE ${searchTerm}`,
+          sql`LOWER(${careers.alias4}) LIKE ${searchTerm}`,
+          sql`LOWER(${careers.alias5}) LIKE ${searchTerm}`
+        )
+      )
+      .limit(20); // Limit results to avoid too much data
+  }
+  
   async createCareer(career: InsertCareer): Promise<Career> {
     const result = await db.insert(careers).values(career).returning();
     return result[0];

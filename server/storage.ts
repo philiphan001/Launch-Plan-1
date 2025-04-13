@@ -40,6 +40,7 @@ export interface IStorage {
   // Career methods
   getCareer(id: number): Promise<Career | undefined>;
   getCareers(): Promise<Career[]>;
+  searchCareers(query: string): Promise<Career[]>;
   createCareer(career: InsertCareer): Promise<Career>;
   
   // Favorite college methods
