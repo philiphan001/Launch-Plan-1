@@ -92,6 +92,10 @@ const Pathways = ({
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [hasSpecificSchool, setHasSpecificSchool] = useState<boolean | null>(null);
   
+  // For 2-year college transfer options
+  const [transferOption, setTransferOption] = useState<TransferOption>(null);
+  const [transferCollege, setTransferCollege] = useState<string>('');
+  
   // Track whether the user came through the guided path for proper flow separation
   const [guidedPathComplete, setGuidedPathComplete] = useState<boolean>(false);
   
@@ -103,10 +107,6 @@ const Pathways = ({
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
-  
-  // Transfer option for 2-year college path
-  const [transferOption, setTransferOption] = useState<TransferOption>(null);
-  const [transferCollege, setTransferCollege] = useState<string>('');
   
   // Location data type
   interface LocationData {
@@ -2242,10 +2242,18 @@ const Pathways = ({
                         <Button variant="outline" onClick={handleBack}>Back</Button>
                         {selectedFieldOfStudy && (
                           <Button 
-                            onClick={handleNext}
+                            onClick={() => {
+                              // For 2-year college path, go to transfer option first
+                              if (educationType === '2year') {
+                                setCurrentStep(5.5);
+                              } else {
+                                // Otherwise go directly to profession selection
+                                handleNext();
+                              }
+                            }}
                             className="bg-green-500 hover:bg-green-600"
                           >
-                            Next: Choose Profession
+                            Next: {educationType === '2year' ? 'Transfer Options' : 'Choose Profession'}
                           </Button>
                         )}
                       </div>
@@ -2364,6 +2372,123 @@ const Pathways = ({
                       <span className="material-icons text-sm mr-1">sports_esports</span>
                       Play Game Again
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </Step>
+          );
+        }
+      
+      case 5.5:
+        // Transfer option step for 2-year college
+        if (isEducationPath(selectedPath) && educationType === '2year' && selectedFieldOfStudy) {
+          return (
+            <Step
+              title={userJourney}
+              subtitle="Considering transfer to a 4-year college?"
+            >
+              <Card>
+                <CardContent className="p-6">
+                  <div className="mb-6">
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
+                      <h4 className="text-lg font-semibold mb-2 flex items-center">
+                        <span className="material-icons mr-2 text-blue-500">school</span>
+                        Transfer Options
+                      </h4>
+                      <p className="text-gray-700 mb-4">
+                        Many students start at a 2-year community college and then transfer to a 4-year college 
+                        to complete their bachelor's degree. This can be a cost-effective way to earn your degree.
+                      </p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div 
+                          className={`border rounded-lg p-5 cursor-pointer transition-all ${
+                            transferOption === 'yes' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'
+                          }`}
+                          onClick={() => setTransferOption('yes')}
+                        >
+                          <div className="flex items-center mb-3">
+                            <div className={`rounded-full ${
+                              transferOption === 'yes' ? 'bg-primary' : 'bg-gray-200'
+                            } h-10 w-10 flex items-center justify-center ${
+                              transferOption === 'yes' ? 'text-white' : 'text-gray-600'
+                            } mr-3`}>
+                              <span className="material-icons">check</span>
+                            </div>
+                            <h5 className={`font-medium ${transferOption === 'yes' ? 'text-primary' : ''}`}>
+                              Yes, I plan to transfer
+                            </h5>
+                          </div>
+                          <p className="text-gray-600 text-sm ml-13 pl-10">
+                            After completing my associate's degree, I plan to transfer to a 4-year college to earn a bachelor's degree.
+                          </p>
+                          
+                          {transferOption === 'yes' && (
+                            <div className="mt-4 ml-13 pl-10">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Do you have a specific 4-year college in mind?
+                              </label>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Enter college name (optional)"
+                                  value={transferCollege}
+                                  onChange={(e) => setTransferCollege(e.target.value)}
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div 
+                          className={`border rounded-lg p-5 cursor-pointer transition-all ${
+                            transferOption === 'no' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'
+                          }`}
+                          onClick={() => setTransferOption('no')}
+                        >
+                          <div className="flex items-center mb-3">
+                            <div className={`rounded-full ${
+                              transferOption === 'no' ? 'bg-primary' : 'bg-gray-200'
+                            } h-10 w-10 flex items-center justify-center ${
+                              transferOption === 'no' ? 'text-white' : 'text-gray-600'
+                            } mr-3`}>
+                              <span className="material-icons">close</span>
+                            </div>
+                            <h5 className={`font-medium ${transferOption === 'no' ? 'text-primary' : ''}`}>
+                              No, I'll complete my 2-year degree
+                            </h5>
+                          </div>
+                          <p className="text-gray-600 text-sm ml-13 pl-10">
+                            I plan to enter the workforce directly after earning my associate's degree.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between mt-6">
+                    <Button variant="outline" onClick={handleBack}>Back</Button>
+                    {transferOption && (
+                      <Button 
+                        onClick={() => {
+                          // Update the narrative to include transfer plans
+                          if (transferOption === 'yes') {
+                            const updatedNarrative = transferCollege 
+                              ? `${userJourney} and plan to transfer to ${transferCollege} to complete my bachelor's degree.`
+                              : `${userJourney} and plan to transfer to a 4-year college to complete my bachelor's degree.`;
+                            setUserJourney(updatedNarrative);
+                          } else {
+                            const updatedNarrative = `${userJourney} and plan to enter the workforce after completing my associate's degree.`;
+                            setUserJourney(updatedNarrative);
+                          }
+                          // Move to profession selection
+                          handleNext();
+                        }}
+                        className="bg-green-500 hover:bg-green-600"
+                      >
+                        Next: Choose Profession
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
