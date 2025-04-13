@@ -333,9 +333,6 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   
   // Initialize in-state status when college or user state changes
   useEffect(() => {
-    // Clear debug to keep console clean
-    console.clear();
-    
     // Display zip code data for debugging
     console.log('Zip Code Data (from React Query):', zipCodeData);
     console.log('Zip Code Data (local):', localZipCodeData);
@@ -348,6 +345,16 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     
     console.log('Selected College:', selectedCollege.name, selectedCollege.state);
     
+    // Check if college is public - only public schools have in-state/out-of-state
+    const isPublic = selectedCollege.type && selectedCollege.type.toLowerCase().includes('public');
+    
+    // For non-public schools, in-state/out-of-state doesn't matter
+    if (!isPublic) {
+      console.log('📚 College is private/non-public, in-state status does not apply');
+      setIsInState(true); // Default to true for non-public schools
+      return;
+    }
+    
     // Only proceed if we have both values needed for comparison
     if (selectedCollege && userState) {
       // Get state codes and normalize them (trim whitespace, uppercase)
@@ -356,7 +363,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
       const collegeStateNormalized = collegeState.toUpperCase().trim();
       
       // Debug information
-      console.log('🔍 State Comparison:');
+      console.log('🔍 State Comparison for PUBLIC college:');
       console.log(`- User zip code: ${zipCode}`);
       console.log(`- User state code (normalized): "${userStateNormalized}"`);
       console.log(`- College state code (normalized): "${collegeStateNormalized}"`);
@@ -368,6 +375,12 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
       // Force update the in-state status and log it
       setIsInState(isMatch);
       console.log(`🏫 College will use ${isMatch ? 'IN-STATE' : 'OUT-OF-STATE'} tuition rates`);
+    } else {
+      // If we're missing state data but have a public college, default to out-of-state
+      if (isPublic) {
+        console.log('⚠️ Missing state data for comparison, defaulting to OUT-OF-STATE tuition');
+        setIsInState(false);
+      }
     }
   }, [selectedCollege, userState, zipCode, zipCodeData, localZipCodeData]);
   
@@ -496,7 +509,64 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   };
   
   const handleCalculate = () => {
-    setCalculated(true);
+    // If we have a zip code but no income data, try to fetch it automatically
+    if (zipCode && zipCode.length === 5 && !estimatedIncome) {
+      // Fetch income data first, then set calculated to true
+      setFetchingZipCode(true);
+      
+      fetch(`/api/zip-code-income/zip/${zipCode}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Zip code data not found');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('📍 Auto-fetched zip code data during calculation:', data);
+          
+          // Store complete zip code data
+          setLocalZipCodeData(data);
+          
+          // Set income data
+          setEstimatedIncome(data.mean_income);
+          setUsingEstimatedIncome(true);
+          setHouseholdIncome(data.mean_income.toString());
+          
+          // Set investment assets data
+          if (data.estimated_investments) {
+            setEstimatedInvestments(data.estimated_investments);
+            setUsingEstimatedInvestments(true);
+            setInvestmentAssets(data.estimated_investments.toString());
+          }
+          
+          // Set home value data if available
+          if (data.home_value) {
+            setEstimatedHomeValue(data.home_value);
+            setUsingEstimatedHomeValue(true);
+            setHomeValue(data.home_value.toString());
+          }
+          
+          // Set the user's state code for in-state tuition determination
+          if (data.state) {
+            console.log(`📍 Setting user state to: "${data.state}" from zip code ${zipCode}`);
+            setUserState(data.state);
+          }
+          
+          // Now continue with the calculation
+          setCalculated(true);
+        })
+        .catch(err => {
+          console.error("Error fetching zip code income during calculation:", err);
+          // Even if the data fetch failed, we'll still calculate with current values
+          setCalculated(true);
+        })
+        .finally(() => {
+          setFetchingZipCode(false);
+        });
+    } else {
+      // If we already have income data or no zip code, just calculate
+      setCalculated(true);
+    }
   };
   
   // Mutation for saving calculations
