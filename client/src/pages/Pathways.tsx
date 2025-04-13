@@ -2875,9 +2875,42 @@ const Pathways = ({
                             <Card 
                               key={path.id} 
                               className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
-                              onClick={() => {
+                              onClick={async () => {
+                                // Set the profession title
                                 setSelectedProfession(path.career_title);
-                                setSelectedCareerId(path.id);
+                                
+                                // Try to use careerId if it exists directly
+                                if (path.careerId) {
+                                  console.log(`Using existing careerId ${path.careerId} from career path`);
+                                  setSelectedCareerId(path.careerId);
+                                } else {
+                                  // Search the careers database for a matching career
+                                  console.log(`Career path ${path.id} doesn't have careerId, searching careers database`);
+                                  try {
+                                    // Search for careers with similar title
+                                    const response = await fetch(`/api/careers/search?query=${encodeURIComponent(path.career_title)}`);
+                                    if (response.ok) {
+                                      const results = await response.json();
+                                      if (results && results.length > 0) {
+                                        // Use the top matching career
+                                        const matchedCareer = results[0];
+                                        console.log(`Found matching career in database: ${matchedCareer.title} (ID: ${matchedCareer.id})`);
+                                        setSelectedCareerId(matchedCareer.id);
+                                      } else {
+                                        // No match found, use the career path ID as fallback
+                                        console.log(`No matching career found in database, using path ID as fallback: ${path.id}`);
+                                        setSelectedCareerId(path.id);
+                                      }
+                                    } else {
+                                      // API error, use path ID as fallback
+                                      console.error('Error searching careers:', response.statusText);
+                                      setSelectedCareerId(path.id);
+                                    }
+                                  } catch (error) {
+                                    console.error('Error searching careers:', error);
+                                    setSelectedCareerId(path.id);
+                                  }
+                                }
                                 
                                 // Complete the narrative with the selected profession
                                 let narrative = '';
