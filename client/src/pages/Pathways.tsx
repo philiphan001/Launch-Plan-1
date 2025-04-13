@@ -3329,6 +3329,195 @@ const Pathways = ({
                             });
                           }
                           
+                          // Auto-generate college and career calculations if user is authenticated
+                          if (isAuthenticated && user) {
+                            // Step 1: Create a college calculation if a college was selected
+                            if (selectedSchoolId && specificSchool) {
+                              // Fetch the financial profile to get household income and size
+                              fetch(`/api/financial-profiles/user/${user.id}`)
+                                .then(res => res.json())
+                                .then(profile => {
+                                  // Get the college data to access tuition and room/board info
+                                  fetch(`/api/colleges/${selectedSchoolId}`)
+                                    .then(res => res.json())
+                                    .then(college => {
+                                      // Default values if not available in financial profile
+                                      const householdIncome = profile?.householdIncome || 80000;
+                                      const householdSize = profile?.householdSize || 4;
+                                      const userZipCode = userData?.zipCode || '00000';
+                                      
+                                      // Calculate a reasonable net price and loan amount
+                                      // These are simplified defaults - in a real app, you'd use
+                                      // a more sophisticated formula based on income, college costs, etc.
+                                      const tuitionAmount = college.tuition || 30000;
+                                      const roomAndBoardAmount = college.roomAndBoard || 12000;
+                                      const totalCost = tuitionAmount + roomAndBoardAmount;
+                                      
+                                      // Simplified financial aid calculation (very basic)
+                                      // In reality, this would use a much more complex formula
+                                      let financialAid = 0;
+                                      if (householdIncome < 50000) financialAid = totalCost * 0.8;
+                                      else if (householdIncome < 80000) financialAid = totalCost * 0.5;
+                                      else if (householdIncome < 120000) financialAid = totalCost * 0.3;
+                                      else financialAid = totalCost * 0.1;
+                                      
+                                      const netPrice = Math.max(totalCost - financialAid, 0);
+                                      // Assume roughly 70% of net price becomes student loan
+                                      const studentLoanAmount = Math.round(netPrice * 0.7);
+                                      
+                                      // Create the college calculation
+                                      const collegeCalculation = {
+                                        userId: user.id,
+                                        collegeId: selectedSchoolId,
+                                        netPrice: netPrice,
+                                        inState: true, // Default to in-state
+                                        householdIncome: householdIncome,
+                                        householdSize: householdSize,
+                                        zip: userZipCode,
+                                        tuitionUsed: tuitionAmount,
+                                        roomAndBoardUsed: roomAndBoardAmount,
+                                        onCampusHousing: true, // Default to on-campus
+                                        totalCost: totalCost,
+                                        studentLoanAmount: studentLoanAmount,
+                                        financialAid: financialAid,
+                                        includedInProjection: true, // Auto-include in projection
+                                        notes: `Auto-generated from Pathways for ${specificSchool}`
+                                      };
+                                      
+                                      console.log('Auto-generating college calculation:', collegeCalculation);
+                                      
+                                      // First, reset any existing included calculations
+                                      fetch(`/api/college-calculations/user/${user.id}`)
+                                        .then(res => res.json())
+                                        .then(calculations => {
+                                          // Find any currently included calculation
+                                          const includedCalculation = calculations.find(calc => calc.includedInProjection);
+                                          
+                                          // If one exists, un-include it first
+                                          if (includedCalculation) {
+                                            return fetch(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
+                                              method: 'POST',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ userId: user.id })
+                                            });
+                                          }
+                                          return Promise.resolve();
+                                        })
+                                        .then(() => {
+                                          // Then create our new calculation that will be included
+                                          return fetch('/api/college-calculations', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(collegeCalculation)
+                                          });
+                                        })
+                                        .then(res => {
+                                          if (!res.ok) throw new Error('Failed to create college calculation');
+                                          console.log('Successfully created college calculation with projection inclusion');
+                                        })
+                                        .catch(err => {
+                                          console.error('Error creating college calculation:', err);
+                                        });
+                                    })
+                                    .catch(err => {
+                                      console.error('Error fetching college data:', err);
+                                    });
+                                })
+                                .catch(err => {
+                                  console.error('Error fetching financial profile:', err);
+                                });
+                            }
+                            
+                            // Step 2: Create a career calculation if a career was selected
+                            if (selectedCareerId && selectedProfession) {
+                              // Get the career data to access salary information
+                              fetch(`/api/careers/${selectedCareerId}`)
+                                .then(res => res.json())
+                                .then(career => {
+                                  // Use salary data from the career, with fallbacks
+                                  const entryLevelSalary = career.salaryPct25 || career.salaryMedian * 0.8 || 50000;
+                                  const midCareerSalary = career.salaryMedian || 65000;
+                                  const experiencedSalary = career.salaryPct75 || career.salaryMedian * 1.2 || 80000;
+                                  
+                                  // Calculate location-adjusted salary if we have location data
+                                  let projectedSalary = midCareerSalary;
+                                  let adjustedForLocation = false;
+                                  let locationZip = null;
+                                  
+                                  if (selectedLocation) {
+                                    locationZip = selectedZipCode;
+                                    const locationFactor = selectedLocation.income_adjustment_factor || 1.0;
+                                    projectedSalary = Math.round(midCareerSalary * locationFactor);
+                                    adjustedForLocation = true;
+                                  }
+                                  
+                                  const careerCalculation = {
+                                    userId: user.id,
+                                    careerId: selectedCareerId,
+                                    projectedSalary: projectedSalary,
+                                    entryLevelSalary: entryLevelSalary,
+                                    midCareerSalary: midCareerSalary,
+                                    experiencedSalary: experiencedSalary,
+                                    education: getEducationLevelFromPathType(educationType),
+                                    additionalNotes: `Auto-generated from Pathways for ${selectedProfession}`,
+                                    includedInProjection: true, // Auto-include in projection
+                                    locationZip: locationZip,
+                                    adjustedForLocation: adjustedForLocation
+                                  };
+                                  
+                                  console.log('Auto-generating career calculation:', careerCalculation);
+                                  
+                                  // First, reset any existing included calculations
+                                  fetch(`/api/career-calculations/user/${user.id}`)
+                                    .then(res => res.json())
+                                    .then(calculations => {
+                                      // Find any currently included calculation
+                                      const includedCalculation = calculations.find(calc => calc.includedInProjection);
+                                      
+                                      // If one exists, un-include it first
+                                      if (includedCalculation) {
+                                        return fetch(`/api/career-calculations/${includedCalculation.id}/toggle-projection`, {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ userId: user.id })
+                                        });
+                                      }
+                                      return Promise.resolve();
+                                    })
+                                    .then(() => {
+                                      // Then create our new calculation that will be included
+                                      return fetch('/api/career-calculations', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(careerCalculation)
+                                      });
+                                    })
+                                    .then(res => {
+                                      if (!res.ok) throw new Error('Failed to create career calculation');
+                                      console.log('Successfully created career calculation with projection inclusion');
+                                    })
+                                    .catch(err => {
+                                      console.error('Error creating career calculation:', err);
+                                    });
+                                })
+                                .catch(err => {
+                                  console.error('Error fetching career data:', err);
+                                });
+                            }
+                          }
+                          
+                          // Helper function to map education type to standardized education level
+                          const getEducationLevelFromPathType = (pathType) => {
+                            switch(pathType) {
+                              case '4year': return 'bachelor';
+                              case '2year': 
+                                // If they transferred to 4-year, they'll end with a bachelor's
+                                return transferOption === 'yes' ? 'bachelor' : 'associate';
+                              case 'vocational': return 'vocational';
+                              default: return 'bachelor';
+                            }
+                          };
+                          
                           // Redirect to the financial projections page with auto-generate flag
                           navigate('/projections?autoGenerate=true');
                         }}
