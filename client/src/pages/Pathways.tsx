@@ -203,9 +203,12 @@ const Pathways = ({
   // Add college to favorites mutation
   const addCollegeToFavorites = useMutation({
     mutationFn: async (collegeId: number) => {
-      return apiRequest('/api/favorite-colleges', {
+      return apiRequest('/api/favorites/colleges', {
         method: 'POST',
-        body: JSON.stringify({ collegeId })
+        body: JSON.stringify({ 
+          userId: user?.id || 1, // Use current user ID or default to 1 for demo
+          collegeId 
+        })
       });
     }
   });
@@ -213,9 +216,12 @@ const Pathways = ({
   // Add career to favorites mutation
   const addCareerToFavorites = useMutation({
     mutationFn: async (careerId: number) => {
-      return apiRequest('/api/favorite-careers', {
+      return apiRequest('/api/favorites/careers', {
         method: 'POST',
-        body: JSON.stringify({ careerId })
+        body: JSON.stringify({ 
+          userId: user?.id || 1, // Use current user ID or default to 1 for demo
+          careerId 
+        })
       });
     }
   });
@@ -3200,8 +3206,19 @@ const Pathways = ({
                             }
                           }
                           
+                          // Log pathway data for debugging
+                          console.log('Pathway data for debugging:', {
+                            isAuthenticated,
+                            user,
+                            selectedSchoolId,
+                            specificSchool,
+                            selectedCareerId,
+                            selectedProfession
+                          });
+                          
                           // Add selected college to favorites if user is authenticated
                           if (isAuthenticated && user && selectedSchoolId) {
+                            console.log(`Adding college to favorites: ID=${selectedSchoolId}, Name=${specificSchool}`);
                             addCollegeToFavorites.mutate(selectedSchoolId, {
                               onSuccess: () => {
                                 console.log('College added to favorites successfully');
@@ -3222,10 +3239,17 @@ const Pathways = ({
                                 });
                               }
                             });
+                          } else {
+                            console.log('Not adding college to favorites. Condition failed:', {
+                              isAuthenticated,
+                              hasUser: !!user,
+                              selectedSchoolId 
+                            });
                           }
                           
                           // Add selected career to favorites if user is authenticated
                           if (isAuthenticated && user && selectedCareerId) {
+                            console.log(`Adding career to favorites: ID=${selectedCareerId}, Title=${selectedProfession}`);
                             addCareerToFavorites.mutate(selectedCareerId, {
                               onSuccess: () => {
                                 console.log('Career added to favorites successfully');
@@ -3245,6 +3269,12 @@ const Pathways = ({
                                   variant: "destructive",
                                 });
                               }
+                            });
+                          } else {
+                            console.log('Not adding career to favorites. Condition failed:', {
+                              isAuthenticated,
+                              hasUser: !!user,
+                              selectedCareerId 
                             });
                           }
                           
