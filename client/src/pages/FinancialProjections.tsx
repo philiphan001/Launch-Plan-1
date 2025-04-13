@@ -198,7 +198,6 @@ const FinancialProjections = ({
   });
   const [studentLoanDebt, setStudentLoanDebt] = useState<number>(0);
   const [financialAdvice, setFinancialAdvice] = useState<FinancialAdvice[]>([]);
-  const [refreshProjections, setRefreshProjections] = useState<boolean>(false);
   
   // State for collapsible sections
   const [locationSectionOpen, setLocationSectionOpen] = useState<boolean>(true);
@@ -1947,62 +1946,9 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     }
   };
   
-  // Mutation for resetting financial projections
-  const resetFinancialProjectionsMutation = useMutation({
-    mutationFn: async () => {
-      if (!userId) {
-        throw new Error('User ID not available');
-      }
-      
-      const response = await fetch(`/api/reset-financial-projections/${userId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to reset financial projections');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      // Invalidate relevant queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
-      queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
-      setRefreshProjections(prev => !prev); // Toggle to force refresh
-    }
-  });
-
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-display font-semibold text-gray-800">Financial Projections</h1>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  if (window.confirm('Reset all financial projections? This will keep your favorites but clear all current projections.')) {
-                    resetFinancialProjectionsMutation.mutate();
-                  }
-                }}
-                disabled={resetFinancialProjectionsMutation.isPending}
-              >
-                {resetFinancialProjectionsMutation.isPending ? 'Resetting...' : 'Reset All Projections'}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Clear all financial projections without affecting your saved favorites</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
       
       {/* Pathway Summary Section */}
       {pathwaySummary && (
