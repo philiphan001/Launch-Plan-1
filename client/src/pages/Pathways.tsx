@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
@@ -15,6 +15,8 @@ import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
 import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
 import { GapYearPathway } from "@/components/pathways/GapYearPathways";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -67,6 +69,8 @@ const Pathways = ({
   logout,
   completeOnboarding
 }: PathwaysProps) => {
+  const { toast } = useToast();
+  
   // Helper function to format salary with commas and currency symbol
   const formatSalary = (salary: number): string => {
     return new Intl.NumberFormat('en-US', { 
@@ -183,6 +187,16 @@ const Pathways = ({
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLocation, setSelectedLocation] = useState<{city: string, state: string} | null>(null);
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
+  
+  // Add location to favorites mutation
+  const addLocationToFavorites = useMutation({
+    mutationFn: async (location: { zipCode: string; city: string; state: string }) => {
+      return apiRequest('/api/favorite-locations', {
+        method: 'POST',
+        body: JSON.stringify(location)
+      });
+    }
+  });
   
   // This function will set the education type and advance to the specific school question
   const selectEducationType = (type: EducationType) => {
@@ -3127,11 +3141,37 @@ const Pathways = ({
                           
                           // Store the location data
                           if (selectedLocation) {
-                            localStorage.setItem('selectedLocation', JSON.stringify({
+                            const locationData = {
                               zipCode: selectedZipCode,
                               city: selectedLocation.city,
                               state: selectedLocation.state
-                            }));
+                            };
+                            
+                            localStorage.setItem('selectedLocation', JSON.stringify(locationData));
+                            
+                            // Add location to favorites if user is authenticated
+                            if (isAuthenticated && user) {
+                              addLocationToFavorites.mutate(locationData, {
+                                onSuccess: () => {
+                                  console.log('Location added to favorites successfully');
+                                  // Show success toast to the user
+                                  toast({
+                                    title: "Added to favorites",
+                                    description: `${locationData.city}, ${locationData.state} has been added to your favorite locations.`,
+                                    variant: "default",
+                                  });
+                                },
+                                onError: (error) => {
+                                  console.error('Failed to add location to favorites:', error);
+                                  // Show error toast to the user
+                                  toast({
+                                    title: "Error adding to favorites",
+                                    description: "The location could not be added to your favorites. It might already exist in your favorites.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              });
+                            }
                           }
                           
                           // Redirect to the financial projections page with auto-generate flag
