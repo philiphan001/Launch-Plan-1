@@ -254,6 +254,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get careers", error: error instanceof Error ? error.message : String(error) });
     }
   });
+  
+  // Career search endpoint - searches by title with query parameter
+  app.get("/api/careers/search", async (req: Request, res: Response) => {
+    try {
+      const { query } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ message: "Query parameter is required" });
+      }
+      
+      console.log(`Searching careers with query: "${query}"`);
+      
+      // Get all careers 
+      const careers = await activeStorage.getCareers();
+      const queryLower = query.toLowerCase();
+      
+      // First try exact match (case insensitive)
+      let results = careers.filter(career => 
+        career.title.toLowerCase() === queryLower
+      );
+      
+      // If no exact matches, try contains
+      if (results.length === 0) {
+        results = careers.filter(career => 
+          career.title.toLowerCase().includes(queryLower) || 
+          queryLower.includes(career.title.toLowerCase())
+        );
+      }
+      
+      // If still no matches, try checking aliases
+      if (results.length === 0) {
+        results = careers.filter(career => 
+          (career.alias1 && career.alias1.toLowerCase().includes(queryLower)) ||
+          (career.alias2 && career.alias2.toLowerCase().includes(queryLower)) ||
+          (career.alias3 && career.alias3.toLowerCase().includes(queryLower))
+        );
+      }
+      
+      // Sort results by match quality
+      results.sort((a, b) => {
+        // Exact title match gets highest priority
+        if (a.title.toLowerCase() === queryLower) return -1;
+        if (b.title.toLowerCase() === queryLower) return 1;
+        
+        // Then title contains query
+        const aContains = a.title.toLowerCase().includes(queryLower);
+        const bContains = b.title.toLowerCase().includes(queryLower);
+        if (aContains && !bContains) return -1;
+        if (!aContains && bContains) return 1;
+        
+        // Then by title length (shorter = better match)
+        return a.title.length - b.title.length;
+      });
+      
+      // Limit results to top 5
+      const limitedResults = results.slice(0, 5);
+      console.log(`Found ${limitedResults.length} careers matching "${query}"`);
+      
+      res.json(limitedResults);
+    } catch (error) {
+      console.error('Error searching careers:', error);
+      res.status(500).json({ message: "Failed to search careers" });
+    }
+  });
 
   app.get("/api/careers/:id", async (req: Request, res: Response) => {
     try {

@@ -166,6 +166,24 @@ export class PgStorage implements IStorage {
       );
     }
     
+    // If still no results, try a fuzzy search with LIKE
+    if (results.length === 0) {
+      results = await db.execute(
+        sql`SELECT * FROM ${careers} WHERE 
+            LOWER(title) LIKE LOWER(${'%' + title + '%'}) OR
+            LOWER(alias1) LIKE LOWER(${'%' + title + '%'}) OR
+            LOWER(alias2) LIKE LOWER(${'%' + title + '%'}) OR
+            LOWER(alias3) LIKE LOWER(${'%' + title + '%'})
+            ORDER BY CASE
+              WHEN LOWER(title) = LOWER(${title}) THEN 0
+              WHEN LOWER(title) LIKE LOWER(${title + '%'}) THEN 1
+              WHEN LOWER(title) LIKE LOWER(${'%' + title + '%'}) THEN 2
+              ELSE 3
+            END
+            LIMIT 5`
+      );
+    }
+    
     // If still no results, try a partial match
     if (results.length === 0) {
       results = await db.execute(
