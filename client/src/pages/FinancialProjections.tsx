@@ -1800,8 +1800,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         console.log("Sending data to Python calculator:", pythonInput);
         
         // Call the Python calculator and get the results
-        const result = await calculateFinancialProjection(pythonInput);
-        console.log("Received projection data from Python calculator:", result);
+        const result = await calculateFinancialProjection(pythonInput, autoGenerate);
+        console.log("Received projection data from Python calculator:", result, "Auto-generate mode:", autoGenerate);
         
         // Add milestones to the projection data (with properly transformed years)
         const resultWithMilestones = {
@@ -1862,7 +1862,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     updateProjectionData();
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
       spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
-      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers]); // Include all configurable parameters to ensure recalculation when any of them change
+      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers, autoGenerate]); // Include autoGenerate to recalculate when auto-generating
   
   // Generate financial advice based on current financial state
   useEffect(() => {
