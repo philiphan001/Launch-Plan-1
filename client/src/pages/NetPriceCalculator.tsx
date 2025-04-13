@@ -654,29 +654,72 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                 <div>
                   <Label htmlFor="zipCode" className="flex justify-between">
                     <span>Your Zip Code</span>
-                    {userData && userData.zipCode && (
+                    {userData && userData.zipCode && !showZipCodeEditor && (
                       <span className="text-xs text-muted-foreground flex items-center">
                         <Check className="h-3 w-3 mr-1" /> From your profile
                       </span>
                     )}
                   </Label>
-                  <div className="flex mt-1">
-                    <Input 
-                      id="zipCode" 
-                      placeholder="Try 90210, 02142, 30328..."
-                      value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button 
-                      variant="outline" 
-                      className="ml-2" 
-                      onClick={() => fetchIncomeData(zipCode)}
-                      disabled={zipCode.length !== 5 || fetchingZipCode}
-                    >
-                      {fetchingZipCode ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find"}
-                    </Button>
-                  </div>
+                  
+                  {!showZipCodeEditor && userData && userData.zipCode ? (
+                    <div className="flex mt-1 items-center">
+                      <div className="border rounded-md px-3 py-2 flex-1 bg-muted text-muted-foreground">
+                        {zipCode}
+                        {localZipCodeData && (
+                          <span className="text-xs ml-2 text-muted-foreground">
+                            ({localZipCodeData.state})
+                          </span>
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        className="ml-2" 
+                        onClick={() => setShowZipCodeEditor(true)}
+                      >
+                        Change
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex mt-1">
+                      <Input 
+                        id="zipCode" 
+                        placeholder="Try 90210, 02142, 30328..."
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button 
+                        variant="outline" 
+                        className="ml-2" 
+                        onClick={() => {
+                          fetchIncomeData(zipCode);
+                          if (userData && userData.zipCode && zipCode !== userData.zipCode) {
+                            setShowZipCodeEditor(false);
+                          }
+                        }}
+                        disabled={zipCode.length !== 5 || fetchingZipCode}
+                      >
+                        {fetchingZipCode ? <Loader2 className="h-4 w-4 animate-spin" /> : "Find"}
+                      </Button>
+                      {userData && userData.zipCode && showZipCodeEditor && (
+                        <Button 
+                          variant="ghost"
+                          size="sm"
+                          className="ml-2" 
+                          onClick={() => {
+                            setZipCode(userData.zipCode);
+                            setShowZipCodeEditor(false);
+                            if (userData.zipCode.length === 5) {
+                              fetchIncomeData(userData.zipCode);
+                            }
+                          }}
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  )}
                   {zipCode.length > 0 && zipCode.length < 5 && (
                     <p className="text-xs text-destructive mt-1">Please enter a valid 5-digit zip code</p>
                   )}
