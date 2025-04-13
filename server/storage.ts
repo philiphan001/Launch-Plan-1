@@ -5,6 +5,7 @@ import {
   careers, type Career, type InsertCareer,
   favoriteColleges, type FavoriteCollege, type InsertFavoriteCollege,
   favoriteCareers, type FavoriteCareer, type InsertFavoriteCareer,
+  favoriteLocations, type FavoriteLocation, type InsertFavoriteLocation,
   financialProjections, type FinancialProjection, type InsertFinancialProjection,
   notificationPreferences, type NotificationPreference, type InsertNotificationPreference,
   milestones, type Milestone, type InsertMilestone,
@@ -52,6 +53,13 @@ export interface IStorage {
   getFavoriteCareersByUserId(userId: number): Promise<(FavoriteCareer & { career: Career })[]>;
   addFavoriteCareer(userId: number, careerId: number): Promise<FavoriteCareer>;
   removeFavoriteCareer(id: number): Promise<void>;
+  
+  // Favorite location methods
+  getFavoriteLocation(id: number): Promise<FavoriteLocation | undefined>;
+  getFavoriteLocationsByUserId(userId: number): Promise<FavoriteLocation[]>;
+  getFavoriteLocationByZipCode(userId: number, zipCode: string): Promise<FavoriteLocation | undefined>;
+  addFavoriteLocation(userId: number, zipCode: string, city?: string, state?: string): Promise<FavoriteLocation>;
+  removeFavoriteLocation(id: number): Promise<void>;
   
   // Financial projection methods
   getFinancialProjection(id: number): Promise<FinancialProjection | undefined>;
@@ -126,6 +134,7 @@ export class MemStorage implements IStorage {
   private careers: Map<number, Career>;
   private favoriteColleges: Map<number, FavoriteCollege>;
   private favoriteCareers: Map<number, FavoriteCareer>;
+  private favoriteLocations: Map<number, FavoriteLocation>;
   private financialProjections: Map<number, FinancialProjection>;
   private notificationPreferences: Map<number, NotificationPreference>;
   private milestones: Map<number, Milestone>;
@@ -143,6 +152,7 @@ export class MemStorage implements IStorage {
   private careerId: number;
   private favoriteCollegeId: number;
   private favoriteCarerId: number;
+  private favoriteLocationId: number;
   private financialProjectionId: number;
   private notificationPreferenceId: number;
   private milestoneId: number;
@@ -160,6 +170,7 @@ export class MemStorage implements IStorage {
     this.careers = new Map();
     this.favoriteColleges = new Map();
     this.favoriteCareers = new Map();
+    this.favoriteLocations = new Map();
     this.financialProjections = new Map();
     this.notificationPreferences = new Map();
     this.milestones = new Map();
@@ -176,6 +187,7 @@ export class MemStorage implements IStorage {
     this.careerId = 1;
     this.favoriteCollegeId = 1;
     this.favoriteCarerId = 1;
+    this.favoriteLocationId = 1;
     this.financialProjectionId = 1;
     this.notificationPreferenceId = 1;
     this.milestoneId = 1;
@@ -519,6 +531,57 @@ export class MemStorage implements IStorage {
   
   async removeFavoriteCareer(id: number): Promise<void> {
     this.favoriteCareers.delete(id);
+  }
+  
+  // Favorite location methods
+  async getFavoriteLocation(id: number): Promise<FavoriteLocation | undefined> {
+    return this.favoriteLocations.get(id);
+  }
+  
+  async getFavoriteLocationsByUserId(userId: number): Promise<FavoriteLocation[]> {
+    return Array.from(this.favoriteLocations.values()).filter(
+      (favorite) => favorite.userId === userId,
+    );
+  }
+  
+  async getFavoriteLocationByZipCode(userId: number, zipCode: string): Promise<FavoriteLocation | undefined> {
+    return Array.from(this.favoriteLocations.values()).find(
+      (favorite) => favorite.userId === userId && favorite.zipCode === zipCode,
+    );
+  }
+  
+  async addFavoriteLocation(userId: number, zipCode: string, city?: string, state?: string): Promise<FavoriteLocation> {
+    // Check if the favorite location already exists
+    const existingFavorite = await this.getFavoriteLocationByZipCode(userId, zipCode);
+    if (existingFavorite) {
+      return existingFavorite;
+    }
+    
+    // Look up location info if city and state are not provided
+    if (!city || !state) {
+      const locationInfo = await this.getLocationCostOfLivingByZipCode(zipCode);
+      if (locationInfo) {
+        city = locationInfo.city || undefined;
+        state = locationInfo.state || undefined;
+      }
+    }
+    
+    const id = this.favoriteLocationId++;
+    const timestamp = new Date();
+    const favorite: FavoriteLocation = { 
+      id, 
+      userId, 
+      zipCode, 
+      city: city || null, 
+      state: state || null, 
+      createdAt: timestamp 
+    };
+    this.favoriteLocations.set(id, favorite);
+    return favorite;
+  }
+  
+  async removeFavoriteLocation(id: number): Promise<void> {
+    this.favoriteLocations.delete(id);
   }
   
   // Financial projection methods
