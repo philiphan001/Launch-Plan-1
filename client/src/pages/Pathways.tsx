@@ -2639,7 +2639,7 @@ const Pathways = ({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
-                              <SelectItem value="" disabled>Available Fields of Study</SelectItem>
+                              <SelectItem value="header" disabled>Available Fields of Study</SelectItem>
                               {transferFieldOptions.map((field) => (
                                 <SelectItem key={field} value={field}>
                                   {field}
