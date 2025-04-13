@@ -133,13 +133,19 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   
   // Set the user's zip code once the profile is loaded
   useEffect(() => {
+    console.log('User Data Loaded:', userData);
+    
     if (userData && userData.zipCode) {
+      console.log('Using profile zip code:', userData.zipCode);
       setZipCode(userData.zipCode);
       
       // Optionally auto-fetch income data if zip code is available
       if (userData.zipCode.length === 5) {
+        console.log('Auto-fetching income data for zip:', userData.zipCode);
         fetchIncomeData(userData.zipCode);
       }
+    } else {
+      console.log('No user data or zip code available');
     }
   }, [userData]);
   
