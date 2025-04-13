@@ -2554,16 +2554,19 @@ const Pathways = ({
                               ? `${userJourney} and plan to transfer to ${transferCollege} to complete my bachelor's degree.`
                               : `${userJourney} and plan to transfer to a 4-year college to complete my bachelor's degree.`;
                             setUserJourney(updatedNarrative);
+                            
+                            // Since this is a 4-year transfer path, proceed to field of study selection (like 4-year path)
+                            setCurrentStep(5); // Set to field of study step directly
                           } else {
                             const updatedNarrative = `${userJourney} and plan to enter the workforce after completing my associate's degree.`;
                             setUserJourney(updatedNarrative);
+                            // Move to profession selection directly as the user won't need field of study
+                            handleNext();
                           }
-                          // Move to profession selection
-                          handleNext();
                         }}
                         className="bg-green-500 hover:bg-green-600"
                       >
-                        Next: Choose Profession
+                        {transferOption === 'yes' ? 'Next: Choose Field of Study' : 'Next: Choose Profession'}
                       </Button>
                     )}
                   </div>
@@ -2654,7 +2657,12 @@ const Pathways = ({
                                     setSelectedProfession(careerSearchQuery.trim());
                                     
                                     // Complete the narrative with the searched career
-                                    const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${careerSearchQuery.trim()}.`;
+                                    let narrative = '';
+                                    if (educationType === '2year' && transferOption === 'yes') {
+                                      narrative = `After high school, I plan to attend a 2-year college and then transfer to ${transferCollege || 'a 4-year college'} where I will study ${selectedFieldOfStudy} to become a ${careerSearchQuery.trim()}.`;
+                                    } else {
+                                      narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${careerSearchQuery.trim()}.`;
+                                    }
                                     setUserJourney(narrative);
                                     localStorage.setItem('userPathwayNarrative', narrative);
                                   }
@@ -2712,7 +2720,12 @@ const Pathways = ({
                                 setSelectedProfession(path.career_title);
                                 
                                 // Complete the narrative with the selected profession
-                                const narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${path.career_title}.`;
+                                let narrative = '';
+                                if (educationType === '2year' && transferOption === 'yes') {
+                                  narrative = `After high school, I plan to attend a 2-year college and then transfer to ${transferCollege || 'a 4-year college'} where I will study ${selectedFieldOfStudy} to become a ${path.career_title}.`;
+                                } else {
+                                  narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${path.career_title}.`;
+                                }
                                 setUserJourney(narrative);
                                 localStorage.setItem('userPathwayNarrative', narrative);
                               }}
@@ -2779,6 +2792,8 @@ const Pathways = ({
                                     localStorage.setItem('savedPathway', JSON.stringify({
                                       educationType,
                                       school: specificSchool || null,
+                                      transferOption: educationType === '2year' ? transferOption : null,
+                                      transferCollege: (educationType === '2year' && transferOption === 'yes') ? transferCollege : null,
                                       fieldOfStudy: selectedFieldOfStudy,
                                       profession: selectedProfession,
                                       narrative: userJourney
