@@ -450,10 +450,8 @@ const Pathways = ({
       const response = await fetch(`/api/location-cost-of-living/zip/${zipCode}`);
       if (response.ok) {
         const locationData = await response.json();
-        setSelectedLocation({
-          city: locationData.city,
-          state: locationData.state
-        });
+        // Create a proper LocationData object with all properties
+        setSelectedLocation(locationData);
         
         // Update the narrative to include location
         const updatedNarrative = `${userJourney} and live in ${locationData.city}, ${locationData.state}.`;
@@ -490,10 +488,8 @@ const Pathways = ({
           // Use the first result
           const locationData = data[0];
           
-          setSelectedLocation({
-            city: locationData.city,
-            state: locationData.state
-          });
+          // Use the complete LocationData object
+          setSelectedLocation(locationData);
           
           // If there's a zip code in the result, store it
           if (locationData.zip_code) {
@@ -3412,7 +3408,7 @@ const Pathways = ({
                                         .then(res => res.json())
                                         .then(calculations => {
                                           // Find any currently included calculation
-                                          const includedCalculation = calculations.find(calc => calc.includedInProjection);
+                                          const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
                                           
                                           // If one exists, un-include it first
                                           if (includedCalculation) {
@@ -3422,7 +3418,8 @@ const Pathways = ({
                                               body: JSON.stringify({ userId: user.id })
                                             });
                                           }
-                                          return Promise.resolve();
+                                          // Create a dummy response to keep the chain properly typed
+                                          return new Response(null, { status: 200 });
                                         })
                                         .then(() => {
                                           // Then create our new calculation that will be included
@@ -3510,7 +3507,7 @@ const Pathways = ({
                                     .then(res => res.json())
                                     .then(calculations => {
                                       // Find any currently included calculation
-                                      const includedCalculation = calculations.find(calc => calc.includedInProjection);
+                                      const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
                                       
                                       // If one exists, un-include it first
                                       if (includedCalculation) {
@@ -3520,7 +3517,8 @@ const Pathways = ({
                                           body: JSON.stringify({ userId: user.id })
                                         });
                                       }
-                                      return Promise.resolve();
+                                      // Create a dummy response to keep the chain properly typed
+                                      return new Response(null, { status: 200 });
                                     })
                                     .then(() => {
                                       // Then create our new calculation that will be included
@@ -3560,7 +3558,7 @@ const Pathways = ({
                           }
                           
                           // Helper function to map education type to standardized education level
-                          const getEducationLevelFromPathType = (pathType) => {
+                          const getEducationLevelFromPathType = (pathType: string | null): string => {
                             switch(pathType) {
                               case '4year': return 'bachelor';
                               case '2year': 
