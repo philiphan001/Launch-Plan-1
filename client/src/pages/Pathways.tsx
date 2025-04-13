@@ -2886,7 +2886,18 @@ const Pathways = ({
                                 type="button"
                                 onClick={() => {
                                   if (careerSearchQuery.trim()) {
+                                    // Set the profession name
                                     setSelectedProfession(careerSearchQuery.trim());
+                                    
+                                    // Try to find a matching career ID from the filtered results
+                                    if (filteredCareerPaths && filteredCareerPaths.length > 0) {
+                                      // Use the first filtered career's ID
+                                      setSelectedCareerId(filteredCareerPaths[0].id);
+                                      console.log(`Using career ID ${filteredCareerPaths[0].id} for custom career: ${careerSearchQuery.trim()}`);
+                                    } else {
+                                      // If no matches, we can't set a career ID, which may affect financial planning
+                                      console.log('Warning: No career ID found for custom career - this may affect financial calculations');
+                                    }
                                     
                                     // Complete the narrative with the searched career
                                     let narrative = '';
@@ -2929,6 +2940,9 @@ const Pathways = ({
                               size="sm"
                               onClick={() => {
                                 setSelectedProfession(null);
+                                setSelectedCareerId(null);
+                                // Maintain consistency with search query
+                                setCareerSearchQuery('');
                               }}
                             >
                               Change
