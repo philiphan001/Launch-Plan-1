@@ -471,6 +471,29 @@ export class MemStorage implements IStorage {
     return Array.from(this.careers.values());
   }
   
+  async searchCareers(query: string): Promise<Career[]> {
+    if (!query || query.length < 2) {
+      return [];
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    const careers = Array.from(this.careers.values());
+    
+    return careers.filter(career => {
+      // Search across all career fields
+      return [
+        career.title,
+        career.description,
+        career.category,
+        career.alias1,
+        career.alias2,
+        career.alias3,
+        career.alias4,
+        career.alias5
+      ].some(field => field && field.toLowerCase().includes(searchTerm));
+    });
+  }
+  
   async createCareer(insertCareer: InsertCareer): Promise<Career> {
     const id = this.careerId++;
     const career: Career = { ...insertCareer, id };

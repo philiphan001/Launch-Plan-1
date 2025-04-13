@@ -254,6 +254,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to get careers", error: error instanceof Error ? error.message : String(error) });
     }
   });
+  
+  app.get("/api/careers/search", async (req: Request, res: Response) => {
+    try {
+      const query = req.query.q as string;
+      console.log(`Searching careers with query: ${query}`);
+      
+      if (!query || query.length < 2) {
+        console.log("Query too short, returning empty array");
+        return res.json([]);
+      }
+      
+      const careers = await activeStorage.searchCareers(query);
+      console.log(`Found ${careers.length} careers matching query`);
+      res.json(careers);
+    } catch (error) {
+      console.error("Error searching careers:", error);
+      res.status(500).json({ message: "Failed to search careers", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
 
   app.get("/api/careers/:id", async (req: Request, res: Response) => {
     try {
