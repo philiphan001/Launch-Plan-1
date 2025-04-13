@@ -677,6 +677,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete financial projection" });
     }
   });
+  
+  // Reset all financial projections for a user (without affecting favorites)
+  app.post("/api/reset-financial-projections/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // Step 1: Reset all college calculations to not be included in projections
+      const collegeCalculations = await activeStorage.getCollegeCalculationsByUserId(userId);
+      let collegeResetCount = 0;
+      
+      for (const calc of collegeCalculations) {
+        if (calc.includedInProjection) {
+          await activeStorage.updateCollegeCalculation(calc.id, { 
+            ...calc,
+            includedInProjection: false 
+          });
+          collegeResetCount++;
+        }
+      }
+      
+      // Step 2: Reset all career calculations to not be included in projections
+      const careerCalculations = await activeStorage.getCareerCalculationsByUserId(userId);
+      let careerResetCount = 0;
+      
+      for (const calc of careerCalculations) {
+        if (calc.includedInProjection) {
+          await activeStorage.updateCareerCalculation(calc.id, { 
+            ...calc,
+            includedInProjection: false 
+          });
+          careerResetCount++;
+        }
+      }
+      
+      res.json({
+        success: true,
+        message: "All financial projections have been reset",
+        details: {
+          collegeCalculationsReset: collegeResetCount,
+          careerCalculationsReset: careerResetCount
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error resetting financial projections:", error);
+      res.status(500).json({ message: "Failed to reset financial projections" });
+    }
+  });
 
   // Career paths routes
   app.get("/api/career-paths", async (req: Request, res: Response) => {
