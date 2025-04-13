@@ -410,6 +410,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, careerId } = req.body;
       
+      console.log("Adding career to favorites:", { userId, careerId });
+      
       // Validate required fields
       if (userId === undefined || careerId === undefined) {
         return res.status(400).json({ message: "Missing required fields: userId and careerId are required" });
@@ -432,6 +434,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if career exists
       const career = await activeStorage.getCareer(careerId);
       if (!career) {
+        console.log(`Career ID ${careerId} not found in careers table. This might be a career_paths ID which doesn't match.`);
+        
+        // Try to find corresponding career path
+        const careerPath = await activeStorage.getCareerPath(careerId);
+        if (careerPath) {
+          console.log(`Found career path with title "${careerPath.career_title}". Need to find matching career.`);
+          
+          // Try to find a matching career by title
+          const matchingCareers = await activeStorage.searchCareers(careerPath.career_title);
+          if (matchingCareers && matchingCareers.length > 0) {
+            const matchedCareer = matchingCareers[0];
+            console.log(`Found matching career with ID ${matchedCareer.id} and title "${matchedCareer.title}"`);
+            
+            // Use the matched career ID from the careers table
+            const favorite = await activeStorage.addFavoriteCareer(userId, matchedCareer.id);
+            return res.status(201).json(favorite);
+          }
+        }
+        
         return res.status(404).json({ message: `Career with ID ${careerId} not found` });
       }
       
