@@ -198,6 +198,26 @@ const Pathways = ({
     }
   });
   
+  // Add college to favorites mutation
+  const addCollegeToFavorites = useMutation({
+    mutationFn: async (collegeId: number) => {
+      return apiRequest('/api/favorite-colleges', {
+        method: 'POST',
+        body: JSON.stringify({ collegeId })
+      });
+    }
+  });
+  
+  // Add career to favorites mutation
+  const addCareerToFavorites = useMutation({
+    mutationFn: async (careerId: number) => {
+      return apiRequest('/api/favorite-careers', {
+        method: 'POST',
+        body: JSON.stringify({ careerId })
+      });
+    }
+  });
+  
   // This function will set the education type and advance to the specific school question
   const selectEducationType = (type: EducationType) => {
     setEducationType(type);
