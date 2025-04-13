@@ -1093,10 +1093,36 @@ class FinancialCalculator:
                             f.write(f"\nUpdating tax filing status to 'married' in year {milestone_year}\n")
                             f.write(f"This will affect tax calculations for this year and all future years\n")
                         
-                        spouse_income = int(milestone.get('spouse_income', milestone.get('spouseIncome', 0)))
-                        spouse_assets = int(milestone.get('spouse_assets', milestone.get('spouseAssets', 0)))
-                        spouse_liabilities = int(milestone.get('spouse_liabilities', milestone.get('spouseLiabilities', 0)))
-                        wedding_cost = int(milestone.get('wedding_cost', milestone.get('weddingCost', 10000)))
+                        # Use safer conversion with better error handling for spouse data
+                        try:
+                            # Get spouse income, assets, and liabilities with safe fallbacks
+                            spouse_income_value = milestone.get('spouse_income', milestone.get('spouseIncome', 0))
+                            spouse_income = int(spouse_income_value) if spouse_income_value is not None else 0
+                            
+                            spouse_assets_value = milestone.get('spouse_assets', milestone.get('spouseAssets', 0))
+                            spouse_assets = int(spouse_assets_value) if spouse_assets_value is not None else 0
+                            
+                            spouse_liabilities_value = milestone.get('spouse_liabilities', milestone.get('spouseLiabilities', 0))
+                            spouse_liabilities = int(spouse_liabilities_value) if spouse_liabilities_value is not None else 0
+                            
+                            wedding_cost_value = milestone.get('wedding_cost', milestone.get('weddingCost', 10000))
+                            wedding_cost = int(wedding_cost_value) if wedding_cost_value is not None else 10000
+                            
+                            # Log spouse occupation data if present (for debugging only)
+                            spouse_occupation = milestone.get('spouse_occupation', milestone.get('spouseOccupation', ''))
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nSpouse milestone data - Income: ${spouse_income}, Assets: ${spouse_assets}, Liabilities: ${spouse_liabilities}\n")
+                                if spouse_occupation:
+                                    f.write(f"Spouse occupation: {spouse_occupation}\n")
+                        except (ValueError, TypeError) as e:
+                            # Log the error and use default values
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nERROR processing spouse data in marriage milestone: {str(e)}\n")
+                                f.write(f"Using default values instead\n")
+                            spouse_income = 50000  # Default fallback
+                            spouse_assets = 10000  # Default fallback
+                            spouse_liabilities = 5000  # Default fallback
+                            wedding_cost = 10000  # Default fallback
                         
                         # Apply the one-time expense (wedding cost) to the milestone year
                         # This is consistent with our handling of down payments for home and car
