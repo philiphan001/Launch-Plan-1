@@ -3,7 +3,6 @@ export interface User {
   name: string;
   email: string;
   isFirstTimeUser: boolean;
-  zipCode?: string;
 }
 
 export interface AuthProps {
