@@ -2963,16 +2963,23 @@ const Pathways = ({
                               key={path.id} 
                               className="border cursor-pointer transition-all hover:shadow-md hover:scale-105"
                               onClick={() => {
-                                setSelectedProfession(path.career_title);
-                                setSelectedCareerId(path.id);
-                                
-                                // Auto-fill the search box with the selected profession
+                                // Auto-fill the search box with the selected career title from career_paths
                                 setCareerSearchQuery(path.career_title);
                                 
-                                // Trigger search for matching careers to help connect with proper career_id
-                                // Always search for the selected career title to ensure proper matching
+                                // Initially set these values temporarily
+                                setSelectedProfession(path.career_title);
+                                
+                                // We DO NOT want to use the career_id from career_paths table
+                                // Instead, we want to search the careers table for proper matching
+                                // This is critical for consistent financial calculations
+                                
+                                console.log(`Selected career path "${path.career_title}" - searching careers table for matches`);
+                                
+                                // Enable global search mode to find this career anywhere
                                 setGlobalCareerSearch(true);
-                                // Search for matching careers using the API
+                                
+                                // Search for matching careers in the careers database
+                                // This will set filteredCareerPaths and selectedCareerId with results from careers table
                                 searchCareers(path.career_title);
                                 
                                 // Complete the narrative with the selected profession
