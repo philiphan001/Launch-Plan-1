@@ -2906,11 +2906,11 @@ const Pathways = ({
                       
                       {/* Display either filtered careers or all careers */}
                       {(filteredCareerPaths?.length || fieldCareerPaths?.length) ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div className="space-y-4 mb-6">
                           {(filteredCareerPaths || fieldCareerPaths || []).map((path: CareerPath) => (
                             <Card 
                               key={path.id} 
-                              className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${selectedProfession === path.career_title ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                              className="border cursor-pointer transition-all hover:shadow-md hover:scale-105"
                               onClick={() => {
                                 setSelectedProfession(path.career_title);
                                 setSelectedCareerId(path.id);
@@ -2919,11 +2919,10 @@ const Pathways = ({
                                 setCareerSearchQuery(path.career_title);
                                 
                                 // Trigger search for matching careers to help connect with proper career_id
-                                if (!globalCareerSearch) {
-                                  setGlobalCareerSearch(true);
-                                  // Search for matching careers
-                                  searchCareers(path.career_title);
-                                }
+                                // Always search for the selected career title to ensure proper matching
+                                setGlobalCareerSearch(true);
+                                // Search for matching careers using the API
+                                searchCareers(path.career_title);
                                 
                                 // Complete the narrative with the selected profession
                                 let narrative = '';
@@ -2938,12 +2937,18 @@ const Pathways = ({
                             >
                               <CardContent className="p-4">
                                 <div className="flex items-center">
-                                  <div className={`rounded-full ${selectedProfession === path.career_title ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${selectedProfession === path.career_title ? 'text-white' : 'text-gray-600'} mr-3 flex-shrink-0`}>
+                                  <div className="rounded-full bg-primary h-10 w-10 flex items-center justify-center text-white mr-3 flex-shrink-0">
                                     <span className="material-icons text-sm">work</span>
                                   </div>
                                   <div>
-                                    <h5 className={`font-medium ${selectedProfession === path.career_title ? 'text-primary' : ''}`}>{path.career_title}</h5>
-                                    <p className="text-sm text-gray-600">Rank: {path.option_rank}</p>
+                                    <h5 className="font-medium">{path.career_title}</h5>
+                                    <p className="text-sm text-gray-600">
+                                      {path.field_of_study || 'General'}
+                                      {path.option_rank ? ` • Rank: ${path.option_rank}` : ''}
+                                    </p>
+                                    <Badge variant="outline" className="mt-1">
+                                      {path.field_of_study}
+                                    </Badge>
                                   </div>
                                 </div>
                               </CardContent>
