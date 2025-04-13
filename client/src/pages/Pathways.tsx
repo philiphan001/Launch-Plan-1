@@ -2829,7 +2829,7 @@ const Pathways = ({
                         <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
                           <h4 className="text-sm font-semibold mb-2 flex items-center">
                             <span className="material-icons mr-1 text-blue-500 text-sm">search</span>
-                            Custom Career Search
+                            Career Search
                           </h4>
                           <div className="flex gap-2">
                             <div className="relative flex-1">
@@ -2886,7 +2886,7 @@ const Pathways = ({
                                 }}
                                 className="bg-orange-500 hover:bg-orange-600 text-white"
                               >
-                                Use Custom Career
+                                Search Careers
                               </Button>
                               <Button 
                                 type="button"
@@ -2894,7 +2894,7 @@ const Pathways = ({
                                 variant="outline"
                                 className={globalCareerSearch ? "bg-blue-100" : ""}
                               >
-                                {globalCareerSearch ? "Searching All Fields" : "Search All Fields"}
+                                {globalCareerSearch ? "Searching All Careers" : "Search All Careers"}
                               </Button>
                             </div>
                           </div>
