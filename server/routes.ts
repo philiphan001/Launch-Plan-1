@@ -492,6 +492,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Favorite locations routes
+  app.post("/api/favorites/locations", async (req: Request, res: Response) => {
+    try {
+      const { userId, zipCode, city, state } = req.body;
+      
+      // Validate required fields
+      if (userId === undefined || zipCode === undefined) {
+        return res.status(400).json({ message: "Missing required fields: userId and zipCode are required" });
+      }
+      
+      // Verify user exists
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        // Create a demo user if not found (for development purposes)
+        console.log(`User with ID ${userId} not found, creating demo user...`);
+        await activeStorage.createUser({
+          username: "philiphan",
+          password: "password123", // This is a demo app, in production you'd use proper auth
+          firstName: "Philip",
+          lastName: "Han",
+          email: "philip.han@example.com"
+        });
+      }
+      
+      // Check if location exists in our cost of living data
+      // We don't block if not found, as we can still store the zip code
+      const locationInfo = await activeStorage.getLocationCostOfLivingByZipCode(zipCode);
+      if (!locationInfo) {
+        console.log(`Location with zip code ${zipCode} not found in cost of living data, adding anyway`);
+      }
+      
+      const favorite = await activeStorage.addFavoriteLocation(userId, zipCode, city, state);
+      res.status(201).json(favorite);
+    } catch (error) {
+      console.error("Error adding favorite location:", error);
+      res.status(500).json({ message: "Failed to add favorite location", error: String(error) });
+    }
+  });
+  
+  app.delete("/api/favorites/locations/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid favorite ID format" });
+      }
+      
+      const favorite = await activeStorage.getFavoriteLocation(id);
+      if (!favorite) {
+        return res.status(404).json({ message: `Favorite location with ID ${id} not found` });
+      }
+      
+      await activeStorage.removeFavoriteLocation(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing favorite location:", error);
+      res.status(500).json({ message: "Failed to remove favorite location", error: String(error) });
+    }
+  });
+  
+  app.get("/api/favorites/locations/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // For development purposes, check if user exists and create a demo user if needed
+      const user = await activeStorage.getUser(userId);
+      if (!user) {
+        console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
+        await activeStorage.createUser({
+          username: "philiphan",
+          password: "password123",
+          firstName: "Philip",
+          lastName: "Han",
+          email: "philip.han@example.com"
+        });
+      }
+      
+      const favorites = await activeStorage.getFavoriteLocationsByUserId(userId);
+      res.json(favorites);
+    } catch (error) {
+      console.error("Error getting favorite locations:", error);
+      res.status(500).json({ message: "Failed to get favorite locations", error: String(error) });
+    }
+  });
+
   // Financial projections routes
   app.post("/api/financial-projections", validateRequest({ body: insertFinancialProjectionSchema }), async (req: Request, res: Response) => {
     try {

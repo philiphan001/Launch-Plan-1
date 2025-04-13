@@ -6,6 +6,7 @@ import {
   careers, type Career, type InsertCareer,
   favoriteColleges, type FavoriteCollege, type InsertFavoriteCollege,
   favoriteCareers, type FavoriteCareer, type InsertFavoriteCareer,
+  favoriteLocations, type FavoriteLocation, type InsertFavoriteLocation,
   financialProjections, type FinancialProjection, type InsertFinancialProjection,
   notificationPreferences, type NotificationPreference, type InsertNotificationPreference,
   milestones, type Milestone, type InsertMilestone,
@@ -222,6 +223,32 @@ export class PgStorage implements IStorage {
   
   async removeFavoriteCareer(id: number): Promise<void> {
     await db.delete(favoriteCareers).where(eq(favoriteCareers.id, id));
+  }
+  
+  // Favorite location methods
+  async getFavoriteLocation(id: number): Promise<FavoriteLocation | undefined> {
+    const result = await db.select().from(favoriteLocations).where(eq(favoriteLocations.id, id));
+    return result[0];
+  }
+  
+  async getFavoriteLocationsByUserId(userId: number): Promise<FavoriteLocation[]> {
+    // For favorite locations, we just return the raw favorites without joining
+    // since the location details are stored in a separate cost of living table
+    return await db.select().from(favoriteLocations).where(eq(favoriteLocations.userId, userId));
+  }
+  
+  async addFavoriteLocation(userId: number, zipCode: string, city?: string, state?: string): Promise<FavoriteLocation> {
+    const result = await db.insert(favoriteLocations).values({ 
+      userId, 
+      zipCode,
+      city,
+      state 
+    }).returning();
+    return result[0];
+  }
+  
+  async removeFavoriteLocation(id: number): Promise<void> {
+    await db.delete(favoriteLocations).where(eq(favoriteLocations.id, id));
   }
   
   // Financial projection methods
