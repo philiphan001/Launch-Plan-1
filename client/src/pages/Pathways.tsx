@@ -2555,8 +2555,9 @@ const Pathways = ({
                               : `${userJourney} and plan to transfer to a 4-year college to complete my bachelor's degree.`;
                             setUserJourney(updatedNarrative);
                             
-                            // Since this is a 4-year transfer path, proceed to field of study selection (like 4-year path)
-                            setCurrentStep(5); // Set to field of study step directly
+                            // Since we've already selected field of study for 2-year, continue to profession selection
+                            // No need to ask for field of study again
+                            setCurrentStep(6); // Jump to profession selection step
                           } else {
                             const updatedNarrative = `${userJourney} and plan to enter the workforce after completing my associate's degree.`;
                             setUserJourney(updatedNarrative);
@@ -2566,7 +2567,7 @@ const Pathways = ({
                         }}
                         className="bg-green-500 hover:bg-green-600"
                       >
-                        {transferOption === 'yes' ? 'Next: Choose Field of Study' : 'Next: Choose Profession'}
+                        {transferOption === 'yes' ? 'Next: Choose Career' : 'Next: Choose Profession'}
                       </Button>
                     )}
                   </div>
