@@ -3100,7 +3100,30 @@ const Pathways = ({
                       <Button 
                         className="bg-green-500 hover:bg-green-600"
                         onClick={() => {
-                          // Update the location in localStorage too if selected
+                          // Collect all the pathway data to auto-generate a financial plan
+                          const pathwayData = {
+                            educationType,
+                            selectedFieldOfStudy,
+                            specificSchool: specificSchool || "",
+                            selectedProfession,
+                            transferOption,
+                            transferCollege,
+                            transferFieldOfStudy,
+                            location: selectedLocation ? {
+                              zipCode: selectedZipCode,
+                              city: selectedLocation.city,
+                              state: selectedLocation.state
+                            } : null,
+                            userJourney
+                          };
+                          
+                          // Store all the pathway data
+                          localStorage.setItem('pathwayData', JSON.stringify(pathwayData));
+                          
+                          // Store the narrative for the calculator
+                          localStorage.setItem('userPathwayNarrative', userJourney);
+                          
+                          // Store the location data
                           if (selectedLocation) {
                             localStorage.setItem('selectedLocation', JSON.stringify({
                               zipCode: selectedZipCode,
@@ -3109,11 +3132,8 @@ const Pathways = ({
                             }));
                           }
                           
-                          // Pass the complete narrative to the calculator via localStorage
-                          localStorage.setItem('userPathwayNarrative', userJourney);
-                          
-                          // Redirect to calculator
-                          navigate('/calculator');
+                          // Redirect to the financial projections page with auto-generate flag
+                          navigate('/projections?autoGenerate=true');
                         }}
                         disabled={!selectedLocation && selectedZipCode.length === 5}
                       >
