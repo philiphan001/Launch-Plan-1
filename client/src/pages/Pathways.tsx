@@ -215,12 +215,12 @@ const Pathways = ({
   
   // Add career to favorites mutation
   const addCareerToFavorites = useMutation({
-    mutationFn: async (careerId: number) => {
+    mutationFn: async (careerPathId: number) => {
       return apiRequest('/api/favorites/careers', {
         method: 'POST',
         body: JSON.stringify({ 
           userId: user?.id || 1, // Use current user ID or default to 1 for demo
-          careerId 
+          careerPathId // Using careerPathId instead of careerId to leverage the backend mapping
         })
       });
     }
