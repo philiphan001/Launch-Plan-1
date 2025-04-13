@@ -3484,75 +3484,150 @@ const Pathways = ({
                                       // Assume roughly 70% of net price becomes student loan
                                       const studentLoanAmount = Math.round(netPrice * 0.7);
                                       
-                                      // Create the college calculation
-                                      const collegeCalculation = {
-                                        userId: user.id,
-                                        collegeId: selectedSchoolId,
-                                        netPrice: netPrice,
-                                        inState: true, // Default to in-state
-                                        householdIncome: householdIncome,
-                                        householdSize: householdSize,
-                                        zip: userZipCode,
-                                        tuitionUsed: tuitionAmount,
-                                        roomAndBoardUsed: roomAndBoardAmount,
-                                        onCampusHousing: true, // Default to on-campus
-                                        totalCost: totalCost,
-                                        studentLoanAmount: studentLoanAmount,
-                                        financialAid: financialAid,
-                                        includedInProjection: true, // Auto-include in projection
-                                        notes: `Auto-generated from Pathways for ${specificSchool}`
-                                      };
+                                      // Process in-state/out-of-state tuition determination
+                                      // For this, we need to check if the user's state matches the college's state
+                                      // This is an asynchronous process since we need to fetch the state from the zip code
                                       
-                                      console.log('Auto-generating college calculation:', collegeCalculation);
-                                      
-                                      // First, reset any existing included calculations
-                                      fetch(`/api/college-calculations/user/${user.id}`)
-                                        .then(res => res.json())
-                                        .then(calculations => {
-                                          // Find any currently included calculation
-                                          const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
+                                      // Define a function to create and save the college calculation
+                                      const createAndSaveCollegeCalculation = (isInState: boolean = true) => {
+                                        let finalTuitionAmount = tuitionAmount;
+                                        let finalTotalCost = totalCost;
+                                        let finalFinancialAid = financialAid;
+                                        let finalNetPrice = netPrice;
+                                        let finalStudentLoanAmount = studentLoanAmount;
+                                        
+                                        // If public college and out of state, apply multiplier to tuition
+                                        if (college && college.type && 
+                                            college.type.toLowerCase().includes('public') && 
+                                            !isInState && college.tuition) {
+                                            
+                                          // Apply out-of-state multiplier (typically 2.5-3x)
+                                          const outOfStateMultiplier = 3;
+                                          finalTuitionAmount = college.tuition * outOfStateMultiplier;
+                                          finalTotalCost = finalTuitionAmount + roomAndBoardAmount;
                                           
-                                          // If one exists, un-include it first
-                                          if (includedCalculation) {
-                                            return fetch(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
+                                          // Recalculate financial aid and net price with new tuition
+                                          if (householdIncome < 50000) finalFinancialAid = finalTotalCost * 0.8;
+                                          else if (householdIncome < 80000) finalFinancialAid = finalTotalCost * 0.5;
+                                          else if (householdIncome < 120000) finalFinancialAid = finalTotalCost * 0.3;
+                                          else finalFinancialAid = finalTotalCost * 0.1;
+                                          
+                                          finalNetPrice = Math.max(finalTotalCost - finalFinancialAid, 0);
+                                          finalStudentLoanAmount = Math.round(finalNetPrice * 0.7);
+                                          
+                                          console.log('Using OUT-OF-STATE tuition for this calculation');
+                                        } else {
+                                          console.log('Using IN-STATE tuition for this calculation');
+                                        }
+                                        
+                                        // Create the college calculation
+                                        const collegeCalculation = {
+                                          userId: user.id,
+                                          collegeId: selectedSchoolId,
+                                          netPrice: finalNetPrice,
+                                          inState: isInState,
+                                          householdIncome: householdIncome,
+                                          householdSize: householdSize,
+                                          zip: userZipCode,
+                                          tuitionUsed: finalTuitionAmount,
+                                          roomAndBoardUsed: roomAndBoardAmount,
+                                          onCampusHousing: true, // Default to on-campus
+                                          totalCost: finalTotalCost,
+                                          studentLoanAmount: finalStudentLoanAmount,
+                                          financialAid: finalFinancialAid,
+                                          includedInProjection: true, // Auto-include in projection
+                                          notes: `Auto-generated from Pathways for ${specificSchool}`
+                                        };
+                                        
+                                        console.log('Auto-generating college calculation:', collegeCalculation);
+                                        
+                                        // Save the calculation to the database
+                                        // First, reset any existing included calculations
+                                        fetch(`/api/college-calculations/user/${user.id}`)
+                                          .then(res => res.json())
+                                          .then(calculations => {
+                                            // Find any currently included calculation
+                                            const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
+                                            
+                                            // If one exists, un-include it first
+                                            if (includedCalculation) {
+                                              return fetch(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ userId: user.id })
+                                              });
+                                            }
+                                            // Create a dummy response to keep the chain properly typed
+                                            return new Response(null, { status: 200 });
+                                          })
+                                          .then(() => {
+                                            // Then create our new calculation that will be included
+                                            return fetch('/api/college-calculations', {
                                               method: 'POST',
                                               headers: { 'Content-Type': 'application/json' },
-                                              body: JSON.stringify({ userId: user.id })
+                                              body: JSON.stringify(collegeCalculation)
                                             });
-                                          }
-                                          // Create a dummy response to keep the chain properly typed
-                                          return new Response(null, { status: 200 });
-                                        })
-                                        .then(() => {
-                                          // Then create our new calculation that will be included
-                                          return fetch('/api/college-calculations', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify(collegeCalculation)
+                                          })
+                                          .then(res => {
+                                            if (!res.ok) throw new Error('Failed to create college calculation');
+                                            return res.json();
+                                          })
+                                          .then(data => {
+                                            console.log('Successfully created college calculation with projection inclusion:', data);
+                                            // Show success toast to notify user
+                                            toast({
+                                              title: "College costs calculated",
+                                              description: `College cost calculation for ${specificSchool} has been created and saved to your profile.`,
+                                              variant: "default",
+                                            });
+                                          })
+                                          .catch(err => {
+                                            console.error('Error creating college calculation:', err);
+                                            // Show error toast
+                                            toast({
+                                              title: "Error creating college calculation",
+                                              description: "There was a problem saving your college cost calculation.",
+                                              variant: "destructive",
+                                            });
                                           });
-                                        })
-                                        .then(res => {
-                                          if (!res.ok) throw new Error('Failed to create college calculation');
-                                          return res.json();
-                                        })
-                                        .then(data => {
-                                          console.log('Successfully created college calculation with projection inclusion:', data);
-                                          // Show success toast to notify user
-                                          toast({
-                                            title: "College costs calculated",
-                                            description: `College cost calculation for ${specificSchool} has been created and saved to your profile.`,
-                                            variant: "default",
+                                      };
+                                      
+                                      // Check if we need to consider in-state vs out-of-state tuition
+                                      if (college && college.type && college.type.toLowerCase().includes('public')) {
+                                        // For public colleges, we need to compare states
+                                        const collegeState = college.state || '';
+                                        
+                                        console.log(`Determining in-state status for ${college.name} (${collegeState})`);
+                                        
+                                        // Try to get user state from zip code data
+                                        fetch(`/api/zip-code-income/zip/${userZipCode}`)
+                                          .then(response => response.ok ? response.json() : null)
+                                          .then(data => {
+                                            if (data && data.state) {
+                                              const userState = data.state;
+                                              
+                                              // Compare states to determine in-state status
+                                              const isInState = userState.toUpperCase() === collegeState.toUpperCase();
+                                              console.log(`College in ${collegeState}, user in ${userState}: in-state = ${isInState}`);
+                                              
+                                              // Create and save the calculation with the right in-state status
+                                              createAndSaveCollegeCalculation(isInState);
+                                            } else {
+                                              // No state data found - default to out-of-state for public colleges
+                                              console.log('No state data found for zip code, defaulting to out-of-state for public college');
+                                              createAndSaveCollegeCalculation(false);
+                                            }
+                                          })
+                                          .catch(err => {
+                                            console.error('Error fetching state from zip code:', err);
+                                            // If error, default to out-of-state for public colleges
+                                            createAndSaveCollegeCalculation(false);
                                           });
-                                        })
-                                        .catch(err => {
-                                          console.error('Error creating college calculation:', err);
-                                          // Show error toast
-                                          toast({
-                                            title: "Error creating college calculation",
-                                            description: "There was a problem saving your college cost calculation.",
-                                            variant: "destructive",
-                                          });
-                                        });
+                                      } else {
+                                        // For private colleges, in-state status doesn't matter
+                                        console.log('College is private/non-public, in-state status does not apply');
+                                        createAndSaveCollegeCalculation(true);
+                                      }
                                     })
                                     .catch(err => {
                                       console.error('Error fetching college data:', err);
