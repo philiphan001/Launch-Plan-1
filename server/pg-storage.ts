@@ -154,6 +154,28 @@ export class PgStorage implements IStorage {
     return await db.select().from(careers);
   }
   
+  async searchCareers(title: string): Promise<Career[]> {
+    // Search for careers by exact title match
+    let results = await db.select().from(careers).where(eq(careers.title, title));
+    
+    // If no results, try a case-insensitive search
+    if (results.length === 0) {
+      // Use SQL LOWER() function to do case-insensitive matching
+      results = await db.execute(
+        sql`SELECT * FROM ${careers} WHERE LOWER(title) = LOWER(${title}) LIMIT 10`
+      );
+    }
+    
+    // If still no results, try a partial match
+    if (results.length === 0) {
+      results = await db.execute(
+        sql`SELECT * FROM ${careers} WHERE LOWER(title) LIKE LOWER(${'%' + title + '%'}) LIMIT 10`
+      );
+    }
+    
+    return results;
+  }
+  
   async createCareer(career: InsertCareer): Promise<Career> {
     const result = await db.insert(careers).values(career).returning();
     return result[0];
