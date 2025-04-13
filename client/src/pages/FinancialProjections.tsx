@@ -371,6 +371,8 @@ const FinancialProjections = ({
       console.log("Auto-generating financial projection from pathway data");
       
       try {
+        console.log("Attempting to load pathway data from localStorage...");
+        
         // Load pathway data from localStorage
         const pathwayDataStr = localStorage.getItem('pathwayData');
         if (!pathwayDataStr) {
@@ -378,8 +380,10 @@ const FinancialProjections = ({
           return;
         }
         
+        console.log("Raw pathway data string:", pathwayDataStr);
+        
         const pathwayData = JSON.parse(pathwayDataStr);
-        console.log("Loaded pathway data:", pathwayData);
+        console.log("Parsed pathway data:", pathwayData);
         
         // Determine initial age based on education path
         let startingAge = 18; // Default starting age after high school
@@ -1708,9 +1712,90 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     };
   }, [projectionData, activeTab, timeframe]);
 
+  // State to hold pathway data for display
+  const [pathwaySummary, setPathwaySummary] = useState<any>(null);
+  
+  // Load pathway data for display in summary section
+  useEffect(() => {
+    const pathwayDataStr = localStorage.getItem('pathwayData');
+    if (pathwayDataStr) {
+      try {
+        const data = JSON.parse(pathwayDataStr);
+        setPathwaySummary(data);
+      } catch (error) {
+        console.error("Error parsing pathway data for summary:", error);
+      }
+    }
+  }, []);
+  
+  // Function to format education type for display
+  const formatEducationType = (type: string | undefined) => {
+    if (!type) return "Unknown";
+    
+    switch(type) {
+      case "4year": return "4-Year College";
+      case "2year": return "2-Year College";
+      case "vocational": return "Vocational School";
+      default: return type;
+    }
+  };
+  
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
+      
+      {/* Pathway Summary Section */}
+      {pathwaySummary && (
+        <Card className="mb-6 border-l-4 border-l-blue-500">
+          <CardContent className="pt-6">
+            <h2 className="text-lg font-semibold mb-3 flex items-center">
+              <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
+              Your Pathway Summary
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm font-medium text-gray-500">Education</span>
+                <span className="text-base font-medium">
+                  {formatEducationType(pathwaySummary.educationType)}
+                  {pathwaySummary.transferOption === "yes" && " → Transfer to 4-Year College"}
+                </span>
+                <span className="text-sm text-gray-700">
+                  {pathwaySummary.selectedFieldOfStudy || "General Studies"}
+                  {pathwaySummary.transferOption === "yes" && pathwaySummary.transferFieldOfStudy && 
+                    ` → ${pathwaySummary.transferFieldOfStudy}`}
+                </span>
+                {pathwaySummary.specificSchool && (
+                  <span className="text-xs text-gray-500">{pathwaySummary.specificSchool}</span>
+                )}
+              </div>
+              
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm font-medium text-gray-500">Career</span>
+                <span className="text-base font-medium">
+                  {pathwaySummary.selectedProfession || "General Career Path"}
+                </span>
+              </div>
+              
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm font-medium text-gray-500">Location</span>
+                {pathwaySummary.location ? (
+                  <>
+                    <span className="text-base font-medium">
+                      {pathwaySummary.location.city}, {pathwaySummary.location.state}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Zip Code: {pathwaySummary.location.zipCode}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-base font-medium">Not specified</span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>

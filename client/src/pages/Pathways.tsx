@@ -3117,6 +3117,8 @@ const Pathways = ({
                             userJourney
                           };
                           
+                          console.log("Storing pathway data for financial planning:", pathwayData);
+                          
                           // Store all the pathway data
                           localStorage.setItem('pathwayData', JSON.stringify(pathwayData));
                           
