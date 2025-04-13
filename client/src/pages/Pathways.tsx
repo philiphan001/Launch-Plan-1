@@ -44,6 +44,7 @@ interface CareerPath {
   field_of_study: string;
   career_title: string;
   option_rank: number;
+  careerId?: number | null; // Reference to matching career in careers table
 }
 
 const Step = ({ children, title, subtitle }: StepProps) => (
@@ -215,12 +216,21 @@ const Pathways = ({
   
   // Add career to favorites mutation
   const addCareerToFavorites = useMutation({
-    mutationFn: async (careerPathId: number) => {
+    mutationFn: async (params: { careerId?: number, careerPathId?: number }) => {
+      const { careerId, careerPathId } = params;
+      
+      console.log(`Adding career to favorites with careerId: ${careerId}, careerPathId: ${careerPathId}`);
+      
+      if (!careerId && !careerPathId) {
+        throw new Error("Either careerId or careerPathId must be provided");
+      }
+      
       return apiRequest('/api/favorites/careers', {
         method: 'POST',
         body: JSON.stringify({ 
           userId: user?.id || 1, // Use current user ID or default to 1 for demo
-          careerPathId // Using careerPathId instead of careerId to leverage the backend mapping
+          careerId,
+          careerPathId
         })
       });
     }
@@ -3326,7 +3336,7 @@ const Pathways = ({
                                 } else {
                                   // Fallback to the original mechanism using careerPathId
                                   console.log('Career path does not have careerId, using careerPathId for backend lookup');
-                                  addCareerToFavorites.mutate(selectedCareerId, {
+                                  addCareerToFavorites.mutate({ careerPathId: selectedCareerId }, {
                                     onSuccess: () => {
                                       console.log('Career added to favorites successfully (via careerPathId)');
                                       toast({
@@ -3349,7 +3359,7 @@ const Pathways = ({
                               .catch(error => {
                                 console.error('Error fetching career path details:', error);
                                 // Fallback to original method if we can't fetch career path details
-                                addCareerToFavorites.mutate(selectedCareerId, {
+                                addCareerToFavorites.mutate({ careerPathId: selectedCareerId }, {
                                   onSuccess: () => {
                                     console.log('Career added to favorites successfully (fallback method)');
                                     toast({
