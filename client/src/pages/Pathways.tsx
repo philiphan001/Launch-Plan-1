@@ -2926,13 +2926,110 @@ const Pathways = ({
                       </div>
                       
                       <h4 className="text-md font-medium mb-4">
-                        {filteredCareerPaths ? 'Search Results:' : 'Available Career Options:'}
+                        {careerSearchQuery.length > 2 ? 'Search Results:' : 'Available Career Options:'}
                       </h4>
                       
-                      {/* Display either filtered careers or all careers */}
-                      {(filteredCareerPaths?.length || fieldCareerPaths?.length) ? (
+                      {/* CAREER SEARCH SECTION - This is where we need to match the Go To Work pathway exactly */}
+                      {careerSearchQuery.length > 2 ? (
+                        // When search query is active, we need to directly filter allCareers like in job pathway
+                        isLoadingAllCareers ? (
+                          <div className="text-center py-8">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                            <p className="mt-4 text-gray-600">Searching careers...</p>
+                          </div>
+                        ) : allCareers && allCareers.length > 0 ? (
+                          <div className="space-y-4 mb-6">
+                            {/* Filter careers EXACTLY as in Go To Work pathway */}
+                            {allCareers
+                              .filter(career => {
+                                // Match search query
+                                const matchesQuery = 
+                                  (career.title && career.title.toLowerCase().includes(careerSearchQuery.toLowerCase())) || 
+                                  (career.description && career.description.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                  (career.alias1 && career.alias1.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                  (career.alias2 && career.alias2.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                  (career.alias3 && career.alias3.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                  (career.alias4 && career.alias4.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
+                                  (career.alias5 && career.alias5.toLowerCase().includes(careerSearchQuery.toLowerCase()));
+                                
+                                // Filter by field of study if not in global search mode
+                                if (!globalCareerSearch && selectedFieldOfStudy) {
+                                  return matchesQuery && 
+                                        (career.category === selectedFieldOfStudy || 
+                                        career.field === selectedFieldOfStudy);
+                                }
+                                
+                                return matchesQuery;
+                              })
+                              .slice(0, 5) // Limit results to 5
+                              .map(career => (
+                                <Card 
+                                  key={career.id} 
+                                  className="border cursor-pointer transition-all hover:shadow-md hover:scale-105"
+                                  onClick={() => {
+                                    setSelectedProfession(career.title);
+                                    setCareerSearchQuery(career.title);
+                                    setSelectedCareerId(career.id);
+                                    
+                                    // Complete the narrative with the selected profession
+                                    let narrative = '';
+                                    if (educationType === '2year' && transferOption === 'yes') {
+                                      narrative = `After high school, I plan to attend a 2-year college studying ${selectedFieldOfStudy === transferFieldOfStudy ? selectedFieldOfStudy : selectedFieldOfStudy + " initially"} and then transfer to ${transferCollege || 'a 4-year college'} where I will study ${transferFieldOfStudy} to become a ${career.title}.`;
+                                    } else {
+                                      narrative = `After high school, I am interested in attending ${specificSchool || (educationType === '4year' ? 'a 4-year college' : educationType === '2year' ? 'a 2-year college' : 'a vocational school')} where I am interested in studying ${selectedFieldOfStudy} to become a ${career.title}.`;
+                                    }
+                                    setUserJourney(narrative);
+                                    localStorage.setItem('userPathwayNarrative', narrative);
+                                  }}
+                                >
+                                  <CardContent className="p-4">
+                                    <div className="flex items-center">
+                                      <div className="rounded-full bg-primary h-10 w-10 flex items-center justify-center text-white mr-3 flex-shrink-0">
+                                        <span className="material-icons text-sm">work</span>
+                                      </div>
+                                      <div>
+                                        <h5 className="font-medium">{career.title}</h5>
+                                        <p className="text-sm text-gray-600">
+                                          {career.category || 'General'}
+                                          {career.salary ? ` • ${formatSalary(career.salary)}` : ''}
+                                        </p>
+                                        {career.growth_rate && (
+                                          <Badge variant="outline" className="mt-1">
+                                            {career.growth_rate === 'fast' ? 'Growing Fast' : 
+                                             career.growth_rate === 'average' ? 'Stable Growth' : 'Slow Growth'}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            
+                            {/* Clear Search button */}
+                            <div className="flex justify-center">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setCareerSearchQuery('');
+                                }}
+                              >
+                                <span className="material-icons text-sm mr-1">clear</span>
+                                Clear Search
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-6 border rounded-lg mb-6">
+                            <p className="text-gray-500">
+                              No careers found matching your search.
+                            </p>
+                          </div>
+                        )
+                      ) : fieldCareerPaths?.length ? (
+                        // When no search is active, show field career paths
                         <div className="space-y-4 mb-6">
-                          {(filteredCareerPaths || fieldCareerPaths || []).map((path: CareerPath) => (
+                          {fieldCareerPaths.map((path: CareerPath) => (
                             <Card 
                               key={path.id} 
                               className="border cursor-pointer transition-all hover:shadow-md hover:scale-105"
@@ -2943,17 +3040,13 @@ const Pathways = ({
                                 // Initially set these values temporarily
                                 setSelectedProfession(path.career_title);
                                 
-                                // We DO NOT want to use the career_id from career_paths table
-                                // Instead, we want to search the careers table for proper matching
-                                // This is critical for consistent financial calculations
-                                
+                                // Search for matching careers in the careers database
                                 console.log(`Selected career path "${path.career_title}" - searching careers table for matches`);
                                 
                                 // Enable global search mode to find this career anywhere
                                 setGlobalCareerSearch(true);
                                 
-                                // Search for matching careers in the careers database
-                                // This will set filteredCareerPaths and selectedCareerId with results from careers table
+                                // Search for this career title to get actual career ID
                                 searchCareers(path.career_title);
                                 
                                 // Complete the narrative with the selected profession
@@ -2978,9 +3071,6 @@ const Pathways = ({
                                       {path.field_of_study || 'General'}
                                       {path.option_rank ? ` • Rank: ${path.option_rank}` : ''}
                                     </p>
-                                    <Badge variant="outline" className="mt-1">
-                                      {path.field_of_study}
-                                    </Badge>
                                   </div>
                                 </div>
                               </CardContent>
@@ -2990,29 +3080,12 @@ const Pathways = ({
                       ) : (
                         <div className="text-center py-6 border rounded-lg mb-6">
                           <p className="text-gray-500">
-                            {filteredCareerPaths ? 'No careers found matching your search.' : 'No career paths found for this field of study'}
+                            No career options found. Try a different search or field of study.
                           </p>
                         </div>
                       )}
                       
-                      {/* Show a "Clear Search" button when filtered */}
-                      {filteredCareerPaths && (
-                        <div className="flex justify-center mb-4">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              // Clear the search
-                              setFilteredCareerPaths(null);
-                              setCareerSearchQuery('');
-                              setGlobalCareerSearch(false);
-                            }}
-                          >
-                            <span className="material-icons text-sm mr-1">clear</span>
-                            Clear Search
-                          </Button>
-                        </div>
-                      )}
+                      {/* No need for this extra Clear Search button anymore - it's already in the search results */}
                       
                       {/* Save to Profile section */}
                       {selectedProfession && (
