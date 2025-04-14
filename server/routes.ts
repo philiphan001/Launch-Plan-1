@@ -79,12 +79,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.post("/api/users/register", validateRequest({ body: insertUserSchema }), async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Check if username already exists
+      const existingUser = await activeStorage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ 
+          message: "Username already exists. Please choose a different username."
+        });
+      }
+      
       // Create user in the database
       const user = await activeStorage.createUser(req.body);
       
       // Automatically log the user in after registration
       req.login(user, (err) => {
         if (err) {
+          console.error("Login error after registration:", err);
           return next(err);
         }
         
@@ -99,12 +108,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating user:", error);
       
-      // Check for duplicate username error
-      if (error instanceof Error && error.message.includes('unique constraint')) {
-        return res.status(400).json({ message: "Username already exists. Please choose a different username." });
+      // Handle database-specific errors
+      if (error instanceof Error) {
+        // Look for specific error types
+        const errorMsg = error.message.toLowerCase();
+        
+        if (errorMsg.includes('unique') || errorMsg.includes('duplicate') || errorMsg.includes('already exists')) {
+          return res.status(400).json({ 
+            message: "Username already exists. Please choose a different username.",
+            details: error.message 
+          });
+        }
+        
+        if (errorMsg.includes('validation') || errorMsg.includes('invalid')) {
+          return res.status(400).json({ 
+            message: "Invalid user data. Please check your information and try again.",
+            details: error.message 
+          });
+        }
       }
       
-      // Return more detailed error message
+      // Return more detailed error message for other errors
       res.status(500).json({ 
         message: "Failed to create user", 
         details: error instanceof Error ? error.message : String(error)

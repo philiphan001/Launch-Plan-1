@@ -120,13 +120,18 @@ function App() {
         credentials: 'include', // Important for cookies
       });
       
+      // Get the response body whether the request succeeded or failed
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        // Extract the error message from the response
+        const errorMessage = responseData.message || responseData.details || 'Registration failed';
+        console.error('Server returned error:', responseData);
+        throw new Error(errorMessage);
       }
       
-      const userData = await response.json();
-      setUser(userData);
+      // Use the successful response data
+      setUser(responseData);
       setIsAuthenticated(true);
       setIsFirstTimeUser(true); // New users are always first-time users
     } catch (error) {
