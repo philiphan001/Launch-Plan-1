@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import Dashboard from "@/pages/Dashboard";
 import FinancialProjections from "@/pages/FinancialProjections";
@@ -7,7 +7,6 @@ import CareerBuilder from "@/pages/CareerBuilder";
 import CollegeDiscovery from "@/pages/CollegeDiscovery";
 import NetPriceCalculator from "@/pages/NetPriceCalculator";
 import Pathways from "@/pages/Pathways";
-import Assumptions from "@/pages/Assumptions";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import LandingPage from "@/pages/LandingPage";
@@ -47,41 +46,6 @@ function App() {
     checkAuth();
   }, []);
   
-  // Handle navigation based on auth status
-  useEffect(() => {
-    console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
-    
-    // Check if we're navigating with query parameters (like projections?id=123)
-    const hasQueryParams = window.location.search !== '';
-    
-    // If at root path '/' and logged in, redirect appropriately, but only if there are no query parameters
-    if (location === '/' && !hasQueryParams) {
-      if (isAuthenticated) {
-        // First-time users go to Pathways, returning users go to Dashboard
-        const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
-        console.log(`Redirecting from / to ${destination} based on first-time status`);
-        setLocation(destination);
-      }
-    } 
-    // If trying to access dashboard as first-time user, redirect to pathways
-    else if (location === '/dashboard' && isAuthenticated && isFirstTimeUser) {
-      console.log("First-time user trying to access dashboard, redirecting to pathways");
-      setLocation('/pathways');
-    }
-    // If trying to access protected routes while not authenticated
-    else if (!isAuthenticated && 
-        !["/", "/login", "/signup"].includes(location) &&
-        !(location === '/projections' && window.location.search.includes('id='))) {
-      console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
-      setLocation('/login');
-    }
-    // After signup or login, we should be authenticated but might get bounced by the redirection logic
-    else if (isAuthenticated && ["/login", "/signup"].includes(location)) {
-      console.log("User is authenticated but on login/signup page, redirecting to appropriate page");
-      setLocation(isFirstTimeUser ? '/pathways' : '/dashboard');
-    }
-  }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
-  
   // Auth context values and functions
   const login = async (username: string, password: string) => {
     try {
@@ -103,6 +67,7 @@ function App() {
       setUser(userData);
       setIsAuthenticated(true);
       setIsFirstTimeUser(!!userData.isFirstTimeUser);
+      return userData;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -134,6 +99,7 @@ function App() {
       setUser(responseData);
       setIsAuthenticated(true);
       setIsFirstTimeUser(true); // New users are always first-time users
+      return responseData;
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
@@ -176,28 +142,51 @@ function App() {
         const updatedUser = await response.json();
         setUser(updatedUser);
         setIsFirstTimeUser(false);
+        return true;
       } catch (error) {
         console.error('Error updating onboarding status:', error);
         // Fallback to local update if server update fails
         setIsFirstTimeUser(false);
+        return false;
       }
     }
+    return false;
   };
   
-  // Provide auth values to pages via props
-  const authProps = {
-    user,
-    isAuthenticated,
-    isFirstTimeUser,
-    login,
-    signup,
-    logout,
-    completeOnboarding
-  };
-  
-  // Check if the current route should be displayed within the AppShell
-  // Path handling with query parameters
-  const isPublicRoute = ["/", "/login", "/signup"].includes(location);
+  // Handle navigation based on auth status
+  useEffect(() => {
+    console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
+    
+    // Check if we're navigating with query parameters (like projections?id=123)
+    const hasQueryParams = window.location.search !== '';
+    
+    // If at root path '/' and logged in, redirect appropriately, but only if there are no query parameters
+    if (location === '/' && !hasQueryParams) {
+      if (isAuthenticated) {
+        // First-time users go to Pathways, returning users go to Dashboard
+        const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
+        console.log(`Redirecting from / to ${destination} based on first-time status`);
+        setLocation(destination);
+      }
+    } 
+    // If trying to access dashboard as first-time user, redirect to pathways
+    else if (location === '/dashboard' && isAuthenticated && isFirstTimeUser) {
+      console.log("First-time user trying to access dashboard, redirecting to pathways");
+      setLocation('/pathways');
+    }
+    // If trying to access protected routes while not authenticated
+    else if (!isAuthenticated && 
+        !["/", "/login", "/signup"].includes(location) &&
+        !(location === '/projections' && window.location.search.includes('id='))) {
+      console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
+      setLocation('/login');
+    }
+    // After signup or login, we should be authenticated but might get bounced by the redirection logic
+    else if (isAuthenticated && ["/login", "/signup"].includes(location)) {
+      console.log("User is authenticated but on login/signup page, redirecting to appropriate page");
+      setLocation(isFirstTimeUser ? '/pathways' : '/dashboard');
+    }
+  }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
   
   // Special handling for the projections route with query parameters
   const hasQueryParams = window.location.search !== '';
@@ -209,6 +198,20 @@ function App() {
       setLocation(`/projections${window.location.search}`);
     }
   }
+  
+  // Create auth props object to pass to components that still use prop-based auth
+  const authProps: AuthProps = {
+    user,
+    isAuthenticated,
+    isFirstTimeUser,
+    login: login,
+    signup: signup,
+    logout: logout,
+    completeOnboarding: completeOnboarding
+  };
+  
+  // Check if the current route should be displayed within the AppShell
+  const isPublicRoute = ["/", "/login", "/signup"].includes(location);
   
   // Routes that should be displayed without the AppShell layout
   if (isPublicRoute) {
@@ -279,7 +282,7 @@ function App() {
           {() => <Pathways {...authProps} />}
         </Route>
         <Route path="/profile">
-          {() => <Profile />}
+          {() => <Profile user={user} />}
         </Route>
         <Route path="/settings">
           {() => <Settings {...authProps} />}

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SavedCalculationsSection from "@/components/profile/SavedCalculationsSection";
-import { useAuth } from "@/context/AuthContext";
+import { AuthProps } from "@/interfaces/auth";
 
 // Types for the favorites
 type FavoriteCollege = {
@@ -39,12 +39,15 @@ type FavoriteCareer = {
   };
 };
 
-const Profile = () => {
+interface ProfileProps {
+  user?: AuthProps['user'];
+}
+
+const Profile = ({ user }: ProfileProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Use the authenticated user's ID from AuthContext
-  const { user, isAuthenticated } = useAuth();
+  // Use the authenticated user's ID from props
   const userId = user?.id;
   
   // User info state
