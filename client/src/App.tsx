@@ -218,7 +218,7 @@ function App() {
           {() => <LandingPage {...authProps} />}
         </Route>
         <Route path="/login">
-          {() => <LoginPage {...authProps} />}
+          {() => <LoginPage />}
         </Route>
         <Route path="/signup">
           {() => <SignupPage {...authProps} />}
@@ -279,7 +279,7 @@ function App() {
           {() => <Pathways {...authProps} />}
         </Route>
         <Route path="/profile">
-          {() => <Profile {...authProps} />}
+          {() => <Profile />}
         </Route>
         <Route path="/settings">
           {() => <Settings {...authProps} />}
