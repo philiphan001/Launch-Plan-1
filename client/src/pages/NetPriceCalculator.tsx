@@ -611,6 +611,16 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   
   // Function to save calculation to user profile
   const saveToProfile = () => {
+    // Check if user is logged in
+    if (!userId) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "Please log in to save your calculation to your profile.",
+      });
+      return;
+    }
+    
     if (!selectedCollege || !netPrice) {
       toast({
         variant: "destructive",
