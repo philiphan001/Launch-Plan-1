@@ -2,9 +2,11 @@ import { Link } from "wouter";
 
 interface User {
   id: number;
-  name: string;
-  email: string;
-  isFirstTimeUser: boolean;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  isFirstTimeUser?: boolean;
 }
 
 interface HeaderProps {

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 
-import { User, AuthProps } from "@/interfaces/auth";
+import { User, AuthProps, RegisterCredentials } from "@/interfaces/auth";
 
 interface SignupPageProps extends AuthProps {}
 
@@ -24,8 +24,19 @@ export default function SignupPage({
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
-  const [formData, setFormData] = useState({
-    name: '',
+  type FormData = {
+    username: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  };
+  
+  const [formData, setFormData] = useState<FormData>({
+    username: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -40,7 +51,7 @@ export default function SignupPage({
     e.preventDefault();
     
     // Basic validation
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.username || !formData.password || !formData.firstName) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
@@ -61,7 +72,15 @@ export default function SignupPage({
     setIsLoading(true);
     
     try {
-      await signup(formData.name, formData.email, formData.password);
+      const credentials: RegisterCredentials = {
+        username: formData.username,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email
+      };
+      
+      await signup(credentials);
       
       toast({
         title: "Account created!",
@@ -104,15 +123,38 @@ export default function SignupPage({
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-white">Full Name</Label>
+              <Label htmlFor="username" className="text-white">Username</Label>
               <Input
-                id="name"
-                name="name"
-                placeholder="Enter your name"
-                value={formData.name}
+                id="username"
+                name="username"
+                placeholder="Choose a username"
+                value={formData.username}
                 onChange={handleChange}
                 className="bg-slate-900 border-slate-700 text-white"
                 required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="firstName" className="text-white">First Name</Label>
+              <Input
+                id="firstName"
+                name="firstName"
+                placeholder="Enter your first name"
+                value={formData.firstName}
+                onChange={handleChange}
+                className="bg-slate-900 border-slate-700 text-white"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName" className="text-white">Last Name</Label>
+              <Input
+                id="lastName"
+                name="lastName"
+                placeholder="Enter your last name"
+                value={formData.lastName}
+                onChange={handleChange}
+                className="bg-slate-900 border-slate-700 text-white"
               />
             </div>
             <div className="space-y-2">
@@ -125,7 +167,6 @@ export default function SignupPage({
                 value={formData.email}
                 onChange={handleChange}
                 className="bg-slate-900 border-slate-700 text-white"
-                required
               />
             </div>
             <div className="space-y-2">
