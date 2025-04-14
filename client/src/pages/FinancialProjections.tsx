@@ -192,6 +192,10 @@ const FinancialProjections = ({
     };
   }, [location, initialProjectionId]);
 
+  // Main tabs for the FinancialProjections page (View, Edit, Compare, Manage)
+  const [mainTab, setMainTab] = useState<string>("view");
+  
+  // Chart type tabs within the View tab
   const [activeTab, setActiveTab] = useState<ProjectionType>("netWorth");
   const [timeframe, setTimeframe] = useState<string>("10 Years");
   const [age, setAge] = useState<number>(25);
