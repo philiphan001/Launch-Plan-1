@@ -153,9 +153,42 @@ function App() {
     return false;
   };
   
+  // Check if user has any saved financial projections
+  const [hasSavedProjections, setHasSavedProjections] = useState(false);
+  
+  // Check for saved projections when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      // Fetch saved projections to determine if user has any
+      fetch(`/api/financial-projections/${user.id}`)
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          return [];
+        })
+        .then(projections => {
+          const hasProjections = Array.isArray(projections) && projections.length > 0;
+          setHasSavedProjections(hasProjections);
+          console.log("User has saved projections:", hasProjections);
+        })
+        .catch(error => {
+          console.error("Error checking for projections:", error);
+          setHasSavedProjections(false);
+        });
+    } else {
+      setHasSavedProjections(false);
+    }
+  }, [isAuthenticated, user]);
+
   // Handle navigation based on auth status
   useEffect(() => {
-    console.log("Navigation effect triggered - Location:", location, "Auth:", isAuthenticated, "FirstTime:", isFirstTimeUser);
+    console.log(
+      "Navigation effect triggered - Location:", location, 
+      "Auth:", isAuthenticated, 
+      "FirstTime:", isFirstTimeUser,
+      "HasProjections:", hasSavedProjections
+    );
     
     // Check if we're navigating with query parameters (like projections?id=123)
     const hasQueryParams = window.location.search !== '';
@@ -163,9 +196,17 @@ function App() {
     // If at root path '/' and logged in, redirect appropriately, but only if there are no query parameters
     if (location === '/' && !hasQueryParams) {
       if (isAuthenticated) {
-        // First-time users go to Pathways, returning users go to Dashboard
-        const destination = isFirstTimeUser ? '/pathways' : '/dashboard';
-        console.log(`Redirecting from / to ${destination} based on first-time status`);
+        // Logic for redirection:
+        // 1. First-time users go to Pathways
+        // 2. Users with saved projections go to Dashboard
+        // 3. Returning users without saved projections go to Dashboard
+        let destination = '/dashboard';
+        
+        if (isFirstTimeUser && !hasSavedProjections) {
+          destination = '/pathways';
+        }
+        
+        console.log(`Redirecting from / to ${destination} based on user status`);
         setLocation(destination);
       }
     } 
