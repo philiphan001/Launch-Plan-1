@@ -1975,15 +1975,15 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
       
-      {/* Current Projection Summary */}
-      <CurrentProjectionSummary 
-        collegeCalculation={includedCollegeCalc} 
-        careerCalculation={includedCareerCalc}
-        locationData={locationCostData}
-      />
-      
-      {/* Pathway Summary Section */}
-      {pathwaySummary && (
+      {/* Only show current projection summary if we have college or career calculations */}
+      {(includedCollegeCalc || includedCareerCalc) ? (
+        <CurrentProjectionSummary 
+          collegeCalculation={includedCollegeCalc} 
+          careerCalculation={includedCareerCalc}
+          locationData={locationCostData}
+        />
+      ) : pathwaySummary && (
+        /* Show Pathway Summary Section only if there's no active financial projection */
         <Card className="mb-6 border-l-4 border-l-blue-500">
           <CardContent className="pt-6">
             <h2 className="text-lg font-semibold mb-3 flex items-center">
