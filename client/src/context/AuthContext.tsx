@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// User interface that matches what the backend returns
 interface User {
   id: number;
   username: string;
@@ -9,11 +10,13 @@ interface User {
   isFirstTimeUser?: boolean;
 }
 
+// Login request body interface
 interface LoginCredentials {
   username: string;
   password: string;
 }
 
+// Registration request body interface
 interface RegisterCredentials {
   username: string;
   password: string;
@@ -22,6 +25,7 @@ interface RegisterCredentials {
   email?: string;
 }
 
+// Auth context interface
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -195,3 +199,6 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Export interfaces for use in other files
+export type { User, LoginCredentials, RegisterCredentials, AuthContextType };

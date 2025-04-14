@@ -7,20 +7,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
-import { User, AuthProps } from "@/interfaces/auth";
+interface LoginPageProps {}
 
-interface LoginPageProps extends AuthProps {}
-
-export default function LoginPage({
-  user,
-  isAuthenticated,
-  isFirstTimeUser,
-  login,
-  signup,
-  logout,
-  completeOnboarding
-}: LoginPageProps) {
+export default function LoginPage() {
+  const { user, isAuthenticated, isFirstTimeUser, login, logout } = useAuth();
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +48,10 @@ export default function LoginPage({
     setIsLoading(true);
     
     try {
-      await login(formData.username, formData.password);
+      await login({
+        username: formData.username,
+        password: formData.password
+      });
       
       toast({
         title: "Login successful!",
