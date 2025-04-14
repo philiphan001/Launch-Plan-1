@@ -31,6 +31,7 @@ export default function SignupPage({
     email: string;
     password: string;
     confirmPassword: string;
+    zipCode: string;
   };
   
   const [formData, setFormData] = useState<FormData>({
@@ -40,6 +41,7 @@ export default function SignupPage({
     email: '',
     password: '',
     confirmPassword: '',
+    zipCode: '',
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
