@@ -1701,17 +1701,55 @@ useEffect(() => {
         const data = await response.json();
         console.log(`Direct fetch successful, got projection: ${data.id} ${data.name}`);
         
+        // Store the data in session storage as a backup
+        const sessionKey = `projection-${projectionId}`;
+        sessionStorage.setItem(sessionKey, JSON.stringify(data));
+        
+        // Extract college and career IDs from the projection
+        const collegeId = data.collegeCalculationId;
+        const careerId = data.careerCalculationId;
+        
         // Force a refetch through React Query to update the UI with latest data
         setTimeout(() => {
+          // Refetch the saved projection
           refetchProjection();
           
-          // Also update college and career calculations which are needed for the summary panel
-          queryClient.invalidateQueries({ 
-            queryKey: ['/api/college-calculations/user', userId] 
-          });
-          queryClient.invalidateQueries({ 
-            queryKey: ['/api/career-calculations/user', userId] 
-          });
+          // If the projection includes college or career, fetch those specific calculations too
+          if (collegeId) {
+            fetch(`/api/college-calculations/${collegeId}?_=${fetchTimestamp}`)
+              .then(res => res.json())
+              .then(data => {
+                console.log(`Fetched college calculation ${collegeId}:`, data);
+                // Update the college calculations after fetching
+                queryClient.invalidateQueries({ 
+                  queryKey: ['/api/college-calculations/user', userId] 
+                });
+              })
+              .catch(err => console.error("Error fetching college calculation:", err));
+          } else {
+            // Still invalidate all college calculations 
+            queryClient.invalidateQueries({ 
+              queryKey: ['/api/college-calculations/user', userId] 
+            });
+          }
+          
+          if (careerId) {
+            fetch(`/api/career-calculations/${careerId}?_=${fetchTimestamp}`)
+              .then(res => res.json())
+              .then(data => {
+                console.log(`Fetched career calculation ${careerId}:`, data);
+                // Update the career calculations after fetching
+                queryClient.invalidateQueries({ 
+                  queryKey: ['/api/career-calculations/user', userId] 
+                });
+              })
+              .catch(err => console.error("Error fetching career calculation:", err));
+          } else {
+            // Still invalidate all career calculations
+            queryClient.invalidateQueries({ 
+              queryKey: ['/api/career-calculations/user', userId] 
+            });
+          }
         }, 10);
       } catch (err) {
         console.error("Error in direct fetch:", err);
@@ -1736,6 +1774,46 @@ useEffect(() => {
         query.queryKey[0] === '/api/career-calculations' ||
         query.queryKey[0] === '/api/college-calculations',
     });
+    
+    // If there's no savedProjection data from React Query yet, try to get it from sessionStorage
+    if (!savedProjection && projectionId) {
+      const sessionKey = `projection-${projectionId}`;
+      const sessionData = sessionStorage.getItem(sessionKey);
+      
+      if (sessionData) {
+        console.log("Retrieved projection from sessionStorage as fallback:", sessionKey);
+        try {
+          const parsedData = JSON.parse(sessionData);
+          
+          // This will force a re-render with the session data
+          // We're not setting savedProjection directly since that's managed by React Query
+          // but we can use the projection data to update the UI temporarily
+          if (parsedData && parsedData.projectionData) {
+            let projData;
+            
+            try {
+              // Parse the projectionData if it's a string
+              projData = typeof parsedData.projectionData === 'string'
+                ? JSON.parse(parsedData.projectionData)
+                : parsedData.projectionData;
+              
+              // Update projection data with the session data
+              if (projData && projData.ages && projData.netWorth) {
+                setProjectionData({
+                  ...projData,
+                  _key: `projection-${projectionId}-${new Date().getTime()}-session`
+                });
+                console.log("Updated projection data from session storage");
+              }
+            } catch (error) {
+              console.error("Failed to parse projection data from session storage:", error);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to parse session data:", error);
+        }
+      }
+    }
   }
   
   // Update the ref
