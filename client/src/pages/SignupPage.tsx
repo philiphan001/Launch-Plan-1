@@ -79,7 +79,8 @@ export default function SignupPage({
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        email: formData.email
+        email: formData.email,
+        zipCode: formData.zipCode
       };
       
       await signup(credentials);
@@ -185,6 +186,17 @@ export default function SignupPage({
                 type="email"
                 placeholder="Enter your email"
                 value={formData.email}
+                onChange={handleChange}
+                className="bg-slate-900 border-slate-700 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zipCode" className="text-white">Home Zip Code</Label>
+              <Input
+                id="zipCode"
+                name="zipCode"
+                placeholder="Enter your home zip code"
+                value={formData.zipCode}
                 onChange={handleChange}
                 className="bg-slate-900 border-slate-700 text-white"
               />
