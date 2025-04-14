@@ -2317,7 +2317,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                       locationZipCode: userData?.zipCode || null,
                       costOfLivingIndex: locationCostData ? 
                         locationCostData.income_adjustment_factor || 1.0 : 1.0,
-                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || 1.0,
                       // Save the configurable parameters
                       emergencyFundAmount: emergencyFundAmount,
                       personalLoanTermYears: personalLoanTermYears,
@@ -2665,8 +2665,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                         locationAdjusted: !!locationCostData,
                         locationZipCode: userData?.zipCode || null,
                         costOfLivingIndex: locationCostData ? 
-                          locationCostData.income_adjustment_factor || 1.0 : null,
-                        incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                          locationCostData.income_adjustment_factor || 1.0 : 1.0,
+                        incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || 1.0,
                         emergencyFundAmount: emergencyFundAmount,
                         personalLoanTermYears: personalLoanTermYears,
                         personalLoanInterestRate: personalLoanInterestRate,
