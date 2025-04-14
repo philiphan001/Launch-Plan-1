@@ -4,6 +4,7 @@ import { FinancialProjection } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
+import { Chart } from "chart.js/auto";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
 import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBreakdownChart";
@@ -42,6 +43,7 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
+import { toast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -1682,6 +1684,31 @@ useEffect(() => {
             parsedData = savedProjection.projectionData;
           }
           
+          // Validate that the projection data has the essential fields before setting state
+          if (!parsedData || !parsedData.ages || !Array.isArray(parsedData.ages) || parsedData.ages.length === 0) {
+            console.error("Invalid projection data format - missing 'ages' array:", parsedData);
+            toast({
+              title: "Projection Error",
+              description: "The selected projection has invalid data format. Please try a different projection.",
+              variant: "destructive",
+            });
+            
+            // Set an empty but valid projection data structure to prevent rendering errors
+            setProjectionData({
+              ages: [25, 26, 27, 28, 29, 30],
+              assets: [10000, 12000, 14000, 16000, 18000, 20000],
+              liabilities: [5000, 4500, 4000, 3500, 3000, 2500],
+              netWorth: [5000, 7500, 10000, 12500, 15000, 17500],
+              income: [50000, 52000, 54000, 56000, 58000, 60000],
+              expenses: [40000, 41000, 42000, 43000, 44000, 45000],
+              cashFlow: [10000, 11000, 12000, 13000, 14000, 15000],
+              savings: [10000, 11000, 12000, 13000, 14000, 15000],
+              savingsRate: [0.2, 0.21, 0.22, 0.23, 0.24, 0.25],
+              _key: `projection-${projectionId}-${new Date().getTime()}-recovery`
+            });
+            return; // Exit early to avoid setting invalid data
+          }
+          
           // Add a key with the current projection ID to force React to treat this as new data
           // and re-render all dependent components
           const dataWithKey = {
@@ -1693,6 +1720,11 @@ useEffect(() => {
           setProjectionData(dataWithKey);
         } catch (error) {
           console.error("Failed to parse saved projection data:", error);
+          toast({
+            title: "Projection Error",
+            description: "There was an error loading the selected projection. Please try again.",
+            variant: "destructive",
+          });
           // If we fail to parse, we may need to use the projectionData directly
           if (typeof savedProjection.projectionData === 'object') {
             console.log("Using projectionData object directly after parse error");
@@ -1933,8 +1965,48 @@ const [projectionData, setProjectionData] = useState<any>(() => {
           chartInstance.current.destroy();
         }
         
-        // Create new chart
-        chartInstance.current = createMainProjectionChart(ctx, projectionData, activeTab);
+        // Validate projection data before creating chart
+        if (!projectionData || !projectionData.ages || !Array.isArray(projectionData.ages) || projectionData.ages.length === 0) {
+          console.error("Invalid projection data detected before chart creation:", projectionData);
+          
+          toast({
+            title: "Chart Error",
+            description: "Unable to render chart with current data. Please try refreshing or selecting a different projection.",
+            variant: "destructive",
+          });
+          
+          // Create empty chart with error message
+          chartInstance.current = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ['No Data'],
+              datasets: [{
+                label: 'Data Unavailable',
+                data: [0],
+                backgroundColor: 'rgba(200, 200, 200, 0.5)'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function() {
+                      return 'No valid data available';
+                    }
+                  }
+                }
+              }
+            }
+          });
+        } else {
+          // Create new chart with valid data
+          chartInstance.current = createMainProjectionChart(ctx, projectionData, activeTab);
+        }
       }
     }
 
