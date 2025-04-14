@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { School, Briefcase, MapPin, Calculator, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { School, Briefcase, MapPin, Calculator } from "lucide-react";
+import { ProjectionErrorHandler, ProjectionDataWarning } from './ProjectionErrorHandler';
 
 interface CollegeCalculation {
   id: number;
@@ -160,46 +160,45 @@ const CurrentProjectionSummary: React.FC<CurrentProjectionSummaryProps> = ({
   // Show error alert when there's a data parsing problem
   if (hasDataError && savedProjection) {
     return (
-      <Card className="mb-6 border-l-4 border-l-red-500">
-        <CardContent className="pt-6">
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Data Format Error</AlertTitle>
-            <AlertDescription>
-              There was a problem processing projection data. Some details may be unavailable or estimated.
-            </AlertDescription>
-          </Alert>
-          
-          <h2 className="text-lg font-semibold mb-3 flex items-center">
-            <Calculator className="mr-2 h-5 w-5 text-primary" />
-            Projection Overview
-          </h2>
-          
-          <div className="my-3">
-            <p className="text-sm mb-2">
-              <strong>Name:</strong> {savedProjection.name}
-            </p>
+      <>
+        <ProjectionDataWarning 
+          message="There was a problem processing the projection data."
+          details="Some details may be unavailable or estimated. The system will use fallback values where possible."
+        />
+        
+        <Card className="mb-6 border-l-4 border-l-yellow-500">
+          <CardContent className="pt-6">
+            <h2 className="text-lg font-semibold mb-3 flex items-center">
+              <Calculator className="mr-2 h-5 w-5 text-primary" />
+              Projection Overview (Limited Data)
+            </h2>
             
-            {savedProjection.startingAge && (
+            <div className="my-3">
               <p className="text-sm mb-2">
-                <strong>Starting Age:</strong> {savedProjection.startingAge}
+                <strong>Name:</strong> {savedProjection.name}
               </p>
-            )}
-            
-            {savedProjection.startingSavings !== null && savedProjection.startingSavings !== undefined && (
-              <p className="text-sm mb-2">
-                <strong>Starting Savings:</strong> ${savedProjection.startingSavings.toLocaleString()}
-              </p>
-            )}
-            
-            {savedProjection.income !== null && savedProjection.income !== undefined && (
-              <p className="text-sm mb-2">
-                <strong>Income:</strong> ${savedProjection.income.toLocaleString()}/year
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              
+              {savedProjection.startingAge && (
+                <p className="text-sm mb-2">
+                  <strong>Starting Age:</strong> {savedProjection.startingAge}
+                </p>
+              )}
+              
+              {savedProjection.startingSavings !== null && savedProjection.startingSavings !== undefined && (
+                <p className="text-sm mb-2">
+                  <strong>Starting Savings:</strong> ${savedProjection.startingSavings.toLocaleString()}
+                </p>
+              )}
+              
+              {savedProjection.income !== null && savedProjection.income !== undefined && (
+                <p className="text-sm mb-2">
+                  <strong>Income:</strong> ${savedProjection.income.toLocaleString()}/year
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </>
     );
   }
   
