@@ -77,15 +77,19 @@ interface Career {
 const SavedCalculationsSection = () => {
   const { toast } = useToast();
   // Get user ID from authentication context
-  // Using the AuthContext would be ideal, but for now we'll use a props pattern
-  const { user } = useAuth();
-  const userId = user?.id || null;
+  const { user, isAuthenticated } = useAuth();
+  const userId = user?.id;
   const queryClient = useQueryClient();
   
   // Fetch saved college calculations with automatic refresh
   const { data: collegeCalculations, isLoading: isLoadingCollegeCalcs, error: collegeError } = useQuery({
     queryKey: ['/api/college-calculations/user', userId],
     queryFn: async () => {
+      // Skip if no user ID
+      if (!userId) {
+        return [] as CollegeCalculation[];
+      }
+      
       const response = await fetch(`/api/college-calculations/user/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch saved college calculations');
@@ -94,7 +98,9 @@ const SavedCalculationsSection = () => {
     },
     // Refresh data every 5 seconds to catch new calculations
     refetchInterval: 5000,
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    // Don't run query if user isn't authenticated
+    enabled: !!userId
   });
   
   // Fetch colleges to get their names
@@ -113,6 +119,11 @@ const SavedCalculationsSection = () => {
   const { data: careerCalculations, isLoading: isLoadingCareerCalcs, error: careerError } = useQuery({
     queryKey: ['/api/career-calculations/user', userId],
     queryFn: async () => {
+      // Skip if no user ID
+      if (!userId) {
+        return [] as CareerCalculation[];
+      }
+      
       const response = await fetch(`/api/career-calculations/user/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch saved career calculations');
@@ -121,7 +132,9 @@ const SavedCalculationsSection = () => {
     },
     // Refresh data every 5 seconds to catch new calculations
     refetchInterval: 5000, 
-    refetchOnWindowFocus: true
+    refetchOnWindowFocus: true,
+    // Don't run query if user isn't authenticated
+    enabled: !!userId
   });
   
   // Fetch careers to get their titles

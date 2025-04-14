@@ -2,19 +2,34 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
   id: number;
-  name: string;
-  email: string;
-  isFirstTimeUser: boolean;
+  username: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  isFirstTimeUser?: boolean;
+}
+
+interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+interface RegisterCredentials {
+  username: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isFirstTimeUser: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  completeOnboarding: () => void;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  signup: (credentials: RegisterCredentials) => Promise<void>;
+  logout: () => Promise<void>;
+  completeOnboarding: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,83 +39,135 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
-  // On component mount, check localStorage for saved user data
+  // On component mount, check if user is authenticated with the server
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-      setIsFirstTimeUser(parsedUser.isFirstTimeUser);
-    }
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          setIsAuthenticated(true);
+          setIsFirstTimeUser(!!userData.isFirstTimeUser);
+        } else {
+          // Clear any stale state if not authenticated
+          setUser(null);
+          setIsAuthenticated(false);
+          setIsFirstTimeUser(false);
+        }
+      } catch (error) {
+        console.error('Failed to check authentication status:', error);
+        // If there's an error, ensure user is logged out
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsFirstTimeUser(false);
+      }
+    };
+    
+    checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      // Simulate API call - in a real app, this would be an actual backend call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+        credentials: 'include', // Important for cookies
+      });
       
-      // For demo purposes, we'll create a mock user
-      const mockUser: User = {
-        id: 1,
-        name: email.split('@')[0], // Just use the username part of the email
-        email,
-        isFirstTimeUser: false // Returning users aren't first-time users
-      };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
       
-      setUser(mockUser);
+      const userData = await response.json();
+      setUser(userData);
       setIsAuthenticated(true);
-      setIsFirstTimeUser(false);
-      
-      // Save to localStorage
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      setIsFirstTimeUser(!!userData.isFirstTimeUser);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   };
   
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (credentials: RegisterCredentials) => {
     try {
-      // Simulate API call - in a real app, this would be an actual backend call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+        credentials: 'include', // Important for cookies
+      });
       
-      // For demo purposes, we'll create a mock user
-      const mockUser: User = {
-        id: Date.now(), // Use timestamp as a unique ID
-        name,
-        email,
-        isFirstTimeUser: true // New users are first-time users
-      };
+      // Get the response body whether the request succeeded or failed
+      const responseData = await response.json();
       
-      setUser(mockUser);
+      if (!response.ok) {
+        // Extract the error message from the response
+        const errorMessage = responseData.message || responseData.details || 'Registration failed';
+        console.error('Server returned error:', responseData);
+        throw new Error(errorMessage);
+      }
+      
+      // Use the successful response data
+      setUser(responseData);
       setIsAuthenticated(true);
-      setIsFirstTimeUser(true);
-      
-      // Save to localStorage
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      setIsFirstTimeUser(true); // New users are always first-time users
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
     }
   };
   
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsFirstTimeUser(false);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Important for cookies
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear local state, even if server request fails
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsFirstTimeUser(false);
+    }
   };
   
-  const completeOnboarding = () => {
-    if (user) {
-      const updatedUser = {
-        ...user,
-        isFirstTimeUser: false
-      };
-      setUser(updatedUser);
+  const completeOnboarding = async () => {
+    try {
+      if (user) {
+        const response = await fetch('/api/users/complete-onboarding', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        
+        if (response.ok) {
+          setIsFirstTimeUser(false);
+          setUser({
+            ...user,
+            isFirstTimeUser: false
+          });
+        } else {
+          throw new Error('Failed to update onboarding status');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+      // Fallback to local update if server update fails
       setIsFirstTimeUser(false);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      if (user) {
+        setUser({
+          ...user,
+          isFirstTimeUser: false
+        });
+      }
     }
   };
   

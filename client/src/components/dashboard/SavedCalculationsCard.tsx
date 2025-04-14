@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 interface CollegeCalculation {
   id: number;
@@ -42,8 +43,9 @@ interface College {
 // This is a profile component to display saved college cost calculations
 const ProfileCalculationsSection = () => {
   const { toast } = useToast();
-  // Default user ID (would come from auth context in a real app)
-  const userId = 1;
+  // Get user ID from authentication context
+  const { user, isAuthenticated } = useAuth();
+  const userId = user?.id;
   const queryClient = useQueryClient();
   
   // Mutation to remove a calculation
@@ -122,12 +124,19 @@ const ProfileCalculationsSection = () => {
   const { data: calculations, isLoading, error } = useQuery({
     queryKey: ['/api/college-calculations/user', userId],
     queryFn: async () => {
+      // Skip if no user ID
+      if (!userId) {
+        return [] as CollegeCalculation[];
+      }
+      
       const response = await fetch(`/api/college-calculations/user/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch saved calculations');
       }
       return response.json() as Promise<CollegeCalculation[]>;
-    }
+    },
+    // Don't run query if user isn't authenticated
+    enabled: !!userId
   });
   
   // Fetch colleges to get their names
