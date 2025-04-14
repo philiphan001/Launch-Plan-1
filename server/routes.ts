@@ -38,7 +38,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { password, ...userWithoutPassword } = user;
         
         // Check if this is a first-time user by checking when they were created
-        const isFirstTimeUser = new Date().getTime() - new Date(user.createdAt || new Date()).getTime() < 24 * 60 * 60 * 1000;
+        // Cast to include createdAt property
+        const userWithTime = user as { createdAt?: string | Date };
+        const isFirstTimeUser = new Date().getTime() - new Date(userWithTime.createdAt || new Date()).getTime() < 24 * 60 * 60 * 1000;
         
         return res.status(200).json({ 
           ...userWithoutPassword,
@@ -64,7 +66,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     const user = req.user;
     // Add isFirstTimeUser property
-    const isFirstTimeUser = new Date().getTime() - new Date(user?.createdAt || new Date()).getTime() < 24 * 60 * 60 * 1000;
+    // Cast to include createdAt property
+    const userWithTime = user as { createdAt?: string | Date };
+    const isFirstTimeUser = new Date().getTime() - new Date(userWithTime?.createdAt || new Date()).getTime() < 24 * 60 * 60 * 1000;
     
     return res.status(200).json({
       ...user,
