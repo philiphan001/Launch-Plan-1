@@ -2610,9 +2610,160 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         <TabsContent value="manage">
           <div className="p-6">
             <h3 className="text-xl font-semibold mb-4">Manage Projections</h3>
-            <p className="text-gray-600 mb-4">
-              This feature will allow you to manage your saved projections. Coming soon.
-            </p>
+            
+            {savedProjections.length > 0 ? (
+              <div className="space-y-4">
+                <div className="rounded-md border overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Age Range
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Net Worth (Final)
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {savedProjections.map((projection) => {
+                        const projData = projection.projectionData ? 
+                          (typeof projection.projectionData === 'string' ? 
+                            JSON.parse(projection.projectionData) : 
+                            projection.projectionData) : 
+                          null;
+                            
+                        const startAge = projection.startingAge || (projData?.ages?.[0] || 0);
+                        const endAge = projData?.ages ? projData.ages[projData.ages.length - 1] : startAge + (projection.timeframe || 10);
+                        const finalNetWorth = projData?.netWorth ? 
+                          projData.netWorth[projData.netWorth.length - 1] : 
+                          projection.startingSavings || 0;
+                            
+                        return (
+                          <tr key={projection.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{projection.name}</div>
+                              {projection.includesCareerCalculation && (
+                                <div className="text-xs text-gray-500">Includes career calculation</div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{startAge} to {endAge}</div>
+                              <div className="text-xs text-gray-500">{endAge - startAge} years</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{formatCurrency(finalNetWorth)}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {projection.createdAt ? new Date(projection.createdAt).toLocaleDateString() : 'Unknown'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                              <div className="flex justify-end space-x-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    // Logic to load this projection
+                                    // We would need to set all the state variables to the values from this projection
+                                    const projData = projection.projectionData ? 
+                                      (typeof projection.projectionData === 'string' ? 
+                                        JSON.parse(projection.projectionData) : 
+                                        projection.projectionData) : 
+                                      null;
+                                    
+                                    if (projData) {
+                                      setProjectionData(projData);
+                                      setAge(projection.startingAge || (projData.ages?.[0] || 25));
+                                      setTimeframe(`${projection.timeframe || 10} Years`);
+                                      setStartingSavings(projection.startingSavings || 0);
+                                      setIncome(projection.income || 0);
+                                      setExpenses(projection.expenses || 0);
+                                      setIncomeGrowth(projection.incomeGrowth || 0.03);
+                                      setStudentLoanDebt(projection.studentLoanDebt || 0);
+                                      setEmergencyFundAmount(projection.emergencyFundAmount || 10000);
+                                      setPersonalLoanTermYears(projection.personalLoanTermYears || 5);
+                                      setPersonalLoanInterestRate(projection.personalLoanInterestRate || 8.0);
+                                      setProjectionName(projection.name);
+                                      
+                                      // Then switch to the view tab
+                                      setMainTab("view");
+                                    }
+                                  }}
+                                >
+                                  Load
+                                </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (confirm(`Are you sure you want to delete "${projection.name}"?`)) {
+                                      try {
+                                        const response = await fetch(`/api/financial-projections/${projection.id}`, {
+                                          method: 'DELETE',
+                                        });
+                                        
+                                        if (response.ok) {
+                                          // Refresh the list after deletion
+                                          queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+                                        } else {
+                                          throw new Error('Failed to delete projection');
+                                        }
+                                      } catch (error) {
+                                        console.error('Error deleting projection:', error);
+                                        alert('Failed to delete projection. Please try again.');
+                                      }
+                                    }
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-md border border-gray-200">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No saved projections</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Create a projection and save it to see it here.
+                </p>
+                <div className="mt-6">
+                  <Button 
+                    onClick={() => setMainTab("view")}
+                  >
+                    Create New Projection
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>
