@@ -162,7 +162,8 @@ const FinancialProjections = ({
   initialProjectionId
 }: FinancialProjectionsProps) => {
   // Temporary user ID for demo purposes
-  const userId = 1;
+  // Use the authenticated user's ID instead of hardcoded value
+  const userId = user?.id || null;
   
   // Setup React Query client first
   const queryClient = useQueryClient();

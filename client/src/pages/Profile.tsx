@@ -45,8 +45,8 @@ const Profile = (props: ProfileProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // Temporary user ID for demo purposes
-  const temporaryUserId = 1;
+  // Use the authenticated user's ID from authProps
+  const userId = props.user?.id || null;
   
   // User info state
   const [firstName, setFirstName] = useState("");
@@ -65,12 +65,14 @@ const Profile = (props: ProfileProps) => {
   
   // Fetch user data
   const { data: userData, isLoading: isLoadingUser } = useQuery({
-    queryKey: ['/api/users', temporaryUserId],
+    queryKey: ['/api/users', userId],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${temporaryUserId}`);
+      if (!userId) return null;
+      const response = await fetch(`/api/users/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch user data');
       return response.json();
-    }
+    },
+    enabled: !!userId
   });
 
   // Update local state when user data is loaded
