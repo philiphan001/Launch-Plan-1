@@ -179,13 +179,29 @@ const Sidebar = ({ user }: SidebarProps) => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  // Use React navigation with wouter instead of direct browser navigation
+                                  // Create a truly unique timestamp to force invalidation
                                   const timestamp = new Date().getTime();
-                                  const newLocation = `/projections?id=${projection.id}&t=${timestamp}`;
+                                  
+                                  // Use a custom cache-busting parameter to ensure the URL is recognized as new
+                                  const cacheBuster = Math.random().toString(36).substring(2, 15);
+                                  
+                                  // Create the navigation URL with all necessary parameters
+                                  const newLocation = `/projections?id=${projection.id}&t=${timestamp}&cb=${cacheBuster}`;
                                   console.log("Navigating to:", newLocation);
                                   
                                   // Debug: Check current location before navigation
                                   console.log("Current location before navigation:", location);
+                                  
+                                  // First ensure React Query cache invalidation for this projection
+                                  // This is done by using an event to signal the cache needs refreshing
+                                  try {
+                                    window.dispatchEvent(new CustomEvent('invalidate-projection', { 
+                                      detail: { id: projection.id, timestamp } 
+                                    }));
+                                    console.log("Dispatched invalidate-projection event");
+                                  } catch (err) {
+                                    console.error("Failed to dispatch event:", err);
+                                  }
                                   
                                   // Explicitly set the window location to ensure URL change is detected
                                   window.history.pushState({}, "", newLocation);

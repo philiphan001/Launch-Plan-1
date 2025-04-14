@@ -173,17 +173,20 @@ const FinancialProjections = ({
   // Get the current location for parsing query parameters
   const [location] = useLocation();
   // This combination of projectionId and timestamp will force a full reset when the URL changes
-  const { projectionId, timestamp, autoGenerate, showPathway } = useMemo(() => {
+  const { projectionId, timestamp, autoGenerate, showPathway, cacheBuster } = useMemo(() => {
     // Parse URL query parameters
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const t = params.get('t') || Date.now().toString();
+    const cb = params.get('cb') || Math.random().toString(36).substring(2, 15);
     const autoGen = params.get('autoGenerate') === 'true';
     const showPath = params.get('showPathway') === 'true';
     
     console.log("PARAM DEBUG - URL:", window.location.href);
     console.log("PARAM DEBUG - Search params:", window.location.search);
     console.log("PARAM DEBUG - Raw ID from URL:", id);
+    console.log("PARAM DEBUG - Timestamp:", t);
+    console.log("PARAM DEBUG - Cache buster:", cb);
     
     // Give priority to initialProjectionId if provided (from App.tsx)
     const effectiveId = initialProjectionId || (id ? parseInt(id, 10) : null);
@@ -198,6 +201,7 @@ const FinancialProjections = ({
     return { 
       projectionId: effectiveId, 
       timestamp: t,
+      cacheBuster: cb,
       autoGenerate: autoGen,
       showPathway: showPath
     };
@@ -1539,7 +1543,8 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
-  queryKey: ['/api/financial-projections/detail', projectionId, timestamp], // Include timestamp to force refetch when URL changes
+  // Include all URL parameters in queryKey to force refetch when any parameter changes
+  queryKey: ['/api/financial-projections/detail', projectionId, timestamp, cacheBuster],
   queryFn: async () => {
     if (!projectionId) {
       console.log("No projection ID provided, skipping fetch");
@@ -1547,17 +1552,17 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
     }
     
     // Add cache-busting timestamp to ensure fresh data
-    const cacheBuster = new Date().getTime();
-    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster}, timestamp: ${timestamp})`);
+    const fetchTimestamp = new Date().getTime();
+    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${fetchTimestamp}, timestamp: ${timestamp}, cacheBuster: ${cacheBuster})`);
     
     try {
-      const url = `/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`;
+      const url = `/api/financial-projections/detail/${projectionId}?_=${fetchTimestamp}`;
       console.log(`Making fetch request to: ${url}`);
       
       // Force a browser history push to ensure the URL is properly updated
       if (!window.location.href.includes(`id=${projectionId}`)) {
         console.log("Enforcing URL to include projection ID");
-        const newUrl = `/projections?id=${projectionId}&t=${timestamp}`;
+        const newUrl = `/projections?id=${projectionId}&t=${timestamp}&cb=${cacheBuster}`;
         window.history.pushState({}, "", newUrl);
       }
       
@@ -1600,10 +1605,43 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
 // Create a ref to track previous projection ID
 const previousProjectionIdRef = useRef<number | null>(null);
 
+// Setup event listener for projection invalidation (triggered from sidebar)
+useEffect(() => {
+  // Create a callback function to handle the custom event
+  const handleProjectionInvalidation = (event: CustomEvent) => {
+    const { id, timestamp } = event.detail;
+    console.log(`Received invalidate-projection event for ID: ${id}, timestamp: ${timestamp}`);
+    
+    // Manually invalidate the cache for this projection
+    queryClient.invalidateQueries({ 
+      queryKey: ['/api/financial-projections/detail', id]
+    });
+    
+    // Force refetch the projection
+    if (projectionId === id) {
+      console.log("Triggering immediate refetch for current projection");
+      refetchProjection();
+    }
+  };
+
+  // Add event listener
+  window.addEventListener('invalidate-projection', handleProjectionInvalidation as EventListener);
+  
+  // Cleanup function to remove event listener
+  return () => {
+    window.removeEventListener('invalidate-projection', handleProjectionInvalidation as EventListener);
+  };
+}, [projectionId, refetchProjection, queryClient]);
+
 // Load saved projection data when available - force a hard reset of state when projection ID changes
 useEffect(() => {
   // First, detect if we've switched to a different projection
   const didProjectionChange = previousProjectionIdRef.current !== projectionId;
+  
+  // Log this important state change for debugging
+  if (didProjectionChange) {
+    console.log(`Projection ID changed from ${previousProjectionIdRef.current} to ${projectionId}`);
+  }
   
   // Update the ref
   previousProjectionIdRef.current = projectionId;
