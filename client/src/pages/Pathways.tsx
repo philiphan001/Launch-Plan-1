@@ -3303,7 +3303,7 @@ const Pathways = ({
                         className="bg-green-500 hover:bg-green-600"
                         onClick={() => {
                           // Collect all the pathway data to auto-generate a financial plan
-                          const pathwayData = {
+                          const pathwayDataToSave = {
                             educationType,
                             selectedFieldOfStudy,
                             specificSchool: specificSchool || "",
@@ -3319,10 +3319,10 @@ const Pathways = ({
                             userJourney
                           };
                           
-                          console.log("Storing pathway data for financial planning:", pathwayData);
+                          console.log("Storing pathway data for financial planning:", pathwayDataToSave);
                           
                           // Store all the pathway data
-                          localStorage.setItem('pathwayData', JSON.stringify(pathwayData));
+                          localStorage.setItem('pathwayData', JSON.stringify(pathwayDataToSave));
                           
                           // Store the narrative for the calculator
                           localStorage.setItem('userPathwayNarrative', userJourney);
