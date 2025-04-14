@@ -1,15 +1,7 @@
 import { ReactNode } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-
-interface User {
-  id: number;
-  username: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  isFirstTimeUser?: boolean;
-}
+import { User } from "@/interfaces/auth";
 
 interface AppShellProps {
   children: ReactNode;

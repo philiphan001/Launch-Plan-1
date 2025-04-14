@@ -16,7 +16,7 @@ import SignupPage from "@/pages/SignupPage";
 import NotFound from "@/pages/not-found";
 import AppShell from "@/components/ui/layout/AppShell";
 
-import { User, AuthProps } from "@/interfaces/auth";
+import { User, AuthProps, RegisterCredentials } from "@/interfaces/auth";
 
 function App() {
   const [location, setLocation] = useLocation();

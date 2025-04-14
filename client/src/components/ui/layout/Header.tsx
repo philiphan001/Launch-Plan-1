@@ -1,13 +1,5 @@
 import { Link } from "wouter";
-
-interface User {
-  id: number;
-  username: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  isFirstTimeUser?: boolean;
-}
+import { User } from "@/interfaces/auth";
 
 interface HeaderProps {
   user: User | null;
@@ -28,7 +20,7 @@ const Header = ({ user, logout }: HeaderProps) => {
           {user && (
             <div className="flex items-center mr-4">
               <span className="hidden md:inline text-sm mr-2">
-                Welcome, {user.name}
+                Welcome, {user.firstName || user.username}
               </span>
               <span className="material-icons text-sm">person</span>
             </div>
