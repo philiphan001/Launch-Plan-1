@@ -3301,7 +3301,7 @@ const Pathways = ({
                       <Button variant="outline" onClick={handleBack}>Back</Button>
                       <Button 
                         className="bg-green-500 hover:bg-green-600"
-                        onClick={async () => {
+                        onClick={() => {
                           // Collect all the pathway data to auto-generate a financial plan
                           const pathwayData = {
                             educationType,
@@ -3746,73 +3746,8 @@ const Pathways = ({
                             }
                           };
                           
-                          // If the user is authenticated, auto-save the projection
-                          if (isAuthenticated && user) {
-                            try {
-                              let incomeEstimate = 50000; // Default income estimate
-                              if (selectedCareerId && selectedProfession) {
-                                // Try to get income from career calculation
-                                try {
-                                  const careerResponse = await fetch(`/api/careers/${selectedCareerId}`);
-                                  if (careerResponse.ok) {
-                                    const careerData = await careerResponse.json();
-                                    incomeEstimate = careerData.midCareerMedian || careerData.startingMedianSalary || 50000;
-                                  }
-                                } catch (err) {
-                                  console.error("Failed to fetch career data for income estimate:", err);
-                                }
-                              }
-                              
-                              // Create the financial projection
-                              const projectionName = `${educationType === '4year' ? '4-Year College' : 
-                                                       educationType === '2year' ? '2-Year College' : 
-                                                       'Vocational School'} to ${selectedProfession || 'Career'}`;
-                              
-                              const response = await fetch('/api/financial-projections', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  userId: user.id,
-                                  name: projectionName,
-                                  timeframe: 10, // Default 10 years
-                                  startingAge: 18, // Default starting age
-                                  startingSavings: 5000, // Default starting savings
-                                  income: incomeEstimate,
-                                  expenses: incomeEstimate * 0.7, // Rough estimate for expenses
-                                  incomeGrowth: 3, // Default income growth %
-                                  studentLoanDebt: 0, // Will be calculated later
-                                  projectionData: JSON.stringify({}), // Empty for now
-                                  includesCollegeCalculation: !!selectedSchoolId,
-                                  includesCareerCalculation: !!selectedCareerId,
-                                  collegeCalculationId: null, // Will be set after creation
-                                  careerCalculationId: null, // Will be set after creation
-                                  locationAdjusted: !!selectedLocation,
-                                  locationZipCode: selectedZipCode || "",
-                                  incomeAdjustmentFactor: 1.0, // Default
-                                  // Default configurable parameters
-                                  emergencyFundAmount: 10000,
-                                  personalLoanTermYears: 5,
-                                  personalLoanInterestRate: 8,
-                                })
-                              });
-                              
-                              if (response.ok) {
-                                console.log("Successfully auto-saved pathway projection");
-                                toast({
-                                  title: "Projection saved",
-                                  description: "Your pathway has been saved as a financial projection.",
-                                  variant: "default",
-                                });
-                              }
-                            } catch (error) {
-                              console.error("Failed to auto-save pathway projection:", error);
-                              // Non-critical error, continue without alerting user
-                            }
-                          }
-                          
-                          // Go to financial projections page with auto-generate flag and freshly saved projection
-                          // Navigate to financial projections page with parameters to show pathway summary
-                          navigate('/projections?autoGenerate=true&showPathway=true');
+                          // Redirect to the financial projections page with auto-generate flag
+                          navigate('/projections?autoGenerate=true');
                         }}
                         disabled={!selectedLocation && selectedZipCode.length === 5}
                       >

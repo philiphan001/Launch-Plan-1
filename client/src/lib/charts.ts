@@ -9,12 +9,6 @@ import { NetWorthData, CashFlowData, ProjectionData } from './types';
  * @returns A copy of the projection data with corrected liability values
  */
 export function fixLiabilityCalculation(data: ProjectionData): ProjectionData {
-  // Add comprehensive safety checks
-  if (!data || typeof data !== 'object') {
-    console.error("Invalid projection data provided to fixLiabilityCalculation:", data);
-    return data || {} as ProjectionData;
-  }
-  
   if (!data.liabilities || !data.graduateSchoolLoans) {
     // If there's no data to fix, return the original
     return data;
@@ -1349,39 +1343,6 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
 }
 
 export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: ProjectionData, type: string = 'netWorth'): Chart {
-  // Safety check to ensure data is properly structured
-  if (!data || !data.ages || !Array.isArray(data.ages) || data.ages.length === 0) {
-    console.error("Invalid or empty projection data:", data);
-    // Return an empty chart with a message
-    return new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['No Data'],
-        datasets: [{
-          label: 'No projection data available',
-          data: [0],
-          backgroundColor: 'rgba(200, 200, 200, 0.5)'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true
-          },
-          tooltip: {
-            callbacks: {
-              label: function() {
-                return 'Please try refreshing or creating a new projection';
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-  
   // Apply the liability fix to ensure graduate school loans are properly counted
   data = fixLiabilityCalculation(data);
   

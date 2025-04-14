@@ -175,64 +175,13 @@ const Sidebar = ({ user }: SidebarProps) => {
                             <li key={projection.id} className="mb-1 flex items-center group">
                               <a
                                 href={`/projections?id=${projection.id}`}
-                                onClick={async (e) => {
+                                onClick={(e) => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  try {
-                                    // CRITICAL FIX: First, explicitly fetch the projection data
-                                    // This direct fetch approach bypasses any caching issues
-                                    console.log("Directly fetching projection data before navigation");
-                                    const fetchTimestamp = new Date().getTime();
-                                    const response = await fetch(`/api/financial-projections/detail/${projection.id}?_=${fetchTimestamp}`);
-                                    
-                                    if (!response.ok) {
-                                      throw new Error(`Failed to fetch projection: ${response.status} ${response.statusText}`);
-                                    }
-                                    
-                                    const projectionData = await response.json();
-                                    console.log("Successfully pre-fetched projection data:", projectionData.id, projectionData.name);
-                                    
-                                    // Cache the projection data in session storage as a fallback mechanism
-                                    try {
-                                      sessionStorage.setItem(
-                                        `projection-${projection.id}`, 
-                                        JSON.stringify({
-                                          data: projectionData,
-                                          timestamp: fetchTimestamp
-                                        })
-                                      );
-                                      console.log("Cached projection data in sessionStorage");
-                                    } catch (err) {
-                                      console.error("Failed to cache in sessionStorage:", err);
-                                    }
-                                  } catch (err) {
-                                    console.error("Error pre-fetching projection:", err);
-                                  }
-                                  
-                                  // Create a truly unique timestamp for navigation
+                                  // Use React navigation with wouter instead of direct browser navigation
                                   const timestamp = new Date().getTime();
-                                  const cacheBuster = Math.random().toString(36).substring(2, 15);
-                                  
-                                  // Create the navigation URL with all necessary parameters
-                                  const newLocation = `/projections?id=${projection.id}&t=${timestamp}&cb=${cacheBuster}&forceReload=true`;
-                                  console.log("Navigating to:", newLocation);
-                                  
-                                  try {
-                                    // Explicitly invalidate the React Query cache
-                                    window.dispatchEvent(new CustomEvent('invalidate-projection', { 
-                                      detail: { id: projection.id, timestamp, forceReload: true } 
-                                    }));
-                                    console.log("Dispatched invalidate-projection event");
-                                  } catch (err) {
-                                    console.error("Failed to dispatch event:", err);
-                                  }
-                                  
-                                  // Explicitly set the window location to ensure URL change is detected
-                                  window.history.pushState({}, "", newLocation);
-                                  
-                                  // Then trigger the React router navigation
-                                  setLocation(newLocation);
+                                  setLocation(`/projections?id=${projection.id}&t=${timestamp}`);
                                   
                                   // Refresh saved projections data to ensure we have the latest
                                   setTimeout(() => {

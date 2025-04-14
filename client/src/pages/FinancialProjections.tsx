@@ -4,7 +4,6 @@ import { FinancialProjection } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
-import { Chart } from "chart.js/auto";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
 import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBreakdownChart";
@@ -43,7 +42,6 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatCurrency } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -173,20 +171,12 @@ const FinancialProjections = ({
   // Get the current location for parsing query parameters
   const [location] = useLocation();
   // This combination of projectionId and timestamp will force a full reset when the URL changes
-  const { projectionId, timestamp, autoGenerate, showPathway, cacheBuster } = useMemo(() => {
+  const { projectionId, timestamp, autoGenerate } = useMemo(() => {
     // Parse URL query parameters
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const t = params.get('t') || Date.now().toString();
-    const cb = params.get('cb') || Math.random().toString(36).substring(2, 15);
     const autoGen = params.get('autoGenerate') === 'true';
-    const showPath = params.get('showPathway') === 'true';
-    
-    console.log("PARAM DEBUG - URL:", window.location.href);
-    console.log("PARAM DEBUG - Search params:", window.location.search);
-    console.log("PARAM DEBUG - Raw ID from URL:", id);
-    console.log("PARAM DEBUG - Timestamp:", t);
-    console.log("PARAM DEBUG - Cache buster:", cb);
     
     // Give priority to initialProjectionId if provided (from App.tsx)
     const effectiveId = initialProjectionId || (id ? parseInt(id, 10) : null);
@@ -195,26 +185,12 @@ const FinancialProjections = ({
     console.log("Projection ID changed to:", effectiveId, 
         initialProjectionId ? "(from initialProjectionId)" : "(from URL)", 
         "with timestamp:", t,
-        "autoGenerate:", autoGen,
-        "showPathway:", showPath);
-    
-    // CRITICAL FIX: If we detect a projection ID but no saved projection data, immediately invalidate
-    // the cache for that projection to force a fresh fetch
-    if (effectiveId && typeof window !== 'undefined') {
-      setTimeout(() => {
-        queryClient.invalidateQueries({ 
-          queryKey: ['/api/financial-projections/detail', effectiveId] 
-        });
-        console.log("Force-invalidated cache for projection ID:", effectiveId);
-      }, 0);
-    }
+        "autoGenerate:", autoGen);
     
     return { 
       projectionId: effectiveId, 
       timestamp: t,
-      cacheBuster: cb,
-      autoGenerate: autoGen,
-      showPathway: showPath
+      autoGenerate: autoGen
     };
   }, [location, initialProjectionId]);
 
@@ -244,7 +220,6 @@ const FinancialProjections = ({
   const [taxSectionOpen, setTaxSectionOpen] = useState<boolean>(true);
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
   const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
-  const [chartType, setChartType] = useState<string>('netWorth');
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
@@ -1555,51 +1530,20 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
-  // Include all URL parameters in queryKey to force refetch when any parameter changes
-  queryKey: ['/api/financial-projections/detail', projectionId, timestamp, cacheBuster],
+  queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
   queryFn: async () => {
     if (!projectionId) {
       console.log("No projection ID provided, skipping fetch");
       return null;
     }
     
-    // CRITICAL FIX: First check if we have pre-fetched data in sessionStorage
-    try {
-      const cachedData = sessionStorage.getItem(`projection-${projectionId}`);
-      if (cachedData) {
-        const { data, timestamp: cachedTimestamp } = JSON.parse(cachedData);
-        console.log(`Found pre-fetched projection data in sessionStorage (timestamp: ${cachedTimestamp})`);
-        
-        // Only use cached data if it's fresh (less than 5 seconds old)
-        const now = new Date().getTime();
-        if (now - cachedTimestamp < 5000) {
-          console.log("Using pre-fetched data from sessionStorage");
-          // Clear the cache to ensure fresh data next time
-          sessionStorage.removeItem(`projection-${projectionId}`);
-          return data;
-        } else {
-          console.log("Cached data is stale, fetching fresh data");
-          sessionStorage.removeItem(`projection-${projectionId}`);
-        }
-      }
-    } catch (err) {
-      console.error("Error reading from sessionStorage:", err);
-    }
-    
     // Add cache-busting timestamp to ensure fresh data
-    const fetchTimestamp = new Date().getTime();
-    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${fetchTimestamp}, timestamp: ${timestamp}, cacheBuster: ${cacheBuster})`);
+    const cacheBuster = new Date().getTime();
+    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster})`);
     
     try {
-      const url = `/api/financial-projections/detail/${projectionId}?_=${fetchTimestamp}`;
+      const url = `/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`;
       console.log(`Making fetch request to: ${url}`);
-      
-      // Force a browser history push to ensure the URL is properly updated
-      if (!window.location.href.includes(`id=${projectionId}`)) {
-        console.log("Enforcing URL to include projection ID");
-        const newUrl = `/projections?id=${projectionId}&t=${timestamp}&cb=${cacheBuster}&forceReload=true`;
-        window.history.pushState({}, "", newUrl);
-      }
       
       const response = await fetch(url);
       
@@ -1611,17 +1555,6 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       
       const data = await response.json();
       console.log("Successfully loaded projection data:", data.id, data.name);
-      
-      // Debug the data structure
-      console.log("Projection data structure check:", {
-        hasProjectionData: !!data.projectionData,
-        projectionDataType: typeof data.projectionData,
-        projectionDataLength: typeof data.projectionData === 'string' ? data.projectionData.length : 'N/A',
-        isParseableJSON: typeof data.projectionData === 'string' ? (() => {
-          try { JSON.parse(data.projectionData); return true; } catch(e) { return false; }
-        })() : false
-      });
-      
       return data;
     } catch (error) {
       console.error("Error fetching projection:", error);
@@ -1629,193 +1562,20 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
     }
   },
   enabled: !!projectionId, // Only enable this query when we have a projection ID
-  retry: 2, // Retry failed requests twice
+  retry: false, // Don't retry failed requests
   staleTime: 0, // Consider data immediately stale to allow refetching
   gcTime: 0, // Don't cache results between component mounts (gcTime replaces cacheTime in v5)
   refetchOnMount: true, // Always refetch on component mount
-  refetchOnWindowFocus: true, // Always refetch when window gains focus
-  refetchOnReconnect: true // Also refetch when reconnecting
+  refetchOnWindowFocus: true // Always refetch when window gains focus
 });
 
 // Create a ref to track previous projection ID
 const previousProjectionIdRef = useRef<number | null>(null);
 
-// Setup event listener for projection invalidation (triggered from sidebar)
-useEffect(() => {
-  // Create a callback function to handle the custom event
-  const handleProjectionInvalidation = (event: CustomEvent) => {
-    const { id, timestamp, forceReload } = event.detail;
-    console.log(`Received invalidate-projection event for ID: ${id}, timestamp: ${timestamp}, forceReload: ${forceReload}`);
-    
-    // Manually invalidate the cache for this projection
-    queryClient.invalidateQueries({ 
-      queryKey: ['/api/financial-projections/detail', id],
-      exact: false // Invalidate all queries that include this ID
-    });
-    
-    // If this is a forced reload (from sidebar), do a more aggressive cache invalidation
-    if (forceReload) {
-      // Invalidate all financial projections queries
-      queryClient.invalidateQueries({
-        queryKey: ['/api/financial-projections'],
-        exact: false
-      });
-      
-      console.log("Performing aggressive cache invalidation for all projection queries");
-    }
-    
-    // Force refetch the projection
-    if (projectionId === id) {
-      console.log("Triggering immediate refetch for current projection");
-      
-      // Delay the refetch to ensure cache invalidation has taken effect
-      setTimeout(() => {
-        refetchProjection();
-      }, 100);
-    }
-  };
-
-  // Add event listener
-  window.addEventListener('invalidate-projection', handleProjectionInvalidation as EventListener);
-  
-  // Cleanup function to remove event listener
-  return () => {
-    window.removeEventListener('invalidate-projection', handleProjectionInvalidation as EventListener);
-  };
-}, [projectionId, refetchProjection, queryClient]);
-
 // Load saved projection data when available - force a hard reset of state when projection ID changes
 useEffect(() => {
-  // CRITICAL FIX: Direct fetch to ensure we always have the latest data
-  const fetchProjectionDirectly = async () => {
-    if (projectionId) {
-      try {
-        console.log(`Direct fetch for projection ID ${projectionId} initiated`);
-        const fetchTimestamp = new Date().getTime();
-        const response = await fetch(`/api/financial-projections/detail/${projectionId}?_=${fetchTimestamp}`);
-        
-        if (!response.ok) {
-          console.error(`Failed to fetch projection: ${response.status} ${response.statusText}`);
-          return;
-        }
-        
-        const data = await response.json();
-        console.log(`Direct fetch successful, got projection: ${data.id} ${data.name}`);
-        
-        // Store the data in session storage as a backup
-        const sessionKey = `projection-${projectionId}`;
-        sessionStorage.setItem(sessionKey, JSON.stringify(data));
-        
-        // Extract college and career IDs from the projection
-        const collegeId = data.collegeCalculationId;
-        const careerId = data.careerCalculationId;
-        
-        // Force a refetch through React Query to update the UI with latest data
-        setTimeout(() => {
-          // Refetch the saved projection
-          refetchProjection();
-          
-          // If the projection includes college or career, fetch those specific calculations too
-          if (collegeId) {
-            fetch(`/api/college-calculations/${collegeId}?_=${fetchTimestamp}`)
-              .then(res => res.json())
-              .then(data => {
-                console.log(`Fetched college calculation ${collegeId}:`, data);
-                // Update the college calculations after fetching
-                queryClient.invalidateQueries({ 
-                  queryKey: ['/api/college-calculations/user', userId] 
-                });
-              })
-              .catch(err => console.error("Error fetching college calculation:", err));
-          } else {
-            // Still invalidate all college calculations 
-            queryClient.invalidateQueries({ 
-              queryKey: ['/api/college-calculations/user', userId] 
-            });
-          }
-          
-          if (careerId) {
-            fetch(`/api/career-calculations/${careerId}?_=${fetchTimestamp}`)
-              .then(res => res.json())
-              .then(data => {
-                console.log(`Fetched career calculation ${careerId}:`, data);
-                // Update the career calculations after fetching
-                queryClient.invalidateQueries({ 
-                  queryKey: ['/api/career-calculations/user', userId] 
-                });
-              })
-              .catch(err => console.error("Error fetching career calculation:", err));
-          } else {
-            // Still invalidate all career calculations
-            queryClient.invalidateQueries({ 
-              queryKey: ['/api/career-calculations/user', userId] 
-            });
-          }
-        }, 10);
-      } catch (err) {
-        console.error("Error in direct fetch:", err);
-      }
-    }
-  };
-  
-  // Execute the direct fetch to ensure latest data
-  fetchProjectionDirectly();
-  
   // First, detect if we've switched to a different projection
   const didProjectionChange = previousProjectionIdRef.current !== projectionId;
-  
-  // Log this important state change for debugging
-  if (didProjectionChange) {
-    console.log(`Projection ID changed from ${previousProjectionIdRef.current} to ${projectionId}`);
-    
-    // When projection ID changes, force a hard reload of related data from server
-    queryClient.invalidateQueries({
-      predicate: (query) => 
-        query.queryKey[0] === '/api/financial-projections' || 
-        query.queryKey[0] === '/api/career-calculations' ||
-        query.queryKey[0] === '/api/college-calculations',
-    });
-    
-    // If there's no savedProjection data from React Query yet, try to get it from sessionStorage
-    if (!savedProjection && projectionId) {
-      const sessionKey = `projection-${projectionId}`;
-      const sessionData = sessionStorage.getItem(sessionKey);
-      
-      if (sessionData) {
-        console.log("Retrieved projection from sessionStorage as fallback:", sessionKey);
-        try {
-          const parsedData = JSON.parse(sessionData);
-          
-          // This will force a re-render with the session data
-          // We're not setting savedProjection directly since that's managed by React Query
-          // but we can use the projection data to update the UI temporarily
-          if (parsedData && parsedData.projectionData) {
-            let projData;
-            
-            try {
-              // Parse the projectionData if it's a string
-              projData = typeof parsedData.projectionData === 'string'
-                ? JSON.parse(parsedData.projectionData)
-                : parsedData.projectionData;
-              
-              // Update projection data with the session data
-              if (projData && projData.ages && projData.netWorth) {
-                setProjectionData({
-                  ...projData,
-                  _key: `projection-${projectionId}-${new Date().getTime()}-session`
-                });
-                console.log("Updated projection data from session storage");
-              }
-            } catch (error) {
-              console.error("Failed to parse projection data from session storage:", error);
-            }
-          }
-        } catch (error) {
-          console.error("Failed to parse session data:", error);
-        }
-      }
-    }
-  }
   
   // Update the ref
   previousProjectionIdRef.current = projectionId;
@@ -1919,48 +1679,6 @@ useEffect(() => {
             parsedData = savedProjection.projectionData;
           }
           
-          // Validate that the projection data has the essential fields before setting state
-          const isValidData = parsedData && 
-            parsedData.ages && Array.isArray(parsedData.ages) && parsedData.ages.length > 0 &&
-            parsedData.netWorth && Array.isArray(parsedData.netWorth) && parsedData.netWorth.length > 0 &&
-            parsedData.income && Array.isArray(parsedData.income) && parsedData.income.length > 0 &&
-            parsedData.expenses && Array.isArray(parsedData.expenses) && parsedData.expenses.length > 0;
-            
-          if (!isValidData) {
-            console.error("Invalid projection data format - missing key arrays:", parsedData);
-            toast({
-              title: "Projection Error",
-              description: "The selected projection has invalid data format. Please try a different projection.",
-              variant: "destructive",
-            });
-            
-            // Create a basic default projection based on the current state values
-            // This ensures we have valid data that matches the current form inputs
-            const basicValidData = {
-              ages: Array.from({length: 10}, (_, i) => age + i),
-              assets: Array.from({length: 10}, (_, i) => startingSavings * (1 + (i * 0.1))),
-              liabilities: Array.from({length: 10}, (_, i) => studentLoanDebt * (1 - (i * 0.1) < 0 ? 0 : 1 - (i * 0.1))),
-              netWorth: Array.from({length: 10}, (_, i) => (startingSavings * (1 + (i * 0.1))) - (studentLoanDebt * (1 - (i * 0.1) < 0 ? 0 : 1 - (i * 0.1)))),
-              income: Array.from({length: 10}, (_, i) => income * (1 + (i * incomeGrowth / 100))),
-              expenses: Array.from({length: 10}, (_, i) => expenses * (1 + (i * 0.02))),
-              cashFlow: Array.from({length: 10}, (_, i) => (income * (1 + (i * incomeGrowth / 100))) - (expenses * (1 + (i * 0.02)))),
-              savings: Array.from({length: 10}, (_, i) => startingSavings * (1 + (i * 0.1))),
-              savingsRate: Array.from({length: 10}, () => 0.1),
-              _key: `projection-${projectionId}-${new Date().getTime()}-recovery-fallback`
-            };
-            
-            setProjectionData(basicValidData);
-            
-            // Also recalculate using the Python calculator to get accurate data
-            setTimeout(() => {
-              // Force a recalculation using current inputs
-              const event = new Event('recalculate-projection');
-              window.dispatchEvent(event);
-            }, 500);
-            
-            return; // Exit early to avoid setting invalid data
-          }
-          
           // Add a key with the current projection ID to force React to treat this as new data
           // and re-render all dependent components
           const dataWithKey = {
@@ -1972,11 +1690,6 @@ useEffect(() => {
           setProjectionData(dataWithKey);
         } catch (error) {
           console.error("Failed to parse saved projection data:", error);
-          toast({
-            title: "Projection Error",
-            description: "There was an error loading the selected projection. Please try again.",
-            variant: "destructive",
-          });
           // If we fail to parse, we may need to use the projectionData directly
           if (typeof savedProjection.projectionData === 'object') {
             console.log("Using projectionData object directly after parse error");
@@ -2001,7 +1714,7 @@ useEffect(() => {
   if (savedProjectionError) {
     console.error("Error loading saved projection:", savedProjectionError);
   }
-}, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId, refetchProjection, queryClient, userId]);
+}, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId]);
 
 // Initialize projection data with a key that depends on projectionId to force re-renders
 const [projectionData, setProjectionData] = useState<any>(() => {
@@ -2014,8 +1727,9 @@ const [projectionData, setProjectionData] = useState<any>(() => {
   };
 });
   
-  // Define the updateProjectionData function
-  const updateProjectionData = async () => {
+  // Update projection data when inputs change
+  useEffect(() => {
+    const updateProjectionData = async () => {
       console.log("Inputs changed, calculating projection data using Python calculator");
       try {
         // Add debugging for any existing milestones of type 'education'
@@ -2167,88 +1881,67 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         console.log("Falling back to JavaScript calculator");
         setProjectionData(generateProjectionData(milestones));
       }
-  };
-  
-  // Initial calculation once at startup
-  useEffect(() => {
-    console.log("Initial projection calculation");
-    // Execute the function only if we have milestones to process
-    if (milestones && milestones.length > 0) {
-      updateProjectionData();
-    }
-  }, [milestones]);
-  
-  // Listen for external recalculation requests
-  useEffect(() => {
-    const handleManualRecalc = () => {
-      console.log("Manual recalculation requested");
-      const event = new CustomEvent('invalidate-projection');
-      window.dispatchEvent(event);
     };
     
-    window.addEventListener('recalculate-projection', handleManualRecalc);
-    return () => window.removeEventListener('recalculate-projection', handleManualRecalc);
-  }, []);
+    // Execute the async function
+    updateProjectionData();
+  }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
+      spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
+      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers, autoGenerate]); // Include autoGenerate to recalculate when auto-generating
   
   // Generate financial advice based on current financial state
   useEffect(() => {
-    try {
-      // Create a financial state object based on current values
-      const financialState: FinancialState = {
-        income: income || 0,
-        expenses: expenses || 0,
-        savings: startingSavings || 0,
-        studentLoanDebt: studentLoanDebt || 0,
-        otherDebt: financialProfile?.otherDebtAmount || 0,
-      };
-      
-      // Generate financial advice
-      const advice = generateFinancialAdvice(financialState);
-      setFinancialAdvice(advice);
-    } catch (error) {
-      console.error("Error generating financial advice:", error);
+    // Create a financial state object based on current values
+    const financialState: FinancialState = {
+      income: income,
+      expenses: expenses,
+      savings: startingSavings,
+      studentLoanDebt: studentLoanDebt,
+      otherDebt: financialProfile?.otherDebtAmount || 0,
+    };
+    
+    // Add home-related values if milestones include a home purchase
+    const homeMilestone = milestones?.find(m => m.type === 'home');
+    if (homeMilestone) {
+      financialState.homeValue = homeMilestone.homeValue;
+      financialState.homeDownPayment = homeMilestone.homeDownPayment;
+      financialState.homeMonthlyPayment = homeMilestone.homeMonthlyPayment;
     }
-  }, [income, expenses, startingSavings, studentLoanDebt, financialProfile]);
+    
+    // Add car-related values if milestones include a car purchase
+    const carMilestone = milestones?.find(m => m.type === 'car');
+    if (carMilestone) {
+      financialState.carValue = carMilestone.carValue;
+      financialState.carDownPayment = carMilestone.carDownPayment;
+      financialState.carMonthlyPayment = carMilestone.carMonthlyPayment;
+    }
+    
+    // Generate financial advice
+    const advice = generateFinancialAdvice(financialState);
+    setFinancialAdvice(advice);
+  }, [income, expenses, startingSavings, studentLoanDebt, financialProfile, milestones]);
 
-  // Chart rendering
   useEffect(() => {
-    if (!chartRef.current || !projectionData) {
-      console.log("Cannot render chart - chart canvas or projection data not available");
-      return;
+    if (chartRef.current) {
+      const ctx = chartRef.current.getContext("2d");
+      if (ctx) {
+        // Destroy previous chart instance if it exists
+        if (chartInstance.current) {
+          chartInstance.current.destroy();
+        }
+        
+        // Create new chart
+        chartInstance.current = createMainProjectionChart(ctx, projectionData, activeTab);
+      }
     }
-    
-    // Get canvas context for chart 
-    const ctx = chartRef.current.getContext('2d');
-    if (!ctx) {
-      console.error("Failed to get chart context");
-      return;
-    }
-    
-    console.log("Rendering projection chart with data", projectionData);
-    
-    // Fix liability calculation if needed
-    const fixedData = fixLiabilityCalculation(projectionData);
-    
-    // Destroy existing chart if one exists to prevent memory leaks
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-    
-    try {
-      // Create and store the new chart instance
-      chartInstance.current = createMainProjectionChart(ctx, fixedData, chartType);
-      console.log("Chart rendered successfully");
-    } catch (error) {
-      console.error("Error rendering chart:", error);
-    }
-    
-    // Cleanup function to destroy chart on component unmount
+
+    // Cleanup on unmount
     return () => {
       if (chartInstance.current) {
         chartInstance.current.destroy();
       }
     };
-  }, [projectionData, chartType]);
+  }, [projectionData, activeTab, timeframe]);
 
   // State to hold pathway data for display
   const [pathwaySummary, setPathwaySummary] = useState<any>(null);
@@ -2282,133 +1975,65 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
       
-      {/* Display the appropriate summary based on parameters and available data */}
-      {(() => {
-        // If showPathway is true and we have pathway data, prioritize showing the pathway summary
-        if (showPathway && pathwaySummary) {
-          return (
-            <Card className="mb-6 border-l-4 border-l-blue-500">
-              <CardContent className="pt-6">
-                <h2 className="text-lg font-semibold mb-3 flex items-center">
-                  <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
-                  Your Pathway Summary
-                </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">Education</span>
+      {/* Only show current projection summary if we have college or career calculations */}
+      {(includedCollegeCalc || includedCareerCalc) ? (
+        <CurrentProjectionSummary 
+          collegeCalculation={includedCollegeCalc} 
+          careerCalculation={includedCareerCalc}
+          locationData={locationCostData}
+        />
+      ) : pathwaySummary && (
+        /* Show Pathway Summary Section only if there's no active financial projection */
+        <Card className="mb-6 border-l-4 border-l-blue-500">
+          <CardContent className="pt-6">
+            <h2 className="text-lg font-semibold mb-3 flex items-center">
+              <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
+              Your Pathway Summary
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm font-medium text-gray-500">Education</span>
+                <span className="text-base font-medium">
+                  {formatEducationType(pathwaySummary.educationType)}
+                  {pathwaySummary.transferOption === "yes" && " → Transfer to 4-Year College"}
+                </span>
+                <span className="text-sm text-gray-700">
+                  {pathwaySummary.selectedFieldOfStudy || "General Studies"}
+                  {pathwaySummary.transferOption === "yes" && pathwaySummary.transferFieldOfStudy && 
+                    ` → ${pathwaySummary.transferFieldOfStudy}`}
+                </span>
+                {pathwaySummary.specificSchool && (
+                  <span className="text-xs text-gray-500">{pathwaySummary.specificSchool}</span>
+                )}
+              </div>
+              
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm font-medium text-gray-500">Career</span>
+                <span className="text-base font-medium">
+                  {pathwaySummary.selectedProfession || "General Career Path"}
+                </span>
+              </div>
+              
+              <div className="flex flex-col space-y-1">
+                <span className="text-sm font-medium text-gray-500">Location</span>
+                {pathwaySummary.location ? (
+                  <>
                     <span className="text-base font-medium">
-                      {formatEducationType(pathwaySummary.educationType)}
-                      {pathwaySummary.transferOption === "yes" && " → Transfer to 4-Year College"}
+                      {pathwaySummary.location.city}, {pathwaySummary.location.state}
                     </span>
-                    <span className="text-sm text-gray-700">
-                      {pathwaySummary.selectedFieldOfStudy || "General Studies"}
-                      {pathwaySummary.transferOption === "yes" && pathwaySummary.transferFieldOfStudy && 
-                        ` → ${pathwaySummary.transferFieldOfStudy}`}
+                    <span className="text-xs text-gray-500">
+                      Zip Code: {pathwaySummary.location.zipCode}
                     </span>
-                    {pathwaySummary.specificSchool && (
-                      <span className="text-xs text-gray-500">{pathwaySummary.specificSchool}</span>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">Career</span>
-                    <span className="text-base font-medium">
-                      {pathwaySummary.selectedProfession || "General Career Path"}
-                    </span>
-                  </div>
-                  
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">Location</span>
-                    {pathwaySummary.location ? (
-                      <>
-                        <span className="text-base font-medium">
-                          {pathwaySummary.location.city}, {pathwaySummary.location.state}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Zip Code: {pathwaySummary.location.zipCode}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-base font-medium">Not specified</span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        }
-        
-        // Else if we have a saved projection or any calculations, show the current projection summary
-        else if (savedProjection || includedCollegeCalc || includedCareerCalc) {
-          return (
-            <CurrentProjectionSummary 
-              collegeCalculation={includedCollegeCalc} 
-              careerCalculation={includedCareerCalc}
-              locationData={locationCostData}
-              savedProjection={savedProjection}
-            />
-          );
-        }
-        
-        // Fallback: If we have pathway data but no active calculations, show the pathway summary
-        else if (pathwaySummary) {
-          return (
-            <Card className="mb-6 border-l-4 border-l-blue-500">
-              <CardContent className="pt-6">
-                <h2 className="text-lg font-semibold mb-3 flex items-center">
-                  <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
-                  Your Pathway Summary
-                </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">Education</span>
-                    <span className="text-base font-medium">
-                      {formatEducationType(pathwaySummary.educationType)}
-                      {pathwaySummary.transferOption === "yes" && " → Transfer to 4-Year College"}
-                    </span>
-                    <span className="text-sm text-gray-700">
-                      {pathwaySummary.selectedFieldOfStudy || "General Studies"}
-                      {pathwaySummary.transferOption === "yes" && pathwaySummary.transferFieldOfStudy && 
-                        ` → ${pathwaySummary.transferFieldOfStudy}`}
-                    </span>
-                    {pathwaySummary.specificSchool && (
-                      <span className="text-xs text-gray-500">{pathwaySummary.specificSchool}</span>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">Career</span>
-                    <span className="text-base font-medium">
-                      {pathwaySummary.selectedProfession || "General Career Path"}
-                    </span>
-                  </div>
-                  
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">Location</span>
-                    {pathwaySummary.location ? (
-                      <>
-                        <span className="text-base font-medium">
-                          {pathwaySummary.location.city}, {pathwaySummary.location.state}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Zip Code: {pathwaySummary.location.zipCode}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-base font-medium">Not specified</span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        }
-        
-        // No summary to show if we have no pathway data and no active calculations
-        return null;
-      })()}
+                  </>
+                ) : (
+                  <span className="text-base font-medium">Not specified</span>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="view" value={mainTab} onValueChange={setMainTab} className="w-full mb-6">
         <TabsList className="grid grid-cols-4 w-full max-w-2xl mx-auto mb-6">
@@ -2621,8 +2246,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                       locationAdjusted: !!locationCostData,
                       locationZipCode: userData?.zipCode || null,
                       costOfLivingIndex: locationCostData ? 
-                        locationCostData.income_adjustment_factor || 1.0 : 1.0,
-                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || 1.0,
+                        locationCostData.income_adjustment_factor || 1.0 : null,
+                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                       // Save the configurable parameters
                       emergencyFundAmount: emergencyFundAmount,
                       personalLoanTermYears: personalLoanTermYears,
@@ -2698,20 +2323,6 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               >
                 Cash Flow
               </button>
-            </div>
-            
-            <div className="flex justify-end mb-2">
-              <select 
-                value={chartType}
-                onChange={(e) => setChartType(e.target.value)}
-                className="border rounded p-1 text-sm bg-white"
-              >
-                <option value="netWorth">Net Worth</option>
-                <option value="cashFlow">Cash Flow</option>
-                <option value="income">Income</option>
-                <option value="savings">Savings</option>
-                <option value="debt">Debt</option>
-              </select>
             </div>
             
             <div className="h-96">
@@ -2984,8 +2595,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                         locationAdjusted: !!locationCostData,
                         locationZipCode: userData?.zipCode || null,
                         costOfLivingIndex: locationCostData ? 
-                          locationCostData.income_adjustment_factor || 1.0 : 1.0,
-                        incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || 1.0,
+                          locationCostData.income_adjustment_factor || 1.0 : null,
+                        incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                         emergencyFundAmount: emergencyFundAmount,
                         personalLoanTermYears: personalLoanTermYears,
                         personalLoanInterestRate: personalLoanInterestRate,
@@ -3902,7 +3513,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       
       {/* Life Milestones Section */}
       <MilestonesSection 
-        userId={userId as number} 
+        userId={userId} 
         onMilestoneChange={() => {
           console.log("Milestone changed, recalculating projections...");
           
