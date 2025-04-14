@@ -198,6 +198,17 @@ const FinancialProjections = ({
         "autoGenerate:", autoGen,
         "showPathway:", showPath);
     
+    // CRITICAL FIX: If we detect a projection ID but no saved projection data, immediately invalidate
+    // the cache for that projection to force a fresh fetch
+    if (effectiveId && typeof window !== 'undefined') {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/financial-projections/detail', effectiveId] 
+        });
+        console.log("Force-invalidated cache for projection ID:", effectiveId);
+      }, 0);
+    }
+    
     return { 
       projectionId: effectiveId, 
       timestamp: t,
@@ -1551,6 +1562,29 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       return null;
     }
     
+    // CRITICAL FIX: First check if we have pre-fetched data in sessionStorage
+    try {
+      const cachedData = sessionStorage.getItem(`projection-${projectionId}`);
+      if (cachedData) {
+        const { data, timestamp: cachedTimestamp } = JSON.parse(cachedData);
+        console.log(`Found pre-fetched projection data in sessionStorage (timestamp: ${cachedTimestamp})`);
+        
+        // Only use cached data if it's fresh (less than 5 seconds old)
+        const now = new Date().getTime();
+        if (now - cachedTimestamp < 5000) {
+          console.log("Using pre-fetched data from sessionStorage");
+          // Clear the cache to ensure fresh data next time
+          sessionStorage.removeItem(`projection-${projectionId}`);
+          return data;
+        } else {
+          console.log("Cached data is stale, fetching fresh data");
+          sessionStorage.removeItem(`projection-${projectionId}`);
+        }
+      }
+    } catch (err) {
+      console.error("Error reading from sessionStorage:", err);
+    }
+    
     // Add cache-busting timestamp to ensure fresh data
     const fetchTimestamp = new Date().getTime();
     console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${fetchTimestamp}, timestamp: ${timestamp}, cacheBuster: ${cacheBuster})`);
@@ -1562,7 +1596,7 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       // Force a browser history push to ensure the URL is properly updated
       if (!window.location.href.includes(`id=${projectionId}`)) {
         console.log("Enforcing URL to include projection ID");
-        const newUrl = `/projections?id=${projectionId}&t=${timestamp}&cb=${cacheBuster}`;
+        const newUrl = `/projections?id=${projectionId}&t=${timestamp}&cb=${cacheBuster}&forceReload=true`;
         window.history.pushState({}, "", newUrl);
       }
       
@@ -1609,18 +1643,34 @@ const previousProjectionIdRef = useRef<number | null>(null);
 useEffect(() => {
   // Create a callback function to handle the custom event
   const handleProjectionInvalidation = (event: CustomEvent) => {
-    const { id, timestamp } = event.detail;
-    console.log(`Received invalidate-projection event for ID: ${id}, timestamp: ${timestamp}`);
+    const { id, timestamp, forceReload } = event.detail;
+    console.log(`Received invalidate-projection event for ID: ${id}, timestamp: ${timestamp}, forceReload: ${forceReload}`);
     
     // Manually invalidate the cache for this projection
     queryClient.invalidateQueries({ 
-      queryKey: ['/api/financial-projections/detail', id]
+      queryKey: ['/api/financial-projections/detail', id],
+      exact: false // Invalidate all queries that include this ID
     });
+    
+    // If this is a forced reload (from sidebar), do a more aggressive cache invalidation
+    if (forceReload) {
+      // Invalidate all financial projections queries
+      queryClient.invalidateQueries({
+        queryKey: ['/api/financial-projections'],
+        exact: false
+      });
+      
+      console.log("Performing aggressive cache invalidation for all projection queries");
+    }
     
     // Force refetch the projection
     if (projectionId === id) {
       console.log("Triggering immediate refetch for current projection");
-      refetchProjection();
+      
+      // Delay the refetch to ensure cache invalidation has taken effect
+      setTimeout(() => {
+        refetchProjection();
+      }, 100);
     }
   };
 

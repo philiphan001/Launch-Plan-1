@@ -175,28 +175,53 @@ const Sidebar = ({ user }: SidebarProps) => {
                             <li key={projection.id} className="mb-1 flex items-center group">
                               <a
                                 href={`/projections?id=${projection.id}`}
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                   e.preventDefault();
                                   console.log("Sidebar: Loading projection with ID:", projection.id);
                                   
-                                  // Create a truly unique timestamp to force invalidation
-                                  const timestamp = new Date().getTime();
+                                  try {
+                                    // CRITICAL FIX: First, explicitly fetch the projection data
+                                    // This direct fetch approach bypasses any caching issues
+                                    console.log("Directly fetching projection data before navigation");
+                                    const fetchTimestamp = new Date().getTime();
+                                    const response = await fetch(`/api/financial-projections/detail/${projection.id}?_=${fetchTimestamp}`);
+                                    
+                                    if (!response.ok) {
+                                      throw new Error(`Failed to fetch projection: ${response.status} ${response.statusText}`);
+                                    }
+                                    
+                                    const projectionData = await response.json();
+                                    console.log("Successfully pre-fetched projection data:", projectionData.id, projectionData.name);
+                                    
+                                    // Cache the projection data in session storage as a fallback mechanism
+                                    try {
+                                      sessionStorage.setItem(
+                                        `projection-${projection.id}`, 
+                                        JSON.stringify({
+                                          data: projectionData,
+                                          timestamp: fetchTimestamp
+                                        })
+                                      );
+                                      console.log("Cached projection data in sessionStorage");
+                                    } catch (err) {
+                                      console.error("Failed to cache in sessionStorage:", err);
+                                    }
+                                  } catch (err) {
+                                    console.error("Error pre-fetching projection:", err);
+                                  }
                                   
-                                  // Use a custom cache-busting parameter to ensure the URL is recognized as new
+                                  // Create a truly unique timestamp for navigation
+                                  const timestamp = new Date().getTime();
                                   const cacheBuster = Math.random().toString(36).substring(2, 15);
                                   
                                   // Create the navigation URL with all necessary parameters
-                                  const newLocation = `/projections?id=${projection.id}&t=${timestamp}&cb=${cacheBuster}`;
+                                  const newLocation = `/projections?id=${projection.id}&t=${timestamp}&cb=${cacheBuster}&forceReload=true`;
                                   console.log("Navigating to:", newLocation);
                                   
-                                  // Debug: Check current location before navigation
-                                  console.log("Current location before navigation:", location);
-                                  
-                                  // First ensure React Query cache invalidation for this projection
-                                  // This is done by using an event to signal the cache needs refreshing
                                   try {
+                                    // Explicitly invalidate the React Query cache
                                     window.dispatchEvent(new CustomEvent('invalidate-projection', { 
-                                      detail: { id: projection.id, timestamp } 
+                                      detail: { id: projection.id, timestamp, forceReload: true } 
                                     }));
                                     console.log("Dispatched invalidate-projection event");
                                   } catch (err) {
