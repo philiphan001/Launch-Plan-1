@@ -244,6 +244,7 @@ const FinancialProjections = ({
   const [taxSectionOpen, setTaxSectionOpen] = useState<boolean>(true);
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
   const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
+  const [chartType, setChartType] = useState<string>('netWorth');
   
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
@@ -2697,6 +2698,20 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               >
                 Cash Flow
               </button>
+            </div>
+            
+            <div className="flex justify-end mb-2">
+              <select 
+                value={chartType}
+                onChange={(e) => setChartType(e.target.value)}
+                className="border rounded p-1 text-sm bg-white"
+              >
+                <option value="netWorth">Net Worth</option>
+                <option value="cashFlow">Cash Flow</option>
+                <option value="income">Income</option>
+                <option value="savings">Savings</option>
+                <option value="debt">Debt</option>
+              </select>
             </div>
             
             <div className="h-96">
