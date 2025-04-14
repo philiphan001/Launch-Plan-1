@@ -637,7 +637,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   
   // Function that actually saves the calculation after name is provided
   const handleSaveCalculation = () => {
-    if (!selectedCollege || !netPrice) return;
+    if (!userId || !selectedCollege || !netPrice) return;
     
     // Calculate financial aid amount based on sticker price minus net price
     // This represents scholarships and grants that don't need to be repaid
@@ -649,7 +649,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     
     // Create the calculation data object
     const calculationData: CollegeCalculation = {
-      userId,
+      userId: userId as number, // We've checked for userId earlier in saveToProfile
       collegeId: selectedCollege.id,
       netPrice,
       inState: isInState,
