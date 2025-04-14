@@ -2365,9 +2365,236 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         <TabsContent value="edit">
           <div className="p-6">
             <h3 className="text-xl font-semibold mb-4">Edit Projection</h3>
-            <p className="text-gray-600 mb-4">
-              This feature will allow you to edit an existing projection. Coming soon.
-            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <h4 className="text-lg font-medium mb-4">Basic Settings</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="projectionName">Projection Name</Label>
+                      <Input 
+                        id="projectionName"
+                        value={projectionName}
+                        onChange={(e) => setProjectionName(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="age">Current Age</Label>
+                      <Input 
+                        id="age" 
+                        type="number" 
+                        value={age} 
+                        onChange={(e) => setAge(Number(e.target.value))} 
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="timeframe">Timeframe</Label>
+                      <select 
+                        id="timeframe"
+                        className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                        value={timeframe}
+                        onChange={(e) => setTimeframe(e.target.value)}
+                      >
+                        <option>5 Years</option>
+                        <option>10 Years</option>
+                        <option>20 Years</option>
+                        <option>30 Years</option>
+                        <option>40 Years</option>
+                      </select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <h4 className="text-lg font-medium mb-4">Financial Details</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="editSavings">Starting Savings ($)</Label>
+                      <Input 
+                        id="editSavings" 
+                        type="number" 
+                        value={startingSavings} 
+                        onChange={(e) => setStartingSavings(Number(e.target.value))} 
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="editIncome">Annual Income ($)</Label>
+                      <Input 
+                        id="editIncome" 
+                        type="number" 
+                        value={income} 
+                        onChange={(e) => setIncome(Number(e.target.value))} 
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="editExpenses">Annual Expenses ($)</Label>
+                      <Input 
+                        id="editExpenses" 
+                        type="number" 
+                        value={expenses} 
+                        onChange={(e) => setExpenses(Number(e.target.value))} 
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <h4 className="text-lg font-medium mb-4">Education & Debt</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="editStudentLoan">Student Loan Debt ($)</Label>
+                      <Input 
+                        id="editStudentLoan" 
+                        type="number" 
+                        value={studentLoanDebt} 
+                        onChange={(e) => setStudentLoanDebt(Number(e.target.value))} 
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="incomeGrowth">Income Growth Rate (%)</Label>
+                      <Slider
+                        id="incomeGrowth"
+                        value={[incomeGrowth * 100]}
+                        onValueChange={(value) => setIncomeGrowth(value[0] / 100)}
+                        min={0}
+                        max={10}
+                        step={0.1}
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Current: {(incomeGrowth * 100).toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <h4 className="text-lg font-medium mb-4">Emergency & Loans</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Emergency Fund Target: {formatCurrency(emergencyFundAmount)}</Label>
+                      <Slider
+                        value={[emergencyFundAmount]}
+                        onValueChange={(value) => setEmergencyFundAmount(value[0])}
+                        min={1000}
+                        max={50000}
+                        step={1000}
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Recommended: 3-6 months of expenses</p>
+                    </div>
+                    
+                    <div>
+                      <Label>Personal Loan Term: {personalLoanTermYears} years</Label>
+                      <Slider
+                        value={[personalLoanTermYears]}
+                        onValueChange={(value) => setPersonalLoanTermYears(value[0])}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Loan Interest Rate: {personalLoanInterestRate}%</Label>
+                      <Slider
+                        value={[personalLoanInterestRate]}
+                        onValueChange={(value) => setPersonalLoanInterestRate(value[0])}
+                        min={3}
+                        max={20}
+                        step={0.5}
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <Button 
+                variant="outline" 
+                className="mr-2"
+                onClick={() => setMainTab("view")}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={async () => {
+                  try {
+                    // Adjust income based on location
+                    const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
+                    const adjustedExpenses = expenses;
+                       
+                    const response = await fetch('/api/financial-projections', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        userId,
+                        name: projectionName,
+                        timeframe: years,
+                        startingAge: age,
+                        startingSavings,
+                        income: Math.round(adjustedIncome),
+                        expenses: Math.round(adjustedExpenses),
+                        incomeGrowth,
+                        studentLoanDebt,
+                        projectionData: JSON.stringify(projectionData),
+                        includesCollegeCalculation: !!includedCollegeCalc,
+                        includesCareerCalculation: !!includedCareerCalc,
+                        collegeCalculationId: includedCollegeCalc?.id || null,
+                        careerCalculationId: includedCareerCalc?.id || null,
+                        locationAdjusted: !!locationCostData,
+                        locationZipCode: userData?.zipCode || null,
+                        costOfLivingIndex: locationCostData ? 
+                          locationCostData.income_adjustment_factor || 1.0 : null,
+                        incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                        emergencyFundAmount: emergencyFundAmount,
+                        personalLoanTermYears: personalLoanTermYears,
+                        personalLoanInterestRate: personalLoanInterestRate,
+                      }),
+                    });
+                    
+                    if (response.ok) {
+                      alert('Projection saved successfully!');
+                      queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+                      // After saving, switch back to view tab
+                      setMainTab("view");
+                    } else {
+                      throw new Error('Failed to save projection');
+                    }
+                  } catch (error) {
+                    console.error('Error saving projection:', error);
+                    alert('Failed to save projection. Please try again.');
+                  }
+                }}
+              >
+                Save Changes
+              </Button>
+            </div>
           </div>
         </TabsContent>
         
