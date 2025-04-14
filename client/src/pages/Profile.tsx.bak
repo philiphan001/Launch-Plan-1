@@ -167,11 +167,11 @@ const Profile = (props: ProfileProps) => {
   const updateFinancialMutation = useMutation({
     mutationFn: async () => {
       // First check if financial profile exists for this user
-      const checkResponse = await fetch(`/api/financial-profiles/user/${userId}`);
+      const checkResponse = await fetch(`/api/financial-profiles/user/${temporaryUserId}`);
       const existingProfile = checkResponse.ok ? await checkResponse.json() : null;
       
       const financialData = {
-        userId: userId,
+        userId: temporaryUserId,
         householdIncome: parseInt(householdIncome) || 0,
         householdSize: parseInt(householdSize) || 1,
         savingsAmount: parseInt(savingsAmount) || 0,
@@ -239,7 +239,7 @@ const Profile = (props: ProfileProps) => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', userId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', temporaryUserId] });
       toast({
         title: "College removed",
         description: "College has been removed from your favorites.",
@@ -271,7 +271,7 @@ const Profile = (props: ProfileProps) => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites/careers', userId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/careers', temporaryUserId] });
       toast({
         title: "Career removed",
         description: "Career has been removed from your favorites.",

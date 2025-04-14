@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CollegeCalculation {
@@ -75,8 +76,10 @@ interface Career {
 // This is a profile component to display saved college and career calculations
 const SavedCalculationsSection = () => {
   const { toast } = useToast();
-  // Default user ID (would come from auth context in a real app)
-  const userId = 1;
+  // Get user ID from authentication context
+  // Using the AuthContext would be ideal, but for now we'll use a props pattern
+  const { user } = useAuth();
+  const userId = user?.id || null;
   const queryClient = useQueryClient();
   
   // Fetch saved college calculations with automatic refresh
