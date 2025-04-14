@@ -181,7 +181,17 @@ const Sidebar = ({ user }: SidebarProps) => {
                                   
                                   // Use React navigation with wouter instead of direct browser navigation
                                   const timestamp = new Date().getTime();
-                                  setLocation(`/projections?id=${projection.id}&t=${timestamp}`);
+                                  const newLocation = `/projections?id=${projection.id}&t=${timestamp}`;
+                                  console.log("Navigating to:", newLocation);
+                                  
+                                  // Debug: Check current location before navigation
+                                  console.log("Current location before navigation:", location);
+                                  
+                                  // Explicitly set the window location to ensure URL change is detected
+                                  window.history.pushState({}, "", newLocation);
+                                  
+                                  // Then trigger the React router navigation
+                                  setLocation(newLocation);
                                   
                                   // Refresh saved projections data to ensure we have the latest
                                   setTimeout(() => {
