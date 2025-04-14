@@ -2259,6 +2259,17 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                     alert('Projection saved successfully!');
                     // Invalidate the financial projections query to refresh the list
                     queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+                    
+                    // If this is a first-time user, mark them as having completed onboarding
+                    if (isFirstTimeUser && completeOnboarding) {
+                      console.log("User saved their first projection, marking as completed onboarding");
+                      try {
+                        await completeOnboarding();
+                      } catch (error) {
+                        console.error("Failed to update onboarding status:", error);
+                        // Non-critical error, continue without showing an error to the user
+                      }
+                    }
                   } else {
                     throw new Error('Failed to save projection');
                   }
