@@ -507,8 +507,20 @@ const FinancialProjections = ({
         
         if (pathwayDataStr) {
           console.log("Found pathway data in localStorage");
-          pathwayData = JSON.parse(pathwayDataStr);
-          console.log("Parsed pathway data:", pathwayData);
+          try {
+            pathwayData = JSON.parse(pathwayDataStr);
+            console.log("Parsed pathway data:", pathwayData);
+            
+            // Validate that required fields are present
+            if (!pathwayData) {
+              console.error("Parsed pathway data is null or undefined");
+            } else if (!pathwayData.hasOwnProperty('educationType')) {
+              console.error("Pathway data is missing educationType field:", pathwayData);
+            }
+          } catch (error) {
+            console.error("Error parsing pathway data from localStorage:", error);
+            console.error("Raw pathway data string:", pathwayDataStr);
+          }
         } else {
           console.log("No pathway data in localStorage, using favorite data instead");
         }
@@ -641,7 +653,14 @@ const FinancialProjections = ({
           locationZipCode = favoriteLocations[0].zipCode;
         } else if (pathwayData?.location) {
           // If no favorite locations but pathway data exists, use that
+          console.log("Using location from pathway data:", pathwayData.location);
           locationZipCode = pathwayData.location;
+        } else if (pathwayData?.zipCode) {
+          // Some pathway data might store location as zipCode
+          console.log("Using zipCode from pathway data:", pathwayData.zipCode);
+          locationZipCode = pathwayData.zipCode;
+        } else if (pathwayData) {
+          console.log("Pathway data exists but no location found:", Object.keys(pathwayData));
         }
         
         // If we have a different zip code than the user's profile,
