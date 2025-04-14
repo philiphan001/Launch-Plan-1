@@ -2005,38 +2005,11 @@ useEffect(() => {
 
 // Initialize projection data with a key that depends on projectionId to force re-renders
 const [projectionData, setProjectionData] = useState<any>(() => {
-  // Generate projection over 10 years for initial data
-  const yearsToProject = 10;
-  const ages = Array.from({length: yearsToProject + 1}, (_, i) => age + i);
-  
-  // Generate basic net worth projection
-  const netWorth = Array.from({length: yearsToProject + 1}, (_, i) => {
-    // Simple growth model for initial visualization
-    return Math.round(startingSavings + (income - expenses) * i);
-  });
-  
-  // Generate income values with 3% annual growth
-  const incomeValues = Array.from({length: yearsToProject + 1}, (_, i) => {
-    return Math.round(income * Math.pow(1.03, i));
-  });
-  
-  // Generate expense values with 2% inflation
-  const expenseValues = Array.from({length: yearsToProject + 1}, (_, i) => {
-    return Math.round(expenses * Math.pow(1.02, i));
-  });
-
-  // Generate savings values (cumulative savings over time)
-  const savingsValues = Array.from({length: yearsToProject + 1}, (_, i) => {
-    if (i === 0) return startingSavings;
-    return Math.round(startingSavings + Array.from({length: i}, (_, j) => incomeValues[j] - expenseValues[j]).reduce((a, b) => a + b, 0));
-  });
-  
   return {
-    netWorth: netWorth,
-    ages: ages,
-    income: incomeValues,
-    expenses: expenseValues,
-    savingsValue: savingsValues,
+    netWorth: [startingSavings],
+    ages: [age],
+    income: [income],
+    expenses: [expenses],
     _key: projectionId || 'new' // Add a key to force state change detection
   };
 });
