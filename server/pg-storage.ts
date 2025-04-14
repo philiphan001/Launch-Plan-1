@@ -13,10 +13,21 @@ import {
   careerPaths, type CareerPath, type InsertCareerPath,
   locationCostOfLiving, type LocationCostOfLiving, type InsertLocationCostOfLiving,
   zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
-  collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation,
+  collegeCalculations, type CollegeCalculation as DrizzleCollegeCalculation, type InsertCollegeCalculation,
   careerCalculations, type CareerCalculation, type InsertCareerCalculation,
   assumptions, type Assumption, type InsertAssumption, defaultAssumptions
 } from "@shared/schema";
+
+// Extended type for college calculations with college data
+interface CollegeCalculationWithCollege extends DrizzleCollegeCalculation {
+  college?: {
+    name: string;
+    type?: string;
+  };
+}
+
+// Use the extended type
+type CollegeCalculation = CollegeCalculationWithCollege;
 import { IStorage } from './storage';
 import { eq, and, or, sql } from 'drizzle-orm';
 
@@ -425,12 +436,63 @@ export class PgStorage implements IStorage {
 
   // College calculations methods
   async getCollegeCalculation(id: number): Promise<CollegeCalculation | undefined> {
-    const result = await db.select().from(collegeCalculations).where(eq(collegeCalculations.id, id));
-    return result[0];
+    const calculation = await db.select().from(collegeCalculations).where(eq(collegeCalculations.id, id));
+    if (calculation.length === 0) return undefined;
+    
+    // Now fetch the college data separately
+    if (calculation[0].collegeId) {
+      const collegeData = await db.select().from(colleges).where(eq(colleges.id, calculation[0].collegeId));
+      if (collegeData.length > 0) {
+        // Add college data to the calculation result
+        return {
+          ...calculation[0],
+          college: {
+            name: collegeData[0].name,
+            type: collegeData[0].type
+          }
+        };
+      }
+    }
+    
+    return calculation[0];
   }
 
   async getCollegeCalculationsByUserId(userId: number): Promise<CollegeCalculation[]> {
-    return await db.select().from(collegeCalculations).where(eq(collegeCalculations.userId, userId));
+    // Get all college calculations for this user
+    const calculations = await db.select().from(collegeCalculations).where(eq(collegeCalculations.userId, userId));
+    
+    // Get all college IDs from the calculations
+    const collegeIds = calculations.map(calc => calc.collegeId);
+    
+    // If there are no calculations or no college IDs, return the raw calculations
+    if (calculations.length === 0 || collegeIds.length === 0) {
+      return calculations;
+    }
+    
+    // Get all colleges for these IDs in a single query
+    const collegeData = await db.select().from(colleges)
+      .where(colleges.id.in(collegeIds));
+    
+    // Create a map of college ID to college data for quick lookup
+    const collegeMap = new Map();
+    for (const college of collegeData) {
+      collegeMap.set(college.id, college);
+    }
+    
+    // Add college data to each calculation
+    return calculations.map(calc => {
+      const college = collegeMap.get(calc.collegeId);
+      if (college) {
+        return {
+          ...calc,
+          college: {
+            name: college.name,
+            type: college.type
+          }
+        };
+      }
+      return calc;
+    });
   }
 
   async getCollegeCalculationsByUserAndCollege(userId: number, collegeId: number): Promise<CollegeCalculation[]> {
