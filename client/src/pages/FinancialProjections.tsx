@@ -2209,13 +2209,45 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     }
   }, [income, expenses, startingSavings, studentLoanDebt, financialProfile]);
 
-  // Chart rendering with simplified dependency array
+  // Chart rendering
   useEffect(() => {
-    // Chart rendering code is temporarily simplified for debugging purposes
-    console.log("Chart would render here when projection data is available");
+    if (!chartRef.current || !projectionData) {
+      console.log("Cannot render chart - chart canvas or projection data not available");
+      return;
+    }
     
-    // Full chart implementation will be restored after fixing the dependency issues
-  }, []);
+    // Get canvas context for chart 
+    const ctx = chartRef.current.getContext('2d');
+    if (!ctx) {
+      console.error("Failed to get chart context");
+      return;
+    }
+    
+    console.log("Rendering projection chart with data", projectionData);
+    
+    // Fix liability calculation if needed
+    const fixedData = fixLiabilityCalculation(projectionData);
+    
+    // Destroy existing chart if one exists to prevent memory leaks
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+    }
+    
+    try {
+      // Create and store the new chart instance
+      chartInstance.current = createMainProjectionChart(ctx, fixedData, chartType);
+      console.log("Chart rendered successfully");
+    } catch (error) {
+      console.error("Error rendering chart:", error);
+    }
+    
+    // Cleanup function to destroy chart on component unmount
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+      }
+    };
+  }, [projectionData, chartType]);
 
   // State to hold pathway data for display
   const [pathwaySummary, setPathwaySummary] = useState<any>(null);
