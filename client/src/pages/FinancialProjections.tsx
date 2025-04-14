@@ -171,12 +171,13 @@ const FinancialProjections = ({
   // Get the current location for parsing query parameters
   const [location] = useLocation();
   // This combination of projectionId and timestamp will force a full reset when the URL changes
-  const { projectionId, timestamp, autoGenerate } = useMemo(() => {
+  const { projectionId, timestamp, autoGenerate, showPathway } = useMemo(() => {
     // Parse URL query parameters
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const t = params.get('t') || Date.now().toString();
     const autoGen = params.get('autoGenerate') === 'true';
+    const showPath = params.get('showPathway') === 'true';
     
     // Give priority to initialProjectionId if provided (from App.tsx)
     const effectiveId = initialProjectionId || (id ? parseInt(id, 10) : null);
@@ -185,12 +186,14 @@ const FinancialProjections = ({
     console.log("Projection ID changed to:", effectiveId, 
         initialProjectionId ? "(from initialProjectionId)" : "(from URL)", 
         "with timestamp:", t,
-        "autoGenerate:", autoGen);
+        "autoGenerate:", autoGen,
+        "showPathway:", showPath);
     
     return { 
       projectionId: effectiveId, 
       timestamp: t,
-      autoGenerate: autoGen
+      autoGenerate: autoGen,
+      showPathway: showPath
     };
   }, [location, initialProjectionId]);
 
@@ -1975,65 +1978,132 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
       
-      {/* Only show current projection summary if we have college or career calculations */}
-      {(includedCollegeCalc || includedCareerCalc) ? (
-        <CurrentProjectionSummary 
-          collegeCalculation={includedCollegeCalc} 
-          careerCalculation={includedCareerCalc}
-          locationData={locationCostData}
-        />
-      ) : pathwaySummary && (
-        /* Show Pathway Summary Section only if there's no active financial projection */
-        <Card className="mb-6 border-l-4 border-l-blue-500">
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold mb-3 flex items-center">
-              <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
-              Your Pathway Summary
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-500">Education</span>
-                <span className="text-base font-medium">
-                  {formatEducationType(pathwaySummary.educationType)}
-                  {pathwaySummary.transferOption === "yes" && " → Transfer to 4-Year College"}
-                </span>
-                <span className="text-sm text-gray-700">
-                  {pathwaySummary.selectedFieldOfStudy || "General Studies"}
-                  {pathwaySummary.transferOption === "yes" && pathwaySummary.transferFieldOfStudy && 
-                    ` → ${pathwaySummary.transferFieldOfStudy}`}
-                </span>
-                {pathwaySummary.specificSchool && (
-                  <span className="text-xs text-gray-500">{pathwaySummary.specificSchool}</span>
-                )}
-              </div>
-              
-              <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-500">Career</span>
-                <span className="text-base font-medium">
-                  {pathwaySummary.selectedProfession || "General Career Path"}
-                </span>
-              </div>
-              
-              <div className="flex flex-col space-y-1">
-                <span className="text-sm font-medium text-gray-500">Location</span>
-                {pathwaySummary.location ? (
-                  <>
+      {/* Display the appropriate summary based on parameters and available data */}
+      {(() => {
+        // If showPathway is true and we have pathway data, prioritize showing the pathway summary
+        if (showPathway && pathwaySummary) {
+          return (
+            <Card className="mb-6 border-l-4 border-l-blue-500">
+              <CardContent className="pt-6">
+                <h2 className="text-lg font-semibold mb-3 flex items-center">
+                  <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
+                  Your Pathway Summary
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">Education</span>
                     <span className="text-base font-medium">
-                      {pathwaySummary.location.city}, {pathwaySummary.location.state}
+                      {formatEducationType(pathwaySummary.educationType)}
+                      {pathwaySummary.transferOption === "yes" && " → Transfer to 4-Year College"}
                     </span>
-                    <span className="text-xs text-gray-500">
-                      Zip Code: {pathwaySummary.location.zipCode}
+                    <span className="text-sm text-gray-700">
+                      {pathwaySummary.selectedFieldOfStudy || "General Studies"}
+                      {pathwaySummary.transferOption === "yes" && pathwaySummary.transferFieldOfStudy && 
+                        ` → ${pathwaySummary.transferFieldOfStudy}`}
                     </span>
-                  </>
-                ) : (
-                  <span className="text-base font-medium">Not specified</span>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                    {pathwaySummary.specificSchool && (
+                      <span className="text-xs text-gray-500">{pathwaySummary.specificSchool}</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">Career</span>
+                    <span className="text-base font-medium">
+                      {pathwaySummary.selectedProfession || "General Career Path"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">Location</span>
+                    {pathwaySummary.location ? (
+                      <>
+                        <span className="text-base font-medium">
+                          {pathwaySummary.location.city}, {pathwaySummary.location.state}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Zip Code: {pathwaySummary.location.zipCode}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-base font-medium">Not specified</span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        
+        // Else if we have college or career calculations, show the current projection summary
+        else if (includedCollegeCalc || includedCareerCalc) {
+          return (
+            <CurrentProjectionSummary 
+              collegeCalculation={includedCollegeCalc} 
+              careerCalculation={includedCareerCalc}
+              locationData={locationCostData}
+            />
+          );
+        }
+        
+        // Fallback: If we have pathway data but no active calculations, show the pathway summary
+        else if (pathwaySummary) {
+          return (
+            <Card className="mb-6 border-l-4 border-l-blue-500">
+              <CardContent className="pt-6">
+                <h2 className="text-lg font-semibold mb-3 flex items-center">
+                  <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
+                  Your Pathway Summary
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">Education</span>
+                    <span className="text-base font-medium">
+                      {formatEducationType(pathwaySummary.educationType)}
+                      {pathwaySummary.transferOption === "yes" && " → Transfer to 4-Year College"}
+                    </span>
+                    <span className="text-sm text-gray-700">
+                      {pathwaySummary.selectedFieldOfStudy || "General Studies"}
+                      {pathwaySummary.transferOption === "yes" && pathwaySummary.transferFieldOfStudy && 
+                        ` → ${pathwaySummary.transferFieldOfStudy}`}
+                    </span>
+                    {pathwaySummary.specificSchool && (
+                      <span className="text-xs text-gray-500">{pathwaySummary.specificSchool}</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">Career</span>
+                    <span className="text-base font-medium">
+                      {pathwaySummary.selectedProfession || "General Career Path"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">Location</span>
+                    {pathwaySummary.location ? (
+                      <>
+                        <span className="text-base font-medium">
+                          {pathwaySummary.location.city}, {pathwaySummary.location.state}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Zip Code: {pathwaySummary.location.zipCode}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-base font-medium">Not specified</span>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        
+        // No summary to show if we have no pathway data and no active calculations
+        return null;
+      })()}
 
       <Tabs defaultValue="view" value={mainTab} onValueChange={setMainTab} className="w-full mb-6">
         <TabsList className="grid grid-cols-4 w-full max-w-2xl mx-auto mb-6">
@@ -2246,7 +2316,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                       locationAdjusted: !!locationCostData,
                       locationZipCode: userData?.zipCode || null,
                       costOfLivingIndex: locationCostData ? 
-                        locationCostData.income_adjustment_factor || 1.0 : null,
+                        locationCostData.income_adjustment_factor || 1.0 : 1.0,
                       incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
                       // Save the configurable parameters
                       emergencyFundAmount: emergencyFundAmount,
