@@ -594,8 +594,8 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
       
       // Invalidate relevant queries to ensure the saved calculation appears immediately
       queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
-      // Also invalidate the global college calculations query used in SavedCalculationsSection
-      queryClient.invalidateQueries({ queryKey: ['/api/college-calculations'] });
+      // Also invalidate the colleges query used in SavedCalculationsSection
+      queryClient.invalidateQueries({ queryKey: ['/api/colleges'] });
     },
     onError: (error) => {
       console.error("Error saving calculation:", error);

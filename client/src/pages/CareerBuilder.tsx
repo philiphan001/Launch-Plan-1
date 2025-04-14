@@ -260,8 +260,8 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
       setCalculationSuccess(true);
       // Invalidate career calculations for this user to refresh the data
       queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
-      // Also invalidate global career calculations to refresh SavedCalculationsSection
-      queryClient.invalidateQueries({ queryKey: ['/api/career-calculations'] });
+      // Also invalidate college and career calculations queries
+      queryClient.invalidateQueries({ queryKey: ['/api/careers'] });
       toast({
         title: "Success!",
         description: `${selectedCareer?.title} has been saved and included in your financial projections.`,
