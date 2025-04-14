@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
+import { User } from "@/interfaces/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CollegeCalculation {
@@ -73,11 +73,14 @@ interface Career {
   growthRate: string | null;
 }
 
+interface SavedCalculationsSectionProps {
+  user?: User | null;
+}
+
 // This is a profile component to display saved college and career calculations
-const SavedCalculationsSection = () => {
+const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
   const { toast } = useToast();
-  // Get user ID from authentication context
-  const { user, isAuthenticated } = useAuth();
+  // Get user ID from props
   const userId = user?.id;
   const queryClient = useQueryClient();
   

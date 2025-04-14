@@ -557,7 +557,7 @@ const Profile = ({ user }: ProfileProps) => {
         </TabsContent>
         
         <TabsContent value="calculations">
-          <SavedCalculationsSection />
+          <SavedCalculationsSection user={user} />
         </TabsContent>
       </Tabs>
     </div>
