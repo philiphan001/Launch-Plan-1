@@ -1,7 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
+import { User } from "@/context/AuthContext";
+
+// Props-based approach for more reliable auth
+interface SidebarProps {
+  user: User | null;
+}
 
 interface NavItem {
   path: string;
