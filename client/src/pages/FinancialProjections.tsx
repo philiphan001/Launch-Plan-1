@@ -374,6 +374,18 @@ const FinancialProjections = ({
     refetchOnWindowFocus: true
   });
   
+  // Query for saved financial projections
+  const { data: savedProjections = [], isLoading: isLoadingSavedProjections } = useQuery({
+    queryKey: ['/api/financial-projections', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/financial-projections/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch saved projections');
+      return response.json();
+    },
+    enabled: !!userId,
+    refetchOnWindowFocus: true
+  });
+  
   // Get all available careers for reference in milestone processing
   // This data is needed for salary information when changing careers after graduation
   const { data: careers, isLoading: isLoadingCareers } = useQuery({
@@ -2601,9 +2613,187 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         <TabsContent value="compare">
           <div className="p-6">
             <h3 className="text-xl font-semibold mb-4">Compare Projections</h3>
-            <p className="text-gray-600 mb-4">
-              This feature will allow you to compare multiple projections side by side. Coming soon.
-            </p>
+            
+            {savedProjections && savedProjections.length >= 2 ? (
+              <div className="space-y-6">
+                <div className="bg-slate-50 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Select Projections to Compare</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Choose up to 3 projections to compare side by side. This will show key metrics across your different financial scenarios.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {savedProjections.slice(0, 6).map((projection: any) => (
+                      <div 
+                        key={projection.id}
+                        className="border rounded-md p-3 bg-white cursor-pointer hover:border-primary transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id={`projection-${projection.id}`}
+                            className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <label 
+                            htmlFor={`projection-${projection.id}`}
+                            className="text-sm font-medium text-gray-900 cursor-pointer"
+                          >
+                            {projection.name || 'Unnamed Projection'}
+                          </label>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500">
+                          {projection.timeframe || 10} year projection
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h4 className="text-lg font-medium mb-2">Standard Projection</h4>
+                      <p className="text-xs text-gray-500 mb-4">Base scenario</p>
+                      
+                      <div className="space-y-4">
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Starting Age</p>
+                          <p className="text-lg font-medium">25</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Starting Savings</p>
+                          <p className="text-lg font-medium">{formatCurrency(10000)}</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Annual Income</p>
+                          <p className="text-lg font-medium">{formatCurrency(50000)}</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Final Net Worth</p>
+                          <p className="text-lg font-medium text-green-600">{formatCurrency(250000)}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h4 className="text-lg font-medium mb-2">Higher Education</h4>
+                      <p className="text-xs text-gray-500 mb-4">Graduate degree scenario</p>
+                      
+                      <div className="space-y-4">
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Starting Age</p>
+                          <p className="text-lg font-medium">25</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Starting Savings</p>
+                          <p className="text-lg font-medium">{formatCurrency(5000)}</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Annual Income</p>
+                          <p className="text-lg font-medium">{formatCurrency(70000)}</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Final Net Worth</p>
+                          <p className="text-lg font-medium text-green-600">{formatCurrency(320000)}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6">
+                      <h4 className="text-lg font-medium mb-2">Early Career</h4>
+                      <p className="text-xs text-gray-500 mb-4">Work experience scenario</p>
+                      
+                      <div className="space-y-4">
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Starting Age</p>
+                          <p className="text-lg font-medium">22</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Starting Savings</p>
+                          <p className="text-lg font-medium">{formatCurrency(3000)}</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Annual Income</p>
+                          <p className="text-lg font-medium">{formatCurrency(45000)}</p>
+                        </div>
+                        
+                        <div className="bg-slate-50 p-3 rounded-md">
+                          <p className="text-xs text-gray-500">Final Net Worth</p>
+                          <p className="text-lg font-medium text-green-600">{formatCurrency(280000)}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-3">Net Worth Comparison</h4>
+                  <div className="bg-white border rounded-md p-4 h-96">
+                    <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                      <p>Select projections above to generate comparison</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium mb-3">Income Comparison</h4>
+                    <div className="bg-white border rounded-md p-4 h-72">
+                      <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                        <p>Income comparison data will appear here</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium mb-3">Debt Comparison</h4>
+                    <div className="bg-white border rounded-md p-4 h-72">
+                      <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                        <p>Debt comparison data will appear here</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-md border border-gray-200">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No projections to compare</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  You need at least 2 saved projections to use the comparison feature.
+                </p>
+                <div className="mt-6">
+                  <Button onClick={() => setMainTab("view")}>
+                    Create Projection
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
         
