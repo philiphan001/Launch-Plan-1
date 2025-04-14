@@ -137,22 +137,30 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ages.map((age, i) => (
-                    <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <TableCell>{i}</TableCell>
-                      <TableCell>{age}</TableCell>
-                      <TableCell>{formatCurrency(income, i)}</TableCell>
-                      <TableCell>{formatCurrency(spouseIncome, i)}</TableCell>
-                      <TableCell>${(getValue(income, i) + getValue(spouseIncome, i)).toLocaleString()}</TableCell>
-                      <TableCell>{formatCurrency(expenses, i)}</TableCell>
-                      <TableCell>
-                        ${(getValue(income, i) + getValue(spouseIncome, i) - getValue(expenses, i)).toLocaleString()}
-                      </TableCell>
-                      <TableCell>{formatCurrency(netWorth, i)}</TableCell>
-                      <TableCell>{formatCurrency(assets, i)}</TableCell>
-                      <TableCell>{formatCurrency(liabilities, i)}</TableCell>
+                  {ages && ages.length > 0 ? (
+                    // Only render if ages array exists and has data
+                    ages.map((age, i) => (
+                      <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <TableCell>{i}</TableCell>
+                        <TableCell>{age}</TableCell>
+                        <TableCell>{formatCurrency(income, i)}</TableCell>
+                        <TableCell>{formatCurrency(spouseIncome, i)}</TableCell>
+                        <TableCell>${(getValue(income, i) + getValue(spouseIncome, i)).toLocaleString()}</TableCell>
+                        <TableCell>{formatCurrency(expenses, i)}</TableCell>
+                        <TableCell>
+                          ${(getValue(income, i) + getValue(spouseIncome, i) - getValue(expenses, i)).toLocaleString()}
+                        </TableCell>
+                        <TableCell>{formatCurrency(netWorth, i)}</TableCell>
+                        <TableCell>{formatCurrency(assets, i)}</TableCell>
+                        <TableCell>{formatCurrency(liabilities, i)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    // Render placeholder row if no data is available
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-4">No projection data available</TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -177,21 +185,27 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {ages.map((age, i) => (
-                      <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                        <TableCell>{i}</TableCell>
-                        <TableCell>{age}</TableCell>
-                        <TableCell>{formatCurrency(housingExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(transportationExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(foodExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(healthcareExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(personalInsuranceExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(apparelExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(servicesExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(entertainmentExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(otherExpenses, i)}</TableCell>
+                    {ages && ages.length > 0 ? (
+                      ages.map((age, i) => (
+                        <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                          <TableCell>{i}</TableCell>
+                          <TableCell>{age}</TableCell>
+                          <TableCell>{formatCurrency(housingExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(transportationExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(foodExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(healthcareExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(personalInsuranceExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(apparelExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(servicesExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(entertainmentExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(otherExpenses, i)}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={11} className="text-center py-4">No expense data available</TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -212,16 +226,22 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {ages.map((age, i) => (
-                      <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                        <TableCell>{i}</TableCell>
-                        <TableCell>{age}</TableCell>
-                        <TableCell>{formatCurrency(educationExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(childcareExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(debtExpenses, i)}</TableCell>
-                        <TableCell>{formatCurrency(discretionaryExpenses, i)}</TableCell>
+                    {ages && ages.length > 0 ? (
+                      ages.map((age, i) => (
+                        <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                          <TableCell>{i}</TableCell>
+                          <TableCell>{age}</TableCell>
+                          <TableCell>{formatCurrency(educationExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(childcareExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(debtExpenses, i)}</TableCell>
+                          <TableCell>{formatCurrency(discretionaryExpenses, i)}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-4">No expense data available</TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -248,55 +268,61 @@ const CashFlowTable: React.FC<CashFlowTableProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {ages.map((age, i) => {
-                      // Calculate other assets and liabilities (those not specifically tracked)
-                      const homeVal = getValue(homeValue, i);
-                      const carVal = getValue(carValue, i);
-                      const totalAssets = getValue(assets, i);
-                      const mortgageVal = getValue(mortgage, i);
-                      const carLoanVal = getValue(carLoan, i);
-                      const studentLoanVal = getValue(studentLoan, i);
-                      const educationLoanVal = getValue(educationLoans, i);
-                      const graduateSchoolLoanVal = getValue(graduateSchoolLoans, i);
-                      const personalLoanVal = getValue(personalLoans, i);
-                      // Get the total liabilities from the API response
-                      let totalLiabilities = getValue(liabilities, i);
-                      
-                      // Calculate the explicit sum of all known liabilities to check for discrepancies
-                      const sumOfAllLiabilities = mortgageVal + carLoanVal + studentLoanVal + 
-                        educationLoanVal + graduateSchoolLoanVal + personalLoanVal;
-                      
-                      // If sumOfAllLiabilities is greater than totalLiabilities, it means some loans 
-                      // (like graduate school loans) aren't being included in the backend totals
-                      if (sumOfAllLiabilities > totalLiabilities) {
-                        // Update totalLiabilities to be at least the sum of all known liabilities
-                        totalLiabilities = sumOfAllLiabilities;
-                        console.log(`Year ${i}: Corrected liabilities value from ${getValue(liabilities, i)} to ${totalLiabilities}`);
-                      }
-                      
-                      const otherAssets = totalAssets - (homeVal + carVal);
-                      const otherLiabilities = Math.max(0, totalLiabilities - (
-                        mortgageVal + carLoanVal + studentLoanVal + 
-                        educationLoanVal + graduateSchoolLoanVal + personalLoanVal
-                      ));
-                      
-                      return (
-                        <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <TableCell>{i}</TableCell>
-                          <TableCell>{age}</TableCell>
-                          <TableCell>{formatCurrency(homeValue, i)}</TableCell>
-                          <TableCell>{formatCurrency(mortgage, i)}</TableCell>
-                          <TableCell>{formatCurrency(carValue, i)}</TableCell>
-                          <TableCell>{formatCurrency(carLoan, i)}</TableCell>
-                          <TableCell>{formatCurrency(studentLoan, i)}</TableCell>
-                          <TableCell>{formatCurrency(educationLoans, i)}</TableCell>
-                          <TableCell>{formatCurrency(graduateSchoolLoans, i)}</TableCell>
-                          <TableCell>{formatCurrency(personalLoans, i)}</TableCell>
-                          <TableCell>${Math.max(0, otherAssets).toLocaleString()}</TableCell>
-                          <TableCell>${Math.max(0, otherLiabilities).toLocaleString()}</TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {ages && ages.length > 0 ? (
+                      ages.map((age, i) => {
+                        // Calculate other assets and liabilities (those not specifically tracked)
+                        const homeVal = getValue(homeValue, i);
+                        const carVal = getValue(carValue, i);
+                        const totalAssets = getValue(assets, i);
+                        const mortgageVal = getValue(mortgage, i);
+                        const carLoanVal = getValue(carLoan, i);
+                        const studentLoanVal = getValue(studentLoan, i);
+                        const educationLoanVal = getValue(educationLoans, i);
+                        const graduateSchoolLoanVal = getValue(graduateSchoolLoans, i);
+                        const personalLoanVal = getValue(personalLoans, i);
+                        // Get the total liabilities from the API response
+                        let totalLiabilities = getValue(liabilities, i);
+                        
+                        // Calculate the explicit sum of all known liabilities to check for discrepancies
+                        const sumOfAllLiabilities = mortgageVal + carLoanVal + studentLoanVal + 
+                          educationLoanVal + graduateSchoolLoanVal + personalLoanVal;
+                        
+                        // If sumOfAllLiabilities is greater than totalLiabilities, it means some loans 
+                        // (like graduate school loans) aren't being included in the backend totals
+                        if (sumOfAllLiabilities > totalLiabilities) {
+                          // Update totalLiabilities to be at least the sum of all known liabilities
+                          totalLiabilities = sumOfAllLiabilities;
+                          console.log(`Year ${i}: Corrected liabilities value from ${getValue(liabilities, i)} to ${totalLiabilities}`);
+                        }
+                        
+                        const otherAssets = totalAssets - (homeVal + carVal);
+                        const otherLiabilities = Math.max(0, totalLiabilities - (
+                          mortgageVal + carLoanVal + studentLoanVal + 
+                          educationLoanVal + graduateSchoolLoanVal + personalLoanVal
+                        ));
+                        
+                        return (
+                          <TableRow key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <TableCell>{i}</TableCell>
+                            <TableCell>{age}</TableCell>
+                            <TableCell>{formatCurrency(homeValue, i)}</TableCell>
+                            <TableCell>{formatCurrency(mortgage, i)}</TableCell>
+                            <TableCell>{formatCurrency(carValue, i)}</TableCell>
+                            <TableCell>{formatCurrency(carLoan, i)}</TableCell>
+                            <TableCell>{formatCurrency(studentLoan, i)}</TableCell>
+                            <TableCell>{formatCurrency(educationLoans, i)}</TableCell>
+                            <TableCell>{formatCurrency(graduateSchoolLoans, i)}</TableCell>
+                            <TableCell>{formatCurrency(personalLoans, i)}</TableCell>
+                            <TableCell>${Math.max(0, otherAssets).toLocaleString()}</TableCell>
+                            <TableCell>${Math.max(0, otherLiabilities).toLocaleString()}</TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={12} className="text-center py-4">No asset and liability data available</TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
