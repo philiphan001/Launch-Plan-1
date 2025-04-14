@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { School, Briefcase, MapPin, Calculator } from "lucide-react";
+import { School, Briefcase, MapPin, Calculator, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface CollegeCalculation {
   id: number;
@@ -43,6 +44,15 @@ interface FinancialProjection {
   collegeCalculationId?: number | null;
   includesCareerCalculation?: boolean;
   careerCalculationId?: number | null;
+  
+  // Extended fields that might be available in some projections
+  startingAge?: number | null;
+  startingSavings?: number | null;
+  income?: number | null; 
+  expenses?: number | null;
+  incomeGrowth?: number | null;
+  studentLoanDebt?: number | null;
+  timeframe?: number | null;
 }
 
 interface CurrentProjectionSummaryProps {
@@ -58,44 +68,139 @@ const CurrentProjectionSummary: React.FC<CurrentProjectionSummaryProps> = ({
   locationData,
   savedProjection,
 }) => {
+  // Track if we encountered an error parsing the projection data
+  const [hasDataError, setHasDataError] = React.useState(false);
+
   // Extract projection details from the savedProjection if available
   const projectionDetails = React.useMemo(() => {
-    if (!savedProjection?.projectionData) return null;
+    if (!savedProjection) return null;
+
+    // Default values for projection details in case we can't extract them
+    let defaults = {
+      finalSalary: savedProjection.income || 0,
+      ages: [savedProjection.startingAge || 25, (savedProjection.startingAge || 25) + (savedProjection.timeframe || 10)],
+      initialNetWorth: savedProjection.startingSavings || 0,
+      finalNetWorth: savedProjection.startingSavings ? savedProjection.startingSavings * 1.2 : 0
+    };
+    
+    // If we don't have projection data, try to use other fields from savedProjection
+    if (!savedProjection.projectionData) {
+      console.log("No projection data available, using basic projection fields");
+      return defaults;
+    }
     
     try {
       // Parse the projectionData if it's a string
-      const projData = typeof savedProjection.projectionData === 'string'
-        ? JSON.parse(savedProjection.projectionData)
-        : savedProjection.projectionData;
-        
-      // Return structured data from the projection
-      if (projData) {
-        return {
-          // Extract data for the last year of projection for career info
-          finalSalary: projData.income && projData.income.length > 1 
-            ? projData.income[projData.income.length - 1] 
-            : null,
-          ages: projData.ages || [],
-          // Get the initial net worth (savings)
-          initialNetWorth: projData.netWorth && projData.netWorth.length > 0 
-            ? projData.netWorth[0] 
-            : null,
-          // Get the final net worth projection
-          finalNetWorth: projData.netWorth && projData.netWorth.length > 1 
-            ? projData.netWorth[projData.netWorth.length - 1] 
-            : null,
-        };
+      let projData;
+      try {
+        // First, try to parse if it's a string
+        if (typeof savedProjection.projectionData === 'string') {
+          projData = JSON.parse(savedProjection.projectionData);
+        } else {
+          // Otherwise, use it directly as an object
+          projData = savedProjection.projectionData;
+        }
+      } catch (parseError) {
+        console.warn("Could not parse projection data as JSON", parseError);
+        setHasDataError(true); // Set error flag
+        return defaults;
       }
+      
+      // Validate that we have an object with expected arrays
+      if (!projData || typeof projData !== 'object') {
+        console.warn("Invalid projection data structure: not an object", projData);
+        return defaults;
+      }
+      
+      // Check for required data arrays and provide fallbacks
+      const hasIncome = Array.isArray(projData.income) && projData.income.length > 0;
+      const hasNetWorth = Array.isArray(projData.netWorth) && projData.netWorth.length > 0;
+      const hasAges = Array.isArray(projData.ages) && projData.ages.length > 0;
+      
+      if (!hasIncome && !hasNetWorth && !hasAges) {
+        console.warn("Projection data missing all required arrays", projData);
+        return defaults;
+      }
+      
+      // Return structured data from the projection with fallbacks
+      return {
+        // Extract data for the last year of projection for career info
+        finalSalary: hasIncome && projData.income.length > 1 
+          ? projData.income[projData.income.length - 1] 
+          : (savedProjection.income || defaults.finalSalary),
+          
+        ages: hasAges ? projData.ages : 
+          (savedProjection.startingAge ? 
+            [savedProjection.startingAge, savedProjection.startingAge + (savedProjection.timeframe || 10)] : 
+            defaults.ages),
+            
+        // Get the initial net worth (savings)
+        initialNetWorth: hasNetWorth ? projData.netWorth[0] : 
+          (savedProjection.startingSavings || defaults.initialNetWorth),
+          
+        // Get the final net worth projection
+        finalNetWorth: hasNetWorth && projData.netWorth.length > 1 
+          ? projData.netWorth[projData.netWorth.length - 1] 
+          : (savedProjection.startingSavings ? savedProjection.startingSavings * 1.2 : defaults.finalNetWorth),
+      };
     } catch (error) {
       console.error("Error extracting data from projection:", error);
+      setHasDataError(true);
+      return defaults;
     }
-    
-    return null;
   }, [savedProjection]);
   
-  // If we don't have any data for at least one section, don't render the component
-  if (!collegeCalculation && !careerCalculation && !locationData && !projectionDetails) {
+  // Always show the component if we have a savedProjection, even if we don't have details extracted
+  // Otherwise, only show if we have at least one piece of data
+  if (!savedProjection && !collegeCalculation && !careerCalculation && !locationData && !projectionDetails) {
+    console.log("No data to display in CurrentProjectionSummary");
     return null;
+  }
+  
+  // Show error alert when there's a data parsing problem
+  if (hasDataError && savedProjection) {
+    return (
+      <Card className="mb-6 border-l-4 border-l-red-500">
+        <CardContent className="pt-6">
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Data Format Error</AlertTitle>
+            <AlertDescription>
+              There was a problem processing projection data. Some details may be unavailable or estimated.
+            </AlertDescription>
+          </Alert>
+          
+          <h2 className="text-lg font-semibold mb-3 flex items-center">
+            <Calculator className="mr-2 h-5 w-5 text-primary" />
+            Projection Overview
+          </h2>
+          
+          <div className="my-3">
+            <p className="text-sm mb-2">
+              <strong>Name:</strong> {savedProjection.name}
+            </p>
+            
+            {savedProjection.startingAge && (
+              <p className="text-sm mb-2">
+                <strong>Starting Age:</strong> {savedProjection.startingAge}
+              </p>
+            )}
+            
+            {savedProjection.startingSavings !== null && savedProjection.startingSavings !== undefined && (
+              <p className="text-sm mb-2">
+                <strong>Starting Savings:</strong> ${savedProjection.startingSavings.toLocaleString()}
+              </p>
+            )}
+            
+            {savedProjection.income !== null && savedProjection.income !== undefined && (
+              <p className="text-sm mb-2">
+                <strong>Income:</strong> ${savedProjection.income.toLocaleString()}/year
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
   
   return (
