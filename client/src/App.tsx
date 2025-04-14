@@ -277,7 +277,14 @@ function App() {
     <AppShell logout={logout} user={user}>
       <Switch>
         <Route path="/dashboard">
-          {() => <Dashboard {...authProps} />}
+          {() => {
+            console.log("Dashboard route rendering", { 
+              auth: isAuthenticated, 
+              firstTime: isFirstTimeUser,
+              user: user
+            });
+            return <Dashboard {...authProps} />;
+          }}
         </Route>
         <Route path="/projections">
           {() => {

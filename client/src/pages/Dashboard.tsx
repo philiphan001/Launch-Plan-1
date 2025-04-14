@@ -21,12 +21,13 @@ const Dashboard = ({
   completeOnboarding
 }: DashboardProps) => {
   // Use the user's name from props if available, otherwise use a default
-  const [username, setUsername] = useState(user?.name || "User");
+  // Using firstName as name property isn't available
+  const [username, setUsername] = useState(user?.firstName || user?.username || "User");
   
   // Update username when user changes
   useEffect(() => {
-    if (user?.name) {
-      setUsername(user.name);
+    if (user?.firstName || user?.username) {
+      setUsername(user.firstName || user.username || "User");
     }
   }, [user]);
 
