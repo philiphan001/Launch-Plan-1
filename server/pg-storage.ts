@@ -450,11 +450,11 @@ export class PgStorage implements IStorage {
             name: collegeData[0].name,
             type: collegeData[0].type
           }
-        };
+        } as CollegeCalculation;
       }
     }
     
-    return calculation[0];
+    return calculation[0] as CollegeCalculation;
   }
 
   async getCollegeCalculationsByUserId(userId: number): Promise<CollegeCalculation[]> {
@@ -471,7 +471,9 @@ export class PgStorage implements IStorage {
     
     // Get all colleges for these IDs in a single query
     const collegeData = await db.select().from(colleges)
-      .where(colleges.id.in(collegeIds));
+      .where(
+        or(...collegeIds.map(id => eq(colleges.id, id)))
+      );
     
     // Create a map of college ID to college data for quick lookup
     const collegeMap = new Map();
@@ -489,18 +491,42 @@ export class PgStorage implements IStorage {
             name: college.name,
             type: college.type
           }
-        };
+        } as CollegeCalculation;
       }
-      return calc;
+      return calc as CollegeCalculation;
     });
   }
 
   async getCollegeCalculationsByUserAndCollege(userId: number, collegeId: number): Promise<CollegeCalculation[]> {
-    return await db.select().from(collegeCalculations)
+    // Get calculations matching both user and college
+    const calculations = await db.select().from(collegeCalculations)
       .where(and(
         eq(collegeCalculations.userId, userId),
         eq(collegeCalculations.collegeId, collegeId)
       ));
+    
+    if (calculations.length === 0) {
+      return calculations;
+    }
+    
+    // Get the college data
+    const collegeData = await db.select().from(colleges).where(eq(colleges.id, collegeId));
+    if (collegeData.length === 0) {
+      return calculations;
+    }
+    
+    const college = collegeData[0];
+    
+    // Add college data to each calculation
+    return calculations.map(calc => {
+      return {
+        ...calc,
+        college: {
+          name: college.name,
+          type: college.type
+        }
+      } as CollegeCalculation;
+    });
   }
 
   async createCollegeCalculation(calculation: InsertCollegeCalculation): Promise<CollegeCalculation> {
@@ -538,8 +564,10 @@ export class PgStorage implements IStorage {
         .set({ includedInProjection: true })
         .where(eq(collegeCalculations.id, id))
         .returning();
-        
-      return result[0];
+      
+      // Get the updated calculation with college details
+      const updatedCalc = await this.getCollegeCalculation(id);  
+      return updatedCalc;
     });
   }
   
