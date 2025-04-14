@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -350,6 +351,17 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   };
 
   const handleSaveMilestone = () => {
+    // Check if user is logged in before saving milestone
+    if (userId === null) {
+      toast({
+        title: "Authentication Required",
+        description: "You need to be logged in to create or update milestones.",
+        variant: "destructive",
+      });
+      setDialogOpen(false);
+      return;
+    }
+    
     let type = "";
     // Use custom name if provided, otherwise use default title
     let title = customName.trim() || "";
@@ -374,8 +386,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         }
       }
       
+      // At this point, userId is guaranteed to be a number (not null) from the check at the beginning of the function
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion since we checked userId !== null above
         type,
         title,
         date,
@@ -401,7 +414,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "home";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion since we checked userId !== null above
         type,
         title,
         date,
@@ -426,7 +439,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "car";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion since we checked userId !== null above
         type,
         title,
         date,
@@ -451,7 +464,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "children";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion since we checked userId !== null above
         type,
         title,
         date,
@@ -475,7 +488,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "education";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion since we checked userId !== null above
         type,
         title,
         date,
@@ -549,92 +562,104 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
             Add major life events to see how they impact your financial projection.
           </p>
           
-          {/* Milestones grid */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-            <div 
-              className="border border-gray-200 rounded-lg p-4 hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition-colors text-center"
-              onClick={() => openMilestoneDialog("marriage")}
-            >
-              <Heart className="h-6 w-6 text-pink-500 mx-auto mb-2" />
-              <h4 className="font-medium">Get Married</h4>
+          {userId === null ? (
+            <div className="text-center py-6 bg-gray-50 rounded-lg border border-gray-200">
+              <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-3" />
+              <h4 className="font-medium text-lg mb-2">Sign in Required</h4>
+              <p className="text-gray-600 max-w-md mx-auto mb-3">
+                You need to be signed in to create and manage life milestones. Please sign in or create an account.
+              </p>
             </div>
-            
-            <div 
-              className="border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors text-center"
-              onClick={() => openMilestoneDialog("children")}
-            >
-              <Users className="h-6 w-6 text-blue-500 mx-auto mb-2" />
-              <h4 className="font-medium">Have Kids</h4>
-            </div>
-            
-            <div 
-              className="border border-gray-200 rounded-lg p-4 hover:border-green-400 hover:bg-green-50 cursor-pointer transition-colors text-center"
-              onClick={() => openMilestoneDialog("home")}
-            >
-              <Home className="h-6 w-6 text-green-500 mx-auto mb-2" />
-              <h4 className="font-medium">Buy a Home</h4>
-            </div>
-            
-            <div 
-              className="border border-gray-200 rounded-lg p-4 hover:border-orange-400 hover:bg-orange-50 cursor-pointer transition-colors text-center"
-              onClick={() => openMilestoneDialog("car")}
-            >
-              <Car className="h-6 w-6 text-orange-500 mx-auto mb-2" />
-              <h4 className="font-medium">Buy a Car</h4>
-            </div>
-            
-            <div 
-              className="border border-gray-200 rounded-lg p-4 hover:border-purple-400 hover:bg-purple-50 cursor-pointer transition-colors text-center"
-              onClick={() => openMilestoneDialog("education")}
-            >
-              <GraduationCap className="h-6 w-6 text-purple-500 mx-auto mb-2" />
-              <h4 className="font-medium">Graduate School</h4>
-            </div>
-          </div>
-          
-          {/* Active milestones list */}
-          {milestones && milestones.length > 0 && (
-            <div className="mt-6">
-              <h4 className="text-md font-medium mb-3">Active Milestones</h4>
-              <div className="space-y-3">
-                {milestones.map((milestone) => (
-                  <div 
-                    key={milestone.id} 
-                    className={`border rounded-md p-3 flex justify-between items-center ${getMilestoneColor(milestone.type)}`}
-                  >
-                    <div className="flex items-center">
-                      <div className="mr-3">
-                        {getMilestoneIcon(milestone.type)}
-                      </div>
-                      <div>
-                        <div className="font-medium">{milestone.title}</div>
-                        <div className="text-sm text-gray-600">
-                          In {milestone.yearsAway} years ({milestone.date})
+          ) : (
+            <>
+              {/* Milestones grid */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                <div 
+                  className="border border-gray-200 rounded-lg p-4 hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition-colors text-center"
+                  onClick={() => openMilestoneDialog("marriage")}
+                >
+                  <Heart className="h-6 w-6 text-pink-500 mx-auto mb-2" />
+                  <h4 className="font-medium">Get Married</h4>
+                </div>
+                
+                <div 
+                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors text-center"
+                  onClick={() => openMilestoneDialog("children")}
+                >
+                  <Users className="h-6 w-6 text-blue-500 mx-auto mb-2" />
+                  <h4 className="font-medium">Have Kids</h4>
+                </div>
+                
+                <div 
+                  className="border border-gray-200 rounded-lg p-4 hover:border-green-400 hover:bg-green-50 cursor-pointer transition-colors text-center"
+                  onClick={() => openMilestoneDialog("home")}
+                >
+                  <Home className="h-6 w-6 text-green-500 mx-auto mb-2" />
+                  <h4 className="font-medium">Buy a Home</h4>
+                </div>
+                
+                <div 
+                  className="border border-gray-200 rounded-lg p-4 hover:border-orange-400 hover:bg-orange-50 cursor-pointer transition-colors text-center"
+                  onClick={() => openMilestoneDialog("car")}
+                >
+                  <Car className="h-6 w-6 text-orange-500 mx-auto mb-2" />
+                  <h4 className="font-medium">Buy a Car</h4>
+                </div>
+                
+                <div 
+                  className="border border-gray-200 rounded-lg p-4 hover:border-purple-400 hover:bg-purple-50 cursor-pointer transition-colors text-center"
+                  onClick={() => openMilestoneDialog("education")}
+                >
+                  <GraduationCap className="h-6 w-6 text-purple-500 mx-auto mb-2" />
+                  <h4 className="font-medium">Graduate School</h4>
+                </div>
+              </div>
+              
+              {/* Active milestones list */}
+              {milestones && milestones.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-md font-medium mb-3">Active Milestones</h4>
+                  <div className="space-y-3">
+                    {milestones.map((milestone) => (
+                      <div 
+                        key={milestone.id} 
+                        className={`border rounded-md p-3 flex justify-between items-center ${getMilestoneColor(milestone.type)}`}
+                      >
+                        <div className="flex items-center">
+                          <div className="mr-3">
+                            {getMilestoneIcon(milestone.type)}
+                          </div>
+                          <div>
+                            <div className="font-medium">{milestone.title}</div>
+                            <div className="text-sm text-gray-600">
+                              In {milestone.yearsAway} years ({milestone.date})
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-gray-500 hover:text-blue-500"
+                            onClick={() => openMilestoneDialog(milestone.type as MilestoneType, milestone)}
+                          >
+                            <span className="text-sm">Edit</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-gray-500 hover:text-red-500"
+                            onClick={() => deleteMilestone.mutate(milestone.id)}
+                          >
+                            <span className="text-sm">Remove</span>
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-gray-500 hover:text-blue-500"
-                        onClick={() => openMilestoneDialog(milestone.type as MilestoneType, milestone)}
-                      >
-                        <span className="text-sm">Edit</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-gray-500 hover:text-red-500"
-                        onClick={() => deleteMilestone.mutate(milestone.id)}
-                      >
-                        <span className="text-sm">Remove</span>
-                      </Button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
