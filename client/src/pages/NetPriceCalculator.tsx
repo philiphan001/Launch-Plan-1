@@ -116,19 +116,21 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   const [localZipCodeData, setLocalZipCodeData] = useState<ZipCodeIncome | null>(null);
   const [showZipCodeEditor, setShowZipCodeEditor] = useState(false);
   
-  // Temporary user ID for demo purposes - would normally come from auth context
-  const userId = 1;
+  // Get user ID from auth props
+  const userId = props.user?.id;
   
-  // Query to fetch the user profile
+  // Query to fetch the user profile only if user is authenticated
   const { data: userData, isLoading: isLoadingUser } = useQuery({
     queryKey: ['/api/users', userId],
     queryFn: async () => {
+      if (!userId) return null;
       const response = await fetch(`/api/users/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
       return response.json();
-    }
+    },
+    enabled: !!userId // Only run query if userId exists
   });
   
   // Set the user's zip code once the profile is loaded
