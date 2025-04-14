@@ -63,7 +63,7 @@ import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search, Penc
 type MilestoneType = "marriage" | "children" | "home" | "car" | "education";
 
 interface MilestonesSectionProps {
-  userId: number;
+  userId: number | null;
   onMilestoneChange?: () => void;
 }
 
@@ -123,6 +123,13 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const { data: financialProfile, refetch: refetchFinancialProfile } = useQuery({
     queryKey: ['/api/financial-profiles/user', userId],
     queryFn: async () => {
+      // Return default values if no userId is provided
+      if (userId === null) {
+        return { 
+          savingsAmount: 0
+        };
+      }
+      
       const response = await fetch(`/api/financial-profiles/user/${userId}`);
       if (!response.ok && response.status !== 404) throw new Error('Failed to fetch financial profile');
       
@@ -138,7 +145,8 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
     // Ensure we have the latest financial profile data when the dialog opens
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 0 // Always consider data stale to force a refetch
+    staleTime: 0, // Always consider data stale to force a refetch
+    enabled: userId !== null // Only run the query if we have a valid userId
   });
   
   // Get future savings projection for the milestone year

@@ -3583,7 +3583,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       
       {/* Life Milestones Section */}
       <MilestonesSection 
-        userId={userId} 
+        userId={userId as number} 
         onMilestoneChange={() => {
           console.log("Milestone changed, recalculating projections...");
           
