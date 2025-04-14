@@ -742,8 +742,8 @@ const CollegeDiscovery = ({
                           </Button>
                           <Button 
                             size="sm"
-                            variant={isCollegeFavorite(college.id) ? "default" : "outline"}
-                            className={isCollegeFavorite(college.id) ? "bg-background text-foreground border-input" : ""}
+                            variant={isCollegeFavorite(college.id) ? "outline" : "outline"}
+                            className={isCollegeFavorite(college.id) ? "border-gray-200 bg-gray-50 hover:bg-gray-100 text-black" : ""}
                             onClick={() => toggleFavorite(college)}
                             disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                           >
@@ -751,7 +751,7 @@ const CollegeDiscovery = ({
                               <>
                                 <svg 
                                   xmlns="http://www.w3.org/2000/svg" 
-                                  className="h-4 w-4 mr-1" 
+                                  className="h-4 w-4 mr-1 text-black" 
                                   viewBox="0 0 20 20" 
                                   fill="currentColor"
                                 >
@@ -761,7 +761,7 @@ const CollegeDiscovery = ({
                                     clipRule="evenodd" 
                                   />
                                 </svg>
-                                Favorited
+                                <span className="text-black font-medium">Favorited</span>
                               </>
                             ) : (
                               "Add to Favorites"
@@ -981,8 +981,8 @@ const CollegeDiscovery = ({
               
               <DialogFooter className="flex gap-2">
                 <Button 
-                  variant={isCollegeFavorite(selectedCollege.id) ? "default" : "outline"}
-                  className={isCollegeFavorite(selectedCollege.id) ? "bg-background text-foreground border-input" : ""}
+                  variant={isCollegeFavorite(selectedCollege.id) ? "outline" : "outline"}
+                  className={isCollegeFavorite(selectedCollege.id) ? "border-gray-200 bg-gray-50 hover:bg-gray-100 text-black" : ""}
                   onClick={() => toggleFavorite(selectedCollege)}
                   disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                 >
@@ -990,7 +990,7 @@ const CollegeDiscovery = ({
                     <>
                       <svg 
                         xmlns="http://www.w3.org/2000/svg" 
-                        className="h-4 w-4 mr-1" 
+                        className="h-4 w-4 mr-1 text-black" 
                         viewBox="0 0 20 20" 
                         fill="currentColor"
                       >
@@ -1000,7 +1000,7 @@ const CollegeDiscovery = ({
                           clipRule="evenodd" 
                         />
                       </svg>
-                      Favorited
+                      <span className="text-black font-medium">Favorited</span>
                     </>
                   ) : (
                     "Add to Favorites"
