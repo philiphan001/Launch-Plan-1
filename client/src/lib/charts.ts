@@ -311,6 +311,23 @@ export function createExpenseBreakdownChart(ctx: CanvasRenderingContext2D, data:
 
 // Function to create a stacked asset chart showing different asset categories
 export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  // Check if data.ages exists before mapping
+  if (!data.ages || data.ages.length === 0) {
+    return new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [] },
+      options: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'No data available',
+            font: { size: 16 }
+          }
+        }
+      }
+    });
+  }
+  
   const labels = data.ages.map(age => age.toString());
   
   // Use savingsValue directly from the Python backend
@@ -500,6 +517,23 @@ export function createStackedAssetChart(ctx: CanvasRenderingContext2D, data: Pro
 
 // Function to create a stacked income chart showing personal and spouse income
 export function createStackedIncomeChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  // Check if data.ages exists before mapping
+  if (!data.ages || data.ages.length === 0) {
+    return new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [] },
+      options: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'No income data available',
+            font: { size: 16 }
+          }
+        }
+      }
+    });
+  }
+  
   const labels = data.ages.map(age => age.toString());
   
   const datasets = [];
