@@ -184,7 +184,7 @@ const SavedCalculationsSection = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
       toast({
         title: "Financial Projection Updated",
-        description: "This college scenario will now be included in your financial projections.",
+        description: "This college scenario is now selected for your financial projections. Any previously selected college has been deselected.",
       });
     },
     onError: (error) => {
@@ -245,7 +245,7 @@ const SavedCalculationsSection = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
       toast({
         title: "Financial Projection Updated",
-        description: "This career scenario will now be included in your financial projections.",
+        description: "This career scenario is now selected for your financial projections. Any previously selected career has been deselected.",
       });
     },
     onError: (error) => {
@@ -412,7 +412,7 @@ const SavedCalculationsSection = () => {
                         disabled={toggleCollegeProjectionMutation.isPending}
                       >
                         <Calculator className="h-3 w-3 mr-1" />
-                        {calc.includedInProjection ? "✓ Included in Projection" : "Include in Projection"}
+                        {calc.includedInProjection ? "✓ Selected for Projection" : "Select for Projection"}
                       </Button>
                       <Button 
                         variant="outline" 
@@ -509,7 +509,7 @@ const SavedCalculationsSection = () => {
                         disabled={toggleCareerProjectionMutation.isPending}
                       >
                         <Calculator className="h-3 w-3 mr-1" />
-                        {calc.includedInProjection ? "✓ Included in Projection" : "Include in Projection"}
+                        {calc.includedInProjection ? "✓ Selected for Projection" : "Select for Projection"}
                       </Button>
                       <Button 
                         variant="outline" 
