@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { AuthProps } from "@/interfaces/auth";
+import { FinancialProjection } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
@@ -2825,7 +2826,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {savedProjections.map((projection) => {
+                      {savedProjections.map((projection: FinancialProjection) => {
                         const projData = projection.projectionData ? 
                           (typeof projection.projectionData === 'string' ? 
                             JSON.parse(projection.projectionData) : 
