@@ -618,6 +618,23 @@ export function createStackedIncomeChart(ctx: CanvasRenderingContext2D, data: Pr
 
 // Function to create a stacked expense chart showing different expense categories
 export function createStackedExpenseChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  // Check if data.ages exists before mapping
+  if (!data.ages || data.ages.length === 0) {
+    return new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [] },
+      options: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'No expense data available',
+            font: { size: 16 }
+          }
+        }
+      }
+    });
+  }
+  
   const labels = data.ages.map(age => age.toString());
   
   const datasets = [];
@@ -766,6 +783,23 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
   // Apply the liability fix to ensure graduate school loans are properly counted
   data = fixLiabilityCalculation(data);
   
+  // Check if data.ages exists before mapping
+  if (!data.ages || data.ages.length === 0) {
+    return new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [] },
+      options: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'No liability data available',
+            font: { size: 16 }
+          }
+        }
+      }
+    });
+  }
+  
   const labels = data.ages.map(age => age.toString());
   
   // Calculate other debts (total liabilities minus all specific loan types)
@@ -909,6 +943,23 @@ export function createStackedLiabilityChart(ctx: CanvasRenderingContext2D, data:
 
 // Function to create a combined income and expense chart that also shows net cash flow
 export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data: ProjectionData): Chart {
+  // Check if data.ages exists before mapping
+  if (!data.ages || data.ages.length === 0) {
+    return new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [] },
+      options: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'No cash flow data available',
+            font: { size: 16 }
+          }
+        }
+      }
+    });
+  }
+  
   const labels = data.ages.map(age => age.toString());
   
   // Get income data
@@ -1379,6 +1430,23 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
 export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: ProjectionData, type: string = 'netWorth'): Chart {
   // Apply the liability fix to ensure graduate school loans are properly counted
   data = fixLiabilityCalculation(data);
+  
+  // Check if data.ages exists before mapping
+  if (!data.ages || data.ages.length === 0) {
+    return new Chart(ctx, {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: {
+        plugins: {
+          title: {
+            display: true,
+            text: 'No projection data available',
+            font: { size: 16 }
+          }
+        }
+      }
+    });
+  }
   
   const labels = data.ages.map(age => age.toString());
   let chartData;
