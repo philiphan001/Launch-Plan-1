@@ -1685,12 +1685,57 @@ useEffect(() => {
 
 // Load saved projection data when available - force a hard reset of state when projection ID changes
 useEffect(() => {
+  // CRITICAL FIX: Direct fetch to ensure we always have the latest data
+  const fetchProjectionDirectly = async () => {
+    if (projectionId) {
+      try {
+        console.log(`Direct fetch for projection ID ${projectionId} initiated`);
+        const fetchTimestamp = new Date().getTime();
+        const response = await fetch(`/api/financial-projections/detail/${projectionId}?_=${fetchTimestamp}`);
+        
+        if (!response.ok) {
+          console.error(`Failed to fetch projection: ${response.status} ${response.statusText}`);
+          return;
+        }
+        
+        const data = await response.json();
+        console.log(`Direct fetch successful, got projection: ${data.id} ${data.name}`);
+        
+        // Force a refetch through React Query to update the UI with latest data
+        setTimeout(() => {
+          refetchProjection();
+          
+          // Also update college and career calculations which are needed for the summary panel
+          queryClient.invalidateQueries({ 
+            queryKey: ['/api/college-calculations/user', userId] 
+          });
+          queryClient.invalidateQueries({ 
+            queryKey: ['/api/career-calculations/user', userId] 
+          });
+        }, 10);
+      } catch (err) {
+        console.error("Error in direct fetch:", err);
+      }
+    }
+  };
+  
+  // Execute the direct fetch to ensure latest data
+  fetchProjectionDirectly();
+  
   // First, detect if we've switched to a different projection
   const didProjectionChange = previousProjectionIdRef.current !== projectionId;
   
   // Log this important state change for debugging
   if (didProjectionChange) {
     console.log(`Projection ID changed from ${previousProjectionIdRef.current} to ${projectionId}`);
+    
+    // When projection ID changes, force a hard reload of related data from server
+    queryClient.invalidateQueries({
+      predicate: (query) => 
+        query.queryKey[0] === '/api/financial-projections' || 
+        query.queryKey[0] === '/api/career-calculations' ||
+        query.queryKey[0] === '/api/college-calculations',
+    });
   }
   
   // Update the ref
@@ -1860,7 +1905,7 @@ useEffect(() => {
   if (savedProjectionError) {
     console.error("Error loading saved projection:", savedProjectionError);
   }
-}, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId]);
+}, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId, refetchProjection, queryClient, userId]);
 
 // Initialize projection data with a key that depends on projectionId to force re-renders
 const [projectionData, setProjectionData] = useState<any>(() => {
