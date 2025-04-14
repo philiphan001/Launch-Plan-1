@@ -1,7 +1,8 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import passport from "passport";
 import { activeStorage } from "./index";
-import { validateRequest } from "../shared/middleware";
+import { validateRequest, authMiddleware } from "../shared/middleware";
 import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema, insertCareerCalculationSchema, insertMilestoneSchema, insertAssumptionSchema } from "../shared/schema";
 import { spawn } from "child_process";
 import path from "path";
@@ -17,17 +18,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // API routes
+  // Auth routes
+  app.post("/api/auth/login", (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("local", (err: Error, user: any, info: { message: string }) => {
+      if (err) {
+        return next(err);
+      }
+      
+      if (!user) {
+        return res.status(401).json({ message: info.message || "Authentication failed" });
+      }
+      
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          return next(loginErr);
+        }
+        
+        // Don't return password
+        const { password, ...userWithoutPassword } = user;
+        
+        // Check if this is a first-time user by checking when they were created
+        const isFirstTimeUser = new Date().getTime() - new Date(user.createdAt || new Date()).getTime() < 24 * 60 * 60 * 1000;
+        
+        return res.status(200).json({ 
+          ...userWithoutPassword,
+          isFirstTimeUser
+        });
+      });
+    })(req, res, next);
+  });
+  
+  app.post("/api/auth/logout", (req: Request, res: Response, next: NextFunction) => {
+    req.logout((err) => {
+      if (err) {
+        return next(err);
+      }
+      res.status(200).json({ message: "Logged out successfully" });
+    });
+  });
+  
+  app.get("/api/auth/me", (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    
+    const user = req.user;
+    // Add isFirstTimeUser property
+    const isFirstTimeUser = new Date().getTime() - new Date(user?.createdAt || new Date()).getTime() < 24 * 60 * 60 * 1000;
+    
+    return res.status(200).json({
+      ...user,
+      isFirstTimeUser
+    });
+  });
+  
   // User routes
-  app.post("/api/users/register", validateRequest({ body: insertUserSchema }), async (req: Request, res: Response) => {
+  app.post("/api/users/register", validateRequest({ body: insertUserSchema }), async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Create user in the database
       const user = await activeStorage.createUser(req.body);
-      res.status(201).json({ id: user.id, username: user.username });
+      
+      // Automatically log the user in after registration
+      req.login(user, (err) => {
+        if (err) {
+          return next(err);
+        }
+        
+        // Don't return password
+        const { password, ...userWithoutPassword } = user;
+        
+        res.status(201).json({
+          ...userWithoutPassword,
+          isFirstTimeUser: true
+        });
+      });
     } catch (error) {
       res.status(500).json({ message: "Failed to create user" });
     }
   });
 
-  app.get("/api/users/:id", async (req: Request, res: Response) => {
+  app.get("/api/users/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
       const user = await activeStorage.getUser(parseInt(req.params.id));
       if (!user) {

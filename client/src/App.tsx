@@ -24,15 +24,27 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   
-  // On mount, check localStorage for user data
+  // On mount, check if user is authenticated with the server
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-      setIsFirstTimeUser(parsedUser.isFirstTimeUser);
-    }
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          setIsAuthenticated(true);
+          setIsFirstTimeUser(!!userData.isFirstTimeUser);
+        }
+      } catch (error) {
+        console.error('Failed to check authentication status:', error);
+        // If there's an error, ensure user is logged out
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsFirstTimeUser(false);
+      }
+    };
+    
+    checkAuth();
   }, []);
   
   // Handle navigation based on auth status
@@ -71,71 +83,99 @@ function App() {
   }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
   
   // Auth context values and functions
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include', // Important for cookies
+      });
       
-      // Create mock user
-      const mockUser: User = {
-        id: 1,
-        name: email.split('@')[0],
-        email,
-        isFirstTimeUser: false // Returning users aren't first-time users
-      };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
       
-      setUser(mockUser);
+      const userData = await response.json();
+      setUser(userData);
       setIsAuthenticated(true);
-      setIsFirstTimeUser(false);
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      setIsFirstTimeUser(!!userData.isFirstTimeUser);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
     }
   };
   
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (credentials: RegisterCredentials) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+        credentials: 'include', // Important for cookies
+      });
       
-      // Create mock user
-      const mockUser: User = {
-        id: Date.now(),
-        name,
-        email,
-        isFirstTimeUser: true // New users are first-time users
-      };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+      }
       
-      setUser(mockUser);
+      const userData = await response.json();
+      setUser(userData);
       setIsAuthenticated(true);
-      setIsFirstTimeUser(true);
-      
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      setIsFirstTimeUser(true); // New users are always first-time users
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
     }
   };
   
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsFirstTimeUser(false);
-    localStorage.removeItem('user');
-    setLocation('/');
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Important for cookies
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Even if the server request fails, clean up the frontend state
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsFirstTimeUser(false);
+      setLocation('/');
+    }
   };
   
-  const completeOnboarding = () => {
+  const completeOnboarding = async () => {
     if (user) {
-      const updatedUser = {
-        ...user,
-        isFirstTimeUser: false
-      };
-      setUser(updatedUser);
-      setIsFirstTimeUser(false);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      try {
+        const response = await fetch(`/api/users/${user.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isFirstTimeUser: false }),
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update user profile');
+        }
+        
+        const updatedUser = await response.json();
+        setUser(updatedUser);
+        setIsFirstTimeUser(false);
+      } catch (error) {
+        console.error('Error updating onboarding status:', error);
+        // Fallback to local update if server update fails
+        setIsFirstTimeUser(false);
+      }
     }
   };
   

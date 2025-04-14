@@ -26,7 +26,7 @@ export default function LoginPage({
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     rememberMe: false
   });
@@ -44,10 +44,10 @@ export default function LoginPage({
     e.preventDefault();
     
     // Basic validation
-    if (!formData.email || !formData.password) {
+    if (!formData.username || !formData.password) {
       toast({
         title: "Missing information",
-        description: "Please enter both email and password.",
+        description: "Please enter both username and password.",
         variant: "destructive"
       });
       return;
@@ -56,7 +56,7 @@ export default function LoginPage({
     setIsLoading(true);
     
     try {
-      await login(formData.email, formData.password);
+      await login(formData.username, formData.password);
       
       toast({
         title: "Login successful!",
@@ -68,7 +68,7 @@ export default function LoginPage({
     } catch (error) {
       toast({
         title: "Login failed",
-        description: "Invalid email or password. Please try again.",
+        description: "Invalid username or password. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -98,13 +98,13 @@ export default function LoginPage({
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white">Email</Label>
+              <Label htmlFor="username" className="text-white">Username</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Enter your email"
-                value={formData.email}
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Enter your username"
+                value={formData.username}
                 onChange={handleChange}
                 className="bg-slate-900 border-slate-700 text-white"
                 required

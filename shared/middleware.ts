@@ -39,9 +39,8 @@ export function validateRequest(schema: ValidateRequest) {
 }
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  // For demonstration purposes, check if user is in session
-  // In a production app, you would use proper authentication
-  if (!req.session || !req.session.userId) {
+  // Check if user is authenticated with Passport
+  if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   
