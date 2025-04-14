@@ -513,17 +513,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID format" });
       }
       
-      // For development purposes, check if user exists and create a demo user if needed
+      // Check if user exists
       const user = await activeStorage.getUser(userId);
       if (!user) {
-        console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
-        await activeStorage.createUser({
-          username: "philiphan",
-          password: "password123",
-          firstName: "Philip",
-          lastName: "Han",
-          email: "philip.han@example.com"
-        });
+        return res.status(404).json({ message: `User with ID ${userId} not found` });
       }
       
       const favorites = await activeStorage.getFavoriteCollegesByUserId(userId);
@@ -548,15 +541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify user exists
       const user = await activeStorage.getUser(userId);
       if (!user) {
-        // Create a demo user if not found (for development purposes)
-        console.log(`User with ID ${userId} not found, creating demo user...`);
-        await activeStorage.createUser({
-          username: "philiphan",
-          password: "password123", // This is a demo app, in production you'd use proper auth
-          firstName: "Philip",
-          lastName: "Han",
-          email: "philip.han@example.com"
-        });
+        return res.status(404).json({ message: `User with ID ${userId} not found` });
       }
       
       // Check if career exists
@@ -620,17 +605,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID format" });
       }
       
-      // For development purposes, check if user exists and create a demo user if needed
+      // Check if user exists
       const user = await activeStorage.getUser(userId);
       if (!user) {
-        console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
-        await activeStorage.createUser({
-          username: "philiphan",
-          password: "password123",
-          firstName: "Philip",
-          lastName: "Han",
-          email: "philip.han@example.com"
-        });
+        return res.status(404).json({ message: `User with ID ${userId} not found` });
       }
       
       const favorites = await activeStorage.getFavoriteCareersByUserId(userId);
@@ -654,15 +632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify user exists
       const user = await activeStorage.getUser(userId);
       if (!user) {
-        // Create a demo user if not found (for development purposes)
-        console.log(`User with ID ${userId} not found, creating demo user...`);
-        await activeStorage.createUser({
-          username: "philiphan",
-          password: "password123", // This is a demo app, in production you'd use proper auth
-          firstName: "Philip",
-          lastName: "Han",
-          email: "philip.han@example.com"
-        });
+        return res.status(404).json({ message: `User with ID ${userId} not found` });
       }
       
       // Check if location exists in our cost of living data
@@ -707,17 +677,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID format" });
       }
       
-      // For development purposes, check if user exists and create a demo user if needed
+      // Check if user exists
       const user = await activeStorage.getUser(userId);
       if (!user) {
-        console.log(`User with ID ${userId} not found for favorites lookup, creating demo user...`);
-        await activeStorage.createUser({
-          username: "philiphan",
-          password: "password123",
-          firstName: "Philip",
-          lastName: "Han",
-          email: "philip.han@example.com"
-        });
+        return res.status(404).json({ message: `User with ID ${userId} not found` });
       }
       
       const favorites = await activeStorage.getFavoriteLocationsByUserId(userId);
