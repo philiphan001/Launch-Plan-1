@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 interface NavItem {
   path: string;
@@ -30,9 +31,10 @@ const Sidebar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [expandProjections, setExpandProjections] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
   
-  // For demonstration, we'll use userId 1
-  const userId = 1;
+  // Get user ID from auth context
+  const userId = user?.id;
   
   // Automatically expand the projections if we're on the projections page
   useEffect(() => {
@@ -49,6 +51,12 @@ const Sidebar = () => {
   }, [location, expandProjections]);
   
   const fetchSavedProjections = async () => {
+    // Don't fetch if user is not authenticated
+    if (!userId) {
+      setSavedProjections([]);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const response = await fetch(`/api/financial-projections/${userId}`);
