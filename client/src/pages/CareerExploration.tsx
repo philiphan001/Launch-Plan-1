@@ -51,8 +51,8 @@ const CareerExploration = ({
   logout,
   completeOnboarding
 }: CareerExplorationProps) => {
-  // User ID - hardcoded for demo, in real app would come from auth
-  const userId = 1;
+  // Get user ID from auth props
+  const userId = user?.id;
   
   // State variables
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,12 +84,16 @@ const CareerExploration = ({
   const { data: favoriteCareers = [] } = useQuery<FavoriteCareer[]>({
     queryKey: ['/api/favorites/careers', userId],
     queryFn: async () => {
+      // Don't fetch favorites if user is not authenticated
+      if (!userId) return [];
+      
       const response = await fetch(`/api/favorites/careers/${userId}`);
       if (!response.ok) {
         return [];
       }
       return response.json();
-    }
+    },
+    enabled: !!userId // Only run query if userId exists
   });
   
   // Check if a career is favorited
@@ -100,6 +104,9 @@ const CareerExploration = ({
   // Mutation to add a career to favorites
   const addToFavoritesMutation = useMutation({
     mutationFn: async (careerId: number) => {
+      if (!userId) {
+        throw new Error("You must be logged in to favorite careers");
+      }
       return apiRequest('/api/favorites/careers', {
         method: 'POST',
         body: JSON.stringify({ userId, careerId }),
@@ -113,6 +120,9 @@ const CareerExploration = ({
   // Mutation to remove a career from favorites
   const removeFromFavoritesMutation = useMutation({
     mutationFn: async (favoriteId: number) => {
+      if (!userId) {
+        throw new Error("You must be logged in to remove favorite careers");
+      }
       return apiRequest(`/api/favorites/careers/${favoriteId}`, {
         method: 'DELETE',
       });
