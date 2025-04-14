@@ -651,16 +651,23 @@ const FinancialProjections = ({
           // Use the first favorite location
           console.log("Using favorite location data:", favoriteLocations);
           locationZipCode = favoriteLocations[0].zipCode;
-        } else if (pathwayData?.location) {
-          // If no favorite locations but pathway data exists, use that
-          console.log("Using location from pathway data:", pathwayData.location);
-          locationZipCode = pathwayData.location;
-        } else if (pathwayData?.zipCode) {
-          // Some pathway data might store location as zipCode
-          console.log("Using zipCode from pathway data:", pathwayData.zipCode);
-          locationZipCode = pathwayData.zipCode;
         } else if (pathwayData) {
-          console.log("Pathway data exists but no location found:", Object.keys(pathwayData));
+          // If no favorite locations but pathway data exists, try all possible locations
+          if (typeof pathwayData.location === 'string') {
+            // Direct string value (zipCode)
+            console.log("Using string location from pathway data:", pathwayData.location);
+            locationZipCode = pathwayData.location;
+          } else if (pathwayData.location && pathwayData.location.zipCode) {
+            // Object with zipCode property
+            console.log("Using object location from pathway data:", pathwayData.location.zipCode);
+            locationZipCode = pathwayData.location.zipCode;
+          } else if (pathwayData.zipCode) {
+            // Direct zipCode property
+            console.log("Using zipCode from pathway data:", pathwayData.zipCode);
+            locationZipCode = pathwayData.zipCode;
+          } else {
+            console.log("Pathway data exists but no location found:", Object.keys(pathwayData));
+          }
         }
         
         // If we have a different zip code than the user's profile,

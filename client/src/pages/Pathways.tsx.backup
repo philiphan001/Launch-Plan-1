@@ -3747,7 +3747,7 @@ const Pathways = ({
                           };
                           
                           // Collect pathway data with enhanced location info
-                          const pathwayDataForFinancialPlan = {
+                          const pathwayData = {
                             educationType,
                             selectedFieldOfStudy,
                             specificSchool: specificSchool || "",
@@ -3766,8 +3766,8 @@ const Pathways = ({
                             selectedCareer: selectedCareerId
                           };
                           
-                          console.log("Storing enhanced pathway data for financial planning:", pathwayDataForFinancialPlan);
-                          localStorage.setItem('pathwayData', JSON.stringify(pathwayDataForFinancialPlan));
+                          console.log("Storing enhanced pathway data for financial planning:", pathwayData);
+                          localStorage.setItem('pathwayData', JSON.stringify(pathwayData));
                           
                           // Redirect to the financial projections page with auto-generate flag
                           navigate('/projections?autoGenerate=true');
