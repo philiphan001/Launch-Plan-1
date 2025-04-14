@@ -33,6 +33,7 @@ export function useAuthCompat(): AuthContextType {
     },
     completeOnboarding: async () => { 
       console.warn('Auth system not initialized');
+      return Promise.resolve(); // Return a resolved promise with no value
     }
   };
 }

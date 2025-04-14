@@ -210,10 +210,11 @@ function App() {
         setLocation(destination);
       }
     } 
-    // If trying to access dashboard as first-time user, redirect to pathways
-    else if (location === '/dashboard' && isAuthenticated && isFirstTimeUser) {
-      console.log("First-time user trying to access dashboard, redirecting to pathways");
-      setLocation('/pathways');
+    // Allow users to access dashboard even if they're first-time users
+    // This was previously redirecting first-time users away from dashboard, which was causing issues
+    else if (location === '/dashboard' && isAuthenticated) {
+      console.log("User accessing dashboard, allowing access regardless of first-time status");
+      // No redirection needed, allow access to dashboard
     }
     // If trying to access protected routes while not authenticated
     else if (!isAuthenticated && 
