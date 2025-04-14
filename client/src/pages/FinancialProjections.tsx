@@ -3,6 +3,7 @@ import { AuthProps } from "@/interfaces/auth";
 import { FinancialProjection } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
@@ -455,6 +456,100 @@ const FinancialProjections = ({
       console.error("Error deleting milestones:", error);
     }
   });
+  
+  // We're using the imported toast function directly
+  
+  // Add college to favorites mutation
+  const addCollegeToFavoritesMutation = useMutation({
+    mutationFn: async (collegeId: number) => {
+      const response = await fetch('/api/favorites/colleges', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          userId, 
+          collegeId 
+        })
+      });
+      
+      if (!response.ok) {
+        // If it's a duplicate, don't treat as error - it's already a favorite
+        if (response.status === 409) {
+          return { alreadyExists: true };
+        }
+        throw new Error('Failed to add college to favorites');
+      }
+      return response.json();
+    },
+    onSuccess: (data, collegeId) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges/user', userId] });
+      if (data?.alreadyExists) {
+        console.log('College is already in favorites:', collegeId);
+      } else {
+        console.log('College added to favorites successfully:', collegeId);
+        toast({
+          title: "Added to Favorites",
+          description: "College has been added to your favorites.",
+          variant: "default",
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to add college to favorites:', error);
+      toast({
+        title: "Action Failed",
+        description: "There was an error adding the college to your favorites.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Add career to favorites mutation
+  const addCareerToFavoritesMutation = useMutation({
+    mutationFn: async (careerId: number) => {
+      const response = await fetch('/api/favorites/careers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          userId, 
+          careerId 
+        })
+      });
+      
+      if (!response.ok) {
+        // If it's a duplicate, don't treat as error - it's already a favorite
+        if (response.status === 409) {
+          return { alreadyExists: true };
+        }
+        throw new Error('Failed to add career to favorites');
+      }
+      return response.json();
+    },
+    onSuccess: (data, careerId) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/favorites/careers/user', userId] });
+      if (data?.alreadyExists) {
+        console.log('Career is already in favorites:', careerId);
+      } else {
+        console.log('Career added to favorites successfully:', careerId);
+        toast({
+          title: "Added to Favorites",
+          description: "Career has been added to your favorites.",
+          variant: "default",
+        });
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to add career to favorites:', error);
+      toast({
+        title: "Action Failed",
+        description: "There was an error adding the career to your favorites.",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Handle deletion completion effect
   const [deletionComplete, setDeletionComplete] = useState(false);
@@ -516,6 +611,23 @@ const FinancialProjections = ({
               console.error("Parsed pathway data is null or undefined");
             } else if (!pathwayData.hasOwnProperty('educationType')) {
               console.error("Pathway data is missing educationType field:", pathwayData);
+            } else if (isAuthenticated && userId) {
+              // If pathway data is valid and user is authenticated, add college and career to favorites
+              
+              // If there's a specific school, find its ID and add to favorites
+              if (pathwayData.specificSchool && pathwayData.specificSchool !== "") {
+                // Look up the college ID if needed (can be enhanced)
+                if (pathwayData.selectedSchoolId) {
+                  console.log("Adding college to favorites from pathway data:", pathwayData.selectedSchoolId);
+                  addCollegeToFavoritesMutation.mutate(pathwayData.selectedSchoolId);
+                }
+              }
+              
+              // If there's a career ID, add it to favorites
+              if (pathwayData.selectedCareer) {
+                console.log("Adding career to favorites from pathway data:", pathwayData.selectedCareer);
+                addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
+              }
             }
           } catch (error) {
             console.error("Error parsing pathway data from localStorage:", error);
