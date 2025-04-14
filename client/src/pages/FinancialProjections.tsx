@@ -2263,13 +2263,14 @@ const [projectionData, setProjectionData] = useState<any>(() => {
           );
         }
         
-        // Else if we have college or career calculations, show the current projection summary
-        else if (includedCollegeCalc || includedCareerCalc) {
+        // Else if we have a saved projection or any calculations, show the current projection summary
+        else if (savedProjection || includedCollegeCalc || includedCareerCalc) {
           return (
             <CurrentProjectionSummary 
               collegeCalculation={includedCollegeCalc} 
               careerCalculation={includedCareerCalc}
               locationData={locationCostData}
+              savedProjection={savedProjection}
             />
           );
         }
