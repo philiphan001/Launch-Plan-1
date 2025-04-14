@@ -2020,8 +2020,29 @@ const [projectionData, setProjectionData] = useState<any>(() => {
           </CardContent>
         </Card>
       )}
+
+      <Tabs defaultValue="view" value={mainTab} onValueChange={setMainTab} className="w-full mb-6">
+        <TabsList className="grid grid-cols-4 w-full max-w-2xl mx-auto mb-6">
+          <TabsTrigger value="view" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span>View</span>
+          </TabsTrigger>
+          <TabsTrigger value="edit" className="flex items-center gap-2">
+            <Edit className="h-4 w-4" />
+            <span>Edit</span>
+          </TabsTrigger>
+          <TabsTrigger value="compare" className="flex items-center gap-2">
+            <BarChart4 className="h-4 w-4" />
+            <span>Compare</span>
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            <span>Manage</span>
+          </TabsTrigger>
+        </TabsList>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <TabsContent value="view">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Projection Settings</h3>
@@ -2339,6 +2360,35 @@ const [projectionData, setProjectionData] = useState<any>(() => {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+        
+        <TabsContent value="edit">
+          <div className="p-6">
+            <h3 className="text-xl font-semibold mb-4">Edit Projection</h3>
+            <p className="text-gray-600 mb-4">
+              This feature will allow you to edit an existing projection. Coming soon.
+            </p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="compare">
+          <div className="p-6">
+            <h3 className="text-xl font-semibold mb-4">Compare Projections</h3>
+            <p className="text-gray-600 mb-4">
+              This feature will allow you to compare multiple projections side by side. Coming soon.
+            </p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="manage">
+          <div className="p-6">
+            <h3 className="text-xl font-semibold mb-4">Manage Projections</h3>
+            <p className="text-gray-600 mb-4">
+              This feature will allow you to manage your saved projections. Coming soon.
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
       
       {/* Card to display location-based cost of living or 'Add Location' card if no data */}
       {locationCostData ? (
