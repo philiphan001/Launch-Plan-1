@@ -181,6 +181,10 @@ const FinancialProjections = ({
     const autoGen = params.get('autoGenerate') === 'true';
     const showPath = params.get('showPathway') === 'true';
     
+    console.log("PARAM DEBUG - URL:", window.location.href);
+    console.log("PARAM DEBUG - Search params:", window.location.search);
+    console.log("PARAM DEBUG - Raw ID from URL:", id);
+    
     // Give priority to initialProjectionId if provided (from App.tsx)
     const effectiveId = initialProjectionId || (id ? parseInt(id, 10) : null);
     
@@ -1535,7 +1539,7 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
-  queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
+  queryKey: ['/api/financial-projections/detail', projectionId, timestamp], // Include timestamp to force refetch when URL changes
   queryFn: async () => {
     if (!projectionId) {
       console.log("No projection ID provided, skipping fetch");
@@ -1544,11 +1548,18 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
     
     // Add cache-busting timestamp to ensure fresh data
     const cacheBuster = new Date().getTime();
-    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster})`);
+    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster}, timestamp: ${timestamp})`);
     
     try {
       const url = `/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`;
       console.log(`Making fetch request to: ${url}`);
+      
+      // Force a browser history push to ensure the URL is properly updated
+      if (!window.location.href.includes(`id=${projectionId}`)) {
+        console.log("Enforcing URL to include projection ID");
+        const newUrl = `/projections?id=${projectionId}&t=${timestamp}`;
+        window.history.pushState({}, "", newUrl);
+      }
       
       const response = await fetch(url);
       
@@ -1560,6 +1571,17 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       
       const data = await response.json();
       console.log("Successfully loaded projection data:", data.id, data.name);
+      
+      // Debug the data structure
+      console.log("Projection data structure check:", {
+        hasProjectionData: !!data.projectionData,
+        projectionDataType: typeof data.projectionData,
+        projectionDataLength: typeof data.projectionData === 'string' ? data.projectionData.length : 'N/A',
+        isParseableJSON: typeof data.projectionData === 'string' ? (() => {
+          try { JSON.parse(data.projectionData); return true; } catch(e) { return false; }
+        })() : false
+      });
+      
       return data;
     } catch (error) {
       console.error("Error fetching projection:", error);
@@ -1567,11 +1589,12 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
     }
   },
   enabled: !!projectionId, // Only enable this query when we have a projection ID
-  retry: false, // Don't retry failed requests
+  retry: 2, // Retry failed requests twice
   staleTime: 0, // Consider data immediately stale to allow refetching
   gcTime: 0, // Don't cache results between component mounts (gcTime replaces cacheTime in v5)
   refetchOnMount: true, // Always refetch on component mount
-  refetchOnWindowFocus: true // Always refetch when window gains focus
+  refetchOnWindowFocus: true, // Always refetch when window gains focus
+  refetchOnReconnect: true // Also refetch when reconnecting
 });
 
 // Create a ref to track previous projection ID
