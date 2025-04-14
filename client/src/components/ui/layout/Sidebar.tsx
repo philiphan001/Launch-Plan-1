@@ -30,13 +30,12 @@ const navItems: NavItem[] = [
   { path: "/profile", label: "Profile", icon: "account_circle" },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ user }: SidebarProps) => {
   const [location, setLocation] = useLocation();
   const [savedProjections, setSavedProjections] = useState<FinancialProjection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [expandProjections, setExpandProjections] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
   
   // Get user ID from auth context
   const userId = user?.id;
