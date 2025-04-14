@@ -166,6 +166,7 @@ const SavedCalculationsSection = () => {
   
   const toggleCollegeProjectionMutation = useMutation({
     mutationFn: async (calculationId: number) => {
+      console.log("Toggling college projection for ID:", calculationId);
       const response = await fetch(`/api/college-calculations/${calculationId}/toggle-projection`, {
         method: 'POST',
         headers: {
@@ -178,10 +179,16 @@ const SavedCalculationsSection = () => {
         throw new Error('Failed to toggle college projection inclusion');
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log("Toggle response:", result);
+      return result;
     },
     onSuccess: (data) => {
+      console.log("College toggle success, invalidating query cache");
+      // Force an immediate refetch to update the UI
       queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
+      queryClient.refetchQueries({ queryKey: ['/api/college-calculations/user', userId] });
+      
       toast({
         title: "Financial Projection Updated",
         description: "This college scenario is now selected for your financial projections. Any previously selected college has been deselected.",
@@ -227,6 +234,7 @@ const SavedCalculationsSection = () => {
   
   const toggleCareerProjectionMutation = useMutation({
     mutationFn: async (calculationId: number) => {
+      console.log("Toggling career projection for ID:", calculationId);
       const response = await fetch(`/api/career-calculations/${calculationId}/toggle-projection`, {
         method: 'POST',
         headers: {
@@ -239,10 +247,16 @@ const SavedCalculationsSection = () => {
         throw new Error('Failed to toggle career projection inclusion');
       }
       
-      return response.json();
+      const result = await response.json();
+      console.log("Career toggle response:", result);
+      return result;
     },
     onSuccess: (data) => {
+      console.log("Career toggle success, invalidating query cache");
+      // Force an immediate refetch to update the UI
       queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
+      queryClient.refetchQueries({ queryKey: ['/api/career-calculations/user', userId] });
+      
       toast({
         title: "Financial Projection Updated",
         description: "This career scenario is now selected for your financial projections. Any previously selected career has been deselected.",
