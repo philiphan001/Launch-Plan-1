@@ -91,9 +91,27 @@ export default function SignupPage({
       // First time users go to pathways
       setLocation('/pathways');
     } catch (error) {
+      console.error("Signup error:", error);
+      
+      // Extract meaningful error messages from the response
+      let errorMessage = "There was a problem creating your account. Please try again.";
+      
+      if (error instanceof Error) {
+        // If it's a standard Error object, use its message
+        errorMessage = error.message;
+      } else if (error && typeof error === 'object' && 'message' in error) {
+        // If it's an object with a message property (like from fetch response)
+        errorMessage = String(error.message);
+      }
+      
+      // Check for common error messages and provide user-friendly alternatives
+      if (errorMessage.includes("username already exists") || errorMessage.includes("unique constraint")) {
+        errorMessage = "This username is already taken. Please choose a different one.";
+      }
+      
       toast({
         title: "Error creating account",
-        description: "There was a problem creating your account. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

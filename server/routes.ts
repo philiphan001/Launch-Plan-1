@@ -97,7 +97,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       });
     } catch (error) {
-      res.status(500).json({ message: "Failed to create user" });
+      console.error("Error creating user:", error);
+      
+      // Check for duplicate username error
+      if (error instanceof Error && error.message.includes('unique constraint')) {
+        return res.status(400).json({ message: "Username already exists. Please choose a different username." });
+      }
+      
+      // Return more detailed error message
+      res.status(500).json({ 
+        message: "Failed to create user", 
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
