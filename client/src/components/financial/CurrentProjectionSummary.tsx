@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { School, Briefcase, MapPin } from "lucide-react";
+import { School, Briefcase, MapPin, Calculator } from "lucide-react";
 
 interface CollegeCalculation {
   id: number;
@@ -54,10 +54,10 @@ const CurrentProjectionSummary: React.FC<CurrentProjectionSummaryProps> = ({
   return (
     <Card className="mb-6 border-l-4 border-l-primary">
       <CardContent className="pt-6">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center">
-          <span className="i-lucide-calculator mr-2" />
+        <h2 className="text-lg font-semibold mb-3 flex items-center">
+          <Calculator className="mr-2 h-5 w-5 text-primary" />
           Current Projection Summary
-        </h3>
+        </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Education Section */}

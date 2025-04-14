@@ -13,6 +13,7 @@ import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
 import TaxBreakdownTable from "@/components/financial/TaxBreakdownTable";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import LocationAdjustmentInfo from "@/components/financial/LocationAdjustmentInfo";
+import CurrentProjectionSummary from "@/components/financial/CurrentProjectionSummary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -1949,6 +1950,13 @@ const [projectionData, setProjectionData] = useState<any>(() => {
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
+      
+      {/* Current Projection Summary */}
+      <CurrentProjectionSummary 
+        collegeCalculation={includedCollegeCalc} 
+        careerCalculation={includedCareerCalc}
+        locationData={locationCostData}
+      />
       
       {/* Pathway Summary Section */}
       {pathwaySummary && (
