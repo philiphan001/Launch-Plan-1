@@ -47,14 +47,14 @@ function App() {
   }, []);
   
   // Auth context values and functions
-  const login = async (username: string, password: string) => {
+  const login = async (credentials: { username: string; password: string }) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(credentials),
         credentials: 'include', // Important for cookies
       });
       
@@ -221,7 +221,7 @@ function App() {
           {() => <LandingPage {...authProps} />}
         </Route>
         <Route path="/login">
-          {() => <LoginPage />}
+          {() => <LoginPage {...authProps} />}
         </Route>
         <Route path="/signup">
           {() => <SignupPage {...authProps} />}

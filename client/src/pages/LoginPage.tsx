@@ -7,12 +7,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { AuthProps } from "@/interfaces/auth";
 
-interface LoginPageProps {}
+interface LoginPageProps extends Partial<AuthProps> {}
 
-export default function LoginPage() {
-  const { user, isAuthenticated, isFirstTimeUser, login, logout } = useAuth();
+export default function LoginPage(props: LoginPageProps) {
+  const { user, isAuthenticated, isFirstTimeUser, login } = props;
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -48,18 +48,46 @@ export default function LoginPage() {
     setIsLoading(true);
     
     try {
-      await login({
-        username: formData.username,
-        password: formData.password
-      });
-      
-      toast({
-        title: "Login successful!",
-        description: "Welcome back to Launch Plan.",
-      });
-      
-      // Returning users go to dashboard
-      setLocation('/dashboard');
+      // Check if login is provided via props
+      if (login) {
+        await login({
+          username: formData.username,
+          password: formData.password
+        });
+        
+        toast({
+          title: "Login successful!",
+          description: "Welcome back to Launch Plan.",
+        });
+        
+        // Returning users go to dashboard
+        setLocation('/dashboard');
+      } else {
+        // Fallback - direct API call if login function not provided
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password
+          }),
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          throw new Error('Login failed');
+        }
+        
+        toast({
+          title: "Login successful!",
+          description: "Welcome back to Launch Plan.",
+        });
+        
+        // Refresh the page to trigger auth check
+        window.location.href = '/dashboard';
+      }
     } catch (error) {
       toast({
         title: "Login failed",

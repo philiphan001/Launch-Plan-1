@@ -31,8 +31,8 @@ export interface AuthProps {
   user: User | null;
   isAuthenticated: boolean;
   isFirstTimeUser: boolean;
-  login: (username: string, password: string) => Promise<void>;
-  signup: (credentials: RegisterCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<any>;
+  signup: (credentials: RegisterCredentials) => Promise<any>;
   logout: () => void;
   completeOnboarding: () => void;
 }
