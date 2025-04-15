@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, PanInfo, useAnimation, AnimatePresence } from 'framer-motion';
+import { motion, PanInfo, useAnimation } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,8 +10,7 @@ interface Scenario {
   title: string;
   description: string;
   category: string;
-  image?: string;
-  emoji?: string;
+  emoji: string;
 }
 
 interface SwipeableScenariosProps {
@@ -24,6 +23,7 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   const [results, setResults] = useState<Record<string, boolean>>({});
   const cardControls = useAnimation();
   const dragControls = useRef({ startX: 0 });
+  const [dragOffset, setDragOffset] = useState(0);
   
   // Reset state when resetKey changes
   useEffect(() => {
@@ -31,6 +31,7 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
     // Completely reset the component state
     setCurrentIndex(0);
     setResults({});
+    setDragOffset(0);
     cardControls.set({ x: 0, rotate: 0, opacity: 1 });
     
     // Force a repaint of the component
@@ -137,6 +138,7 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
     } else {
       // Return to center
       cardControls.start({ x: 0, transition: { type: 'spring', stiffness: 300, damping: 20 }});
+      setDragOffset(0);
     }
   };
   
@@ -162,6 +164,7 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
         if (currentIndex < scenarios.length - 1) {
           setCurrentIndex(currentIndex + 1);
           // Reset animation for next card
+          setDragOffset(0);
           cardControls.set({ x: 0, rotate: 0, opacity: 1 });
         } else {
           // All scenarios done - use the updated results to ensure the last card is included
@@ -185,14 +188,6 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
     }
   };
   
-  // Track current drag position for animations
-  const [dragOffset, setDragOffset] = useState(0);
-
-  // Update drag offset during drag
-  const handleDragUpdate = (_: any, info: PanInfo) => {
-    setDragOffset(info.offset.x);
-  };
-
   // Get gradient colors for cards based on category
   const getCategoryGradient = (category: string) => {
     switch(category) {
@@ -310,36 +305,43 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
         </motion.div>
       </div>
       
-      <div className="flex justify-center gap-4 mb-4">
+      <div className="flex justify-center gap-6 mb-4">
         <Button 
           variant="outline" 
           size="lg" 
-          className="bg-red-50 hover:bg-red-100 border-red-100 text-red-600"
+          className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-0 text-white py-6 px-6 shadow-lg hover:shadow-xl transition-all rounded-xl font-bold"
           onClick={() => handleSwipe(false)}
         >
-          <span className="material-icons mr-2">thumb_down</span>
-          Not for me
+          <span className="text-2xl mr-2">👎</span>
+          Not My Thing
         </Button>
         
         <Button 
           variant="outline" 
           size="lg" 
-          className="bg-green-50 hover:bg-green-100 border-green-100 text-green-600"
+          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 text-white py-6 px-6 shadow-lg hover:shadow-xl transition-all rounded-xl font-bold"
           onClick={() => handleSwipe(true)}
         >
-          <span className="material-icons mr-2">thumb_up</span>
-          I like this
+          <span className="text-2xl mr-2">👍</span>
+          Love This!
         </Button>
       </div>
       
       <div className="w-full text-center">
-        <Button variant="ghost" size="sm" onClick={handleSkip}>Skip the rest and see results</Button>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="hover:bg-gray-100 text-gray-500 transition-all"
+          onClick={handleSkip}
+        >
+          Skip and see my results
+        </Button>
       </div>
       
-      <div className="bg-blue-50 border border-blue-100 rounded-md p-3 text-sm text-blue-700 mt-6 w-full">
+      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-100 rounded-xl p-4 text-sm text-blue-700 mt-6 w-full shadow-sm">
         <p className="flex items-start">
-          <span className="material-icons text-blue-500 mr-2 text-lg">info</span>
-          <span>Tip: You can also drag the card left or right to swipe!</span>
+          <span className="text-2xl mr-2">💫</span>
+          <span className="font-medium">Pro Tip: <span className="font-normal">Drag the card left or right to swipe - just like on dating apps!</span></span>
         </p>
       </div>
     </div>
