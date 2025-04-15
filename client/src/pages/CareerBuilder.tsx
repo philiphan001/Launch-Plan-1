@@ -81,6 +81,8 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
   const [startYear, setStartYear] = useState<number | ''>(new Date().getFullYear() + 4);
   const [education, setEducation] = useState<string>('');
   const [additionalNotes, setAdditionalNotes] = useState<string>('');
+  const [locationCity, setLocationCity] = useState<string>('');
+  const [locationState, setLocationState] = useState<string>('');
   const [formProcessing, setFormProcessing] = useState(false);
   const [calculationSuccess, setCalculationSuccess] = useState(false);
   const { toast } = useToast();
@@ -161,6 +163,8 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
     setProjectedSalary(career.salary || 0);
     setEducation(career.education || '');
     setAdditionalNotes('');
+    setLocationCity('');
+    setLocationState('');
     setCalculationSuccess(false);
   };
   
@@ -238,6 +242,8 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
         midCareerSalary,
         experiencedSalary,
         additionalNotes,
+        locationCity,
+        locationState,
         includedInProjection: true
       };
       
@@ -716,7 +722,31 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
                         />
                       </div>
                       
-                      <div className="space-y-2">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="city">City</Label>
+                          <input
+                            id="city"
+                            value={locationCity}
+                            onChange={(e) => setLocationCity(e.target.value)}
+                            placeholder="City for location adjustment"
+                            className="w-full rounded-md border border-input h-9 px-3 py-1 text-sm bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="state">State</Label>
+                          <input
+                            id="state"
+                            value={locationState}
+                            onChange={(e) => setLocationState(e.target.value)}
+                            placeholder="State for location adjustment"
+                            className="w-full rounded-md border border-input h-9 px-3 py-1 text-sm bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 mt-4">
                         <Label htmlFor="notes">Additional Notes</Label>
                         <textarea
                           id="notes"
