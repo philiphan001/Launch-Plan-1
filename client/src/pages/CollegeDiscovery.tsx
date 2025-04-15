@@ -113,17 +113,55 @@ const CollegeDiscovery = ({
   // Fetch user's favorite colleges
   const { data: favoriteColleges = [] } = useQuery<FavoriteCollege[]>({
     queryKey: ['/api/favorites/colleges', userId],
-    staleTime: 60 * 1000, // 1 minute
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const response = await fetch(`/api/favorites/colleges?userId=${userId}`);
+      if (!response.ok) {
+        console.error('Failed to fetch favorite colleges:', response.statusText);
+        return [];
+      }
+      const data = await response.json();
+      console.log('Fetched favorite colleges:', data);
+      return data;
+    },
+    staleTime: 0, // No stale time - always fetch fresh data
+    enabled: !!userId && userId > 0 // Only run if we have a valid userId
   });
   
   // Track local favorites state to avoid UI refresh issues
-  const [localFavorites, setLocalFavorites] = useState<number[]>([]);
+  // Initialize with data from localStorage if available
+  const [localFavorites, setLocalFavorites] = useState<number[]>(() => {
+    try {
+      const saved = localStorage.getItem('collegeFavorites');
+      return saved ? JSON.parse(saved) : [];
+    } catch (error) {
+      console.error('Error loading favorites from localStorage:', error);
+      return [];
+    }
+  });
   
+  // Debug logging on mount
+  useEffect(() => {
+    console.log('CollegeDiscovery component mounted with userId:', userId);
+  }, []);
+
   // Update local favorites when API favorites change
   useEffect(() => {
-    if (favoriteColleges.length > 0) {
-      setLocalFavorites(favoriteColleges.map(fav => fav.collegeId));
+    // Always update local favorites, even if empty
+    const favoriteIds = favoriteColleges.map(fav => fav.collegeId);
+    setLocalFavorites(favoriteIds);
+    
+    // Save to localStorage for persistence between navigation
+    try {
+      localStorage.setItem('collegeFavorites', JSON.stringify(favoriteIds));
+    } catch (error) {
+      console.error('Error saving favorites to localStorage:', error);
     }
+    
+    // Debug output to verify data
+    console.log('Favorite colleges loaded:', favoriteColleges);
+    console.log('Local favorites updated:', favoriteIds);
   }, [favoriteColleges]);
   
   // Check if a college is in favorites
@@ -177,11 +215,31 @@ const CollegeDiscovery = ({
     
     if (favorite) {
       // Immediately update local state for instant UI feedback
-      setLocalFavorites(localFavorites.filter(id => id !== college.id));
+      const newFavorites = localFavorites.filter(id => id !== college.id);
+      setLocalFavorites(newFavorites);
+      
+      // Update localStorage immediately
+      try {
+        localStorage.setItem('collegeFavorites', JSON.stringify(newFavorites));
+      } catch (error) {
+        console.error('Error saving favorites to localStorage:', error);
+      }
+      
+      // Then update the database
       removeFromFavoritesMutation.mutate(favorite.id);
     } else {
       // Immediately update local state for instant UI feedback
-      setLocalFavorites([...localFavorites, college.id]);
+      const newFavorites = [...localFavorites, college.id];
+      setLocalFavorites(newFavorites);
+      
+      // Update localStorage immediately
+      try {
+        localStorage.setItem('collegeFavorites', JSON.stringify(newFavorites));
+      } catch (error) {
+        console.error('Error saving favorites to localStorage:', error);
+      }
+      
+      // Then update the database
       addToFavoritesMutation.mutate(college.id);
     }
   };
