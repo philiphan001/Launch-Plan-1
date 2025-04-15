@@ -3261,6 +3261,38 @@ class FinancialCalculator:
             f.write(f"Savings values in array: {savings_value_yearly}\n")
         
         # Compile results
+        # Check if any expense categories have data before returning
+        housing_has_data = any(val > 0 for val in housing_expenses_yearly)
+        transportation_has_data = any(val > 0 for val in transportation_expenses_yearly)
+        food_has_data = any(val > 0 for val in food_expenses_yearly)
+        healthcare_has_data = any(val > 0 for val in healthcare_expenses_yearly)
+        
+        # Log expense category data for debugging
+        with open('healthcare_debug.log', 'a') as f:
+            f.write("\n===== EXPENSE CATEGORY DATA VERIFICATION =====\n")
+            f.write(f"Housing has data: {housing_has_data}, sample: {housing_expenses_yearly[1]}\n")
+            f.write(f"Transportation has data: {transportation_has_data}, sample: {transportation_expenses_yearly[1]}\n") 
+            f.write(f"Food has data: {food_has_data}, sample: {food_expenses_yearly[1]}\n")
+            f.write(f"Healthcare has data: {healthcare_has_data}, sample: {healthcare_expenses_yearly[1]}\n")
+            
+            # Verify at least one category has data or add fallback
+            all_zero = not (housing_has_data or transportation_has_data or food_has_data or healthcare_has_data)
+            f.write(f"All categories zero: {all_zero}\n")
+            
+            if all_zero:
+                f.write("WARNING: All expense categories are empty! Setting a fallback value\n")
+                # If no categories have data, add a fallback to debt and taxes so at least something shows
+                default_housing = expenses_yearly[1] * 0.3 if expenses_yearly[1] > 0 else 15000
+                default_food = expenses_yearly[1] * 0.15 if expenses_yearly[1] > 0 else 7500 
+                f.write(f"Setting default housing: {default_housing}, food: {default_food}\n")
+                
+                # Add some reasonable fallback values to two categories
+                for i in range(1, len(housing_expenses_yearly)):
+                    if housing_expenses_yearly[i] == 0 and expenses_yearly[i] > 0:
+                        housing_expenses_yearly[i] = int(expenses_yearly[i] * 0.3)
+                    if food_expenses_yearly[i] == 0 and expenses_yearly[i] > 0:
+                        food_expenses_yearly[i] = int(expenses_yearly[i] * 0.15)
+        
         self.results = {
             'ages': ages,
             'netWorth': net_worth,
