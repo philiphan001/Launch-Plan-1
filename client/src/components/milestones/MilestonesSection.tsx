@@ -406,7 +406,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       // Only try to find a matching career if spouseOccupation is set
       if (spouseOccupation && careers && careers.length > 0) {
         const selectedCareer = careers.find(c => c.title === spouseOccupation);
-        if (selectedCareer && selectedCareer.salaryMedian) {
+        if (selectedCareer && selectedCareer.salaryMedian !== undefined && 
+            selectedCareer.salaryMedian !== null && 
+            typeof selectedCareer.salaryMedian === 'number' && 
+            !isNaN(selectedCareer.salaryMedian)) {
           spouseIncomeValue = selectedCareer.salaryMedian;
         }
       }
@@ -788,9 +791,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                           className="flex items-center"
                                         >
                                           <span>{career.title}</span>
-                                          {career.salaryMedian && 
+                                          {career.salaryMedian !== undefined && career.salaryMedian !== null && 
                                             <span className="ml-auto text-xs text-green-600 font-semibold">
-                                              ${career.salaryMedian.toLocaleString()}
+                                              ${typeof career.salaryMedian === 'number' ? career.salaryMedian.toLocaleString() : '—'}
                                             </span>
                                           }
                                         </CommandItem>
@@ -809,18 +812,23 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                               <div>
                                 <Label className="text-purple-700">Their Yearly Salary 💰</Label>
                                 <div className="mt-1 font-medium text-lg text-green-600">
-                                  ${careers?.find(c => c.title === spouseOccupation)?.salaryMedian?.toLocaleString() || "???,???"}
+                                  ${(() => {
+                                    const salary = careers?.find(c => c.title === spouseOccupation)?.salaryMedian;
+                                    return typeof salary === 'number' && !isNaN(salary) ? salary.toLocaleString() : "???,???";
+                                  })()}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   Average salary for this job
                                 </div>
                               </div>
                               <div className="text-5xl">
-                                {
-                                  (careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0) > 100000 ? "🤑" :
-                                  (careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0) > 70000 ? "😎" :
-                                  (careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0) > 40000 ? "🙂" : "😅"
-                                }
+                                {(() => {
+                                  const salary = careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0;
+                                  if (typeof salary !== 'number' || isNaN(salary)) return "😊";
+                                  return salary > 100000 ? "🤑" :
+                                         salary > 70000 ? "😎" :
+                                         salary > 40000 ? "🙂" : "😅";
+                                })()}
                               </div>
                             </div>
                             
@@ -965,7 +973,13 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div className="bg-white rounded p-2 border border-yellow-100">
                               <div className="text-gray-600">Combined Income</div>
-                              <div className="font-bold text-green-600">${(income + spouseIncome).toLocaleString()}/year</div>
+                              <div className="font-bold text-green-600">
+                                ${(typeof income === 'number' && typeof spouseIncome === 'number') ? 
+                                  (income + spouseIncome).toLocaleString() : 
+                                  ((typeof income === 'number' ? income : 0) + 
+                                   (typeof spouseIncome === 'number' ? spouseIncome : 0)).toLocaleString()
+                                }/year
+                              </div>
                             </div>
                             <div className="bg-white rounded p-2 border border-yellow-100">
                               <div className="text-gray-600">Net Worth Change</div>
