@@ -2464,8 +2464,16 @@ const [projectionData, setProjectionData] = useState<any>(() => {
           chartInstance.current.destroy();
         }
         
-        // Create new chart
-        chartInstance.current = createMainProjectionChart(ctx, projectionData, activeTab);
+        // Create new chart - passing the canvas element and correct parameters
+        const showIncome = activeTab === 'income' || activeTab === 'netWorth';
+        const showExpenses = activeTab === 'expenses' || activeTab === 'netWorth';
+        
+        chartInstance.current = createMainProjectionChart(
+          chartRef.current, 
+          projectionData, 
+          showIncome,  // showIncome boolean
+          showExpenses // showExpenses boolean
+        );
       }
     }
 
