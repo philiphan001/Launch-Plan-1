@@ -400,19 +400,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       if (!title) title = "Get Married";
       type = "marriage";
       
-      // Safety check for careers data and spouse occupation
-      let spouseIncomeValue = spouseIncome;  // Default to user-entered value
-      
-      // Only try to find a matching career if spouseOccupation is set
-      if (spouseOccupation && careers && careers.length > 0) {
-        const selectedCareer = careers.find(c => c.title === spouseOccupation);
-        if (selectedCareer && selectedCareer.salaryMedian !== undefined && 
-            selectedCareer.salaryMedian !== null && 
-            typeof selectedCareer.salaryMedian === 'number' && 
-            !isNaN(selectedCareer.salaryMedian)) {
-          spouseIncomeValue = selectedCareer.salaryMedian;
-        }
-      }
+      // Use the current spouseIncome value directly - we no longer need to look up in careers
+      // since we set the income when occupation is selected in the dropdown
+      let spouseIncomeValue = typeof spouseIncome === 'number' && !isNaN(spouseIncome) ? 
+                             spouseIncome : 0;
       
       const milestoneData = {
         userId,
@@ -781,23 +772,37 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                   <CommandList className="max-h-[300px] overflow-auto">
                                     <CommandEmpty>No matching careers found</CommandEmpty>
                                     <CommandGroup>
-                                      {careers?.sort((a, b) => a.title.localeCompare(b.title)).map((career) => (
-                                        <CommandItem
-                                          key={career.id}
-                                          value={career.title}
-                                          onSelect={() => {
-                                            setSpouseOccupation(career.title);
-                                          }}
-                                          className="flex items-center"
-                                        >
-                                          <span>{career.title}</span>
-                                          {career.salaryMedian !== undefined && career.salaryMedian !== null && 
-                                            <span className="ml-auto text-xs text-green-600 font-semibold">
-                                              ${typeof career.salaryMedian === 'number' ? career.salaryMedian.toLocaleString() : '—'}
-                                            </span>
-                                          }
-                                        </CommandItem>
-                                      ))}
+                                      {careers ? 
+                                        careers
+                                          .filter(career => career && career.title) // Filter out any null or missing title careers
+                                          .sort((a, b) => a.title.localeCompare(b.title))
+                                          .map((career) => (
+                                            <CommandItem
+                                              key={career.id || Math.random()}
+                                              value={career.title || ""}
+                                              onSelect={() => {
+                                                setSpouseOccupation(career.title || "");
+                                                // If salary is available, update spouse income
+                                                if (career.salaryMedian && 
+                                                    typeof career.salaryMedian === 'number' && 
+                                                    !isNaN(career.salaryMedian)) {
+                                                  setSpouseIncome(career.salaryMedian);
+                                                }
+                                              }}
+                                              className="flex items-center"
+                                            >
+                                              <span>{career.title || ""}</span>
+                                              <span className="ml-auto text-xs text-green-600 font-semibold">
+                                                {career.salaryMedian && 
+                                                 typeof career.salaryMedian === 'number' && 
+                                                 !isNaN(career.salaryMedian) 
+                                                  ? `$${career.salaryMedian.toLocaleString()}` 
+                                                  : '—'}
+                                              </span>
+                                            </CommandItem>
+                                          ))
+                                        : <CommandItem value="loading">Loading careers...</CommandItem>
+                                      }
                                     </CommandGroup>
                                   </CommandList>
                                 </Command>
