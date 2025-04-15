@@ -17,7 +17,10 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -785,84 +788,92 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                             <span className="mr-2">💼</span> Future Spouse's Career
                           </Label>
                           <div className="mt-2 relative">
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  className="w-full justify-between bg-white border-pink-200 hover:bg-pink-50 hover:text-pink-700 focus:ring-pink-500"
-                                >
-                                  {spouseOccupation 
-                                    ? spouseOccupation 
-                                    : "Search for a dream career..."}
-                                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-full p-0" style={{ width: "var(--radix-popover-trigger-width)" }}>
-                                <Command>
-                                  <div className="px-3 py-2 border-b border-pink-100 bg-gradient-to-r from-pink-50 to-purple-50">
-                                    <p className="text-xs text-center font-medium text-pink-600">💼 Choose wisely — this affects your financial future!</p>
-                                  </div>
-                                  <CommandInput placeholder="Type to search careers..." className="h-9 border-pink-100" />
-                                  <CommandList className="max-h-[300px] overflow-auto">
-                                    <CommandEmpty>No matching careers found</CommandEmpty>
-                                    <CommandGroup>
-                                      {careers ? 
-                                        careers
-                                          .filter(career => career && career.title) // Filter out any null or missing title careers
-                                          .sort((a, b) => a.title.localeCompare(b.title))
-                                          .map((career) => {
-                                            // Safely extract the career title and salary median
-                                            const title = career.title || "";
-                                            // Default to 50000 if no valid number is available
-                                            const salary = typeof career.salaryMedian === 'number' && !isNaN(career.salaryMedian) 
-                                              ? career.salaryMedian 
-                                              : 50000;
-                                            
-                                            // Format salary for display safely
-                                            const formattedSalary = typeof salary === 'number' 
-                                              ? `$${salary.toLocaleString()}` 
-                                              : '—';
-                                            
-                                            // Return a completely rewritten CommandItem with simplified logic
-                                            return (
-                                              <CommandItem
-                                                key={career.id || Math.random()}
-                                                value={title}
-                                                onSelect={(value) => {
-                                                  // COMPLETELY REIMPLEMENTED CAREER SELECTION
-                                                  // First, set the occupation name immediately
-                                                  setSpouseOccupation(title);
-                                                  
-                                                  // Use a very defensive approach for the income
-                                                  let incomeValue = 50000; // Default value
-                                                  
-                                                  // Only attempt to use the actual value if it's valid
-                                                  if (typeof salary === 'number' && !isNaN(salary) && salary > 0) {
-                                                    // Round to avoid any floating point issues
-                                                    incomeValue = Math.round(salary);
-                                                  }
-                                                  
-                                                  // Set the income with a verified number
-                                                  console.log(`Setting spouse income to: ${incomeValue}`);
-                                                  setSpouseIncome(incomeValue);
-                                                }}
-                                                className="flex items-center"
-                                              >
-                                                <span>{title}</span>
-                                                <span className="ml-auto text-xs text-green-600 font-semibold">
-                                                  {formattedSalary}
-                                                </span>
-                                              </CommandItem>
-                                            );
-                                          })
-                                        : <CommandItem value="loading">Loading careers...</CommandItem>
-                                      }
-                                    </CommandGroup>
-                                  </CommandList>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
+                            {/* COMPLETELY REDESIGNED UI: Using Select instead of Popover/Command */}
+                            <Select
+                              value={spouseOccupation || ""}
+                              onValueChange={(value) => {
+                                console.log(`Selected spouse career: ${value}`);
+                                setSpouseOccupation(value);
+                                
+                                // Find corresponding salary from the career list
+                                const career = careers?.find(c => c.title === value);
+                                if (career && typeof career.salaryMedian === 'number') {
+                                  const salaryValue = Math.round(career.salaryMedian);
+                                  console.log(`Setting spouse income to: ${salaryValue}`);
+                                  setSpouseIncome(salaryValue);
+                                } else {
+                                  // Default to 50000 if no valid career found
+                                  console.log(`No salary data found, using default`);
+                                  setSpouseIncome(50000);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-full bg-white border-pink-200">
+                                <SelectValue placeholder="Select spouse's career..." />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[300px]">
+                                <SelectGroup>
+                                  <SelectLabel>Top-Paying Careers</SelectLabel>
+                                  {careers
+                                    ?.filter(career => career && career.title && career.salaryMedian) 
+                                    .sort((a, b) => (b.salaryMedian || 0) - (a.salaryMedian || 0))
+                                    .slice(0, 30)
+                                    .map(career => (
+                                      <SelectItem 
+                                        key={career.id || career.title} 
+                                        value={career.title || ""}
+                                      >
+                                        <div className="flex justify-between w-full">
+                                          <span>{career.title}</span>
+                                          <span className="text-green-600 ml-2">
+                                            ${career.salaryMedian?.toLocaleString()}
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                                <SelectSeparator />
+                                <SelectGroup>
+                                  <SelectLabel>Common Careers</SelectLabel>
+                                  {careers
+                                    ?.filter(career => career && career.title && career.salaryMedian)
+                                    .sort((a, b) => a.title.localeCompare(b.title))
+                                    .slice(0, 50)
+                                    .map(career => (
+                                      <SelectItem 
+                                        key={career.id || career.title} 
+                                        value={career.title || ""}
+                                      >
+                                        <div className="flex justify-between w-full">
+                                          <span>{career.title}</span>
+                                          <span className="text-green-600 ml-2">
+                                            ${career.salaryMedian?.toLocaleString()}
+                                          </span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                            
+                            {/* Manual entry option */}
+                            <div className="mt-4">
+                              <p className="text-xs text-center font-medium text-pink-600 mb-2">💼 Or specify their job details manually</p>
+                              <div className="flex gap-3">
+                                <div className="flex-1">
+                                  <Label htmlFor="manual-occupation" className="text-xs text-pink-700">
+                                    Job Title
+                                  </Label>
+                                  <Input
+                                    id="manual-occupation"
+                                    placeholder="Custom job title..."
+                                    value={spouseOccupation}
+                                    onChange={(e) => setSpouseOccupation(e.target.value)}
+                                    className="mt-1 w-full border-pink-200"
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                         
