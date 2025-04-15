@@ -1751,6 +1751,165 @@ const FinancialProjections = ({
   // Add a state for the name of the current projection
 const [projectionName, setProjectionName] = useState<string>(`Projection - ${new Date().toLocaleDateString()}`);
 
+// Function to save financial projection with proper validation and error handling
+const saveProjection = async () => {
+  try {
+    // Validate required fields
+    if (!projectionName || !projectionData) {
+      throw new Error('Missing required fields');
+    }
+    
+    // Prepare the projection data
+    const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
+    
+    const projectionToSave = {
+      userId,
+      name: projectionName,
+      timeframe: years,
+      startingAge: age,
+      startingSavings,
+      income: Math.round(adjustedIncome),
+      expenses: Math.round(expenses),
+      incomeGrowth,
+      studentLoanDebt,
+      projectionData: JSON.stringify(projectionData),
+      includesCollegeCalculation: !!includedCollegeCalc,
+      includesCareerCalculation: !!includedCareerCalc,
+      collegeCalculationId: includedCollegeCalc?.id || null,
+      careerCalculationId: includedCareerCalc?.id || null,
+      locationAdjusted: !!locationCostData,
+      locationZipCode: userData?.zipCode || null,
+      costOfLivingIndex: locationCostData?.income_adjustment_factor || null,
+      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+      emergencyFundAmount,
+      personalLoanTermYears,
+      personalLoanInterestRate,
+    };
+    
+    // Validate the projection data
+    if (!projectionToSave.timeframe || !projectionToSave.startingAge || 
+        !projectionToSave.startingSavings || !projectionToSave.income || 
+        !projectionToSave.expenses || !projectionToSave.incomeGrowth) {
+      throw new Error('Missing required projection data');
+    }
+    
+    const response = await fetch('/api/financial-projections', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(projectionToSave),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to save projection');
+    }
+    
+    const savedProjection = await response.json();
+    
+    // Update the UI
+    toast({
+      title: "Success",
+      description: "Projection saved successfully",
+    });
+    
+    // Refresh the saved projections list
+    queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+    
+    // If this is a first-time user, mark them as having completed onboarding
+    if (isFirstTimeUser && completeOnboarding) {
+      console.log("User saved their first projection, marking as completed onboarding");
+      try {
+        await completeOnboarding();
+      } catch (error) {
+        console.error("Failed to update onboarding status:", error);
+      }
+    }
+    
+    return savedProjection;
+    
+  } catch (error) {
+    console.error('Error saving projection:', error);
+    toast({
+      title: "Error",
+      description: error.message || 'Failed to save projection',
+      variant: "destructive"
+    });
+    throw error;
+  }
+};
+
+// Function to load a saved projection with proper error handling
+const loadSavedProjection = async (projectionId: number) => {
+  try {
+    // Clear existing state first
+    setProjectionData(null);
+    
+    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load projection: ${response.statusText}`);
+    }
+    
+    const savedProjection = await response.json();
+    
+    // Validate the projection data
+    if (!savedProjection || !savedProjection.projectionData) {
+      throw new Error('Invalid projection data');
+    }
+    
+    // Parse projection data if it's a string
+    const projectionData = typeof savedProjection.projectionData === 'string' 
+      ? JSON.parse(savedProjection.projectionData)
+      : savedProjection.projectionData;
+    
+    // Update all state values in a single batch
+    const stateUpdates = {
+      projectionName: savedProjection.name,
+      timeframe: `${savedProjection.timeframe} Years`,
+      age: savedProjection.startingAge,
+      startingSavings: savedProjection.startingSavings,
+      income: savedProjection.income,
+      expenses: savedProjection.expenses,
+      incomeGrowth: savedProjection.incomeGrowth,
+      studentLoanDebt: savedProjection.studentLoanDebt,
+      emergencyFundAmount: savedProjection.emergencyFundAmount,
+      personalLoanTermYears: savedProjection.personalLoanTermYears,
+      personalLoanInterestRate: savedProjection.personalLoanInterestRate,
+      projectionData: {
+        ...projectionData,
+        _key: `projection-${projectionId}-${new Date().getTime()}`
+      }
+    };
+    
+    // Apply all state updates at once
+    setProjectionName(stateUpdates.projectionName);
+    setTimeframe(stateUpdates.timeframe);
+    setAge(stateUpdates.age);
+    setStartingSavings(stateUpdates.startingSavings);
+    setIncome(stateUpdates.income);
+    setExpenses(stateUpdates.expenses);
+    setIncomeGrowth(stateUpdates.incomeGrowth);
+    setStudentLoanDebt(stateUpdates.studentLoanDebt);
+    setEmergencyFundAmount(stateUpdates.emergencyFundAmount);
+    setPersonalLoanTermYears(stateUpdates.personalLoanTermYears);
+    setPersonalLoanInterestRate(stateUpdates.personalLoanInterestRate);
+    setProjectionData(stateUpdates.projectionData);
+    
+    // Switch to view tab
+    setMainTab("view");
+    
+  } catch (error) {
+    console.error('Error loading projection:', error);
+    // Show error to user
+    toast({
+      title: "Error",
+      description: 'Failed to load projection. Please try again.',
+      variant: "destructive"
+    });
+  }
+};
+
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
   queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
@@ -2542,64 +2701,9 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               className="w-full mt-6"
               onClick={async () => {
                 try {
-                  // Adjust income based on location, but we don't need to adjust expenses again
-                  // since they're already adjusted in the UI as part of the expenses state
-                  const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
-                  const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
-                     
-                  const response = await fetch('/api/financial-projections', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      userId,
-                      name: projectionName, // Changed from projectionName to name to match schema
-                      timeframe: years,
-                      startingAge: age,
-                      startingSavings,
-                      income: Math.round(adjustedIncome),
-                      expenses: Math.round(adjustedExpenses),
-                      incomeGrowth,
-                      studentLoanDebt,
-                      projectionData: projectionData,
-                      includesCollegeCalculation: !!includedCollegeCalc,
-                      includesCareerCalculation: !!includedCareerCalc,
-                      collegeCalculationId: includedCollegeCalc?.id || null,
-                      careerCalculationId: includedCareerCalc?.id || null,
-                      locationAdjusted: !!locationCostData,
-                      locationZipCode: userData?.zipCode || null,
-                      costOfLivingIndex: locationCostData ? 
-                        locationCostData.income_adjustment_factor || 1.0 : null,
-                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
-                      // Save the configurable parameters
-                      emergencyFundAmount: emergencyFundAmount,
-                      personalLoanTermYears: personalLoanTermYears,
-                      personalLoanInterestRate: personalLoanInterestRate,
-                    }),
-                  });
-                  
-                  if (response.ok) {
-                    alert('Projection saved successfully!');
-                    // Invalidate the financial projections query to refresh the list
-                    queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
-                    
-                    // If this is a first-time user, mark them as having completed onboarding
-                    if (isFirstTimeUser && completeOnboarding) {
-                      console.log("User saved their first projection, marking as completed onboarding");
-                      try {
-                        await completeOnboarding();
-                      } catch (error) {
-                        console.error("Failed to update onboarding status:", error);
-                        // Non-critical error, continue without showing an error to the user
-                      }
-                    }
-                  } else {
-                    throw new Error('Failed to save projection');
-                  }
+                  await saveProjection();
                 } catch (error) {
                   console.error('Error saving projection:', error);
-                  alert('Failed to save projection. Please try again.');
                 }
               }}
             >
