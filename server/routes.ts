@@ -60,25 +60,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   app.get("/api/auth/me", (req: Request, res: Response) => {
-    console.log("AUTH CHECK - Session:", req.session);
-    console.log("AUTH CHECK - User:", req.user);
-    console.log("AUTH CHECK - isAuthenticated:", req.isAuthenticated?.());
-    
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+    try {
+      console.log("AUTH CHECK - Session:", req.session);
+      console.log("AUTH CHECK - User:", req.user);
+      console.log("AUTH CHECK - isAuthenticated:", req.isAuthenticated?.());
+      
+      if (!req.isAuthenticated() || !req.user) {
+        console.log("User not authenticated in /api/auth/me");
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const user = req.user;
+      
+      // Check if user data is valid
+      if (!user || typeof user !== 'object') {
+        console.error("Invalid user data in session:", user);
+        return res.status(500).json({ message: "Invalid user data in session" });
+      }
+      
+      // Add isFirstTimeUser property
+      // Cast to include createdAt property
+      const userWithTime = user as { createdAt?: string | Date };
+      
+      // Default to false if createdAt is missing
+      let isFirstTimeUser = false;
+      
+      if (userWithTime && userWithTime.createdAt) {
+        try {
+          const userCreatedAt = new Date(userWithTime.createdAt).getTime();
+          const now = new Date().getTime();
+          isFirstTimeUser = (now - userCreatedAt) < 24 * 60 * 60 * 1000;
+        } catch (err) {
+          console.error("Error calculating isFirstTimeUser:", err);
+          // Default to false on error
+          isFirstTimeUser = false;
+        }
+      }
+      
+      // Force isFirstTimeUser to false to ensure dashboard access
+      console.log("Returning user data:", { id: (user as any).id, isFirstTimeUser: false });
+      return res.status(200).json({
+        ...user,
+        isFirstTimeUser: false
+      });
+    } catch (error) {
+      console.error("Error in /api/auth/me endpoint:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
-    
-    const user = req.user;
-    // Add isFirstTimeUser property
-    // Cast to include createdAt property
-    const userWithTime = user as { createdAt?: string | Date };
-    const isFirstTimeUser = new Date().getTime() - new Date(userWithTime?.createdAt || new Date()).getTime() < 24 * 60 * 60 * 1000;
-    
-    // Force isFirstTimeUser to false to ensure dashboard access
-    return res.status(200).json({
-      ...user,
-      isFirstTimeUser: false
-    });
   });
   
   // Add the complete-onboarding endpoint

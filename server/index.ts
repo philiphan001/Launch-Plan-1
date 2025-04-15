@@ -3,6 +3,7 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import connectPgSimple from "connect-pg-simple";
+import bcrypt from "bcrypt";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { pgStorage } from "./pg-storage";
@@ -48,7 +49,7 @@ if (process.env.DATABASE_URL) {
   }));
 }
 
-// Configure Passport
+// Configure Passport with secure password comparison
 passport.use(new LocalStrategy({
   usernameField: 'username',
   passwordField: 'password'
@@ -59,16 +60,39 @@ passport.use(new LocalStrategy({
     const user = result[0];
     
     if (!user) {
-      return done(null, false, { message: 'Incorrect username.' });
+      console.log(`Authentication failed: username '${username}' not found`);
+      return done(null, false, { message: 'Incorrect username or password.' });
     }
     
-    // Simple password check (in production, you should use bcrypt)
-    if (user.password !== password) {
-      return done(null, false, { message: 'Incorrect password.' });
+    // Check if we need to use bcrypt or direct comparison
+    let isPasswordValid = false;
+    
+    // First try bcrypt compare if the password looks hashed
+    if (user.password.startsWith('$2')) {
+      // Password appears to be a bcrypt hash
+      try {
+        isPasswordValid = await bcrypt.compare(password, user.password);
+      } catch (bcryptError) {
+        console.error('bcrypt comparison error:', bcryptError);
+        // Fall back to direct comparison if bcrypt fails
+        isPasswordValid = user.password === password;
+      }
+    } else {
+      // Direct comparison for plain text passwords
+      // This is a fallback and should be upgraded to bcrypt
+      isPasswordValid = user.password === password;
+      console.log('WARNING: User has plaintext password, should upgrade to bcrypt');
     }
     
+    if (!isPasswordValid) {
+      console.log(`Authentication failed: incorrect password for '${username}'`);
+      return done(null, false, { message: 'Incorrect username or password.' });
+    }
+    
+    console.log(`Authentication successful for user: ${username}`);
     return done(null, user);
   } catch (error) {
+    console.error('Authentication error:', error);
     return done(error);
   }
 }));
@@ -133,12 +157,38 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Improved comprehensive error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error("Server error:", err);
+    
+    // Extract status code and message
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+    
+    // Enhanced error response with more details in development
+    // but keep minimal for production to avoid exposing implementation details
+    const errorResponse: Record<string, any> = { 
+      message,
+      status,
+      error: true
+    };
+    
+    // Add stack trace in development environment
+    if (process.env.NODE_ENV === 'development') {
+      errorResponse.stack = err.stack;
+      
+      // Add additional error details if available
+      if (err.code) errorResponse.code = err.code;
+      if (err.type) errorResponse.type = err.type;
+      if (err.path) errorResponse.path = err.path;
+      if (err.details) errorResponse.details = err.details;
+    }
+    
+    // Send error response
+    res.status(status).json(errorResponse);
+    
+    // Don't throw the error again as it's already been handled
+    // and would crash the server
   });
 
   // importantly only setup vite in development and after
