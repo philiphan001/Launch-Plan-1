@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { useSounds } from '../../hooks/useSounds';
 
 interface PromptOption {
   id: string;
@@ -34,6 +35,9 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
   const [showInstructions, setShowInstructions] = useState(true);
   const wheelRef = useRef<HTMLDivElement>(null);
   
+  // Get sound functions from our custom hook
+  const { playClick, playSpin, playWinning, startTicking, stopTicking } = useSounds();
+  
   // Reset state when resetKey changes
   useEffect(() => {
     console.log('IdentityWheel: resetKey changed to', resetKey);
@@ -46,6 +50,9 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
     setCategory(null);
     setShowPrompt(false);
     setShowInstructions(true);
+    
+    // Stop any ongoing sounds when component resets
+    stopTicking();
     
     // Force a repaint of the component with a small delay
     const timer = setTimeout(() => {
@@ -60,8 +67,19 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
       }
     }, 50);
     
-    return () => clearTimeout(timer);
-  }, [resetKey]);
+    return () => {
+      clearTimeout(timer);
+      stopTicking(); // Make sure to stop sounds on cleanup
+    };
+  }, [resetKey, stopTicking]);
+  
+  // Make sure to stop all sounds when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('IdentityWheel: Unmounting, cleaning up sounds');
+      stopTicking();
+    };
+  }, [stopTicking]);
   
   // Define prompts
   const prompts: WheelPrompt[] = [
@@ -135,8 +153,21 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
   const spinWheel = () => {
     if (isSpinning) return;
     
+    // Play initial click sound when button is pressed
+    playClick();
+    
+    // Start spinning process
     setIsSpinning(true);
     setShowPrompt(false);
+    
+    // Play the continuous spin sound
+    playSpin();
+    
+    // Start the ticking sound that speeds up as the wheel spins
+    // Start with a slower interval that speeds up
+    setTimeout(() => startTicking(150), 300);
+    setTimeout(() => startTicking(100), 1000);
+    setTimeout(() => startTicking(50), 2000);
     
     // Land on one of the 5 segments (values, talents, fears, wishes, goals)
     const segmentSize = 360 / 5;
@@ -157,6 +188,13 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
     
     // Reset after spin completes
     setTimeout(() => {
+      // Stop the ticking sound
+      stopTicking();
+      
+      // Play the winning sound
+      playWinning();
+      
+      // Update UI
       setIsSpinning(false);
       const categories: WheelPrompt['category'][] = ['values', 'talents', 'fears', 'wishes', 'goals'];
       const landedCategory = categories[randomSegment];
@@ -166,6 +204,9 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
   };
   
   const handleOptionSelect = (value: string) => {
+    // Play a click sound when an option is selected
+    playClick();
+    
     setSelectedOptions(prev => ({
       ...prev,
       [currentPrompt.id]: value
@@ -173,10 +214,16 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
   };
   
   const handleNext = () => {
+    // Play click sound when button is pressed
+    playClick();
+    
     const answeredQuestions = Object.keys(selectedOptions).length;
     
     // If we've answered all questions
     if (answeredQuestions >= prompts.length) {
+      // Play winning sound for completing all questions
+      playWinning();
+      
       setIsComplete(true);
       onComplete(selectedOptions);
       return;
@@ -248,7 +295,11 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
         </div>
         
         <div className="flex justify-end mt-6">
-          <Button onClick={() => onComplete(selectedOptions)}>
+          <Button onClick={() => {
+            playClick();
+            playWinning(); // Play a winning sound as they finish
+            onComplete(selectedOptions);
+          }}>
             Continue to Recommendations
           </Button>
         </div>
@@ -290,7 +341,12 @@ export default function IdentityWheel({ onComplete, resetKey = 0 }: IdentityWhee
               </ol>
               
               <div className="text-center">
-                <Button onClick={() => setShowInstructions(false)}>Got it, Let's Play!</Button>
+                <Button onClick={() => {
+                  playClick();
+                  setShowInstructions(false);
+                }}>
+                  Got it, Let's Play!
+                </Button>
               </div>
             </div>
           </motion.div>
