@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Switch, Route, useLocation, Redirect } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import Dashboard from "@/pages/Dashboard";
 import FinancialProjections from "@/pages/FinancialProjections";
-import ProjectionViewer from "@/pages/ProjectionViewer";
 import CareerExploration from "@/pages/CareerExploration";
 import CareerBuilder from "@/pages/CareerBuilder";
 import CollegeDiscovery from "@/pages/CollegeDiscovery";
@@ -343,25 +342,6 @@ function App() {
         </Route>
         <Route path="/explore">
           {() => <Pathways {...authProps} />}
-        </Route>
-        
-        {/* Dedicated projection viewer route to avoid state conflicts */}
-        <Route path="/projection/:id">
-          {(params) => {
-            if (!user) {
-              setLocation('/login');
-              return null;
-            }
-            return <ProjectionViewer 
-              user={user} 
-              isAuthenticated={isAuthenticated} 
-              isFirstTimeUser={isFirstTimeUser} 
-              login={login} 
-              signup={signup} 
-              logout={logout} 
-              completeOnboarding={completeOnboarding} 
-            />;
-          }}
         </Route>
         
         {/* Redirect /assumptions to /settings with assumptions tab */}

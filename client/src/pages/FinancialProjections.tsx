@@ -13,7 +13,6 @@ import TaxBreakdownTable from "@/components/financial/TaxBreakdownTable";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import LocationAdjustmentInfo from "@/components/financial/LocationAdjustmentInfo";
 import CurrentProjectionSummary from "@/components/financial/CurrentProjectionSummary";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -193,7 +192,7 @@ const FinancialProjections = ({
     };
   }, [location, initialProjectionId]);
 
-  // Main tabs for the FinancialProjections page (View, Edit, Compare, Manage, Loading)
+  // Main tabs for the FinancialProjections page (View, Edit, Compare, Manage)
   const [mainTab, setMainTab] = useState<string>("view");
   
   // Chart type tabs within the View tab
@@ -210,7 +209,6 @@ const FinancialProjections = ({
   });
   const [studentLoanDebt, setStudentLoanDebt] = useState<number>(0);
   const [financialAdvice, setFinancialAdvice] = useState<FinancialAdvice[]>([]);
-  const [isLoadingProjection, setIsLoadingProjection] = useState<boolean>(false);
   
   // State for collapsible sections
   const [locationSectionOpen, setLocationSectionOpen] = useState<boolean>(true);
@@ -605,90 +603,57 @@ const FinancialProjections = ({
           setStartingSavings(5000); // Default starting savings
         }
 
-        // First try to load pathway data from localStorage with improved error handling
-        interface PathwayData {
-          selectedSchoolId?: number;
-          specificSchool?: string;
-          selectedCareer?: number;
-          selectedProfession?: string;
-          educationType?: string;
-          transferOption?: string;
-          location?: string | { zipCode: string; city?: string; state?: string };
-          zipCode?: string;
-          [key: string]: any; // Allow for other properties
-        }
+        // First try to load pathway data from localStorage
+        const pathwayDataStr = localStorage.getItem('pathwayData');
+        let pathwayData = null;
         
-        let pathwayData: PathwayData = {};
-        try {
-          // Safely get and parse pathway data
-          const pathwayDataStr = localStorage.getItem('pathwayData');
-          
-          if (pathwayDataStr) {
-            console.log("Found pathway data in localStorage");
+        if (pathwayDataStr) {
+          console.log("Found pathway data in localStorage");
+          try {
+            pathwayData = JSON.parse(pathwayDataStr);
+            console.log("Parsed pathway data:", pathwayData);
             
-            try {
-              // Parse the data and validate it
-              const parsedData = JSON.parse(pathwayDataStr);
-              
-              // Ensure we have valid data structure
-              if (parsedData && typeof parsedData === 'object') {
-                console.log("Successfully parsed pathway data:", parsedData);
-                pathwayData = parsedData as PathwayData;
-                
-                // Only attempt to add to favorites if authenticated and data is valid
-                if (isAuthenticated && userId) {
-                  console.log("User authenticated, processing favorites");
-                  
-                  // Safely add college to favorites if available
-                  if (pathwayData.selectedSchoolId && 
-                      typeof pathwayData.selectedSchoolId === 'number') {
-                    console.log("Adding college to favorites:", pathwayData.selectedSchoolId);
-                    try {
-                      addCollegeToFavoritesMutation.mutate(pathwayData.selectedSchoolId);
-                    } catch (favError) {
-                      console.error("Error adding college to favorites:", favError);
-                    }
-                  }
-                  
-                  // Safely add career to favorites if available
-                  if (pathwayData.selectedCareer && 
-                      typeof pathwayData.selectedCareer === 'number') {
-                    console.log("Adding career to favorites:", pathwayData.selectedCareer);
-                    try {
-                      addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
-                    } catch (favError) {
-                      console.error("Error adding career to favorites:", favError);
-                    }
-                  }
-                } else {
-                  console.log("User not authenticated, skipping adding favorites");
-                }
-              } else {
-                console.error("Parsed pathway data is not a valid object");
-                // Keep default empty object
-              }
-            } catch (parseError) {
-              console.error("Error parsing pathway data JSON:", parseError);
-              console.error("Invalid pathway data string:", pathwayDataStr);
-              
-              toast({
-                title: "Error processing pathway data",
-                description: "There was an issue with your saved pathway data. Default values will be used.",
-                variant: "destructive"
-              });
+            // Validate that required fields are present
+            if (!pathwayData) {
+              console.error("Parsed pathway data is null or undefined");
+              // Initialize with a minimal valid object to prevent crashes
+              pathwayData = {};
             }
-          } else {
-            console.log("No pathway data found in localStorage, using default values");
+            
+            // Only attempt to add to favorites if authenticated
+            if (isAuthenticated && userId) {
+              // If pathway data is valid and user is authenticated, add college and career to favorites
+              
+              // If there's a specific school, find its ID and add to favorites
+              if (pathwayData.specificSchool && pathwayData.specificSchool !== "") {
+                // Look up the college ID if needed (can be enhanced)
+                if (pathwayData.selectedSchoolId) {
+                  console.log("Adding college to favorites from pathway data:", pathwayData.selectedSchoolId);
+                  addCollegeToFavoritesMutation.mutate(pathwayData.selectedSchoolId);
+                }
+              }
+              
+              // If there's a career ID, add it to favorites
+              if (pathwayData.selectedCareer) {
+                console.log("Adding career to favorites from pathway data:", pathwayData.selectedCareer);
+                addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
+              }
+            } else {
+              console.log("User not authenticated, skipping adding favorites");
+            }
+          } catch (error) {
+            console.error("Error parsing pathway data from localStorage:", error);
+            console.error("Raw pathway data string:", pathwayDataStr);
+            // Initialize with a minimal valid object to prevent crashes
+            pathwayData = {};
+            toast({
+              title: "Error processing pathway data",
+              description: "There was an issue generating your financial plan. Default values will be used.",
+              variant: "destructive"
+            });
           }
-        } catch (storageError) {
-          // Handle any localStorage access errors
-          console.error("Error accessing localStorage:", storageError);
-          
-          toast({
-            title: "Storage Access Error",
-            description: "Could not access saved data. Default values will be used.",
-            variant: "destructive"
-          });
+        } else {
+          console.log("No pathway data in localStorage, using favorite data instead");
         }
         
         // If we have favorite college data, use it for student loans
@@ -719,66 +684,35 @@ const FinancialProjections = ({
           
           // If no student loan amount found, use an estimate based on college type
           if (studentLoanAmount === 0) {
-            try {
-              // Use safer property access with type checking
-              const eduType = pathwayData?.educationType;
-              if (typeof eduType === 'string') {
-                if (eduType === "4year") {
-                  studentLoanAmount = 30000; // Estimate for 4-year college
-                } else if (eduType === "2year") {
-                  studentLoanAmount = 15000; // Estimate for 2-year college
-                  
-                  // Safely check transfer option
-                  const transferOpt = pathwayData?.transferOption;
-                  if (typeof transferOpt === 'string' && transferOpt === "yes") {
-                    studentLoanAmount += 20000; // Additional debt from transfer institution
-                  }
-                } else if (eduType === "vocational") {
-                  studentLoanAmount = 12000; // Estimate for vocational school
-                } else {
-                  // Default if education type not recognized
-                  studentLoanAmount = 25000;
-                  console.log("Unrecognized education type:", eduType);
-                }
-              } else {
-                // Default if no education type or invalid type
-                studentLoanAmount = 25000;
-                console.log("No valid education type found in pathway data");
+            if (pathwayData?.educationType === "4year") {
+              studentLoanAmount = 30000; // Estimate for 4-year college
+            } else if (pathwayData?.educationType === "2year") {
+              studentLoanAmount = 15000; // Estimate for 2-year college
+              
+              // If transferring to 4-year, add more debt
+              if (pathwayData?.transferOption === "yes") {
+                studentLoanAmount += 20000; // Additional debt from transfer institution
               }
-            } catch (error) {
-              console.error("Error processing education type:", error);
-              studentLoanAmount = 25000; // Default fallback
-            }
-          }
-        } else if (pathwayData && Object.keys(pathwayData).length > 0) {
-          // If no favorite college but pathway data exists, use that
-          try {
-            // Use safer property access with type checking
-            const eduType = pathwayData.educationType;
-            if (typeof eduType === 'string') {
-              if (eduType === "4year") {
-                studentLoanAmount = 30000; // Estimate for 4-year college
-              } else if (eduType === "2year") {
-                studentLoanAmount = 15000; // Estimate for 2-year college
-                
-                // Safely check transfer option
-                const transferOpt = pathwayData.transferOption;
-                if (typeof transferOpt === 'string' && transferOpt === "yes") {
-                  studentLoanAmount += 20000; // Additional debt from transfer institution
-                }
-              } else if (eduType === "vocational") {
-                studentLoanAmount = 12000; // Estimate for vocational school
-              } else {
-                // Default if education type not recognized
-                studentLoanAmount = 25000;
-              }
+            } else if (pathwayData?.educationType === "vocational") {
+              studentLoanAmount = 12000; // Estimate for vocational school
             } else {
-              // Default if no valid education type
+              // Default if no education type specified
               studentLoanAmount = 25000;
             }
-          } catch (error) {
-            console.error("Error processing pathway education data:", error);
-            studentLoanAmount = 25000; // Default fallback
+          }
+        } else if (pathwayData) {
+          // If no favorite college but pathway data exists, use that
+          if (pathwayData.educationType === "4year") {
+            studentLoanAmount = 30000; // Estimate for 4-year college
+          } else if (pathwayData.educationType === "2year") {
+            studentLoanAmount = 15000; // Estimate for 2-year college
+            
+            // If transferring to 4-year, add more debt
+            if (pathwayData.transferOption === "yes") {
+              studentLoanAmount += 20000; // Additional debt from transfer institution
+            }
+          } else if (pathwayData.educationType === "vocational") {
+            studentLoanAmount = 12000; // Estimate for vocational school
           }
         }
         
@@ -828,10 +762,8 @@ const FinancialProjections = ({
           }
         } else if (pathwayData?.selectedProfession && careers && careers.length > 0) {
           // If no favorite careers but pathway data exists, use selected profession
-          // We know selectedProfession exists because of the condition check above
-          const selectedProfession = pathwayData.selectedProfession!;
           const selectedCareer = careers.find((c: any) => 
-            c.title.toLowerCase() === selectedProfession.toLowerCase());
+            c.title.toLowerCase() === pathwayData.selectedProfession.toLowerCase());
           
           if (selectedCareer) {
             startingIncome = selectedCareer.salary_pct_10 || 
@@ -1753,224 +1685,6 @@ const FinancialProjections = ({
   // Add a state for the name of the current projection
 const [projectionName, setProjectionName] = useState<string>(`Projection - ${new Date().toLocaleDateString()}`);
 
-// Function to save financial projection with proper validation and error handling
-const saveProjection = async () => {
-  try {
-    // Validate required fields
-    if (!projectionName || !projectionData) {
-      throw new Error('Missing required fields');
-    }
-    
-    // Prepare the projection data
-    const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
-    
-    const projectionToSave = {
-      userId,
-      name: projectionName,
-      timeframe: years,
-      startingAge: age,
-      startingSavings,
-      income: Math.round(adjustedIncome),
-      expenses: Math.round(expenses),
-      incomeGrowth,
-      studentLoanDebt,
-      projectionData: JSON.stringify(projectionData),
-      includesCollegeCalculation: !!includedCollegeCalc,
-      includesCareerCalculation: !!includedCareerCalc,
-      collegeCalculationId: includedCollegeCalc?.id || null,
-      careerCalculationId: includedCareerCalc?.id || null,
-      locationAdjusted: !!locationCostData,
-      locationZipCode: userData?.zipCode || null,
-      costOfLivingIndex: locationCostData?.income_adjustment_factor || null,
-      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
-      emergencyFundAmount,
-      personalLoanTermYears,
-      personalLoanInterestRate,
-    };
-    
-    // Validate the projection data
-    if (!projectionToSave.timeframe || !projectionToSave.startingAge || 
-        !projectionToSave.startingSavings || !projectionToSave.income || 
-        !projectionToSave.expenses || !projectionToSave.incomeGrowth) {
-      throw new Error('Missing required projection data');
-    }
-    
-    const response = await fetch('/api/financial-projections', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(projectionToSave),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to save projection');
-    }
-    
-    const savedProjection = await response.json();
-    
-    // Update the UI
-    toast({
-      title: "Success",
-      description: "Projection saved successfully",
-    });
-    
-    // Refresh the saved projections list
-    queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
-    
-    // If this is a first-time user, mark them as having completed onboarding
-    if (isFirstTimeUser && completeOnboarding) {
-      console.log("User saved their first projection, marking as completed onboarding");
-      try {
-        await completeOnboarding();
-      } catch (error) {
-        console.error("Failed to update onboarding status:", error);
-      }
-    }
-    
-    return savedProjection;
-    
-  } catch (error: any) {
-    console.error('Error saving projection:', error);
-    toast({
-      title: "Error",
-      description: error.message || 'Failed to save projection',
-      variant: "destructive"
-    });
-    throw error;
-  }
-};
-
-// Function to load a saved projection with proper error handling
-const loadSavedProjection = async (projectionId: number) => {
-  try {
-    // Set loading state and switch to loading tab for visual feedback
-    setIsLoadingProjection(true);
-    setMainTab("loading");
-    
-    // Clear existing state first for a complete reset
-    setProjectionData(null);
-    setTimeframe("10 Years");
-    setAge(25);
-    setStartingSavings(5000);
-    setIncome(40000);
-    setExpenses(35000);
-    setIncomeGrowth(3.0);
-    setStudentLoanDebt(0);
-    setEmergencyFundAmount(10000);
-    setPersonalLoanTermYears(5);
-    setPersonalLoanInterestRate(8.0);
-    
-    console.log(`Loading projection ${projectionId} with fresh state`);
-    
-    // Force a refetch by clearing the React Query cache for this projection
-    queryClient.removeQueries({ queryKey: ['/api/financial-projections/detail', projectionId] });
-    
-    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
-    if (!response.ok) {
-      throw new Error(`Failed to load projection: ${response.statusText}`);
-    }
-    
-    const savedProjection = await response.json();
-    
-    // Validate the projection data
-    if (!savedProjection || !savedProjection.projectionData) {
-      throw new Error('Invalid projection data');
-    }
-    
-    // Set projection name
-    setProjectionName(savedProjection.name || `Projection ${projectionId}`);
-    
-    // Update form fields with saved values (if they exist)
-    setTimeframe(savedProjection.timeframe || "10 Years");
-    setAge(savedProjection.startingAge || 25);
-    setStartingSavings(savedProjection.startingSavings || 5000);
-    setIncome(savedProjection.annualIncome || 40000);
-    setExpenses(savedProjection.annualExpenses || 35000);
-    setIncomeGrowth(savedProjection.incomeGrowthRate || 3.0);
-    setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
-    setEmergencyFundAmount(savedProjection.emergencyFundAmount || 10000);
-    setPersonalLoanTermYears(savedProjection.personalLoanTermYears || 5);
-    setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate || 8.0);
-    
-    // Parse projection data if it's a string
-    let parsedProjectionData;
-    try {
-      parsedProjectionData = typeof savedProjection.projectionData === 'string' 
-        ? JSON.parse(savedProjection.projectionData)
-        : savedProjection.projectionData;
-    } catch (parseError) {
-      console.error('Error parsing projection data:', parseError);
-      throw new Error('Invalid projection data format');
-    }
-    
-    // Ensure projection data has the required properties
-    if (!parsedProjectionData || !parsedProjectionData.ages || !Array.isArray(parsedProjectionData.ages)) {
-      console.error('Missing or invalid ages array in projection data');
-      
-      // Initialize with safe defaults
-      parsedProjectionData = parsedProjectionData || {};
-      parsedProjectionData.ages = parsedProjectionData.ages || [savedProjection.startingAge || 25]; 
-      parsedProjectionData.netWorth = parsedProjectionData.netWorth || [savedProjection.startingSavings || 0];
-      parsedProjectionData.income = parsedProjectionData.income || [savedProjection.income || 0];
-      parsedProjectionData.expenses = parsedProjectionData.expenses || [savedProjection.expenses || 0];
-    }
-    
-    // Update all state values in a single batch
-    const stateUpdates = {
-      projectionName: savedProjection.name || 'My Projection',
-      timeframe: `${savedProjection.timeframe || 10} Years`,
-      age: savedProjection.startingAge || 25,
-      startingSavings: savedProjection.startingSavings || 0,
-      income: savedProjection.income || 0,
-      expenses: savedProjection.expenses || 0,
-      incomeGrowth: savedProjection.incomeGrowth || 0.03,
-      studentLoanDebt: savedProjection.studentLoanDebt || 0,
-      emergencyFundAmount: savedProjection.emergencyFundAmount || 10000,
-      personalLoanTermYears: savedProjection.personalLoanTermYears || 5,
-      personalLoanInterestRate: savedProjection.personalLoanInterestRate || 8.0,
-      projectionData: {
-        ...parsedProjectionData,
-        _key: `projection-${projectionId}-${new Date().getTime()}`
-      }
-    };
-    
-    // Apply all state updates at once
-    setProjectionName(stateUpdates.projectionName);
-    setTimeframe(stateUpdates.timeframe);
-    setAge(stateUpdates.age);
-    setStartingSavings(stateUpdates.startingSavings);
-    setIncome(stateUpdates.income);
-    setExpenses(stateUpdates.expenses);
-    setIncomeGrowth(stateUpdates.incomeGrowth);
-    setStudentLoanDebt(stateUpdates.studentLoanDebt);
-    setEmergencyFundAmount(stateUpdates.emergencyFundAmount);
-    setPersonalLoanTermYears(stateUpdates.personalLoanTermYears);
-    setPersonalLoanInterestRate(stateUpdates.personalLoanInterestRate);
-    setProjectionData(stateUpdates.projectionData);
-    
-    // Switch to view tab
-    setMainTab("view");
-    
-  } catch (error: any) {
-    console.error('Error loading projection:', error);
-    // Show error to user
-    toast({
-      title: "Error",
-      description: error.message || 'Failed to load projection. Please try again.',
-      variant: "destructive"
-    });
-    
-    // Reset loading state and switch to edit tab if there was an error
-    setIsLoadingProjection(false);
-    setMainTab("edit");
-  } finally {
-    // Make sure loading state is reset even if there's no error
-    setIsLoadingProjection(false);
-  }
-};
-
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
   queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
@@ -2022,11 +1736,11 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       }
       
       return data;
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching projection:", error);
       toast({
         title: "Error Loading Projection",
-        description: error.message || "Failed to load the saved projection. Please try again.",
+        description: "Failed to load the saved projection. Please try again.",
         variant: "destructive"
       });
       throw error;
@@ -2464,16 +2178,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
           chartInstance.current.destroy();
         }
         
-        // Create new chart - passing the canvas element and correct parameters
-        const showIncome = activeTab === 'income' || activeTab === 'netWorth';
-        const showExpenses = activeTab === 'expenses' || activeTab === 'netWorth';
-        
-        chartInstance.current = createMainProjectionChart(
-          chartRef.current, 
-          projectionData, 
-          showIncome,  // showIncome boolean
-          showExpenses // showExpenses boolean
-        );
+        // Create new chart
+        chartInstance.current = createMainProjectionChart(ctx, projectionData, activeTab);
       }
     }
 
@@ -2598,36 +2304,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         </TabsList>
       
         <TabsContent value="view">
-          <ErrorBoundary fallback={
-            <div className="p-6 bg-red-50 text-red-700 rounded-md">
-              <h3 className="font-medium mb-2">Error loading projection</h3>
-              <p className="mb-4">There was a problem displaying this financial projection.</p>
-              <Button variant="outline" onClick={() => {
-                setProjectionData(null);
-                setMainTab("edit");
-              }}>
-                Create New Projection
-              </Button>
-            </div>
-          }>
-            {isLoadingSavedProjection ? (
-              <div className="p-6 flex justify-center items-center h-72">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-gray-500">Loading projection data...</p>
-                </div>
-              </div>
-            ) : !projectionData ? (
-              <div className="p-6 flex justify-center items-center h-72">
-                <div className="text-center">
-                  <p className="text-gray-500 mb-4">No projection data available.</p>
-                  <Button variant="outline" onClick={() => setMainTab("edit")}>
-                    Create New Projection
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Projection Settings</h3>
@@ -2799,9 +2476,64 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               className="w-full mt-6"
               onClick={async () => {
                 try {
-                  await saveProjection();
+                  // Adjust income based on location, but we don't need to adjust expenses again
+                  // since they're already adjusted in the UI as part of the expenses state
+                  const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
+                  const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
+                     
+                  const response = await fetch('/api/financial-projections', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      userId,
+                      name: projectionName, // Changed from projectionName to name to match schema
+                      timeframe: years,
+                      startingAge: age,
+                      startingSavings,
+                      income: Math.round(adjustedIncome),
+                      expenses: Math.round(adjustedExpenses),
+                      incomeGrowth,
+                      studentLoanDebt,
+                      projectionData: projectionData,
+                      includesCollegeCalculation: !!includedCollegeCalc,
+                      includesCareerCalculation: !!includedCareerCalc,
+                      collegeCalculationId: includedCollegeCalc?.id || null,
+                      careerCalculationId: includedCareerCalc?.id || null,
+                      locationAdjusted: !!locationCostData,
+                      locationZipCode: userData?.zipCode || null,
+                      costOfLivingIndex: locationCostData ? 
+                        locationCostData.income_adjustment_factor || 1.0 : null,
+                      incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                      // Save the configurable parameters
+                      emergencyFundAmount: emergencyFundAmount,
+                      personalLoanTermYears: personalLoanTermYears,
+                      personalLoanInterestRate: personalLoanInterestRate,
+                    }),
+                  });
+                  
+                  if (response.ok) {
+                    alert('Projection saved successfully!');
+                    // Invalidate the financial projections query to refresh the list
+                    queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+                    
+                    // If this is a first-time user, mark them as having completed onboarding
+                    if (isFirstTimeUser && completeOnboarding) {
+                      console.log("User saved their first projection, marking as completed onboarding");
+                      try {
+                        await completeOnboarding();
+                      } catch (error) {
+                        console.error("Failed to update onboarding status:", error);
+                        // Non-critical error, continue without showing an error to the user
+                      }
+                    }
+                  } else {
+                    throw new Error('Failed to save projection');
+                  }
                 } catch (error) {
                   console.error('Error saving projection:', error);
+                  alert('Failed to save projection. Please try again.');
                 }
               }}
             >
@@ -2857,7 +2589,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
             
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
               <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="text-sm text-gray-500 uppercase">Net Worth at {projectionData && projectionData.ages && projectionData.ages.length > 0 ? projectionData.ages[projectionData.ages.length - 1] : age}</p>
+                <p className="text-sm text-gray-500 uppercase">Net Worth at {projectionData?.ages?.length > 0 ? projectionData.ages[projectionData.ages.length - 1] : age}</p>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -2910,9 +2642,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
             </div>
           </CardContent>
         </Card>
-            </div>
-          )}
-          </ErrorBoundary>
+      </div>
         </TabsContent>
         
         <TabsContent value="edit">
@@ -3096,27 +2826,70 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               <Button 
                 onClick={async () => {
                   try {
-                    await saveProjection();
-                    // Return to the view tab on success
-                    setMainTab("view");
-                  } catch (error: any) {
+                    // Adjust income based on location
+                    const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
+                    const adjustedExpenses = expenses;
+                       
+                    const response = await fetch('/api/financial-projections', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        userId,
+                        name: projectionName,
+                        timeframe: years,
+                        startingAge: age,
+                        startingSavings,
+                        income: Math.round(adjustedIncome),
+                        expenses: Math.round(adjustedExpenses),
+                        incomeGrowth,
+                        studentLoanDebt,
+                        projectionData: projectionData,
+                        includesCollegeCalculation: !!includedCollegeCalc,
+                        includesCareerCalculation: !!includedCareerCalc,
+                        collegeCalculationId: includedCollegeCalc?.id || null,
+                        careerCalculationId: includedCareerCalc?.id || null,
+                        locationAdjusted: !!locationCostData,
+                        locationZipCode: userData?.zipCode || null,
+                        costOfLivingIndex: locationCostData ? 
+                          locationCostData.income_adjustment_factor || 1.0 : null,
+                        incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
+                        emergencyFundAmount: emergencyFundAmount,
+                        personalLoanTermYears: personalLoanTermYears,
+                        personalLoanInterestRate: personalLoanInterestRate,
+                      }),
+                    });
+                    
+                    if (response.ok) {
+                      alert('Projection saved successfully!');
+                      queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+                      
+                      // If this is a first-time user, mark them as having completed onboarding
+                      if (isFirstTimeUser && completeOnboarding) {
+                        console.log("User saved their first projection, marking as completed onboarding");
+                        try {
+                          await completeOnboarding();
+                        } catch (error) {
+                          console.error("Failed to update onboarding status:", error);
+                          // Non-critical error, continue without showing an error to the user
+                        }
+                      }
+                      
+                      // After saving, switch back to view tab
+                      setMainTab("view");
+                    } else {
+                      throw new Error('Failed to save projection');
+                    }
+                  } catch (error) {
                     console.error('Error saving projection:', error);
-                    // Error is already displayed via toast in saveProjection function
+                    alert('Failed to save projection. Please try again.');
                   }
                 }}
               >
                 Save Changes
               </Button>
             </div>
-          </div>
-        </TabsContent>
-        
-        {/* Loading tab content */}
-        <TabsContent value="loading">
-          <div className="p-8 bg-white rounded-lg shadow flex flex-col items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-6"></div>
-            <h2 className="text-xl font-medium text-gray-700 mb-2">Loading Financial Projection</h2>
-            <p className="text-gray-500">Please wait while we prepare your financial data...</p>
           </div>
         </TabsContent>
         
@@ -3372,17 +3145,53 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => {
-                                    // Instead of trying to manipulate the current component's state,
-                                    // navigate to a dedicated URL for viewing a specific projection
-                                    const timestamp = Date.now(); // Add timestamp to prevent caching
+                                    // Reset all state related to projections
+                                    setProjectionData(null);
+                                    setAge(25);
+                                    setTimeframe("10 Years");
+                                    setStartingSavings(5000);
+                                    setIncome(40000);
+                                    setExpenses(35000);
+                                    setIncomeGrowth(0.03);
+                                    setStudentLoanDebt(0);
+                                    setEmergencyFundAmount(10000);
+                                    setPersonalLoanTermYears(5);
+                                    setPersonalLoanInterestRate(8.0);
+                                    setProjectionName("");
                                     
-                                    console.log(`Navigating to dedicated view for projection ${projection.id}`);
+                                    // Force the React Query cache to evict all related data
+                                    queryClient.removeQueries({ queryKey: ['/api/financial-projections/detail', projection.id] });
                                     
-                                    // Navigate to new page to completely avoid state conflicts
-                                    window.location.href = `/projection/${projection.id}?t=${timestamp}`;
+                                    // Generate a truly unique timestamp to ensure cache busting
+                                    const timestamp = Date.now();
+                                    
+                                    console.log(`Loading projection ${projection.id} with fresh state and cache at timestamp: ${timestamp}`);
+                                    
+                                    // Force UI to loading state first to ensure complete reset
+                                    setMainTab("loading");
+                                    
+                                    // Small delay to ensure React has time to process state changes
+                                    setTimeout(() => {
+                                      // Clear the React Query cache completely to force fresh data load
+                                      // This is a more aggressive approach to ensure clean state
+                                      queryClient.clear();
+                                      
+                                      console.log(`Completely reset React Query cache and state before loading projection ${projection.id}`);
+                                      
+                                      // Use URL approach for navigation - this triggers all the proper loading mechanisms
+                                      setLocation(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
+                                        replace: true // Replace current history entry to avoid back button issues
+                                      });
+                                      
+                                      // Switch to view tab after a longer delay to ensure all state changes have propagated
+                                      setTimeout(() => {
+                                        setMainTab("view");
+                                        console.log(`Switched to view tab for projection ${projection.id}`);
+                                      }, 300);
+                                    }, 100);
                                   }}
                                 >
-                                  View
+                                  Load
                                 </Button>
                                 <Button 
                                   variant="destructive" 
@@ -3788,28 +3597,26 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       
       {/* Detailed Cash Flow Table with collapsible container */}
       {/* Apply the fixLiabilityCalculation function to ensure graduate school loans are properly counted */}
-      {projectionData && (
-        <CashFlowTable 
-          {...fixLiabilityCalculation(projectionData)}
-          ages={projectionData.ages || []}
-          income={projectionData.income || []}
-          spouseIncome={projectionData.spouseIncome || []}
-          expenses={projectionData.expenses || []}
-          housingExpenses={projectionData.housing || []}
-          transportationExpenses={projectionData.transportation || []}
-          foodExpenses={projectionData.food || []}
-          healthcareExpenses={projectionData.healthcare || []}
-          personalInsuranceExpenses={projectionData.personalInsurance || []}
-          apparelExpenses={projectionData.apparel || []}
-          servicesExpenses={projectionData.services || []}
-          entertainmentExpenses={projectionData.entertainment || []}
-          otherExpenses={projectionData.other || []}
-          educationExpenses={projectionData.education || []}
-          childcareExpenses={projectionData.childcare || []}
-          debtExpenses={projectionData.debt || []}
-          discretionaryExpenses={projectionData.discretionary || []}
-        />
-      )}
+      <CashFlowTable 
+        {...fixLiabilityCalculation(projectionData)}
+        ages={projectionData.ages}
+        income={projectionData.income}
+        spouseIncome={projectionData.spouseIncome}
+        expenses={projectionData.expenses}
+        housingExpenses={projectionData.housing}
+        transportationExpenses={projectionData.transportation}
+        foodExpenses={projectionData.food}
+        healthcareExpenses={projectionData.healthcare}
+        personalInsuranceExpenses={projectionData.personalInsurance}
+        apparelExpenses={projectionData.apparel}
+        servicesExpenses={projectionData.services}
+        entertainmentExpenses={projectionData.entertainment}
+        otherExpenses={projectionData.other}
+        educationExpenses={projectionData.education}
+        childcareExpenses={projectionData.childcare} 
+        debtExpenses={projectionData.debt}
+        discretionaryExpenses={projectionData.discretionary}
+      />
       
       {/* Card to display included college and career calculations */}
       <Card className="mb-6">

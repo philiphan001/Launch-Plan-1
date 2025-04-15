@@ -55,11 +55,11 @@ export async function generateCareerTimeline(
       messages: [
         {
           role: "system",
-          content: "You are a career path specialist from the Deep South who creates accurate, realistic career progression timelines for high school students in Southern states. Your timelines are personalized to specific careers, showing realistic progression from education through various career stages with a Southern perspective. Use warm, friendly language with Southern expressions and references to Southern educational institutions, companies, and work cultures when appropriate. You must respond with valid JSON."
+          content: "You are a career path specialist who creates accurate, realistic career progression timelines for high school students. Your timelines are personalized to specific careers, showing realistic progression from education through various career stages. You must respond with valid JSON."
         },
         {
           role: "user",
-          content: `Hey y'all! Create a detailed career progression timeline for the ${careerTitle} profession that will resonate with students from the Deep South.
+          content: `Create a detailed career progression timeline for the ${careerTitle} profession.
           ${description ? `Additional career information: ${description}` : ''}
           
           Format your response as JSON with the following structure:
@@ -68,7 +68,7 @@ export async function generateCareerTimeline(
               {
                 "year": 0,
                 "stage": "education",
-                "description": "Graduate high school and begin specific education path for this career with references to Southern educational options",
+                "description": "Graduate high school and begin specific education path for this career",
                 "earnings": 0
               },
               {
@@ -144,11 +144,11 @@ export async function generateCareerTimeline(
     console.error("Error generating career timeline:", error);
     return {
       timeline: [
-        { year: 0, stage: "education", description: "Graduate high school and begin your education journey at a Southern community college or university", earnings: 0 },
-        { year: 4, stage: "education", description: "Complete relevant degree or training from a respected Southern institution", earnings: 0 },
-        { year: 5, stage: "entry", description: "First professional position with a local company in the South", earnings: 45000 },
-        { year: 8, stage: "mid", description: "Mid-level position with more responsibilities at a growing Southern business", earnings: 65000 },
-        { year: 15, stage: "senior", description: "Senior position with leadership opportunities in a thriving Southern market", earnings: 95000 }
+        { year: 0, stage: "education", description: "Graduate high school and begin your education journey", earnings: 0 },
+        { year: 4, stage: "education", description: "Complete relevant degree or training", earnings: 0 },
+        { year: 5, stage: "entry", description: "First professional position", earnings: 45000 },
+        { year: 8, stage: "mid", description: "Mid-level position with more responsibilities", earnings: 65000 },
+        { year: 15, stage: "senior", description: "Senior position with leadership opportunities", earnings: 95000 }
       ]
     };
   }
@@ -164,26 +164,26 @@ export async function generateCareerInsights(
       messages: [
         {
           role: "system",
-          content: "You are an enthusiastic career coach for high school students from the Deep South who makes career information exciting, relatable, and easy to understand. Use casual, engaging language with a Southern warmth and charm. Include regional references, colloquial expressions, and real-world examples that resonate with teenagers from states like Alabama, Mississippi, Louisiana, Georgia, and Texas. Relate examples to rural and small-town experiences when appropriate, as well as larger Southern cities. Avoid dry, academic language. You must respond with valid JSON."
+          content: "You are an enthusiastic career coach for high school students who makes career information exciting, relatable, and easy to understand. Use casual, engaging language with short sentences, interesting facts, and real-world examples that resonate with teenagers. Avoid dry, academic language. You must respond with valid JSON."
         },
         {
           role: "user",
-          content: `Hey y'all! I need some fun and engaging info about being a ${careerTitle} that will really connect with high school students from the Deep South.
+          content: `Hey! I need some fun and engaging info about being a ${careerTitle} that will really connect with high school students.
           ${description ? `Here's what we know: ${description}` : ''}
           
           Format your response as JSON with the following structure:
           {
-            "education": "Write a short, engaging paragraph about education paths using Southern expressions and references. Make it conversational and exciting! Include specific degree options, alternative paths, and how long it typically takes. Mention any cool specializations, and relate it to Southern schools, community colleges, and regional universities when appropriate.",
+            "education": "Write a short, engaging paragraph about education paths - make it conversational and exciting! Include specific degree options, alternative paths, and how long it typically takes. Mention any cool specializations.",
             
-            "pathways": "Create a fun, motivating paragraph about career growth - from entry-level to expert - using warm, Southern language. Include specific job titles at different stages and mention any exciting opportunities. Reference how this career might look in Southern communities, from small towns to bigger cities like Atlanta, New Orleans, or Houston. Keep it upbeat and inspirational!",
+            "pathways": "Create a fun, motivating paragraph about career growth - from entry-level to expert. Include specific job titles at different stages and mention any exciting opportunities. Keep it upbeat and inspirational!",
             
-            "dailyTasks": "Write a vivid, day-in-the-life style paragraph with Southern charm that helps students imagine themselves in this role. Use active language, specific examples that relate to Southern life and values, and mention both challenging and rewarding aspects.",
+            "dailyTasks": "Write a vivid, day-in-the-life style paragraph that helps students imagine themselves in this role. Use active language, specific examples, and mention both challenging and rewarding aspects.",
             
-            "skillsNeeded": "Create an energetic paragraph about must-have skills - technical AND personal traits - using Southern expressions and cultural references. Use examples that connect to Southern teen experiences where possible. Maybe reference activities like hunting, fishing, church youth groups, or local community events. Make it positive but honest about what it takes to succeed!",
+            "skillsNeeded": "Create an energetic paragraph about must-have skills - technical AND personal traits. Use examples that connect to teen experiences where possible. Make it positive but honest about what it takes to succeed!",
             
-            "futureOutlook": "Write an optimistic but realistic paragraph about job prospects and emerging trends, especially as they relate to the South. Include interesting facts about growth rates and how technology might change this career. Consider how this career looks specifically in Southern states and economies. Make students feel excited about the future!",
+            "futureOutlook": "Write an optimistic but realistic paragraph about job prospects and emerging trends. Include interesting facts about growth rates and how technology might change this career. Make students feel excited about the future!",
             
-            "relatedCareers": "Create a paragraph listing at least 5 related career options with brief explanations of how they connect. Use Southern expressions and relate them to opportunities within the South. Present these as cool alternatives students might not have considered!",
+            "relatedCareers": "Create a paragraph listing at least 5 related career options with brief explanations of how they connect. Present these as cool alternatives students might not have considered!",
             
             "salaryData": {
               "entryLevel": [entry-level salary as a number],

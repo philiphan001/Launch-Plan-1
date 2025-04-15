@@ -47,23 +47,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log("Checking authentication status...");
-        const response = await fetch('/api/auth/me', {
-          credentials: 'include', // Ensure cookies are sent with the request
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        });
-        
+        const response = await fetch('/api/auth/me');
         if (response.ok) {
           const userData = await response.json();
-          console.log("Authentication successful, user data:", userData);
           setUser(userData);
           setIsAuthenticated(true);
           setIsFirstTimeUser(!!userData.isFirstTimeUser);
         } else {
-          console.log("Not authenticated, status:", response.status);
           // Clear any stale state if not authenticated
           setUser(null);
           setIsAuthenticated(false);
