@@ -801,7 +801,7 @@ const Pathways = ({
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
                     onClick={() => {
                       setExplorationMethod('wheel');
                       // Clear previous results
@@ -811,17 +811,19 @@ const Pathways = ({
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
-                    <CardContent className="p-6 text-center">
-                      <div className="rounded-full bg-secondary h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
-                        <span className="material-icons text-2xl">casino</span>
+                    <div className="bg-gradient-to-r from-purple-500 to-blue-500 py-5">
+                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
+                        <span className="material-icons text-2xl text-purple-500">casino</span>
                       </div>
-                      <h3 className="text-lg font-medium mb-2">Identity Wheel</h3>
+                    </div>
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-lg font-bold mb-2 text-gray-800">Identity Wheel</h3>
                       <p className="text-sm text-gray-600">Spin a wheel to discover prompts about your values, talents, fears and wishes</p>
                     </CardContent>
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
                     onClick={() => {
                       setExplorationMethod('advancedWheel');
                       // Clear previous results
@@ -831,17 +833,19 @@ const Pathways = ({
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
-                    <CardContent className="p-6 text-center">
-                      <div className="rounded-full bg-purple-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
-                        <span className="material-icons text-2xl">psychology</span>
+                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 py-5">
+                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
+                        <span className="material-icons text-2xl text-indigo-500">psychology</span>
                       </div>
-                      <h3 className="text-lg font-medium mb-2">Advanced Identity Wheel</h3>
+                    </div>
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-lg font-bold mb-2 text-gray-800">Advanced Identity Wheel</h3>
                       <p className="text-sm text-gray-600">Explore deeper aspects of your identity with fun prompts and mini-games</p>
                     </CardContent>
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
                     onClick={() => {
                       setExplorationMethod('avatar');
                       // Clear previous results
@@ -851,17 +855,19 @@ const Pathways = ({
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
-                    <CardContent className="p-6 text-center">
-                      <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
-                        <span className="material-icons text-2xl">face</span>
+                    <div className="bg-gradient-to-r from-green-500 to-teal-500 py-5">
+                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
+                        <span className="material-icons text-2xl text-green-500">face</span>
                       </div>
-                      <h3 className="text-lg font-medium mb-2">Future Self Avatar</h3>
+                    </div>
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-lg font-bold mb-2 text-gray-800">Future Self Avatar</h3>
                       <p className="text-sm text-gray-600">Create a personalized avatar that represents your future self</p>
                     </CardContent>
                   </Card>
                   
                   <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
                     onClick={() => {
                       setExplorationMethod('quickSpin');
                       // Clear previous results
@@ -880,11 +886,13 @@ const Pathways = ({
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
-                    <CardContent className="p-6 text-center">
-                      <div className="rounded-full bg-yellow-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
-                        <span className="material-icons text-2xl">toys</span>
+                    <div className="bg-gradient-to-r from-amber-400 to-yellow-500 py-5">
+                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
+                        <span className="material-icons text-2xl text-amber-500">toys</span>
                       </div>
-                      <h3 className="text-lg font-medium mb-2">Quick Spin Game</h3>
+                    </div>
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-lg font-bold mb-2 text-gray-800">Quick Spin Game</h3>
                       <p className="text-sm text-gray-600">Play a quick spinning wheel game to explore your future identity</p>
                     </CardContent>
                   </Card>
