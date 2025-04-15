@@ -346,7 +346,7 @@ function App() {
         </Route>
         
         {/* Dedicated projection viewer route to avoid state conflicts */}
-        <Route path="/financial-projections/view/:id">
+        <Route path="/projection/:id">
           {(params) => {
             if (!user) {
               setLocation('/login');

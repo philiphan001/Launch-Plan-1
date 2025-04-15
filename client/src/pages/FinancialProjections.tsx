@@ -3379,7 +3379,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                     console.log(`Navigating to dedicated view for projection ${projection.id}`);
                                     
                                     // Navigate to new page to completely avoid state conflicts
-                                    window.location.href = `/financial-projections/view/${projection.id}?t=${timestamp}`;
+                                    window.location.href = `/projection/${projection.id}?t=${timestamp}`;
                                   }}
                                 >
                                   View
