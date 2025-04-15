@@ -116,9 +116,19 @@ const CollegeDiscovery = ({
     staleTime: 60 * 1000, // 1 minute
   });
   
+  // Track local favorites state to avoid UI refresh issues
+  const [localFavorites, setLocalFavorites] = useState<number[]>([]);
+  
+  // Update local favorites when API favorites change
+  useEffect(() => {
+    if (favoriteColleges.length > 0) {
+      setLocalFavorites(favoriteColleges.map(fav => fav.collegeId));
+    }
+  }, [favoriteColleges]);
+  
   // Check if a college is in favorites
   const isCollegeFavorite = (collegeId: number) => {
-    return favoriteColleges.some((favorite) => favorite.collegeId === collegeId);
+    return localFavorites.includes(collegeId);
   };
   
   // Add to favorites mutation
@@ -166,8 +176,12 @@ const CollegeDiscovery = ({
     const favorite = favoriteColleges.find((fav) => fav.collegeId === college.id);
     
     if (favorite) {
+      // Immediately update local state for instant UI feedback
+      setLocalFavorites(localFavorites.filter(id => id !== college.id));
       removeFromFavoritesMutation.mutate(favorite.id);
     } else {
+      // Immediately update local state for instant UI feedback
+      setLocalFavorites([...localFavorites, college.id]);
       addToFavoritesMutation.mutate(college.id);
     }
   };
@@ -732,8 +746,10 @@ const CollegeDiscovery = ({
                           </Button>
                           <Button 
                             size="sm"
-                            variant={isCollegeFavorite(college.id) ? "default" : "outline"}
-                            className={isCollegeFavorite(college.id) ? "bg-primary" : ""}
+                            variant="outline"
+                            className={isCollegeFavorite(college.id) 
+                              ? "bg-slate-900 text-white hover:bg-slate-800 border-slate-900" 
+                              : ""}
                             onClick={() => toggleFavorite(college)}
                             disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                           >
@@ -971,8 +987,10 @@ const CollegeDiscovery = ({
               
               <DialogFooter className="flex gap-2">
                 <Button 
-                  variant={isCollegeFavorite(selectedCollege.id) ? "default" : "outline"}
-                  className={isCollegeFavorite(selectedCollege.id) ? "bg-primary" : ""}
+                  variant="outline"
+                  className={isCollegeFavorite(selectedCollege.id) 
+                    ? "bg-slate-900 text-white hover:bg-slate-800 border-slate-900" 
+                    : ""}
                   onClick={() => toggleFavorite(selectedCollege)}
                   disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                 >
