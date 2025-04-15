@@ -3058,31 +3058,26 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => {
-                                    // Logic to load this projection
-                                    // We would need to set all the state variables to the values from this projection
-                                    const projData = projection.projectionData ? 
-                                      (typeof projection.projectionData === 'string' ? 
-                                        JSON.parse(projection.projectionData) : 
-                                        projection.projectionData) : 
-                                      null;
+                                    // Reset React Query cache for this projection to force a fresh load
+                                    queryClient.removeQueries({ queryKey: ['/api/financial-projections/detail', projection.id] });
                                     
-                                    if (projData) {
-                                      setProjectionData(projData);
-                                      setAge(projection.startingAge || (projData.ages?.[0] || 25));
-                                      setTimeframe(`${projection.timeframe || 10} Years`);
-                                      setStartingSavings(projection.startingSavings || 0);
-                                      setIncome(projection.income || 0);
-                                      setExpenses(projection.expenses || 0);
-                                      setIncomeGrowth(projection.incomeGrowth || 0.03);
-                                      setStudentLoanDebt(projection.studentLoanDebt || 0);
-                                      setEmergencyFundAmount(projection.emergencyFundAmount || 10000);
-                                      setPersonalLoanTermYears(projection.personalLoanTermYears || 5);
-                                      setPersonalLoanInterestRate(projection.personalLoanInterestRate || 8.0);
-                                      setProjectionName(projection.name);
-                                      
-                                      // Then switch to the view tab
+                                    // Generate a unique timestamp to ensure cache busting
+                                    const timestamp = Date.now();
+                                    
+                                    // Use navigation/URL approach for consistent loading behavior
+                                    // This ensures we use the same loading mechanism for all projections
+                                    navigate(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
+                                      replace: true // Replace current history entry to avoid back button issues
+                                    });
+                                    
+                                    // Clear projection state to ensure a fresh start
+                                    setProjectionData(null);
+                                    
+                                    // Force React to remount components by setting a temporary loading state
+                                    setMainTab("loading");
+                                    setTimeout(() => {
                                       setMainTab("view");
-                                    }
+                                    }, 100);
                                   }}
                                 >
                                   Load
