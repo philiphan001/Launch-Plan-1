@@ -13,6 +13,7 @@ import TaxBreakdownTable from "@/components/financial/TaxBreakdownTable";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import LocationAdjustmentInfo from "@/components/financial/LocationAdjustmentInfo";
 import CurrentProjectionSummary from "@/components/financial/CurrentProjectionSummary";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -2547,24 +2548,36 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         </TabsList>
       
         <TabsContent value="view">
-          {isLoadingSavedProjection ? (
-            <div className="p-6 flex justify-center items-center h-72">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading projection data...</p>
-              </div>
+          <ErrorBoundary fallback={
+            <div className="p-6 bg-red-50 text-red-700 rounded-md">
+              <h3 className="font-medium mb-2">Error loading projection</h3>
+              <p className="mb-4">There was a problem displaying this financial projection.</p>
+              <Button variant="outline" onClick={() => {
+                setProjectionData(null);
+                setMainTab("edit");
+              }}>
+                Create New Projection
+              </Button>
             </div>
-          ) : !projectionData ? (
-            <div className="p-6 flex justify-center items-center h-72">
-              <div className="text-center">
-                <p className="text-gray-500 mb-4">No projection data available.</p>
-                <Button variant="outline" onClick={() => setMainTab("edit")}>
-                  Create New Projection
-                </Button>
+          }>
+            {isLoadingSavedProjection ? (
+              <div className="p-6 flex justify-center items-center h-72">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading projection data...</p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            ) : !projectionData ? (
+              <div className="p-6 flex justify-center items-center h-72">
+                <div className="text-center">
+                  <p className="text-gray-500 mb-4">No projection data available.</p>
+                  <Button variant="outline" onClick={() => setMainTab("edit")}>
+                    Create New Projection
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Projection Settings</h3>
@@ -2849,6 +2862,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         </Card>
             </div>
           )}
+          </ErrorBoundary>
         </TabsContent>
         
         <TabsContent value="edit">
