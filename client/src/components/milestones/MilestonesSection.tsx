@@ -796,10 +796,16 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                               onSelect={() => {
                                                 setSpouseOccupation(career.title || "");
                                                 // If salary is available, update spouse income
-                                                if (career.salaryMedian && 
-                                                    typeof career.salaryMedian === 'number' && 
-                                                    !isNaN(career.salaryMedian)) {
-                                                  setSpouseIncome(career.salaryMedian);
+                                                if (career.salaryMedian) {
+                                                  // Ensure we're passing a number, not a string that could cause issues
+                                                  const safeIncome = typeof career.salaryMedian === 'number' && !isNaN(career.salaryMedian) 
+                                                    ? career.salaryMedian 
+                                                    : parseInt(String(career.salaryMedian)) || 50000;
+                                                  
+                                                  // Log for debugging
+                                                  console.log("Setting spouse income:", safeIncome, "from career:", career.title);
+                                                  
+                                                  setSpouseIncome(safeIncome);
                                                 }
                                               }}
                                               className="flex items-center"

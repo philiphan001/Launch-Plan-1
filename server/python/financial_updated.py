@@ -1095,15 +1095,34 @@ class FinancialCalculator:
                         
                         # Use safer conversion with better error handling for spouse data
                         try:
-                            # Get spouse income, assets, and liabilities with safe fallbacks
+                            # Get spouse income with robust type handling
                             spouse_income_value = milestone.get('spouse_income', milestone.get('spouseIncome', 0))
-                            # Enhanced type conversion that handles various input types
+                            
+                            # Log the raw value for debugging
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nProcessing spouse_income_value: {spouse_income_value}, type: {type(spouse_income_value)}\n")
+                            
+                            # Extremely robust type conversion with extensive error handling
                             try:
-                                spouse_income = int(float(spouse_income_value)) if spouse_income_value is not None else 0
-                            except (ValueError, TypeError):
-                                # Log the error and use default value
+                                # If it's already a number (int or float), just convert to int
+                                if isinstance(spouse_income_value, (int, float)):
+                                    spouse_income = int(spouse_income_value)
+                                # If it's a string that represents a number
+                                elif isinstance(spouse_income_value, str) and spouse_income_value.strip():
+                                    # Remove any non-numeric characters except decimal point
+                                    cleaned_value = ''.join(c for c in spouse_income_value if c.isdigit() or c == '.')
+                                    spouse_income = int(float(cleaned_value)) if cleaned_value else 50000
+                                # If it's None or any other type
+                                else:
+                                    spouse_income = 50000  # Default fallback
+                                    
+                                # Log the processed value
                                 with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"ERROR converting spouse_income_value: {spouse_income_value}, type: {type(spouse_income_value)}\n")
+                                    f.write(f"Successfully converted spouse_income to: {spouse_income}\n")
+                            except Exception as e:
+                                # Catch any possible error and use default
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"ERROR converting spouse_income_value: {spouse_income_value}, error: {str(e)}\n")
                                 spouse_income = 50000  # Default fallback
                             
                             spouse_assets_value = milestone.get('spouse_assets', milestone.get('spouseAssets', 0)) 
@@ -1287,12 +1306,47 @@ class FinancialCalculator:
                                 growth_factor = 1.03 ** (i - milestone_year)
                                 spouse_income_for_year = int(spouse_income_safe * growth_factor)
                                 
-                                # Only store spouse income separately for visualization
-                                spouse_income_yearly[i] = spouse_income_for_year
+                                # Store spouse income separately for visualization with defensive checks
+                                try:
+                                    spouse_income_yearly[i] = spouse_income_for_year
+                                    
+                                    # Log for debugging
+                                    with open('healthcare_debug.log', 'a') as log_file:
+                                        log_file.write(f"Setting spouse_income_yearly[{i}] = {spouse_income_for_year}\n")
+                                        
+                                except Exception as e:
+                                    with open('healthcare_debug.log', 'a') as log_file:
+                                        log_file.write(f"Error setting spouse_income_yearly[{i}]: {str(e)}\n")
                                 
                                 # To keep cash flow and net worth calculations accurate, update total income
                                 # This is separate from the visualization data
-                                total_income_yearly[i] = income_yearly[i] + spouse_income_yearly[i]
+                                try:
+                                    # Get both incomes with fallbacks
+                                    primary_income = income_yearly[i] if i < len(income_yearly) else 0
+                                    secondary_income = spouse_income_yearly[i] if i < len(spouse_income_yearly) else 0
+                                    
+                                    # Calculate the total income
+                                    total = primary_income + secondary_income
+                                    
+                                    # Update the array with bounds checking
+                                    if i < len(total_income_yearly):
+                                        old_total = total_income_yearly[i]
+                                        total_income_yearly[i] = total
+                                        
+                                        with open('healthcare_debug.log', 'a') as log_file:
+                                            log_file.write(f"Year {i}: Updated total_income_yearly from {old_total} to {total} " +
+                                                        f"(primary: {primary_income} + spouse: {secondary_income})\n")
+                                    else:
+                                        with open('healthcare_debug.log', 'a') as log_file:
+                                            log_file.write(f"Warning: Index {i} out of range for total_income_yearly (length: {len(total_income_yearly)})\n")
+                                except Exception as e:
+                                    with open('healthcare_debug.log', 'a') as log_file:
+                                        log_file.write(f"Error updating total_income_yearly[{i}]: {str(e)}\n")
+                                        log_file.write(f"Using fallback method for total_income calculation\n")
+                                    
+                                    # Fallback calculation if anything goes wrong
+                                    if i < len(total_income_yearly) and i < len(income_yearly):
+                                        total_income_yearly[i] = income_yearly[i] + spouse_income_for_year
                                 
                                 # Log the income split for debugging
                                 with open('healthcare_debug.log', 'a') as f:
