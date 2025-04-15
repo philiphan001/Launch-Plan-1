@@ -2996,64 +2996,12 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               <Button 
                 onClick={async () => {
                   try {
-                    // Adjust income based on location
-                    const adjustedIncome = income * (locationCostData?.income_adjustment_factor || 1.0);
-                    const adjustedExpenses = expenses;
-                       
-                    const response = await fetch('/api/financial-projections', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({
-                        userId,
-                        name: projectionName,
-                        timeframe: years,
-                        startingAge: age,
-                        startingSavings,
-                        income: Math.round(adjustedIncome),
-                        expenses: Math.round(adjustedExpenses),
-                        incomeGrowth,
-                        studentLoanDebt,
-                        projectionData: projectionData,
-                        includesCollegeCalculation: !!includedCollegeCalc,
-                        includesCareerCalculation: !!includedCareerCalc,
-                        collegeCalculationId: includedCollegeCalc?.id || null,
-                        careerCalculationId: includedCareerCalc?.id || null,
-                        locationAdjusted: !!locationCostData,
-                        locationZipCode: userData?.zipCode || null,
-                        costOfLivingIndex: locationCostData ? 
-                          locationCostData.income_adjustment_factor || 1.0 : null,
-                        incomeAdjustmentFactor: locationCostData?.income_adjustment_factor || null,
-                        emergencyFundAmount: emergencyFundAmount,
-                        personalLoanTermYears: personalLoanTermYears,
-                        personalLoanInterestRate: personalLoanInterestRate,
-                      }),
-                    });
-                    
-                    if (response.ok) {
-                      alert('Projection saved successfully!');
-                      queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
-                      
-                      // If this is a first-time user, mark them as having completed onboarding
-                      if (isFirstTimeUser && completeOnboarding) {
-                        console.log("User saved their first projection, marking as completed onboarding");
-                        try {
-                          await completeOnboarding();
-                        } catch (error) {
-                          console.error("Failed to update onboarding status:", error);
-                          // Non-critical error, continue without showing an error to the user
-                        }
-                      }
-                      
-                      // After saving, switch back to view tab
-                      setMainTab("view");
-                    } else {
-                      throw new Error('Failed to save projection');
-                    }
-                  } catch (error) {
+                    await saveProjection();
+                    // Return to the view tab on success
+                    setMainTab("view");
+                  } catch (error: any) {
                     console.error('Error saving projection:', error);
-                    alert('Failed to save projection. Please try again.');
+                    // Error is already displayed via toast in saveProjection function
                   }
                 }}
               >
