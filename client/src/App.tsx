@@ -348,7 +348,19 @@ function App() {
         {/* Dedicated projection viewer route to avoid state conflicts */}
         <Route path="/financial-projections/view/:id">
           {(params) => {
-            return user ? <ProjectionViewer user={user} isAuthenticated={isAuthenticated} isFirstTimeUser={isFirstTimeUser} login={login} signup={signup} logout={logout} completeOnboarding={completeOnboarding} /> : <Redirect to="/login" />;
+            if (!user) {
+              setLocation('/login');
+              return null;
+            }
+            return <ProjectionViewer 
+              user={user} 
+              isAuthenticated={isAuthenticated} 
+              isFirstTimeUser={isFirstTimeUser} 
+              login={login} 
+              signup={signup} 
+              logout={logout} 
+              completeOnboarding={completeOnboarding} 
+            />;
           }}
         </Route>
         

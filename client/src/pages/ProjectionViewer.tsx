@@ -4,7 +4,20 @@ import { AuthProps } from "@/interfaces/auth";
 import { FinancialProjection } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+// Using custom Spinner component directly since the import was causing issues
+const Spinner = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg", className?: string }) => {
+  const sizeClass = {
+    "sm": "h-4 w-4 border-2",
+    "md": "h-8 w-8 border-4",
+    "lg": "h-12 w-12 border-4",
+  }[size];
+  
+  return (
+    <div
+      className={`animate-spin rounded-full border-t-transparent border-primary ${sizeClass} ${className}`}
+    />
+  );
+};
 import { toast } from "@/hooks/use-toast";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
@@ -43,25 +56,42 @@ const ProjectionViewer = ({ user }: AuthProps) => {
         const data = await response.json();
         setProjection(data);
         
+        // Parse the projection data which is stored as JSON (unknown type)
+        const parsedData = data.projectionData ? 
+          (typeof data.projectionData === 'string' ? 
+            JSON.parse(data.projectionData) : data.projectionData) : null;
+        
         // Initialize the chart once we have data
         setTimeout(() => {
-          if (chartRef.current && data.results) {
+          if (chartRef.current && parsedData) {
             if (chartInstance.current) {
               chartInstance.current.destroy();
             }
             
             const ctx = chartRef.current.getContext('2d');
             if (ctx) {
+              // Create a simple demo chart if no detailed data available
+              const timeframe = data.timeframe || 40;
+              const startAge = data.startingAge || 20;
+              const ages = Array.from({length: timeframe}, (_, i) => startAge + i);
+              const income = Array.from({length: timeframe}, (_, i) => data.income * Math.pow(1 + data.incomeGrowth, i));
+              const expenses = Array.from({length: timeframe}, () => data.expenses * 12);
+              
+              // If we have detailed results in parsed data, use them
+              const chartData = {
+                ages: parsedData?.ages || ages,
+                netWorth: parsedData?.netWorth || 
+                  Array.from({length: timeframe}, (_, i) => data.startingSavings + (income[i] - expenses[i]) * i),
+                income: parsedData?.annualIncome || income,
+                expenses: parsedData?.annualExpenses || expenses,
+                assets: parsedData?.assets || [],
+                liabilities: parsedData?.liabilities ? 
+                  fixLiabilityCalculation(parsedData.liabilities) : [],
+              };
+              
               chartInstance.current = createMainProjectionChart(
                 chartRef.current,
-                {
-                  ages: data.results.ages || [],
-                  netWorth: data.results.netWorth || [],
-                  income: data.results.annualIncome || [],
-                  expenses: data.results.annualExpenses || [],
-                  assets: data.results.assets || [],
-                  liabilities: data.results.liabilities ? fixLiabilityCalculation(data.results.liabilities) : [],
-                },
+                chartData,
                 true, // show income
                 true  // show expenses
               );
@@ -147,10 +177,11 @@ const ProjectionViewer = ({ user }: AuthProps) => {
           </CardContent>
         </Card>
 
-        {projection.results?.currentExpenses && (
+        {/* Check for expenses in the projection's data */}
+        {projection.projectionData && typeof projection.projectionData === 'object' && 
+         (projection.projectionData as any).currentExpenses && (
           <ExpenseBreakdownChart 
-            currentExpenses={projection.results.currentExpenses} 
-            title="Current Monthly Expenses" 
+            currentExpenses={(projection.projectionData as any).currentExpenses} 
           />
         )}
 
@@ -162,7 +193,7 @@ const ProjectionViewer = ({ user }: AuthProps) => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div className="bg-primary/10 p-4 rounded-lg">
                 <h3 className="font-medium text-sm text-muted-foreground">Current Age</h3>
-                <p className="text-2xl font-bold">{projection.currentAge || "N/A"}</p>
+                <p className="text-2xl font-bold">{projection.startingAge || "N/A"}</p>
               </div>
               
               <div className="bg-primary/10 p-4 rounded-lg">
@@ -173,25 +204,25 @@ const ProjectionViewer = ({ user }: AuthProps) => {
               </div>
               
               <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Retirement Age</h3>
-                <p className="text-2xl font-bold">{projection.retirementAge || "N/A"}</p>
+                <h3 className="font-medium text-sm text-muted-foreground">Timeframe (Years)</h3>
+                <p className="text-2xl font-bold">{projection.timeframe || "N/A"}</p>
               </div>
               
               <div className="bg-primary/10 p-4 rounded-lg">
                 <h3 className="font-medium text-sm text-muted-foreground">Initial Savings</h3>
                 <p className="text-2xl font-bold">
-                  {projection.initialSavings ? formatCurrency(projection.initialSavings) : "N/A"}
+                  {projection.startingSavings ? formatCurrency(projection.startingSavings) : "N/A"}
                 </p>
               </div>
               
               <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Career Field</h3>
-                <p className="text-2xl font-bold">{projection.careerField || "N/A"}</p>
+                <h3 className="font-medium text-sm text-muted-foreground">Annual Expenses</h3>
+                <p className="text-2xl font-bold">{formatCurrency(projection.expenses * 12)}</p>
               </div>
               
               <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Location</h3>
-                <p className="text-2xl font-bold">{projection.location || "N/A"}</p>
+                <h3 className="font-medium text-sm text-muted-foreground">Income Growth</h3>
+                <p className="text-2xl font-bold">{(projection.incomeGrowth * 100).toFixed(1)}%/year</p>
               </div>
             </div>
           </CardContent>
