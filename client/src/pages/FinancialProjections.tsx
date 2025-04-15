@@ -603,57 +603,90 @@ const FinancialProjections = ({
           setStartingSavings(5000); // Default starting savings
         }
 
-        // First try to load pathway data from localStorage
-        const pathwayDataStr = localStorage.getItem('pathwayData');
-        let pathwayData = null;
+        // First try to load pathway data from localStorage with improved error handling
+        interface PathwayData {
+          selectedSchoolId?: number;
+          specificSchool?: string;
+          selectedCareer?: number;
+          selectedProfession?: string;
+          educationType?: string;
+          transferOption?: string;
+          location?: string | { zipCode: string; city?: string; state?: string };
+          zipCode?: string;
+          [key: string]: any; // Allow for other properties
+        }
         
-        if (pathwayDataStr) {
-          console.log("Found pathway data in localStorage");
-          try {
-            pathwayData = JSON.parse(pathwayDataStr);
-            console.log("Parsed pathway data:", pathwayData);
+        let pathwayData: PathwayData = {};
+        try {
+          // Safely get and parse pathway data
+          const pathwayDataStr = localStorage.getItem('pathwayData');
+          
+          if (pathwayDataStr) {
+            console.log("Found pathway data in localStorage");
             
-            // Validate that required fields are present
-            if (!pathwayData) {
-              console.error("Parsed pathway data is null or undefined");
-              // Initialize with a minimal valid object to prevent crashes
-              pathwayData = {};
-            }
-            
-            // Only attempt to add to favorites if authenticated
-            if (isAuthenticated && userId) {
-              // If pathway data is valid and user is authenticated, add college and career to favorites
+            try {
+              // Parse the data and validate it
+              const parsedData = JSON.parse(pathwayDataStr);
               
-              // If there's a specific school, find its ID and add to favorites
-              if (pathwayData.specificSchool && pathwayData.specificSchool !== "") {
-                // Look up the college ID if needed (can be enhanced)
-                if (pathwayData.selectedSchoolId) {
-                  console.log("Adding college to favorites from pathway data:", pathwayData.selectedSchoolId);
-                  addCollegeToFavoritesMutation.mutate(pathwayData.selectedSchoolId);
+              // Ensure we have valid data structure
+              if (parsedData && typeof parsedData === 'object') {
+                console.log("Successfully parsed pathway data:", parsedData);
+                pathwayData = parsedData as PathwayData;
+                
+                // Only attempt to add to favorites if authenticated and data is valid
+                if (isAuthenticated && userId) {
+                  console.log("User authenticated, processing favorites");
+                  
+                  // Safely add college to favorites if available
+                  if (pathwayData.selectedSchoolId && 
+                      typeof pathwayData.selectedSchoolId === 'number') {
+                    console.log("Adding college to favorites:", pathwayData.selectedSchoolId);
+                    try {
+                      addCollegeToFavoritesMutation.mutate(pathwayData.selectedSchoolId);
+                    } catch (favError) {
+                      console.error("Error adding college to favorites:", favError);
+                    }
+                  }
+                  
+                  // Safely add career to favorites if available
+                  if (pathwayData.selectedCareer && 
+                      typeof pathwayData.selectedCareer === 'number') {
+                    console.log("Adding career to favorites:", pathwayData.selectedCareer);
+                    try {
+                      addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
+                    } catch (favError) {
+                      console.error("Error adding career to favorites:", favError);
+                    }
+                  }
+                } else {
+                  console.log("User not authenticated, skipping adding favorites");
                 }
+              } else {
+                console.error("Parsed pathway data is not a valid object");
+                // Keep default empty object
               }
+            } catch (parseError) {
+              console.error("Error parsing pathway data JSON:", parseError);
+              console.error("Invalid pathway data string:", pathwayDataStr);
               
-              // If there's a career ID, add it to favorites
-              if (pathwayData.selectedCareer) {
-                console.log("Adding career to favorites from pathway data:", pathwayData.selectedCareer);
-                addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
-              }
-            } else {
-              console.log("User not authenticated, skipping adding favorites");
+              toast({
+                title: "Error processing pathway data",
+                description: "There was an issue with your saved pathway data. Default values will be used.",
+                variant: "destructive"
+              });
             }
-          } catch (error) {
-            console.error("Error parsing pathway data from localStorage:", error);
-            console.error("Raw pathway data string:", pathwayDataStr);
-            // Initialize with a minimal valid object to prevent crashes
-            pathwayData = {};
-            toast({
-              title: "Error processing pathway data",
-              description: "There was an issue generating your financial plan. Default values will be used.",
-              variant: "destructive"
-            });
+          } else {
+            console.log("No pathway data found in localStorage, using default values");
           }
-        } else {
-          console.log("No pathway data in localStorage, using favorite data instead");
+        } catch (storageError) {
+          // Handle any localStorage access errors
+          console.error("Error accessing localStorage:", storageError);
+          
+          toast({
+            title: "Storage Access Error",
+            description: "Could not access saved data. Default values will be used.",
+            variant: "destructive"
+          });
         }
         
         // If we have favorite college data, use it for student loans
@@ -684,35 +717,66 @@ const FinancialProjections = ({
           
           // If no student loan amount found, use an estimate based on college type
           if (studentLoanAmount === 0) {
-            if (pathwayData?.educationType === "4year") {
-              studentLoanAmount = 30000; // Estimate for 4-year college
-            } else if (pathwayData?.educationType === "2year") {
-              studentLoanAmount = 15000; // Estimate for 2-year college
-              
-              // If transferring to 4-year, add more debt
-              if (pathwayData?.transferOption === "yes") {
-                studentLoanAmount += 20000; // Additional debt from transfer institution
+            try {
+              // Use safer property access with type checking
+              const eduType = pathwayData?.educationType;
+              if (typeof eduType === 'string') {
+                if (eduType === "4year") {
+                  studentLoanAmount = 30000; // Estimate for 4-year college
+                } else if (eduType === "2year") {
+                  studentLoanAmount = 15000; // Estimate for 2-year college
+                  
+                  // Safely check transfer option
+                  const transferOpt = pathwayData?.transferOption;
+                  if (typeof transferOpt === 'string' && transferOpt === "yes") {
+                    studentLoanAmount += 20000; // Additional debt from transfer institution
+                  }
+                } else if (eduType === "vocational") {
+                  studentLoanAmount = 12000; // Estimate for vocational school
+                } else {
+                  // Default if education type not recognized
+                  studentLoanAmount = 25000;
+                  console.log("Unrecognized education type:", eduType);
+                }
+              } else {
+                // Default if no education type or invalid type
+                studentLoanAmount = 25000;
+                console.log("No valid education type found in pathway data");
               }
-            } else if (pathwayData?.educationType === "vocational") {
-              studentLoanAmount = 12000; // Estimate for vocational school
-            } else {
-              // Default if no education type specified
-              studentLoanAmount = 25000;
+            } catch (error) {
+              console.error("Error processing education type:", error);
+              studentLoanAmount = 25000; // Default fallback
             }
           }
-        } else if (pathwayData) {
+        } else if (pathwayData && Object.keys(pathwayData).length > 0) {
           // If no favorite college but pathway data exists, use that
-          if (pathwayData.educationType === "4year") {
-            studentLoanAmount = 30000; // Estimate for 4-year college
-          } else if (pathwayData.educationType === "2year") {
-            studentLoanAmount = 15000; // Estimate for 2-year college
-            
-            // If transferring to 4-year, add more debt
-            if (pathwayData.transferOption === "yes") {
-              studentLoanAmount += 20000; // Additional debt from transfer institution
+          try {
+            // Use safer property access with type checking
+            const eduType = pathwayData.educationType;
+            if (typeof eduType === 'string') {
+              if (eduType === "4year") {
+                studentLoanAmount = 30000; // Estimate for 4-year college
+              } else if (eduType === "2year") {
+                studentLoanAmount = 15000; // Estimate for 2-year college
+                
+                // Safely check transfer option
+                const transferOpt = pathwayData.transferOption;
+                if (typeof transferOpt === 'string' && transferOpt === "yes") {
+                  studentLoanAmount += 20000; // Additional debt from transfer institution
+                }
+              } else if (eduType === "vocational") {
+                studentLoanAmount = 12000; // Estimate for vocational school
+              } else {
+                // Default if education type not recognized
+                studentLoanAmount = 25000;
+              }
+            } else {
+              // Default if no valid education type
+              studentLoanAmount = 25000;
             }
-          } else if (pathwayData.educationType === "vocational") {
-            studentLoanAmount = 12000; // Estimate for vocational school
+          } catch (error) {
+            console.error("Error processing pathway education data:", error);
+            studentLoanAmount = 25000; // Default fallback
           }
         }
         
@@ -762,8 +826,10 @@ const FinancialProjections = ({
           }
         } else if (pathwayData?.selectedProfession && careers && careers.length > 0) {
           // If no favorite careers but pathway data exists, use selected profession
+          // We know selectedProfession exists because of the condition check above
+          const selectedProfession = pathwayData.selectedProfession!;
           const selectedCareer = careers.find((c: any) => 
-            c.title.toLowerCase() === pathwayData.selectedProfession.toLowerCase());
+            c.title.toLowerCase() === selectedProfession.toLowerCase());
           
           if (selectedCareer) {
             startingIncome = selectedCareer.salary_pct_10 || 
