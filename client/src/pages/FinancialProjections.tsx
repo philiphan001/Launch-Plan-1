@@ -6,9 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
-import AssetBreakdownChart from "@/components/financial/AssetBreakdownChart";
-import EnhancedAssetBreakdownChart from "@/components/financial/EnhancedAssetBreakdownChart";
-import RetirementGrowthWidget from "@/components/financial/RetirementGrowthWidget";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
 import TaxBreakdownChart from "@/components/financial/TaxBreakdownChart";
@@ -216,7 +213,6 @@ const FinancialProjections = ({
   // State for collapsible sections
   const [locationSectionOpen, setLocationSectionOpen] = useState<boolean>(true);
   const [expenseSectionOpen, setExpenseSectionOpen] = useState<boolean>(true);
-  const [assetSectionOpen, setAssetSectionOpen] = useState<boolean>(true);
   const [debtSectionOpen, setDebtSectionOpen] = useState<boolean>(true);
   const [taxSectionOpen, setTaxSectionOpen] = useState<boolean>(true);
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
@@ -3497,48 +3493,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         </Card>
       )}
 
-      {/* Retirement Growth Rate Widget */}
-      <RetirementGrowthWidget />
-      
-      {/* Asset Breakdown Chart */}
-      {projectionData?.assets && projectionData?.savingsValue && (
-        <Card className="mb-6">
-          <Collapsible open={assetSectionOpen} onOpenChange={setAssetSectionOpen}>
-            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
-              <h3 className="text-lg font-medium">Asset Breakdown</h3>
-              {assetSectionOpen ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-6 pt-0">
-                <EnhancedAssetBreakdownChart 
-                  assetData={{
-                    savings: projectionData.savingsValue[0] || 0,
-                    retirement: projectionData.retirementContribution ? projectionData.retirementContribution[0] || 0 : 0,
-                    homeValue: projectionData.homeValue[0] || 0,
-                    carValue: projectionData.carValue[0] || 0,
-                    otherAssets: 0, // Set to 0 for now, may customize in the future
-                  }}
-                  projectionData={{
-                    ages: projectionData.ages,
-                    retirementContribution: projectionData.retirementContribution
-                  }}
-                />
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Understanding your assets:</span> This breakdown shows where your 
-                    wealth is currently allocated. Having a diverse mix of assets (savings, retirement accounts, property, etc.) 
-                    helps create a strong financial foundation and reduces risk through diversification.
-                  </p>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-      )}
+      {/* Debt Breakdown section starts below */}
 
       {/* Debt Breakdown by Loan Type */}
       {projectionData?.debt && (
