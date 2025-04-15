@@ -3364,53 +3364,17 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => {
-                                    // Reset all state related to projections
-                                    setProjectionData(null);
-                                    setAge(25);
-                                    setTimeframe("10 Years");
-                                    setStartingSavings(5000);
-                                    setIncome(40000);
-                                    setExpenses(35000);
-                                    setIncomeGrowth(0.03);
-                                    setStudentLoanDebt(0);
-                                    setEmergencyFundAmount(10000);
-                                    setPersonalLoanTermYears(5);
-                                    setPersonalLoanInterestRate(8.0);
-                                    setProjectionName("");
+                                    // Instead of trying to manipulate the current component's state,
+                                    // navigate to a dedicated URL for viewing a specific projection
+                                    const timestamp = Date.now(); // Add timestamp to prevent caching
                                     
-                                    // Force the React Query cache to evict all related data
-                                    queryClient.removeQueries({ queryKey: ['/api/financial-projections/detail', projection.id] });
+                                    console.log(`Navigating to dedicated view for projection ${projection.id}`);
                                     
-                                    // Generate a truly unique timestamp to ensure cache busting
-                                    const timestamp = Date.now();
-                                    
-                                    console.log(`Loading projection ${projection.id} with fresh state and cache at timestamp: ${timestamp}`);
-                                    
-                                    // Force UI to loading state first to ensure complete reset
-                                    setMainTab("loading");
-                                    
-                                    // Small delay to ensure React has time to process state changes
-                                    setTimeout(() => {
-                                      // Clear the React Query cache completely to force fresh data load
-                                      // This is a more aggressive approach to ensure clean state
-                                      queryClient.clear();
-                                      
-                                      console.log(`Completely reset React Query cache and state before loading projection ${projection.id}`);
-                                      
-                                      // Use URL approach for navigation - this triggers all the proper loading mechanisms
-                                      setLocation(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
-                                        replace: true // Replace current history entry to avoid back button issues
-                                      });
-                                      
-                                      // Switch to view tab after a longer delay to ensure all state changes have propagated
-                                      setTimeout(() => {
-                                        setMainTab("view");
-                                        console.log(`Switched to view tab for projection ${projection.id}`);
-                                      }, 300);
-                                    }, 100);
+                                    // Navigate to new page to completely avoid state conflicts
+                                    window.location.href = `/financial-projections/view/${projection.id}?t=${timestamp}`;
                                   }}
                                 >
-                                  Load
+                                  View
                                 </Button>
                                 <Button 
                                   variant="destructive" 
