@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import passport from "passport";
+import bcrypt from "bcrypt";
 import { activeStorage } from "./index";
 import { validateRequest, authMiddleware } from "../shared/middleware";
 import { insertUserSchema, insertFinancialProfileSchema, insertFinancialProjectionSchema, insertCollegeCalculationSchema, insertCareerCalculationSchema, insertMilestoneSchema, insertAssumptionSchema } from "../shared/schema";
@@ -120,19 +121,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.status(200).json({ success: true, message: "Onboarding completed" });
   });
   
-  // User routes
+  // User routes with secure password hashing
   app.post("/api/users/register", validateRequest({ body: insertUserSchema }), async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("Received registration request:", { username: req.body.username });
+      
       // Check if username already exists
       const existingUser = await activeStorage.getUserByUsername(req.body.username);
       if (existingUser) {
+        console.log(`Registration failed: username '${req.body.username}' already exists`);
         return res.status(400).json({ 
           message: "Username already exists. Please choose a different username."
         });
       }
       
+      // Hash the password with bcrypt
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+      console.log(`Password hashed successfully for user: ${req.body.username}`);
+      
+      // Create user with hashed password
+      const userDataWithHashedPassword = {
+        ...req.body,
+        password: hashedPassword
+      };
+      
       // Create user in the database
-      const user = await activeStorage.createUser(req.body);
+      const user = await activeStorage.createUser(userDataWithHashedPassword);
+      console.log(`User created successfully: ${user.username} (ID: ${user.id})`);
       
       // Automatically log the user in after registration
       req.login(user, (err) => {
@@ -140,6 +156,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Login error after registration:", err);
           return next(err);
         }
+        
+        console.log(`User ${user.username} logged in automatically after registration`);
         
         // Don't return password
         const { password, ...userWithoutPassword } = user;
