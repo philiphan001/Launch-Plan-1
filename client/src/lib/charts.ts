@@ -108,10 +108,16 @@ export function createMainProjectionChart(
   showExpenses: boolean = false,
   darkMode: boolean = false
 ): Chart {
+  // Ensure all data arrays are valid
+  const safeAges = Array.isArray(data.ages) ? data.ages : [];
+  const safeNetWorth = Array.isArray(data.netWorth) ? data.netWorth : [];
+  const safeIncome = Array.isArray(data.income) ? data.income : [];
+  const safeExpenses = Array.isArray(data.expenses) ? data.expenses : [];
+  
   const datasets = [
     {
       label: 'Net Worth',
-      data: data.netWorth,
+      data: safeNetWorth,
       borderColor: darkMode ? 'rgba(96, 165, 250, 1)' : 'rgba(37, 99, 235, 1)',
       backgroundColor: darkMode ? 'rgba(96, 165, 250, 0.1)' : 'rgba(37, 99, 235, 0.1)',
       tension: 0.3,
@@ -121,10 +127,10 @@ export function createMainProjectionChart(
     }
   ];
 
-  if (showIncome && data.income) {
+  if (showIncome && safeIncome.length > 0) {
     datasets.push({
       label: 'Income',
-      data: data.income,
+      data: safeIncome,
       borderColor: darkMode ? 'rgba(74, 222, 128, 1)' : 'rgba(22, 163, 74, 1)',
       backgroundColor: darkMode ? 'rgba(74, 222, 128, 0.1)' : 'rgba(22, 163, 74, 0.1)',
       tension: 0.3,
@@ -136,10 +142,10 @@ export function createMainProjectionChart(
     });
   }
 
-  if (showExpenses && data.expenses) {
+  if (showExpenses && safeExpenses.length > 0) {
     datasets.push({
       label: 'Expenses',
-      data: data.expenses,
+      data: safeExpenses,
       borderColor: darkMode ? 'rgba(248, 113, 113, 1)' : 'rgba(220, 38, 38, 1)',
       backgroundColor: darkMode ? 'rgba(248, 113, 113, 0.1)' : 'rgba(220, 38, 38, 0.1)',
       tension: 0.3,
@@ -154,7 +160,7 @@ export function createMainProjectionChart(
   return new Chart(canvas, {
     type: 'line',
     data: {
-      labels: data.ages.map(age => `Age ${age}`),
+      labels: safeAges.map(age => `Age ${age}`),
       datasets: datasets,
     },
     options: {
@@ -165,8 +171,8 @@ export function createMainProjectionChart(
           type: 'linear',
           display: true,
           position: 'left',
-          beginAtZero: Array.isArray(data.netWorth) && data.netWorth.length > 0 ?
-            data.netWorth.some(value => value < 0) ? false : true :
+          beginAtZero: safeNetWorth.length > 0 ?
+            safeNetWorth.some(value => value < 0) ? false : true :
             true,
           title: {
             display: true,
@@ -240,8 +246,11 @@ export function createMainProjectionChart(
 /**
  * Helper function to fix liability calculation in charts
  */
-export function fixLiabilityCalculation(liabilities: number[]): number[] {
+export function fixLiabilityCalculation(liabilities: number[] | undefined | null): number[] {
   // Convert negative liabilities to positive for better display in charts
+  if (!Array.isArray(liabilities) || liabilities.length === 0) {
+    return [];
+  }
   return liabilities.map(value => Math.abs(value));
 }
 
@@ -256,21 +265,26 @@ export function createCashFlowChart(
     expenses: number[];
   }
 ): Chart {
+  // Ensure income and expenses are valid arrays
+  const safeIncome = Array.isArray(data.income) ? data.income : [];
+  const safeExpenses = Array.isArray(data.expenses) ? data.expenses : [];
+  const safeLabels = Array.isArray(data.labels) ? data.labels : [];
+  
   return new Chart(canvas, {
     type: 'bar',
     data: {
-      labels: data.labels,
+      labels: safeLabels,
       datasets: [
         {
           label: 'Income',
-          data: data.income,
+          data: safeIncome,
           backgroundColor: 'rgba(16, 185, 129, 0.7)',
           borderColor: 'rgba(16, 185, 129, 1)',
           borderWidth: 1,
         },
         {
           label: 'Expenses',
-          data: data.expenses,
+          data: safeExpenses,
           backgroundColor: 'rgba(239, 68, 68, 0.7)',
           borderColor: 'rgba(239, 68, 68, 1)',
           borderWidth: 1,
@@ -313,14 +327,18 @@ export function createNetWorthChart(
     values: number[];
   }
 ): Chart {
+  // Ensure data arrays are valid
+  const safeLabels = Array.isArray(data.labels) ? data.labels : [];
+  const safeValues = Array.isArray(data.values) ? data.values : [];
+  
   return new Chart(canvas, {
     type: 'line',
     data: {
-      labels: data.labels,
+      labels: safeLabels,
       datasets: [
         {
           label: 'Net Worth',
-          data: data.values,
+          data: safeValues,
           borderColor: 'rgba(59, 130, 246, 1)',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           tension: 0.3,
@@ -333,8 +351,8 @@ export function createNetWorthChart(
       maintainAspectRatio: false,
       scales: {
         y: {
-          beginAtZero: Array.isArray(data.values) && data.values.length > 0 ? 
-            data.values.some(value => value < 0) ? false : true : 
+          beginAtZero: safeValues.length > 0 ? 
+            safeValues.some(value => value < 0) ? false : true : 
             true,
           ticks: {
             callback: function(value) {
@@ -361,8 +379,8 @@ export function createNetWorthChart(
  */
 export function createLineChart(
   canvas: HTMLCanvasElement, 
-  labels: number[], 
-  dataPoints: number[],
+  labels: number[] | undefined | null, 
+  dataPoints: number[] | undefined | null,
   lineColor: string = 'blue',
   datasetLabel: string = 'Value'
 ): Chart {
@@ -390,6 +408,10 @@ export function createLineChart(
     },
   };
 
+  // Ensure data arrays are valid
+  const safeLabels = Array.isArray(labels) ? labels : [];
+  const safeDataPoints = Array.isArray(dataPoints) ? dataPoints : [];
+
   // Select the color scheme based on the lineColor parameter
   const colorScheme = colors[lineColor as keyof typeof colors] || colors.blue;
 
@@ -397,11 +419,11 @@ export function createLineChart(
   return new Chart(canvas, {
     type: 'line',
     data: {
-      labels: labels.map(age => `Age ${age}`),
+      labels: safeLabels.map(age => `Age ${age}`),
       datasets: [
         {
           label: datasetLabel,
-          data: dataPoints,
+          data: safeDataPoints,
           borderColor: colorScheme.line,
           backgroundColor: colorScheme.fill,
           tension: 0.3,
@@ -417,8 +439,8 @@ export function createLineChart(
       maintainAspectRatio: false,
       scales: {
         y: {
-          beginAtZero: Array.isArray(dataPoints) && dataPoints.length > 0 ?
-            dataPoints.some(point => point < 0) ? false : true :
+          beginAtZero: safeDataPoints.length > 0 ?
+            safeDataPoints.some(point => point < 0) ? false : true :
             true,
           ticks: {
             callback: function(value) {
