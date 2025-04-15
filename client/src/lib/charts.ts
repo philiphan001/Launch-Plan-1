@@ -19,11 +19,24 @@ export function createExpenseBreakdownChart(
   },
   darkMode: boolean = false
 ): Chart {
-  // Calculate total expenses
-  const total = Object.values(expenses).reduce((sum, value) => sum + value, 0);
+  // Ensure all expense values are valid numbers
+  const safeExpenses = {
+    housing: typeof expenses.housing === 'number' ? expenses.housing : 0,
+    transportation: typeof expenses.transportation === 'number' ? expenses.transportation : 0,
+    food: typeof expenses.food === 'number' ? expenses.food : 0,
+    healthcare: typeof expenses.healthcare === 'number' ? expenses.healthcare : 0,
+    insurance: typeof expenses.insurance === 'number' ? expenses.insurance : 0,
+    debt: typeof expenses.debt === 'number' ? expenses.debt : 0,
+    personal: typeof expenses.personal === 'number' ? expenses.personal : 0,
+    entertainment: typeof expenses.entertainment === 'number' ? expenses.entertainment : 0,
+    other: typeof expenses.other === 'number' ? expenses.other : 0
+  };
+  
+  // Calculate total expenses with safe values
+  const total = Object.values(safeExpenses).reduce((sum, value) => sum + value, 0);
   
   // Prepare data
-  const data = Object.values(expenses);
+  const data = Object.values(safeExpenses);
   const labels = [
     'Housing', 
     'Transportation', 
