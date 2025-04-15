@@ -145,25 +145,55 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const { data: futureSavings, isLoading: isLoadingFutureSavings, refetch: refetchFutureSavings } = useQuery({
     queryKey: ['/api/calculate/future-savings', userId, yearsAway],
     queryFn: async () => {
+      if (!userId) {
+        console.log("Warning: Attempting to calculate future savings without a valid userId");
+        return {
+          currentSavings: financialProfile?.savingsAmount || 0,
+          futureSavings: financialProfile?.savingsAmount || 0,
+          targetYear: new Date().getFullYear() + yearsAway,
+          yearsAway: yearsAway
+        };
+      }
+      
       const currentYear = new Date().getFullYear();
       const targetYear = currentYear + yearsAway;
       
-      const response = await fetch('/api/calculate/future-savings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          targetYear
-        }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to calculate future savings');
-      
-      return response.json();
+      try {
+        const response = await fetch('/api/calculate/future-savings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            targetYear
+          }),
+        });
+        
+        if (!response.ok) {
+          console.warn("Future savings calculation failed with status:", response.status);
+          // Provide fallback values instead of throwing error
+          return {
+            currentSavings: financialProfile?.savingsAmount || 0,
+            futureSavings: financialProfile?.savingsAmount || 0, // No growth as fallback
+            targetYear,
+            yearsAway
+          };
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error calculating future savings:", error);
+        // Provide fallback values on error
+        return {
+          currentSavings: financialProfile?.savingsAmount || 0,
+          futureSavings: financialProfile?.savingsAmount || 0,
+          targetYear,
+          yearsAway
+        };
+      }
     },
-    enabled: !!userId && yearsAway > 0 && dialogOpen, // Only fetch when dialog is open and we have valid inputs
+    enabled: yearsAway > 0 && dialogOpen, // Only fetch when dialog is open and years away is valid
   });
   
   // Effect to refetch future savings whenever dialog opens or years away changes
@@ -179,10 +209,25 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const { data: milestones, isLoading: isLoadingMilestones } = useQuery({
     queryKey: ['/api/milestones', userId],
     queryFn: async () => {
-      const response = await fetch(`/api/milestones/user/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch milestones');
-      return response.json() as Promise<Milestone[]>;
-    }
+      if (!userId) {
+        console.warn("Attempting to fetch milestones without a valid userId");
+        return []; // Return empty array instead of throwing an error
+      }
+      
+      try {
+        const response = await fetch(`/api/milestones/user/${userId}`);
+        if (!response.ok) {
+          console.warn("Failed to fetch milestones, status:", response.status);
+          return []; // Return empty array for any error response
+        }
+        
+        return response.json() as Promise<Milestone[]>;
+      } catch (error) {
+        console.error("Error fetching milestones:", error);
+        return []; // Return empty array for any error
+      }
+    },
+    enabled: !!userId // Only run this query when userId is available
   });
 
   // Create a milestone
