@@ -579,15 +579,9 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
                           <div className="flex items-center">
                             <Briefcase className="h-4 w-4 text-primary mr-1.5" />
                             <h3 className="font-medium text-sm">{calc.career?.title || getCareerTitle(calc.careerId)}</h3>
-                            {(calc.locationCity || calc.locationState || (calc.adjustedForLocation && calc.locationZip)) && (
+                            {(calc.adjustedForLocation && calc.locationZip) && (
                               <Badge variant="outline" className="ml-2 text-xs">
-                                {calc.locationCity && calc.locationState 
-                                  ? `${calc.locationCity}, ${calc.locationState}`
-                                  : calc.locationCity 
-                                    ? calc.locationCity
-                                    : calc.locationState
-                                      ? calc.locationState
-                                      : 'Location Adjusted'}
+                                Location Adjusted
                               </Badge>
                             )}
                           </div>
@@ -609,14 +603,10 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
                               <span className="font-medium text-sm">{calc.startYear}</span>
                             </div>
                           )}
-                          {(calc.locationCity || calc.locationState) && (
+                          {calc.locationZip && calc.adjustedForLocation && (
                             <div className="flex justify-between">
                               <span className="text-xs text-muted-foreground">Location:</span>
-                              <span className="font-medium text-sm">
-                                {calc.locationCity && calc.locationState 
-                                  ? `${calc.locationCity}, ${calc.locationState}`
-                                  : calc.locationCity || calc.locationState || ''}
-                              </span>
+                              <span className="font-medium text-sm">Location Adjusted</span>
                             </div>
                           )}
                         </div>
