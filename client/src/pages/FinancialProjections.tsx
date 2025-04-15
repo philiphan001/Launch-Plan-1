@@ -2529,7 +2529,15 @@ const [projectionData, setProjectionData] = useState<any>(() => {
         </TabsList>
       
         <TabsContent value="view">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          {isLoadingSavedProjection ? (
+            <div className="p-6 flex justify-center items-center h-72">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading projection data...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Projection Settings</h3>
@@ -2759,7 +2767,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
             
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
               <div className="bg-gray-100 p-4 rounded-lg">
-                <p className="text-sm text-gray-500 uppercase">Net Worth at {projectionData?.ages?.length > 0 ? projectionData.ages[projectionData.ages.length - 1] : age}</p>
+                <p className="text-sm text-gray-500 uppercase">Net Worth at {projectionData && projectionData.ages && projectionData.ages.length > 0 ? projectionData.ages[projectionData.ages.length - 1] : age}</p>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -2813,6 +2821,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
           </CardContent>
         </Card>
       </div>
+          )}
         </TabsContent>
         
         <TabsContent value="edit">
@@ -3715,26 +3724,28 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       
       {/* Detailed Cash Flow Table with collapsible container */}
       {/* Apply the fixLiabilityCalculation function to ensure graduate school loans are properly counted */}
-      <CashFlowTable 
-        {...fixLiabilityCalculation(projectionData)}
-        ages={projectionData.ages}
-        income={projectionData.income}
-        spouseIncome={projectionData.spouseIncome}
-        expenses={projectionData.expenses}
-        housingExpenses={projectionData.housing}
-        transportationExpenses={projectionData.transportation}
-        foodExpenses={projectionData.food}
-        healthcareExpenses={projectionData.healthcare}
-        personalInsuranceExpenses={projectionData.personalInsurance}
-        apparelExpenses={projectionData.apparel}
-        servicesExpenses={projectionData.services}
-        entertainmentExpenses={projectionData.entertainment}
-        otherExpenses={projectionData.other}
-        educationExpenses={projectionData.education}
-        childcareExpenses={projectionData.childcare} 
-        debtExpenses={projectionData.debt}
-        discretionaryExpenses={projectionData.discretionary}
-      />
+      {projectionData && (
+        <CashFlowTable 
+          {...fixLiabilityCalculation(projectionData)}
+          ages={projectionData.ages || []}
+          income={projectionData.income || []}
+          spouseIncome={projectionData.spouseIncome || []}
+          expenses={projectionData.expenses || []}
+          housingExpenses={projectionData.housing || []}
+          transportationExpenses={projectionData.transportation || []}
+          foodExpenses={projectionData.food || []}
+          healthcareExpenses={projectionData.healthcare || []}
+          personalInsuranceExpenses={projectionData.personalInsurance || []}
+          apparelExpenses={projectionData.apparel || []}
+          servicesExpenses={projectionData.services || []}
+          entertainmentExpenses={projectionData.entertainment || []}
+          otherExpenses={projectionData.other || []}
+          educationExpenses={projectionData.education || []}
+          childcareExpenses={projectionData.childcare || []}
+          debtExpenses={projectionData.debt || []}
+          discretionaryExpenses={projectionData.discretionary || []}
+        />
+      )}
       
       {/* Card to display included college and career calculations */}
       <Card className="mb-6">
