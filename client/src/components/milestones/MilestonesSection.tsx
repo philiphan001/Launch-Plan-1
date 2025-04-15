@@ -983,8 +983,15 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                             </div>
                             <div className="bg-white rounded p-2 border border-yellow-100">
                               <div className="text-gray-600">Net Worth Change</div>
-                              <div className={`font-bold ${spouseAssets - spouseLiabilities > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                ${(spouseAssets - spouseLiabilities).toLocaleString()}
+                              <div className={`font-bold ${
+                                (typeof spouseAssets === 'number' && typeof spouseLiabilities === 'number' && 
+                                (spouseAssets - spouseLiabilities) > 0) ? 'text-green-600' : 'text-red-500'
+                              }`}>
+                                ${(() => {
+                                  const assets = typeof spouseAssets === 'number' ? spouseAssets : 0;
+                                  const liabilities = typeof spouseLiabilities === 'number' ? spouseLiabilities : 0;
+                                  return (assets - liabilities).toLocaleString();
+                                })()}
                               </div>
                             </div>
                           </div>
