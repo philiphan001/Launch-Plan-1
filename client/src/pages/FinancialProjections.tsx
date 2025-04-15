@@ -3761,13 +3761,13 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       
       {/* Life Milestones Section */}
       <MilestonesSection 
-        userId={userId || 0} 
+        userId={userId} 
         onMilestoneChange={() => {
           console.log("Milestone changed, recalculating projections...");
           
           // Force a re-fetch of milestone data with a higher priority
           queryClient.invalidateQueries({ 
-            queryKey: ['/api/milestones/user', userId || 0],
+            queryKey: ['/api/milestones/user', userId],
             // This will cause the query to refetch immediately and update the UI
             refetchType: 'active',
           });

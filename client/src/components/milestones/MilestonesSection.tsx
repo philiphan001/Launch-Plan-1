@@ -6,6 +6,7 @@ import {
 import { 
   Button 
 } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -63,7 +64,7 @@ import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search, Penc
 type MilestoneType = "marriage" | "children" | "home" | "car" | "education";
 
 interface MilestonesSectionProps {
-  userId: number;
+  userId: number | null;
   onMilestoneChange?: () => void;
 }
 
@@ -387,6 +388,18 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   };
 
   const handleSaveMilestone = () => {
+    // Skip if userId is null - we can't create a milestone without a valid userId
+    if (userId === null) {
+      console.error("Cannot create milestone: userId is null");
+      toast({
+        title: "Error",
+        description: "You must be logged in to create milestones.",
+        variant: "destructive"
+      });
+      setDialogOpen(false);
+      return;
+    }
+    
     let type = "";
     // Use custom name if provided, otherwise use default title
     let title = customName.trim() || "";
@@ -406,7 +419,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                              spouseIncome : 0;
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion based on early null check
         type,
         title,
         date,
