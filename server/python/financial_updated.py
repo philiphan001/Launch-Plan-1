@@ -1097,16 +1097,35 @@ class FinancialCalculator:
                         try:
                             # Get spouse income, assets, and liabilities with safe fallbacks
                             spouse_income_value = milestone.get('spouse_income', milestone.get('spouseIncome', 0))
-                            spouse_income = int(spouse_income_value) if spouse_income_value is not None else 0
+                            # Enhanced type conversion that handles various input types
+                            try:
+                                spouse_income = int(float(spouse_income_value)) if spouse_income_value is not None else 0
+                            except (ValueError, TypeError):
+                                # Log the error and use default value
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"ERROR converting spouse_income_value: {spouse_income_value}, type: {type(spouse_income_value)}\n")
+                                spouse_income = 50000  # Default fallback
                             
-                            spouse_assets_value = milestone.get('spouse_assets', milestone.get('spouseAssets', 0))
-                            spouse_assets = int(spouse_assets_value) if spouse_assets_value is not None else 0
+                            spouse_assets_value = milestone.get('spouse_assets', milestone.get('spouseAssets', 0)) 
+                            # Enhanced type conversion
+                            try:
+                                spouse_assets = int(float(spouse_assets_value)) if spouse_assets_value is not None else 0
+                            except (ValueError, TypeError):
+                                spouse_assets = 10000  # Default fallback
                             
                             spouse_liabilities_value = milestone.get('spouse_liabilities', milestone.get('spouseLiabilities', 0))
-                            spouse_liabilities = int(spouse_liabilities_value) if spouse_liabilities_value is not None else 0
+                            # Enhanced type conversion
+                            try:
+                                spouse_liabilities = int(float(spouse_liabilities_value)) if spouse_liabilities_value is not None else 0
+                            except (ValueError, TypeError):
+                                spouse_liabilities = 5000  # Default fallback
                             
                             wedding_cost_value = milestone.get('wedding_cost', milestone.get('weddingCost', 10000))
-                            wedding_cost = int(wedding_cost_value) if wedding_cost_value is not None else 10000
+                            # Enhanced type conversion
+                            try:
+                                wedding_cost = int(float(wedding_cost_value)) if wedding_cost_value is not None else 10000
+                            except (ValueError, TypeError):
+                                wedding_cost = 10000  # Default fallback
                             
                             # Log spouse occupation data if present (for debugging only)
                             spouse_occupation = milestone.get('spouse_occupation', milestone.get('spouseOccupation', ''))
