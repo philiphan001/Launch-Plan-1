@@ -1,239 +1,291 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useLocation } from "wouter";
-import { AuthProps } from "@/interfaces/auth";
-import { FinancialProjection } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// Using custom Spinner component directly since the import was causing issues
-const Spinner = ({ size = "md", className = "" }: { size?: "sm" | "md" | "lg", className?: string }) => {
-  const sizeClass = {
-    "sm": "h-4 w-4 border-2",
-    "md": "h-8 w-8 border-4",
-    "lg": "h-12 w-12 border-4",
-  }[size];
-  
-  return (
-    <div
-      className={`animate-spin rounded-full border-t-transparent border-primary ${sizeClass} ${className}`}
-    />
-  );
-};
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { ChevronLeft } from "lucide-react";
+import { AuthProps } from "@/interfaces/auth";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
-import { formatCurrency, formatDate } from "@/lib/formatters";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { Spinner } from "@/components/ui/spinner";
+import { FinancialProjection } from "@shared/schema";
 import Chart from 'chart.js/auto';
 
-/**
- * Dedicated component for viewing a single financial projection
- * This is separate from the main FinancialProjections component to avoid state conflicts
- */
+interface ProjectionDetail extends FinancialProjection {
+  projectionData: any;
+}
+
 const ProjectionViewer = ({ user }: AuthProps) => {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(true);
-  const [projection, setProjection] = useState<FinancialProjection | null>(null);
+  const [projection, setProjection] = useState<ProjectionDetail | null>(null);
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
-
-  // Load the projection by ID
+  const { toast } = useToast();
+  
+  // Fetch projection data
   useEffect(() => {
-    const loadProjection = async () => {
-      setIsLoading(true);
-      
+    const fetchData = async () => {
       try {
-        if (!id) {
-          throw new Error("No projection ID provided");
-        }
+        setIsLoading(true);
         
-        const response = await fetch(`/api/financial-projections/${id}`);
+        // Add cache-busting timestamp
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/financial-projections/detail/${id}?_=${timestamp}`);
         
         if (!response.ok) {
-          throw new Error(`Failed to load projection: ${response.status}`);
+          throw new Error(`Failed to fetch projection: ${response.statusText}`);
         }
         
         const data = await response.json();
-        setProjection(data);
         
-        // Parse the projection data which is stored as JSON (unknown type)
-        const parsedData = data.projectionData ? 
-          (typeof data.projectionData === 'string' ? 
-            JSON.parse(data.projectionData) : data.projectionData) : null;
+        // Validate data
+        if (!data || !data.projectionData) {
+          throw new Error("Invalid projection data");
+        }
         
-        // Initialize the chart once we have data
-        setTimeout(() => {
-          if (chartRef.current && parsedData) {
-            if (chartInstance.current) {
-              chartInstance.current.destroy();
+        // Parse projectionData if it's a string
+        let parsedData;
+        if (typeof data.projectionData === 'string') {
+          try {
+            parsedData = JSON.parse(data.projectionData);
+            // Check if it's still a string (double-stringified)
+            if (typeof parsedData === 'string') {
+              parsedData = JSON.parse(parsedData);
             }
-            
-            const ctx = chartRef.current.getContext('2d');
-            if (ctx) {
-              // Create a simple demo chart if no detailed data available
-              const timeframe = data.timeframe || 40;
-              const startAge = data.startingAge || 20;
-              const ages = Array.from({length: timeframe}, (_, i) => startAge + i);
-              const income = Array.from({length: timeframe}, (_, i) => data.income * Math.pow(1 + data.incomeGrowth, i));
-              const expenses = Array.from({length: timeframe}, () => data.expenses * 12);
-              
-              // If we have detailed results in parsed data, use them
-              // Ensure that netWorth is always an array to prevent Chart.js errors
-              let netWorthData = Array.isArray(parsedData?.netWorth) ? 
-                parsedData.netWorth : 
-                Array.from({length: timeframe}, (_, i) => data.startingSavings + (income[i] - expenses[i]) * i);
-              
-              // Fallback to empty arrays for safety if data is missing
-              const chartData = {
-                ages: Array.isArray(parsedData?.ages) ? parsedData.ages : ages,
-                netWorth: netWorthData,
-                income: Array.isArray(parsedData?.annualIncome) ? parsedData.annualIncome : income,
-                expenses: Array.isArray(parsedData?.annualExpenses) ? parsedData.annualExpenses : expenses,
-                assets: Array.isArray(parsedData?.assets) ? parsedData.assets : [],
-                liabilities: Array.isArray(parsedData?.liabilities) ? 
-                  fixLiabilityCalculation(parsedData.liabilities) : [],
-              };
-              
-              chartInstance.current = createMainProjectionChart(
-                chartRef.current,
-                chartData,
-                true, // show income
-                true  // show expenses
-              );
-            }
+          } catch (e) {
+            console.error("Error parsing projection data:", e);
+            parsedData = { error: "Invalid data format" };
           }
-        }, 100);
+        } else {
+          parsedData = data.projectionData;
+        }
+        
+        // Set the data with parsed projection data
+        setProjection({
+          ...data,
+          projectionData: parsedData
+        });
+        
       } catch (error) {
         console.error("Error loading projection:", error);
         toast({
-          title: "Error Loading Projection",
-          description: error instanceof Error ? error.message : "Failed to load projection data",
-          variant: "destructive",
+          title: "Error",
+          description: "Failed to load projection data",
+          variant: "destructive"
         });
       } finally {
         setIsLoading(false);
       }
     };
     
-    loadProjection();
+    if (id) {
+      fetchData();
+    }
+  }, [id, toast]);
+  
+  // Create chart when data is available
+  useEffect(() => {
+    if (chartRef.current && projection?.projectionData) {
+      // Cleanup previous chart instance
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+        chartInstance.current = null;
+      }
+      
+      try {
+        const projData = projection.projectionData;
+        
+        // Ensure data arrays exist before creating chart
+        if (!Array.isArray(projData.ages) || !Array.isArray(projData.netWorth)) {
+          console.error("Invalid projection data arrays:", projData);
+          return;
+        }
+        
+        // Create chart with validated data
+        chartInstance.current = createMainProjectionChart(
+          chartRef.current,
+          {
+            ages: Array.isArray(projData.ages) ? projData.ages : [],
+            netWorth: Array.isArray(projData.netWorth) ? projData.netWorth : [],
+            income: Array.isArray(projData.income) ? projData.income : [],
+            expenses: Array.isArray(projData.expenses) ? projData.expenses : [],
+            assets: Array.isArray(projData.assets) ? projData.assets : [],
+            liabilities: Array.isArray(projData.liabilities) ? fixLiabilityCalculation(projData.liabilities) : []
+          },
+          true, // Show income
+          true  // Show expenses
+        );
+      } catch (error) {
+        console.error("Error creating chart:", error);
+      }
+    }
     
-    // Cleanup chart on unmount
+    // Cleanup on unmount
     return () => {
       if (chartInstance.current) {
         chartInstance.current.destroy();
+        chartInstance.current = null;
       }
     };
-  }, [id]);
-
+  }, [projection]);
+  
   const handleBackClick = () => {
-    setLocation("/financial-projections");
+    setLocation("/projections");
   };
-
+  
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+      <div className="flex justify-center items-center h-96">
         <Spinner size="lg" />
-        <p className="mt-4 text-muted-foreground">Loading projection data...</p>
       </div>
     );
   }
-
+  
   if (!projection) {
     return (
-      <Card className="w-full">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center min-h-[30vh]">
-            <h3 className="text-xl font-semibold mb-2">Projection Not Found</h3>
-            <p className="text-muted-foreground mb-4">
-              The requested projection could not be found or has been deleted.
-            </p>
-            <Button onClick={handleBackClick}>Return to Projections</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <Button variant="outline" onClick={handleBackClick} className="mb-4">
+          <ChevronLeft className="mr-2 h-4 w-4" /> Back to Projections
+        </Button>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center py-8">
+              <h3 className="text-xl font-medium text-gray-600">Projection Not Found</h3>
+              <p className="mt-2 text-gray-500">The requested projection could not be loaded</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
-
+  
+  // Safely access expense categories
+  const currentExpenses = projection.projectionData.expenseCategories?.[0] || {
+    housing: 0,
+    transportation: 0, 
+    food: 0,
+    healthcare: 0,
+    education: 0,
+    debt: 0,
+    childcare: 0,
+    discretionary: 0,
+    taxes: 0
+  };
+  
   return (
-    <ErrorBoundary>
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {projection.name || "Financial Projection"}
-            </h1>
-            <p className="text-muted-foreground">
-              Created {formatDate(projection.createdAt || new Date().toISOString())}
-            </p>
-          </div>
-          <Button onClick={handleBackClick} variant="outline">
-            Back to Projections
-          </Button>
-        </div>
-
-        <Card>
-          <CardHeader>
+    <div className="p-6">
+      <Button variant="outline" onClick={handleBackClick} className="mb-4">
+        <ChevronLeft className="mr-2 h-4 w-4" /> Back to Projections
+      </Button>
+      
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold">{projection.name}</h2>
+        <p className="text-gray-500">Created on {typeof projection.createdAt === 'string' ? new Date(projection.createdAt).toLocaleDateString() : 'Unknown'}</p>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
             <CardTitle>Financial Projection</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[400px]">
-              <canvas ref={chartRef}></canvas>
+            <div className="h-80">
+              <canvas ref={chartRef} />
             </div>
           </CardContent>
         </Card>
-
-        {/* Check for expenses in the projection's data */}
-        {projection.projectionData && typeof projection.projectionData === 'object' && 
-         (projection.projectionData as any).currentExpenses && (
-          <ExpenseBreakdownChart 
-            currentExpenses={(projection.projectionData as any).currentExpenses} 
-          />
-        )}
-
+        
         <Card>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle>Projection Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Current Age</h3>
-                <p className="text-2xl font-bold">{projection.startingAge || "N/A"}</p>
-              </div>
+            <ul className="space-y-2">
+              <li className="flex justify-between">
+                <span className="text-gray-500">Starting Age:</span>
+                <span className="font-medium">{projection.startingAge}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-gray-500">Initial Savings:</span>
+                <span className="font-medium">${projection.startingSavings?.toLocaleString()}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-gray-500">Income:</span>
+                <span className="font-medium">${projection.income?.toLocaleString()} /year</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-gray-500">Expenses:</span>
+                <span className="font-medium">${projection.expenses?.toLocaleString()} /year</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-gray-500">Income Growth:</span>
+                <span className="font-medium">{projection.incomeGrowth}% /year</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-gray-500">Student Loan Debt:</span>
+                <span className="font-medium">${projection.studentLoanDebt?.toLocaleString()}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-gray-500">Emergency Fund:</span>
+                <span className="font-medium">${projection.emergencyFundAmount?.toLocaleString()}</span>
+              </li>
+              <li className="flex justify-between">
+                <span className="text-gray-500">Timeframe:</span>
+                <span className="font-medium">{projection.timeframe} years</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <ExpenseBreakdownChart 
+          currentExpenses={currentExpenses} 
+        />
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Projection Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.isArray(projection.projectionData.netWorth) && (
+                <div>
+                  <h4 className="font-medium">Net Worth Growth</h4>
+                  <p className="text-gray-600">
+                    Starting: ${projection.projectionData.netWorth[0]?.toLocaleString() || 0}
+                  </p>
+                  <p className="text-gray-600">
+                    Ending: ${projection.projectionData.netWorth[projection.projectionData.netWorth.length - 1]?.toLocaleString() || 0}
+                  </p>
+                </div>
+              )}
               
-              <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Current Income</h3>
-                <p className="text-2xl font-bold">
-                  {projection.income ? formatCurrency(projection.income) : "N/A"}
-                </p>
-              </div>
+              {Array.isArray(projection.projectionData.cashFlow) && (
+                <div>
+                  <h4 className="font-medium">Cash Flow</h4>
+                  <p className="text-gray-600">
+                    Average: ${(projection.projectionData.cashFlow.reduce((sum: number, val: number) => sum + val, 0) / 
+                      projection.projectionData.cashFlow.length).toLocaleString(undefined, {maximumFractionDigits: 0})} /year
+                  </p>
+                </div>
+              )}
               
-              <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Timeframe (Years)</h3>
-                <p className="text-2xl font-bold">{projection.timeframe || "N/A"}</p>
-              </div>
-              
-              <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Initial Savings</h3>
-                <p className="text-2xl font-bold">
-                  {projection.startingSavings ? formatCurrency(projection.startingSavings) : "N/A"}
-                </p>
-              </div>
-              
-              <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Annual Expenses</h3>
-                <p className="text-2xl font-bold">{formatCurrency(projection.expenses * 12)}</p>
-              </div>
-              
-              <div className="bg-primary/10 p-4 rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground">Income Growth</h3>
-                <p className="text-2xl font-bold">{(projection.incomeGrowth * 100).toFixed(1)}%/year</p>
-              </div>
+              {projection.projectionData.personalLoans && Array.isArray(projection.projectionData.personalLoans) && (
+                <div>
+                  <h4 className="font-medium">Personal Loans Created</h4>
+                  <p className="text-gray-600">
+                    Count: {projection.projectionData.personalLoans.length}
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
-    </ErrorBoundary>
+    </div>
   );
 };
 
