@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, PanInfo, useAnimation } from 'framer-motion';
+import { motion, PanInfo, useAnimation, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface Scenario {
   id: string;
@@ -10,6 +11,7 @@ interface Scenario {
   description: string;
   category: string;
   image?: string;
+  emoji?: string;
 }
 
 interface SwipeableScenariosProps {
@@ -44,62 +46,72 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
     {
       id: 'innovation',
       title: 'Innovation & New Ideas',
-      description: 'Creating new solutions and thinking outside the box',
+      description: 'Being the one who comes up with the next big thing that changes everything',
       category: 'Creativity',
+      emoji: '💡',
     },
     {
       id: 'problem_solving',
       title: 'Problem Solving',
-      description: 'Finding solutions to complex problems',
+      description: 'Cracking the code when everyone else is stuck — like being a detective!',
       category: 'Analysis',
+      emoji: '🔍',
     },
     {
       id: 'working_with_people',
       title: 'Working With People',
-      description: 'Collaborating and helping others achieve their goals',
+      description: 'Being the glue that brings people together and makes magic happen',
       category: 'Social',
+      emoji: '🤝',
     },
     {
       id: 'numbers_data',
       title: 'Numbers & Data',
-      description: 'Working with statistics, calculations, and data analysis',
+      description: 'Finding the patterns in the chaos and making sense of it all',
       category: 'Analysis',
+      emoji: '📊',
     },
     {
       id: 'building_creating',
       title: 'Building & Creating',
-      description: 'Working with your hands to construct or create things',
+      description: 'Making something real that people can actually touch, use, and love',
       category: 'Practical',
+      emoji: '🛠️',
     },
     {
       id: 'helping_others',
       title: 'Helping Others',
-      description: 'Supporting people through challenges and providing assistance',
+      description: 'Being the person others turn to when they need support or guidance',
       category: 'Social',
+      emoji: '🙌',
     },
     {
       id: 'strategic_thinking',
       title: 'Strategic Thinking',
-      description: 'Planning ahead and making long-term decisions',
+      description: 'Seeing three steps ahead like a chess master planning the perfect move',
       category: 'Analysis',
+      emoji: '♟️',
     },
     {
       id: 'outdoor_work',
       title: 'Working Outdoors',
-      description: 'Spending time in nature and natural environments',
+      description: 'Trading office walls for open skies and connecting with nature daily',
       category: 'Practical',
+      emoji: '🌲',
     },
     {
       id: 'team_collaboration',
       title: 'Team Collaboration',
-      description: 'Working together with others toward common goals',
+      description: 'Creating something incredible together that no one could do alone',
       category: 'Social',
+      emoji: '🏆',
     },
     {
       id: 'technical_skills',
       title: 'Technical Skills',
-      description: 'Using specialized knowledge and technical abilities',
+      description: 'Mastering complex tools and tech that most people don\'t understand',
       category: 'Practical',
+      emoji: '⚙️',
     }
   ];
   
@@ -109,6 +121,7 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   
   const handleDrag = (_: any, info: PanInfo) => {
     dragControls.current.startX = info.offset.x;
+    setDragOffset(info.offset.x);
   };
   
   const handleDragEnd = (_: any, info: PanInfo) => {
@@ -172,24 +185,47 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
     }
   };
   
-  const getEmoji = (category: string) => {
+  // Track current drag position for animations
+  const [dragOffset, setDragOffset] = useState(0);
+
+  // Update drag offset during drag
+  const handleDragUpdate = (_: any, info: PanInfo) => {
+    setDragOffset(info.offset.x);
+  };
+
+  // Get gradient colors for cards based on category
+  const getCategoryGradient = (category: string) => {
     switch(category) {
-      case 'Creativity': return '💡';
-      case 'Analysis': return '🧩';
-      case 'Social': return '👥';
-      case 'Practical': return '🔧';
-      default: return '✨';
+      case 'Creativity': return 'from-purple-500 to-pink-500';
+      case 'Analysis': return 'from-blue-500 to-cyan-500';
+      case 'Social': return 'from-green-500 to-teal-500';
+      case 'Practical': return 'from-amber-500 to-orange-500';
+      default: return 'from-violet-500 to-fuchsia-500';
     }
   };
   
+  // Calculate whether we're showing a "like" or "dislike" indicator
+  const swipeStatus = () => {
+    if (dragOffset > 50) return 'like';
+    if (dragOffset < -50) return 'dislike';
+    return null;
+  };
+  
   if (currentIndex >= scenarios.length) {
-    // All cards have been swiped
+    // All cards have been swiped - show a more exciting completion screen
     return (
-      <div className="text-center space-y-4">
-        <h3 className="text-xl font-medium">Thanks for your input!</h3>
-        <p className="text-gray-600">We're analyzing your preferences...</p>
+      <div className="text-center space-y-6">
+        <div className="animate-bounce inline-block mb-4">
+          <span className="text-5xl">🎉</span>
+        </div>
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
+          Awesome Job!
+        </h3>
+        <p className="text-gray-600 text-lg">
+          We're finding your perfect matches...
+        </p>
         <div className="flex justify-center mt-4">
-          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full shadow-md"></div>
         </div>
       </div>
     );
@@ -208,7 +244,30 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
         <Progress value={progressPercent} />
       </div>
       
-      <div className="relative w-full max-w-md h-56 mb-8">
+      <div className="relative w-full max-w-md h-72 mb-8">
+        {/* Like/Dislike Indicators */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-4 z-10">
+          {/* Dislike indicator */}
+          <div 
+            className={cn(
+              "bg-red-500 text-white rounded-full px-4 py-2 font-bold transform rotate-[-20deg] transition-opacity shadow-lg",
+              dragOffset < -50 ? "opacity-100" : "opacity-0" 
+            )}
+          >
+            NOPE
+          </div>
+          
+          {/* Like indicator */}
+          <div 
+            className={cn(
+              "bg-green-500 text-white rounded-full px-4 py-2 font-bold transform rotate-[20deg] transition-opacity shadow-lg",
+              dragOffset > 50 ? "opacity-100" : "opacity-0"
+            )}
+          >
+            LIKE!
+          </div>
+        </div>
+          
         <motion.div
           className="absolute w-full"
           animate={cardControls}
@@ -220,20 +279,31 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
           onDragEnd={handleDragEnd}
           style={{ x: 0, y: 0 }}
         >
-          <Card className="bg-white shadow-lg h-56 overflow-hidden">
+          <Card className="bg-white shadow-xl h-72 overflow-hidden rounded-xl border-0">
             <CardContent className="p-0 h-full flex flex-col">
-              <div className="bg-primary/10 p-4">
-                <div className="flex items-center mb-2">
-                  <span className="text-2xl mr-2">{getEmoji(currentScenario.category)}</span>
-                  <span className="text-lg font-medium">{currentScenario.title}</span>
+              <div className={cn(
+                "bg-gradient-to-r p-5 text-white",
+                getCategoryGradient(currentScenario.category)
+              )}>
+                <div className="flex items-center mb-3">
+                  <span className="text-4xl mr-3">{currentScenario.emoji}</span>
+                  <span className="text-xl font-bold">{currentScenario.title}</span>
                 </div>
-                <p className="text-gray-600 text-sm">{currentScenario.description}</p>
+                <p className="text-white/90 text-base">{currentScenario.description}</p>
               </div>
               
-              <div className="flex-grow flex items-center justify-center p-6 text-center">
-                <p className="text-gray-700">
-                  Does this interest or appeal to you? Swipe right if yes, left if no.
-                </p>
+              <div className="flex-grow flex items-center justify-center p-6 text-center bg-white relative">
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full w-12 h-12 flex items-center justify-center border-4 border-white shadow-md">
+                  <span className="text-xl">{dragOffset > 50 ? "👍" : (dragOffset < -50 ? "👎" : "🤔")}</span>
+                </div>
+                <div>
+                  <p className="text-gray-700 font-medium text-lg mb-2">
+                    Does this interest you?
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Swipe right if yes, left if no
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
