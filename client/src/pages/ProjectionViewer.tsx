@@ -103,6 +103,14 @@ const ProjectionViewer = ({ user }: AuthProps) => {
           return;
         }
         
+        // Calculate cash flow if it doesn't exist but we have income and expenses
+        if (!projData.cashFlow && Array.isArray(projData.income) && Array.isArray(projData.expenses)) {
+          const length = Math.min(projData.income.length, projData.expenses.length);
+          projData.cashFlow = Array(length).fill(0).map((_, i) => {
+            return (projData.income[i] || 0) - (projData.expenses[i] || 0);
+          });
+        }
+        
         // Create chart with validated data
         chartInstance.current = createMainProjectionChart(
           chartRef.current,
@@ -112,7 +120,8 @@ const ProjectionViewer = ({ user }: AuthProps) => {
             income: Array.isArray(projData.income) ? projData.income : [],
             expenses: Array.isArray(projData.expenses) ? projData.expenses : [],
             assets: Array.isArray(projData.assets) ? projData.assets : [],
-            liabilities: Array.isArray(projData.liabilities) ? fixLiabilityCalculation(projData.liabilities) : []
+            liabilities: Array.isArray(projData.liabilities) ? fixLiabilityCalculation(projData.liabilities) : [],
+            cashFlow: Array.isArray(projData.cashFlow) ? projData.cashFlow : []
           },
           true, // Show income
           true  // Show expenses
@@ -167,11 +176,11 @@ const ProjectionViewer = ({ user }: AuthProps) => {
     transportation: 0, 
     food: 0,
     healthcare: 0,
-    education: 0,
-    debt: 0,
-    childcare: 0,
-    discretionary: 0,
-    taxes: 0
+    insurance: projection.projectionData.expenseCategories?.[0]?.personal_insurance || 0,
+    debt: projection.projectionData.expenseCategories?.[0]?.debt || 0,
+    personal: projection.projectionData.expenseCategories?.[0]?.discretionary || 0,
+    entertainment: projection.projectionData.expenseCategories?.[0]?.entertainment || 0,
+    other: projection.projectionData.expenseCategories?.[0]?.childcare || projection.projectionData.expenseCategories?.[0]?.taxes || 0
   };
   
   return (
