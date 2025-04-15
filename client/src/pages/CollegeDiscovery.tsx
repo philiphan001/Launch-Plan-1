@@ -743,7 +743,7 @@ const CollegeDiscovery = ({
                           <Button 
                             size="sm"
                             variant="outline"
-                            style={isCollegeFavorite(college.id) ? { backgroundColor: 'black', color: 'white' } : {}}
+                            style={isCollegeFavorite(college.id) ? { backgroundColor: '#121825', color: 'white' } : {}}
                             onClick={() => toggleFavorite(college)}
                             disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                           >
@@ -982,7 +982,7 @@ const CollegeDiscovery = ({
               <DialogFooter className="flex gap-2">
                 <Button 
                   variant="outline"
-                  style={isCollegeFavorite(selectedCollege.id) ? { backgroundColor: 'black', color: 'white' } : {}}
+                  style={isCollegeFavorite(selectedCollege.id) ? { backgroundColor: '#121825', color: 'white' } : {}}
                   onClick={() => toggleFavorite(selectedCollege)}
                   disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                 >
