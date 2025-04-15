@@ -781,7 +781,7 @@ const Pathways = ({
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
                   <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary"
+                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
                     onClick={() => {
                       setExplorationMethod('swipe');
                       // Clear previous results
@@ -791,11 +791,13 @@ const Pathways = ({
                       handleNext(); // Automatically proceed to next step
                     }}
                   >
-                    <CardContent className="p-6 text-center">
-                      <div className="rounded-full bg-green-500 h-16 w-16 flex items-center justify-center text-white mx-auto mb-4">
-                        <span className="material-icons text-2xl">swipe</span>
+                    <div className="bg-gradient-to-r from-blue-400 to-cyan-500 py-5">
+                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
+                        <span className="material-icons text-2xl text-blue-500">swipe</span>
                       </div>
-                      <h3 className="text-lg font-medium mb-2">Swipe Cards</h3>
+                    </div>
+                    <CardContent className="p-6 text-center">
+                      <h3 className="text-lg font-bold mb-2 text-gray-800">Swipe Cards</h3>
                       <p className="text-sm text-gray-600">Swipe left or right on different interests, values and lifestyle options</p>
                     </CardContent>
                   </Card>
