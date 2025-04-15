@@ -445,7 +445,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "home";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion based on early null check
         type,
         title,
         date,
@@ -470,7 +470,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "car";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion based on early null check
         type,
         title,
         date,
@@ -495,7 +495,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "children";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion based on early null check
         type,
         title,
         date,
@@ -519,7 +519,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       type = "education";
       
       const milestoneData = {
-        userId,
+        userId: userId as number, // Type assertion based on early null check
         type,
         title,
         date,
