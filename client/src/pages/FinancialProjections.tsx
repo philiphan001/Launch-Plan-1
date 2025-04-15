@@ -553,22 +553,31 @@ const FinancialProjections = ({
   const [deletionComplete, setDeletionComplete] = useState(false);
   const [startGeneration, setStartGeneration] = useState(false);
   
-  // Step 1: When autoGenerate is true, initiate deletion of existing milestones
+  // Step 1: When autoGenerate is true, initiate deletion of existing milestones if authenticated,
+  // or just set the flag to continue with generation if not authenticated
   useEffect(() => {
-    if (autoGenerate && isAuthenticated && userId && !deletionComplete && !startGeneration) {
-      console.log("Initiating milestone deletion for user:", userId);
-      deleteMilestonesMutation.mutate(userId);
+    if (autoGenerate && !deletionComplete && !startGeneration) {
+      if (isAuthenticated && userId) {
+        // If authenticated, delete existing milestones
+        console.log("Initiating milestone deletion for user:", userId);
+        deleteMilestonesMutation.mutate(userId);
+      } else {
+        // If not authenticated, skip milestone deletion and just set the flag
+        console.log("Not authenticated, skipping milestone deletion");
+      }
       setStartGeneration(true);
     }
   }, [autoGenerate, isAuthenticated, userId, deletionComplete, startGeneration, deleteMilestonesMutation]);
   
-  // Step 2: When deletion is successful, set flag to continue with generation
+  // Step 2: When deletion is successful or not needed, set flag to continue with generation
   useEffect(() => {
-    if (autoGenerate && startGeneration && !deleteMilestonesMutation.isPending && !deletionComplete) {
-      console.log("Milestone deletion complete, proceeding with financial projection generation");
-      setDeletionComplete(true);
+    if (autoGenerate && startGeneration && !deletionComplete) {
+      if (!isAuthenticated || !deleteMilestonesMutation.isPending) {
+        console.log("Milestone deletion complete or not needed, proceeding with financial projection generation");
+        setDeletionComplete(true);
+      }
     }
-  }, [autoGenerate, startGeneration, deleteMilestonesMutation.isPending, deletionComplete]);
+  }, [autoGenerate, startGeneration, deleteMilestonesMutation.isPending, deletionComplete, isAuthenticated]);
 
   // Handle auto-generation of financial projections based on pathway data and favorite data
   useEffect(() => {
@@ -607,9 +616,12 @@ const FinancialProjections = ({
             // Validate that required fields are present
             if (!pathwayData) {
               console.error("Parsed pathway data is null or undefined");
-            } else if (!pathwayData.hasOwnProperty('educationType')) {
-              console.error("Pathway data is missing educationType field:", pathwayData);
-            } else if (isAuthenticated && userId) {
+              // Initialize with a minimal valid object to prevent crashes
+              pathwayData = {};
+            }
+            
+            // Only attempt to add to favorites if authenticated
+            if (isAuthenticated && userId) {
               // If pathway data is valid and user is authenticated, add college and career to favorites
               
               // If there's a specific school, find its ID and add to favorites
@@ -626,10 +638,19 @@ const FinancialProjections = ({
                 console.log("Adding career to favorites from pathway data:", pathwayData.selectedCareer);
                 addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
               }
+            } else {
+              console.log("User not authenticated, skipping adding favorites");
             }
           } catch (error) {
             console.error("Error parsing pathway data from localStorage:", error);
             console.error("Raw pathway data string:", pathwayDataStr);
+            // Initialize with a minimal valid object to prevent crashes
+            pathwayData = {};
+            toast({
+              title: "Error processing pathway data",
+              description: "There was an issue generating your financial plan. Default values will be used.",
+              variant: "destructive"
+            });
           }
         } else {
           console.log("No pathway data in localStorage, using favorite data instead");
