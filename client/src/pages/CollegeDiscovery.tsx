@@ -130,16 +130,7 @@ const CollegeDiscovery = ({
   });
   
   // Track local favorites state to avoid UI refresh issues
-  // Initialize with data from localStorage if available
-  const [localFavorites, setLocalFavorites] = useState<number[]>(() => {
-    try {
-      const saved = localStorage.getItem('collegeFavorites');
-      return saved ? JSON.parse(saved) : [];
-    } catch (error) {
-      console.error('Error loading favorites from localStorage:', error);
-      return [];
-    }
-  });
+  const [localFavorites, setLocalFavorites] = useState<number[]>([]);
   
   // Debug logging on mount
   useEffect(() => {
@@ -151,13 +142,6 @@ const CollegeDiscovery = ({
     // Always update local favorites, even if empty
     const favoriteIds = favoriteColleges.map(fav => fav.collegeId);
     setLocalFavorites(favoriteIds);
-    
-    // Save to localStorage for persistence between navigation
-    try {
-      localStorage.setItem('collegeFavorites', JSON.stringify(favoriteIds));
-    } catch (error) {
-      console.error('Error saving favorites to localStorage:', error);
-    }
     
     // Debug output to verify data
     console.log('Favorite colleges loaded:', favoriteColleges);
@@ -218,26 +202,12 @@ const CollegeDiscovery = ({
       const newFavorites = localFavorites.filter(id => id !== college.id);
       setLocalFavorites(newFavorites);
       
-      // Update localStorage immediately
-      try {
-        localStorage.setItem('collegeFavorites', JSON.stringify(newFavorites));
-      } catch (error) {
-        console.error('Error saving favorites to localStorage:', error);
-      }
-      
       // Then update the database
       removeFromFavoritesMutation.mutate(favorite.id);
     } else {
       // Immediately update local state for instant UI feedback
       const newFavorites = [...localFavorites, college.id];
       setLocalFavorites(newFavorites);
-      
-      // Update localStorage immediately
-      try {
-        localStorage.setItem('collegeFavorites', JSON.stringify(newFavorites));
-      } catch (error) {
-        console.error('Error saving favorites to localStorage:', error);
-      }
       
       // Then update the database
       addToFavoritesMutation.mutate(college.id);
