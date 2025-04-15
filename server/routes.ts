@@ -1128,9 +1128,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user's financial profile
       const profile = await activeStorage.getFinancialProfileByUserId(userId);
-      if (!profile) {
-        return res.status(404).json({ message: "Financial profile not found" });
-      }
+      
+      // If no profile exists, use default values instead of returning an error
+      // This makes the API more resilient by providing reasonable fallback values
+      const currentSavings = profile?.savingsAmount || 0;
+      const currentIncome = profile?.householdIncome || 50000; // Default reasonable income
       
       // Get user data to determine age
       const user = await activeStorage.getUser(userId);
@@ -1156,7 +1158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             type: "investment",
             name: "Savings",
-            initialValue: profile.savingsAmount || 0,
+            initialValue: currentSavings,
             growthRate: 0.03 // Default growth rate of 3%
           }
         ],
@@ -1165,7 +1167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             type: "salary",
             name: "Primary Income",
-            amount: profile.householdIncome || 50000,
+            amount: currentIncome,
             growthRate: 0.03 // Default growth rate of 3%
           }
         ],
@@ -1256,7 +1258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Return just the future savings amount and full projection data
           return res.json({ 
-            currentSavings: profile.savingsAmount || 0,
+            currentSavings: currentSavings,
             futureSavings,
             targetYear,
             yearsAway: yearsToProject,
