@@ -4,9 +4,10 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Coffee, TrendingUp, Droplet, Timer, Coins, PiggyBank } from "lucide-react";
+import { Coffee, TrendingUp, Droplet, Timer, Coins, PiggyBank, Car, RotateCw } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const DailyCoffeeCalculator = () => {
   // State variables for the calculator
@@ -14,6 +15,11 @@ const DailyCoffeeCalculator = () => {
   const [frequency, setFrequency] = useState<number>(5); // days per week
   const [yearsToRetirement, setYearsToRetirement] = useState<number>(40);
   const [annualReturn, setAnnualReturn] = useState<number>(8); // 8% default
+  const [currentAge, setCurrentAge] = useState<number>(18); // Default age for high school student
+  const [jeepCost, setJeepCost] = useState<number>(35000); // Cost of a new Jeep
+  
+  // Jeep savings goal - target age is 28
+  const yearsToJeep = Math.max(1, 28 - currentAge);
   
   // Calculated results
   const [weeklySavings, setWeeklySavings] = useState<number>(0);
@@ -23,6 +29,12 @@ const DailyCoffeeCalculator = () => {
   const [totalInvested, setTotalInvested] = useState<number>(0);
   const [investmentGrowth, setInvestmentGrowth] = useState<number>(0);
   const [retirementYearsAdvanced, setRetirementYearsAdvanced] = useState<number>(0);
+  
+  // Jeep savings calculations
+  const [jeepSavingsTotal, setJeepSavingsTotal] = useState<number>(0);
+  const [jeepPercentageReached, setJeepPercentageReached] = useState<number>(0);
+  const [additionalRequired, setAdditionalRequired] = useState<number>(0);
+  const [monthlyForJeep, setMonthlyForJeep] = useState<number>(0);
   
   // Calculate how many years earlier you could retire
   const calculateRetirementYearsAdvanced = (totalAmount: number) => {
@@ -58,6 +70,21 @@ const DailyCoffeeCalculator = () => {
     return futureValue;
   };
   
+  // Calculate monthly amount needed to reach a specific goal
+  const calculateMonthlyForGoal = (targetAmount: number, years: number, rate: number) => {
+    const r = rate / 100;
+    const monthlyRate = r / 12;
+    const months = years * 12;
+    
+    // PMT formula: goal = PMT * ((1+r)^n - 1) / r
+    // Solving for PMT: PMT = goal * r / ((1+r)^n - 1)
+    
+    const numerator = targetAmount * monthlyRate;
+    const denominator = Math.pow(1 + monthlyRate, months) - 1;
+    
+    return numerator / denominator;
+  };
+  
   // Update calculations when inputs change
   useEffect(() => {
     // Calculate savings
@@ -66,10 +93,20 @@ const DailyCoffeeCalculator = () => {
     const monthlyAmount = weeklyAmount * 4.33; // 52 weeks / 12 months = 4.33 weeks per month
     const yearlyAmount = monthlyAmount * 12;
     
-    // Calculate future value
+    // Calculate future value for retirement
     const futureValue = calculateFutureValue(yearlyAmount, yearsToRetirement, annualReturn);
     const totalInvestedAmount = yearlyAmount * yearsToRetirement;
     const growthAmount = futureValue - totalInvestedAmount;
+    
+    // Calculate future value for Jeep (at age 28)
+    const jeepFutureValue = calculateFutureValue(yearlyAmount, yearsToJeep, annualReturn);
+    const jeepPercentage = Math.min(100, (jeepFutureValue / jeepCost) * 100);
+    const jeepAdditionalNeeded = Math.max(0, jeepCost - jeepFutureValue);
+    
+    // Calculate what additional monthly amount would be needed to reach Jeep goal
+    const additionalMonthly = jeepAdditionalNeeded > 0 
+      ? calculateMonthlyForGoal(jeepAdditionalNeeded, yearsToJeep, annualReturn) 
+      : 0;
     
     // Update state
     setWeeklySavings(weeklyAmount);
@@ -79,7 +116,14 @@ const DailyCoffeeCalculator = () => {
     setTotalInvested(totalInvestedAmount);
     setInvestmentGrowth(growthAmount);
     setRetirementYearsAdvanced(calculateRetirementYearsAdvanced(futureValue));
-  }, [coffeeCost, frequency, yearsToRetirement, annualReturn]);
+    
+    // Update Jeep goal state
+    setJeepSavingsTotal(jeepFutureValue);
+    setJeepPercentageReached(jeepPercentage);
+    setAdditionalRequired(jeepAdditionalNeeded);
+    setMonthlyForJeep(additionalMonthly);
+    
+  }, [coffeeCost, frequency, yearsToRetirement, annualReturn, currentAge, jeepCost, yearsToJeep]);
   
   // Animation variants for the motion components
   const containerVariants = {
@@ -117,7 +161,7 @@ const DailyCoffeeCalculator = () => {
           <div>
             <CardTitle className="text-2xl font-bold">☕ The Daily Coffee Challenge</CardTitle>
             <CardDescription>
-              See how small daily expenses add up and impact your retirement goals
+              See how small daily expenses add up over time and impact your financial goals
             </CardDescription>
           </div>
           <Coffee className="h-10 w-10 text-amber-600" />
@@ -175,28 +219,28 @@ const DailyCoffeeCalculator = () => {
           </div>
         </div>
         
-        {/* Years to Retirement Slider */}
+        {/* Current Age Slider */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <Label htmlFor="retirement-years" className="text-base font-medium">
-              Years Until Retirement
+            <Label htmlFor="current-age" className="text-base font-medium">
+              Your Current Age
             </Label>
             <span className="font-semibold text-lg text-primary">
-              {yearsToRetirement} years
+              {currentAge} years old
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <Timer className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">16</span>
             <Slider
-              id="retirement-years"
-              min={10}
-              max={50}
+              id="current-age"
+              min={16}
+              max={25}
               step={1}
-              value={[yearsToRetirement]}
-              onValueChange={(value) => setYearsToRetirement(value[0])}
+              value={[currentAge]}
+              onValueChange={(value) => setCurrentAge(value[0])}
               className="flex-1"
             />
-            <PiggyBank className="h-5 w-5 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">25</span>
           </div>
         </div>
         
@@ -226,84 +270,232 @@ const DailyCoffeeCalculator = () => {
                 <p className="text-xl font-bold text-primary">{formatCurrency(yearlySavings)}</p>
               </motion.div>
               
-              {/* Total Amount Invested */}
+              {/* Jeep Progress */}
               <motion.div variants={itemVariants} className="bg-white/70 backdrop-blur-sm p-4 rounded-lg shadow-sm border border-gray-100">
-                <h4 className="text-sm font-medium text-muted-foreground">Total Amount Invested</h4>
-                <p className="text-xl font-bold text-primary">{formatLargeNumber(totalInvested)}</p>
+                <h4 className="text-sm font-medium text-muted-foreground">Coffee Money by Age 28</h4>
+                <p className="text-xl font-bold text-primary">{formatLargeNumber(jeepSavingsTotal)}</p>
               </motion.div>
             </motion.div>
             
-            {/* Big Impact Stats */}
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="mt-6"
-            >
-              <motion.div
-                variants={itemVariants}
-                className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-emerald-100 shadow-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-green-800">Future Value After {yearsToRetirement} Years</h3>
-                    <p className="text-sm text-green-600">With {annualReturn}% annual return</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-green-500" />
-                </div>
-                <div className="mt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-green-700 uppercase tracking-wider font-medium">Total Future Value</p>
-                      <p className="text-3xl font-bold text-green-800">{formatLargeNumber(totalSavings)}</p>
+            {/* Scenarios Tabs */}
+            <Tabs defaultValue="retirement" className="mt-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="retirement" className="flex items-center gap-2">
+                  <PiggyBank className="h-4 w-4" />
+                  <span>Retirement Impact</span>
+                </TabsTrigger>
+                <TabsTrigger value="jeep" className="flex items-center gap-2">
+                  <Car className="h-4 w-4" />
+                  <span>Jeep Savings Goal</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* Retirement Scenario */}
+              <TabsContent value="retirement" className="mt-4">
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="mt-2"
+                >
+                  <motion.div
+                    variants={itemVariants}
+                    className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg border border-emerald-100 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-green-800">Future Value After {yearsToRetirement} Years</h3>
+                        <p className="text-sm text-green-600">With {annualReturn}% annual return</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-green-500" />
                     </div>
-                    <div>
-                      <p className="text-xs text-green-700 uppercase tracking-wider font-medium">Investment Growth</p>
-                      <p className="text-3xl font-bold text-green-800">{formatLargeNumber(investmentGrowth)}</p>
-                      <p className="text-xs text-green-600">{(investmentGrowth/totalInvested*100).toFixed(0)}% more than invested</p>
+                    <div className="mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-green-700 uppercase tracking-wider font-medium">Total Future Value</p>
+                          <p className="text-3xl font-bold text-green-800">{formatLargeNumber(totalSavings)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-green-700 uppercase tracking-wider font-medium">Investment Growth</p>
+                          <p className="text-3xl font-bold text-green-800">{formatLargeNumber(investmentGrowth)}</p>
+                          <p className="text-xs text-green-600">{(investmentGrowth/totalInvested*100).toFixed(0)}% more than invested</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                
-                {/* Impact on Retirement */}
-                <div className="mt-6 pt-6 border-t border-green-100">
-                  <div className="flex items-center">
-                    <Coins className="h-6 w-6 text-amber-500 mr-2" />
-                    <h4 className="text-lg font-semibold text-amber-600">The Big Impact</h4>
-                  </div>
-                  <p className="mt-2 text-lg">
-                    <span className="font-bold">By investing your coffee money,</span> you could potentially:
-                  </p>
-                  <ul className="mt-2 space-y-2">
-                    <li className="flex items-start">
-                      <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
-                      <span>
-                        Retire up to <span className="font-bold text-amber-600">{retirementYearsAdvanced} years earlier</span> than planned
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
-                      <span>
-                        Add <span className="font-bold text-amber-600">{formatCurrency(totalSavings * 0.04)}</span> to your annual retirement income
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
-                      <span>
-                        Turn each <span className="font-bold text-amber-600">{formatCurrency(coffeeCost)}</span> coffee into <span className="font-bold text-amber-600">{formatCurrency(totalSavings/(frequency*52*yearsToRetirement))}</span> of future value
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </motion.div>
-            </motion.div>
+                    
+                    {/* Impact on Retirement */}
+                    <div className="mt-6 pt-6 border-t border-green-100">
+                      <div className="flex items-center">
+                        <Coins className="h-6 w-6 text-amber-500 mr-2" />
+                        <h4 className="text-lg font-semibold text-amber-600">The Retirement Impact</h4>
+                      </div>
+                      <p className="mt-2 text-lg">
+                        <span className="font-bold">By investing your coffee money,</span> you could potentially:
+                      </p>
+                      <ul className="mt-2 space-y-2">
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
+                          <span>
+                            Retire up to <span className="font-bold text-amber-600">{retirementYearsAdvanced} years earlier</span> than planned
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
+                          <span>
+                            Add <span className="font-bold text-amber-600">{formatCurrency(totalSavings * 0.04)}</span> to your annual retirement income
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
+                          <span>
+                            Turn each <span className="font-bold text-amber-600">{formatCurrency(coffeeCost)}</span> coffee into <span className="font-bold text-amber-600">{formatCurrency(totalSavings/(frequency*52*yearsToRetirement))}</span> of future value
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </TabsContent>
+              
+              {/* Jeep Savings Goal Scenario */}
+              <TabsContent value="jeep" className="mt-4">
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="mt-2"
+                >
+                  <motion.div
+                    variants={itemVariants}
+                    className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-100 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-800">New Jeep Savings Goal</h3>
+                        <p className="text-sm text-blue-600">
+                          Target Age: 28 ({yearsToJeep} years from now) | Price: {formatCurrency(jeepCost)}
+                        </p>
+                      </div>
+                      <Car className="h-8 w-8 text-blue-500" />
+                    </div>
+                    
+                    {/* Goal Progress */}
+                    <div className="mt-4">
+                      <label className="text-xs text-blue-700 uppercase tracking-wider font-medium">
+                        Coffee Savings Progress
+                      </label>
+                      <div className="mt-2 h-4 relative w-full bg-blue-100 rounded-full overflow-hidden">
+                        <div 
+                          className="absolute top-0 left-0 h-full bg-blue-500 rounded-full"
+                          style={{ width: `${jeepPercentageReached}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-xs text-blue-600">{jeepPercentageReached.toFixed(1)}%</span>
+                        <span className="text-xs text-blue-600">{formatCurrency(jeepSavingsTotal)} of {formatCurrency(jeepCost)}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Goal Details */}
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-sm border border-blue-100">
+                        <h4 className="text-sm font-medium text-blue-700">Coffee Savings by Age 28</h4>
+                        <p className="text-2xl font-bold text-blue-800">{formatCurrency(jeepSavingsTotal)}</p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          {jeepPercentageReached >= 100 
+                            ? "Your coffee savings will fully cover your Jeep purchase!" 
+                            : `This covers ${jeepPercentageReached.toFixed(1)}% of your Jeep's cost`}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-white/80 backdrop-blur-sm p-4 rounded-lg shadow-sm border border-blue-100">
+                        <h4 className="text-sm font-medium text-blue-700">Additional Needed</h4>
+                        <p className="text-2xl font-bold text-blue-800">
+                          {additionalRequired > 0 ? formatCurrency(additionalRequired) : "None!"}
+                        </p>
+                        {additionalRequired > 0 && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Add {formatCurrency(monthlyForJeep)} monthly to reach your goal
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Jeep Impact Stats */}
+                    <div className="mt-6 pt-6 border-t border-blue-100">
+                      <div className="flex items-center">
+                        <Coins className="h-6 w-6 text-indigo-500 mr-2" />
+                        <h4 className="text-lg font-semibold text-indigo-600">Coffee vs. Jeep</h4>
+                      </div>
+                      <p className="mt-2 text-lg">
+                        <span className="font-bold">By redirecting your coffee money,</span> you could:
+                      </p>
+                      <ul className="mt-2 space-y-2">
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-indigo-500 mr-2">•</span>
+                          <span>
+                            {jeepPercentageReached >= 100 
+                              ? <span>Pay for your <span className="font-bold text-indigo-600">entire Jeep in cash</span> by age 28</span>
+                              : <span>Cover <span className="font-bold text-indigo-600">{jeepPercentageReached.toFixed(1)}%</span> of your Jeep's cost by age 28</span>
+                            }
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-indigo-500 mr-2">•</span>
+                          <span>
+                            {additionalRequired > 0 
+                              ? <span>Need just <span className="font-bold text-indigo-600">{formatCurrency(monthlyForJeep)}</span> extra per month to fully fund your Jeep</span>
+                              : <span>Have <span className="font-bold text-indigo-600">{formatCurrency(jeepSavingsTotal - jeepCost)}</span> left over for customizations or insurance</span>
+                            }
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-indigo-500 mr-2">•</span>
+                          <span>
+                            Each <span className="font-bold text-indigo-600">{formatCurrency(coffeeCost)}</span> coffee skipped brings you <span className="font-bold text-indigo-600">{formatCurrency(jeepCost/(jeepSavingsTotal/(coffeeCost*frequency*52*yearsToJeep)))}</span> closer to your Jeep
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </TabsContent>
+            </Tabs>
           </div>
+        </div>
+        
+        {/* Jeep Cost Adjustment */}
+        <div className="pt-4 border-t mt-6">
+          <div className="flex justify-between items-center mb-3">
+            <Label htmlFor="jeep-cost" className="text-base font-medium">
+              New Jeep Cost
+            </Label>
+            <span className="font-semibold text-lg text-primary">
+              {formatCurrency(jeepCost)}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Car className="h-4 w-4 text-muted-foreground" />
+            <Slider
+              id="jeep-cost"
+              min={20000}
+              max={60000}
+              step={1000}
+              value={[jeepCost]}
+              onValueChange={(value) => setJeepCost(value[0])}
+              className="flex-1"
+            />
+            <RotateCw className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Adjust the Jeep cost to see how it affects your savings goal.
+          </p>
         </div>
       </CardContent>
       
       <CardFooter className="flex justify-between items-center border-t pt-6">
         <p className="text-sm text-muted-foreground">
-          Small expenses add up. Consider making your coffee at home.
+          Small expenses add up. Consider how daily choices impact major financial goals.
         </p>
         <Button variant="outline" className="gap-2">
           <Coffee className="h-4 w-4" /> See More Tips
