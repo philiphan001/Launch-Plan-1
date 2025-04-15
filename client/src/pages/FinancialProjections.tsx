@@ -1845,8 +1845,9 @@ const saveProjection = async () => {
 // Function to load a saved projection with proper error handling
 const loadSavedProjection = async (projectionId: number) => {
   try {
-    // Set loading state 
+    // Set loading state and switch to loading tab for visual feedback
     setIsLoadingProjection(true);
+    setMainTab("loading");
     
     // Clear existing state first for a complete reset
     setProjectionData(null);
@@ -1960,6 +1961,13 @@ const loadSavedProjection = async (projectionId: number) => {
       description: error.message || 'Failed to load projection. Please try again.',
       variant: "destructive"
     });
+    
+    // Reset loading state and switch to edit tab if there was an error
+    setIsLoadingProjection(false);
+    setMainTab("edit");
+  } finally {
+    // Make sure loading state is reset even if there's no error
+    setIsLoadingProjection(false);
   }
 };
 
@@ -3092,6 +3100,15 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                 Save Changes
               </Button>
             </div>
+          </div>
+        </TabsContent>
+        
+        {/* Loading tab content */}
+        <TabsContent value="loading">
+          <div className="p-8 bg-white rounded-lg shadow flex flex-col items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-6"></div>
+            <h2 className="text-xl font-medium text-gray-700 mb-2">Loading Financial Projection</h2>
+            <p className="text-gray-500">Please wait while we prepare your financial data...</p>
           </div>
         </TabsContent>
         
