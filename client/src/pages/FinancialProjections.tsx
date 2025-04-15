@@ -169,8 +169,8 @@ const FinancialProjections = ({
   // Setup React Query client first
   const queryClient = useQueryClient();
   
-  // Get the current location for parsing query parameters
-  const [location] = useLocation();
+  // Get the current location for parsing query parameters and navigation
+  const [location, setLocation] = useLocation();
   // This combination of projectionId and timestamp will force a full reset when the URL changes
   const { projectionId, timestamp, autoGenerate } = useMemo(() => {
     // Parse URL query parameters
@@ -3066,7 +3066,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                     
                                     // Use navigation/URL approach for consistent loading behavior
                                     // This ensures we use the same loading mechanism for all projections
-                                    navigate(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
+                                    setLocation(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
                                       replace: true // Replace current history entry to avoid back button issues
                                     });
                                     
