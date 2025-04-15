@@ -480,8 +480,6 @@ export const careerCalculations = pgTable("career_calculations", {
   calculationDate: timestamp("calculation_date").defaultNow(),
   includedInProjection: boolean("included_in_projection").default(false),
   locationZip: text("location_zip"),
-  locationCity: text("location_city"),
-  locationState: text("location_state"),
   adjustedForLocation: boolean("adjusted_for_location").default(false),
 });
 
@@ -497,8 +495,6 @@ export const insertCareerCalculationSchema = createInsertSchema(careerCalculatio
   additionalNotes: true,
   includedInProjection: true,
   locationZip: true,
-  locationCity: true,
-  locationState: true,
   adjustedForLocation: true,
 });
 

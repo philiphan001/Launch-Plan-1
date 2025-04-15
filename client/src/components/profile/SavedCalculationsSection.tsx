@@ -71,8 +71,6 @@ interface CareerCalculation {
   calculationDate: string;
   includedInProjection: boolean;
   locationZip: string | null;
-  locationCity: string | null;
-  locationState: string | null;
   adjustedForLocation: boolean;
 }
 
