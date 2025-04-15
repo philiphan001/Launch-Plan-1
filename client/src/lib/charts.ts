@@ -9,23 +9,34 @@ import { NetWorthData, CashFlowData, ProjectionData } from './types';
  * @returns A copy of the projection data with corrected liability values
  */
 export function fixLiabilityCalculation(data: ProjectionData): ProjectionData {
-  if (!data.liabilities || !data.graduateSchoolLoans) {
-    // If there's no data to fix, return the original
-    return data;
-  }
-  
   // Create a deep copy of the data
   const fixedData = { ...data };
+
+  // Check if data.liabilities is an array before trying to process it
+  if (!data || !data.liabilities || !Array.isArray(data.liabilities)) {
+    console.log("No valid liabilities array found in projection data, initializing empty array");
+    // Initialize liabilities as an empty array to prevent null reference errors
+    fixedData.liabilities = [];
+    return fixedData;
+  }
+  
+  // Check if we have graduate school loans to process
+  if (!data.graduateSchoolLoans || !Array.isArray(data.graduateSchoolLoans)) {
+    // No graduate school loans to process, but still ensure liabilities is valid
+    console.log("No graduate school loans to process, returning original liabilities array");
+    fixedData.liabilities = [...data.liabilities]; // Create a copy to avoid reference issues
+    return fixedData;
+  }
   
   // Create a new liabilities array 
   fixedData.liabilities = data.liabilities.map((liability, index) => {
     // Calculate the sum of all known liability types
-    const mortgageValue = data.mortgage && data.mortgage[index] ? data.mortgage[index] : 0;
-    const studentLoanValue = data.studentLoan && data.studentLoan[index] ? data.studentLoan[index] : 0;
-    const educationLoansValue = data.educationLoans && data.educationLoans[index] ? data.educationLoans[index] : 0;
-    const graduateSchoolLoansValue = data.graduateSchoolLoans && data.graduateSchoolLoans[index] ? data.graduateSchoolLoans[index] : 0;
-    const carLoanValue = data.carLoan && data.carLoan[index] ? data.carLoan[index] : 0;
-    const personalLoansValue = data.personalLoans && data.personalLoans[index] ? data.personalLoans[index] : 0;
+    const mortgageValue = data.mortgage && Array.isArray(data.mortgage) && data.mortgage[index] ? data.mortgage[index] : 0;
+    const studentLoanValue = data.studentLoan && Array.isArray(data.studentLoan) && data.studentLoan[index] ? data.studentLoan[index] : 0;
+    const educationLoansValue = data.educationLoans && Array.isArray(data.educationLoans) && data.educationLoans[index] ? data.educationLoans[index] : 0;
+    const graduateSchoolLoansValue = data.graduateSchoolLoans && Array.isArray(data.graduateSchoolLoans) && data.graduateSchoolLoans[index] ? data.graduateSchoolLoans[index] : 0;
+    const carLoanValue = data.carLoan && Array.isArray(data.carLoan) && data.carLoan[index] ? data.carLoan[index] : 0;
+    const personalLoansValue = data.personalLoans && Array.isArray(data.personalLoans) && data.personalLoans[index] ? data.personalLoans[index] : 0;
     
     // Sum all liability types
     const sumOfAllLiabilities = mortgageValue + studentLoanValue + educationLoansValue + 
@@ -42,9 +53,9 @@ export function fixLiabilityCalculation(data: ProjectionData): ProjectionData {
   });
   
   // Also update the net worth to reflect the fixed liability values
-  if (fixedData.assets) {
+  if (fixedData.assets && Array.isArray(fixedData.assets)) {
     fixedData.netWorth = fixedData.assets.map((asset, index) => {
-      return asset - (fixedData.liabilities?.[index] || 0);
+      return asset - (fixedData.liabilities && fixedData.liabilities[index] ? fixedData.liabilities[index] : 0);
     });
   }
   
