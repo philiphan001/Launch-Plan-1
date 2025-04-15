@@ -131,11 +131,6 @@ const CollegeDiscovery = ({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', userId] });
-      toast({
-        title: "College added to favorites",
-        description: "You can view your favorite colleges in the settings page.",
-        variant: "default",
-      });
     },
     onError: (error) => {
       console.error("Error adding college to favorites:", error);
@@ -155,11 +150,6 @@ const CollegeDiscovery = ({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', userId] });
-      toast({
-        title: "College removed from favorites",
-        description: "The college has been removed from your favorites.",
-        variant: "default",
-      });
     },
     onError: (error) => {
       console.error("Error removing college from favorites:", error);
