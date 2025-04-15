@@ -78,10 +78,11 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [customName, setCustomName] = useState("");
   
   // Marriage milestone specific state
-  const [spouseOccupation, setSpouseOccupation] = useState("");
-  const [spouseIncome, setSpouseIncome] = useState(50000);
-  const [spouseAssets, setSpouseAssets] = useState(10000);
-  const [spouseLiabilities, setSpouseLiabilities] = useState(5000);
+  // Completely rewritten spouse state with explicit types and validations
+  const [spouseOccupation, setSpouseOccupation] = useState<string>("");
+  const [spouseIncome, setSpouseIncome] = useState<number>(50000);
+  const [spouseAssets, setSpouseAssets] = useState<number>(10000);
+  const [spouseLiabilities, setSpouseLiabilities] = useState<number>(5000);
   
   // Home milestone specific state
   const [homeValue, setHomeValue] = useState(300000);
@@ -828,19 +829,23 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                               <CommandItem
                                                 key={career.id || Math.random()}
                                                 value={title}
-                                                onSelect={() => {
-                                                  // Ultra simple approach to avoid race conditions
-                                                  console.log(`Selecting career: ${title} with salary: ${salary}`);
-                                                  
-                                                  // Set both values directly, no timeouts or callbacks
+                                                onSelect={(value) => {
+                                                  // COMPLETELY REIMPLEMENTED CAREER SELECTION
+                                                  // First, set the occupation name immediately
                                                   setSpouseOccupation(title);
                                                   
-                                                  // Set a numeric salary value, defaulting to 50000 if needed
-                                                  const safeIncome = typeof salary === 'number' && !isNaN(salary) ? 
-                                                                     Math.round(salary) : 50000;
-                                                  setSpouseIncome(safeIncome);
+                                                  // Use a very defensive approach for the income
+                                                  let incomeValue = 50000; // Default value
                                                   
-                                                  console.log(`Set spouse income to: ${safeIncome}`);
+                                                  // Only attempt to use the actual value if it's valid
+                                                  if (typeof salary === 'number' && !isNaN(salary) && salary > 0) {
+                                                    // Round to avoid any floating point issues
+                                                    incomeValue = Math.round(salary);
+                                                  }
+                                                  
+                                                  // Set the income with a verified number
+                                                  console.log(`Setting spouse income to: ${incomeValue}`);
+                                                  setSpouseIncome(incomeValue);
                                                 }}
                                                 className="flex items-center"
                                               >
@@ -867,23 +872,22 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                               <div>
                                 <Label className="text-purple-700">Their Yearly Salary 💰</Label>
                                 <div className="mt-1 font-medium text-lg text-green-600">
-                                  ${(() => {
-                                    const salary = careers?.find(c => c.title === spouseOccupation)?.salaryMedian;
-                                    return typeof salary === 'number' && !isNaN(salary) ? salary.toLocaleString() : "???,???";
-                                  })()}
+                                  ${
+                                    // Simplified display logic to avoid runtime errors
+                                    spouseIncome.toLocaleString()
+                                  }
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   Average salary for this job
                                 </div>
                               </div>
                               <div className="text-5xl">
-                                {(() => {
-                                  const salary = careers?.find(c => c.title === spouseOccupation)?.salaryMedian || 0;
-                                  if (typeof salary !== 'number' || isNaN(salary)) return "😊";
-                                  return salary > 100000 ? "🤑" :
-                                         salary > 70000 ? "😎" :
-                                         salary > 40000 ? "🙂" : "😅";
-                                })()}
+                                {
+                                  // Simplified emoji display based on spouseIncome state value
+                                  spouseIncome > 100000 ? "🤑" :
+                                  spouseIncome > 70000 ? "😎" :
+                                  spouseIncome > 40000 ? "🙂" : "😅"
+                                }
                               </div>
                             </div>
                             
@@ -1654,7 +1658,9 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                       key={career.id}
                                       value={career.title}
                                       onSelect={() => {
-                                        setTargetOccupation(career.title);
+                                        // Simplified selection handler for education target occupation
+                                        console.log(`Setting target occupation to: ${career.title}`);
+                                        setTargetOccupation(career.title || "");
                                       }}
                                       className="flex items-center"
                                     >
