@@ -1669,18 +1669,21 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
   queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
-  queryFn: async () => {
-    if (!projectionId) {
+  queryFn: async ({ queryKey }) => {
+    // Extract the projectionId from the query key for consistency
+    const id = queryKey[1] as number | null;
+    
+    if (!id) {
       console.log("No projection ID provided, skipping fetch");
       return null;
     }
     
     // Add cache-busting timestamp to ensure fresh data
     const cacheBuster = new Date().getTime();
-    console.log(`Fetching projection data for ID: ${projectionId} (cache bust: ${cacheBuster})`);
+    console.log(`Fetching projection data for ID: ${id} (cache bust: ${cacheBuster})`);
     
     try {
-      const url = `/api/financial-projections/detail/${projectionId}?_=${cacheBuster}`;
+      const url = `/api/financial-projections/detail/${id}?_=${cacheBuster}`;
       console.log(`Making fetch request to: ${url}`);
       
       const response = await fetch(url);
@@ -1692,15 +1695,40 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       }
       
       const data = await response.json();
-      console.log("Successfully loaded projection data:", data.id, data.name);
+      
+      // Validate the data structure
+      if (!data || typeof data !== 'object' || !data.id) {
+        console.error("Invalid projection data structure received:", data);
+        throw new Error("Invalid projection data structure");
+      }
+      
+      console.log("Successfully loaded projection data:", data.id, data.name, "with projectionData type:", typeof data.projectionData);
+      
+      // Handle any projection data that might be stringified
+      if (data.projectionData && typeof data.projectionData === 'string') {
+        try {
+          // Try to parse the projection data once to ensure it's an object
+          const parsedData = JSON.parse(data.projectionData);
+          console.log("Pre-parsed projectionData to ensure correct format");
+          data.projectionData = parsedData;
+        } catch (parseError) {
+          console.warn("Could not parse projectionData string - will be handled during processing:", parseError);
+        }
+      }
+      
       return data;
     } catch (error) {
       console.error("Error fetching projection:", error);
+      toast({
+        title: "Error Loading Projection",
+        description: "Failed to load the saved projection. Please try again.",
+        variant: "destructive"
+      });
       throw error;
     }
   },
   enabled: !!projectionId, // Only enable this query when we have a projection ID
-  retry: false, // Don't retry failed requests
+  retry: 2, // Retry failed requests up to 2 times
   staleTime: 0, // Consider data immediately stale to allow refetching
   gcTime: 0, // Don't cache results between component mounts (gcTime replaces cacheTime in v5)
   refetchOnMount: true, // Always refetch on component mount
@@ -1718,9 +1746,27 @@ useEffect(() => {
   // Update the ref
   previousProjectionIdRef.current = projectionId;
   
+  // Reset state immediately if the projection ID changed
+  if (didProjectionChange) {
+    console.log("Projection ID changed, resetting state:", projectionId);
+    // Clear all state values to defaults to prevent stale data
+    setProjectionData(null);
+    setAge(25);
+    setTimeframe("10 Years");
+    setStartingSavings(5000);
+    setIncome(40000);
+    setExpenses(35000);
+    setIncomeGrowth(3.0);
+    setStudentLoanDebt(0);
+    setEmergencyFundAmount(10000);
+    setPersonalLoanTermYears(5);
+    setPersonalLoanInterestRate(8.0);
+    setProjectionName("");
+  }
+  
   // Only proceed if we have projection data and either it just loaded or the projection ID changed
   if (savedProjection && (!isLoadingSavedProjection || didProjectionChange)) {
-    console.log("Loading saved projection:", savedProjection, "ID changed:", didProjectionChange);
+    console.log("Loading saved projection ID:", projectionId, "Data:", savedProjection, "ID changed:", didProjectionChange);
     console.log("Projection has complete data:", 
       savedProjection.startingAge !== null &&
       savedProjection.startingSavings !== null &&
@@ -1728,9 +1774,7 @@ useEffect(() => {
       savedProjection.expenses !== null);
     
     // Create a batch of state updates to be executed together for better performance
-    const stateUpdates = () => {
-      // Reset all state values at once
-      
+    const stateUpdates = () => {      
       // Load the projection name
       setProjectionName(savedProjection.name || `Projection - ${new Date().toLocaleDateString()}`);
       
@@ -1744,9 +1788,23 @@ useEffect(() => {
         
         // For older projections, try to extract data from the projectionData JSON
         try {
-          const projData = typeof savedProjection.projectionData === 'string' 
-            ? JSON.parse(savedProjection.projectionData) 
-            : savedProjection.projectionData;
+          // Always parse projectionData as string first to handle any level of stringification
+          let projData;
+          if (typeof savedProjection.projectionData === 'string') {
+            try {
+              projData = JSON.parse(savedProjection.projectionData);
+              // Check if it's still a string (double-stringified)
+              if (typeof projData === 'string') {
+                projData = JSON.parse(projData);
+              }
+            } catch (e) {
+              console.error("First parsing attempt failed:", e);
+              // Try alternate approach - remove escaped quotes
+              projData = JSON.parse(savedProjection.projectionData.replace(/\\"/g, '"'));
+            }
+          } else {
+            projData = savedProjection.projectionData;
+          }
           
           // Extract data from the JSON
           const extractedAge = projData.ages && projData.ages.length > 0 ? projData.ages[0] : 25;
@@ -3058,25 +3116,49 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => {
-                                    // Reset React Query cache for this projection to force a fresh load
+                                    // Reset all state related to projections
+                                    setProjectionData(null);
+                                    setAge(25);
+                                    setTimeframe("10 Years");
+                                    setStartingSavings(5000);
+                                    setIncome(40000);
+                                    setExpenses(35000);
+                                    setIncomeGrowth(0.03);
+                                    setStudentLoanDebt(0);
+                                    setEmergencyFundAmount(10000);
+                                    setPersonalLoanTermYears(5);
+                                    setPersonalLoanInterestRate(8.0);
+                                    setProjectionName("");
+                                    
+                                    // Force the React Query cache to evict all related data
                                     queryClient.removeQueries({ queryKey: ['/api/financial-projections/detail', projection.id] });
                                     
-                                    // Generate a unique timestamp to ensure cache busting
+                                    // Generate a truly unique timestamp to ensure cache busting
                                     const timestamp = Date.now();
                                     
-                                    // Use navigation/URL approach for consistent loading behavior
-                                    // This ensures we use the same loading mechanism for all projections
-                                    setLocation(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
-                                      replace: true // Replace current history entry to avoid back button issues
-                                    });
+                                    console.log(`Loading projection ${projection.id} with fresh state and cache at timestamp: ${timestamp}`);
                                     
-                                    // Clear projection state to ensure a fresh start
-                                    setProjectionData(null);
-                                    
-                                    // Force React to remount components by setting a temporary loading state
+                                    // Force UI to loading state first to ensure complete reset
                                     setMainTab("loading");
+                                    
+                                    // Small delay to ensure React has time to process state changes
                                     setTimeout(() => {
-                                      setMainTab("view");
+                                      // Clear the React Query cache completely to force fresh data load
+                                      // This is a more aggressive approach to ensure clean state
+                                      queryClient.clear();
+                                      
+                                      console.log(`Completely reset React Query cache and state before loading projection ${projection.id}`);
+                                      
+                                      // Use URL approach for navigation - this triggers all the proper loading mechanisms
+                                      setLocation(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
+                                        replace: true // Replace current history entry to avoid back button issues
+                                      });
+                                      
+                                      // Switch to view tab after a longer delay to ensure all state changes have propagated
+                                      setTimeout(() => {
+                                        setMainTab("view");
+                                        console.log(`Switched to view tab for projection ${projection.id}`);
+                                      }, 300);
                                     }, 100);
                                   }}
                                 >
