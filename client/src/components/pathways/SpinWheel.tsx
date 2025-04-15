@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
+import { useSounds } from '../../hooks/useSounds';
 
 interface WheelOption {
   id: string;
@@ -31,6 +32,9 @@ const SpinWheel = ({
   const [remainingOptions, setRemainingOptions] = useState<WheelOption[]>([]);
   const [showPrompt, setShowPrompt] = useState(false);
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
+  
+  // Get sound functions from our custom hook
+  const { playClick, playSpin, playWinning, startTicking, stopTicking } = useSounds();
 
   // Initialize remaining options
   useEffect(() => {
@@ -49,19 +53,46 @@ const SpinWheel = ({
     setShowPrompt(false);
     setCurrentPromptIndex(0);
     
+    // Stop any ongoing sounds when component resets
+    stopTicking();
+    
     // Force a repaint of the component with a small delay
     const timer = setTimeout(() => {
       console.log('SpinWheel: Delayed reset complete');
     }, 50);
     
-    return () => clearTimeout(timer);
-  }, [resetKey, options]);
+    return () => {
+      clearTimeout(timer);
+      stopTicking(); // Make sure to stop sounds on cleanup
+    };
+  }, [resetKey, options, stopTicking]);
+  
+  // Make sure to stop all sounds when component unmounts
+  useEffect(() => {
+    return () => {
+      console.log('SpinWheel: Unmounting, cleaning up sounds');
+      stopTicking();
+    };
+  }, [stopTicking]);
 
   const spinWheel = () => {
     if (spinning || remainingOptions.length === 0) return;
     
+    // Play initial click sound when button is pressed
+    playClick();
+    
+    // Start spinning process
     setSpinning(true);
     setShowPrompt(false);
+    
+    // Play the continuous spin sound
+    playSpin();
+    
+    // Start the ticking sound that speeds up as the wheel spins
+    // Start with a slower interval that speeds up
+    setTimeout(() => startTicking(150), 300);
+    setTimeout(() => startTicking(100), 800);
+    setTimeout(() => startTicking(50), 1300);
     
     // Select a random option from remaining options
     const randomIndex = Math.floor(Math.random() * remainingOptions.length);
@@ -69,6 +100,13 @@ const SpinWheel = ({
     
     // After "spinning" is done
     setTimeout(() => {
+      // Stop the ticking sound
+      stopTicking();
+      
+      // Play the winning sound
+      playWinning();
+      
+      // Update the UI
       setSelectedOption(selected);
       setSpinning(false);
       setShowPrompt(true);
@@ -82,6 +120,9 @@ const SpinWheel = ({
 
   const handleResponseSubmit = () => {
     if (!selectedOption) return;
+    
+    // Play click sound when button is pressed
+    playClick();
     
     // Store response
     const updatedResponses = {
@@ -99,6 +140,8 @@ const SpinWheel = ({
     } else {
       // If no more options, complete the activity
       if (remainingOptions.length === 0) {
+        // Play winning sound when completing all questions
+        playWinning();
         onComplete(updatedResponses);
       } else {
         // Reset for next spin
@@ -123,6 +166,9 @@ const SpinWheel = ({
   };
 
   const handleSkip = () => {
+    // Play click sound when skipping
+    playClick();
+    
     if (remainingOptions.length === 0) {
       onComplete(completedOptions);
     } else {
@@ -133,6 +179,11 @@ const SpinWheel = ({
   };
 
   const handleFinish = () => {
+    // Play click sound when finishing
+    playClick();
+    // Also play a winning sound for completion
+    setTimeout(() => playWinning(), 300);
+    
     onComplete(completedOptions);
   };
 
