@@ -1,0 +1,65 @@
+// In FinancialProjections.tsx, modify the saved projection loading:
+const loadSavedProjection = async (projectionId: number) => {
+  try {
+    // Clear existing state first
+    setProjectionData(null);
+    
+    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load projection: ${response.statusText}`);
+    }
+    
+    const savedProjection = await response.json();
+    
+    // Validate the projection data
+    if (!savedProjection || !savedProjection.projectionData) {
+      throw new Error('Invalid projection data');
+    }
+    
+    // Parse projection data if it's a string
+    const projectionData = typeof savedProjection.projectionData === 'string' 
+      ? JSON.parse(savedProjection.projectionData)
+      : savedProjection.projectionData;
+    
+    // Update all state values in a single batch
+    const stateUpdates = {
+      projectionName: savedProjection.name,
+      timeframe: `${savedProjection.timeframe} Years`,
+      age: savedProjection.startingAge,
+      startingSavings: savedProjection.startingSavings,
+      income: savedProjection.income,
+      expenses: savedProjection.expenses,
+      incomeGrowth: savedProjection.incomeGrowth,
+      studentLoanDebt: savedProjection.studentLoanDebt,
+      emergencyFundAmount: savedProjection.emergencyFundAmount,
+      personalLoanTermYears: savedProjection.personalLoanTermYears,
+      personalLoanInterestRate: savedProjection.personalLoanInterestRate,
+      projectionData: {
+        ...projectionData,
+        _key: `projection-${projectionId}-${new Date().getTime()}`
+      }
+    };
+    
+    // Apply all state updates at once
+    setProjectionName(stateUpdates.projectionName);
+    setTimeframe(stateUpdates.timeframe);
+    setAge(stateUpdates.age);
+    setStartingSavings(stateUpdates.startingSavings);
+    setIncome(stateUpdates.income);
+    setExpenses(stateUpdates.expenses);
+    setIncomeGrowth(stateUpdates.incomeGrowth);
+    setStudentLoanDebt(stateUpdates.studentLoanDebt);
+    setEmergencyFundAmount(stateUpdates.emergencyFundAmount);
+    setPersonalLoanTermYears(stateUpdates.personalLoanTermYears);
+    setPersonalLoanInterestRate(stateUpdates.personalLoanInterestRate);
+    setProjectionData(stateUpdates.projectionData);
+    
+    // Switch to view tab
+    setMainTab("view");
+    
+  } catch (error) {
+    console.error('Error loading projection:', error);
+    // Show error to user
+    toast.error('Failed to load projection. Please try again.');
+  }
+};
