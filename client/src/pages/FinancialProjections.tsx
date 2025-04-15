@@ -1807,11 +1807,37 @@ useEffect(() => {
       // Parse the saved projection data
       if (savedProjection.projectionData) {
         try {
-          // Handle both string and object formats for projectionData
+          // Handle multi-level stringification that might occur
           let parsedData;
           if (typeof savedProjection.projectionData === 'string') {
             console.log("Parsing string projectionData...");
-            parsedData = JSON.parse(savedProjection.projectionData);
+            try {
+              // First try to parse it as a string
+              parsedData = JSON.parse(savedProjection.projectionData);
+              
+              // Check if the parsed result is still a string (double-stringified)
+              if (typeof parsedData === 'string') {
+                console.log("Detected double-stringified data, parsing again...");
+                parsedData = JSON.parse(parsedData);
+              }
+              
+              // Verify the parsed data has the expected structure
+              if (!parsedData.ages || !parsedData.netWorth) {
+                console.warn("Parsed data doesn't have expected fields (ages, netWorth):", parsedData);
+              } else {
+                console.log("Successfully parsed projection data with fields:", Object.keys(parsedData).join(", "));
+              }
+            } catch (parseError) {
+              console.error("Error parsing projection data string:", parseError);
+              // Try to parse using a more tolerant approach if regular parsing fails
+              try {
+                parsedData = JSON.parse(savedProjection.projectionData.replace(/\\"/g, '"'));
+                console.log("Parsed data using alternate method");
+              } catch (secondError) {
+                console.error("Failed alternate parsing method:", secondError);
+                throw new Error("Unable to parse projection data");
+              }
+            }
           } else {
             console.log("Using object projectionData directly...");
             parsedData = savedProjection.projectionData;
@@ -1836,6 +1862,13 @@ useEffect(() => {
               _key: `projection-${projectionId}-${new Date().getTime()}-recovery`
             };
             setProjectionData(dataWithKey);
+          } else {
+            console.error("Cannot recover, projectionData is not an object:", typeof savedProjection.projectionData);
+            toast({
+              title: "Error Loading Projection",
+              description: "There was a problem loading this financial projection. Please try a different one.",
+              variant: "destructive"
+            });
           }
         }
       }
@@ -2376,7 +2409,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                       expenses: Math.round(adjustedExpenses),
                       incomeGrowth,
                       studentLoanDebt,
-                      projectionData: JSON.stringify(projectionData),
+                      projectionData: projectionData,
                       includesCollegeCalculation: !!includedCollegeCalc,
                       includesCareerCalculation: !!includedCareerCalc,
                       collegeCalculationId: includedCollegeCalc?.id || null,
@@ -2725,7 +2758,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                         expenses: Math.round(adjustedExpenses),
                         incomeGrowth,
                         studentLoanDebt,
-                        projectionData: JSON.stringify(projectionData),
+                        projectionData: projectionData,
                         includesCollegeCalculation: !!includedCollegeCalc,
                         includesCareerCalculation: !!includedCareerCalc,
                         collegeCalculationId: includedCollegeCalc?.id || null,
