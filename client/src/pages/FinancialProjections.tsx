@@ -193,7 +193,7 @@ const FinancialProjections = ({
     };
   }, [location, initialProjectionId]);
 
-  // Main tabs for the FinancialProjections page (View, Edit, Compare, Manage)
+  // Main tabs for the FinancialProjections page (View, Edit, Compare, Manage, Loading)
   const [mainTab, setMainTab] = useState<string>("view");
   
   // Chart type tabs within the View tab
@@ -210,6 +210,7 @@ const FinancialProjections = ({
   });
   const [studentLoanDebt, setStudentLoanDebt] = useState<number>(0);
   const [financialAdvice, setFinancialAdvice] = useState<FinancialAdvice[]>([]);
+  const [isLoadingProjection, setIsLoadingProjection] = useState<boolean>(false);
   
   // State for collapsible sections
   const [locationSectionOpen, setLocationSectionOpen] = useState<boolean>(true);
@@ -1844,8 +1845,26 @@ const saveProjection = async () => {
 // Function to load a saved projection with proper error handling
 const loadSavedProjection = async (projectionId: number) => {
   try {
-    // Clear existing state first
+    // Set loading state 
+    setIsLoadingProjection(true);
+    
+    // Clear existing state first for a complete reset
     setProjectionData(null);
+    setTimeframe("10 Years");
+    setAge(25);
+    setStartingSavings(5000);
+    setIncome(40000);
+    setExpenses(35000);
+    setIncomeGrowth(3.0);
+    setStudentLoanDebt(0);
+    setEmergencyFundAmount(10000);
+    setPersonalLoanTermYears(5);
+    setPersonalLoanInterestRate(8.0);
+    
+    console.log(`Loading projection ${projectionId} with fresh state`);
+    
+    // Force a refetch by clearing the React Query cache for this projection
+    queryClient.removeQueries({ queryKey: ['/api/financial-projections/detail', projectionId] });
     
     const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
     if (!response.ok) {
@@ -1858,6 +1877,21 @@ const loadSavedProjection = async (projectionId: number) => {
     if (!savedProjection || !savedProjection.projectionData) {
       throw new Error('Invalid projection data');
     }
+    
+    // Set projection name
+    setProjectionName(savedProjection.name || `Projection ${projectionId}`);
+    
+    // Update form fields with saved values (if they exist)
+    setTimeframe(savedProjection.timeframe || "10 Years");
+    setAge(savedProjection.startingAge || 25);
+    setStartingSavings(savedProjection.startingSavings || 5000);
+    setIncome(savedProjection.annualIncome || 40000);
+    setExpenses(savedProjection.annualExpenses || 35000);
+    setIncomeGrowth(savedProjection.incomeGrowthRate || 3.0);
+    setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
+    setEmergencyFundAmount(savedProjection.emergencyFundAmount || 10000);
+    setPersonalLoanTermYears(savedProjection.personalLoanTermYears || 5);
+    setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate || 8.0);
     
     // Parse projection data if it's a string
     let parsedProjectionData;
