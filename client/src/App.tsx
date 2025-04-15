@@ -28,13 +28,22 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("Checking authentication status...");
         const response = await fetch('/api/auth/me');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setIsAuthenticated(true);
-          setIsFirstTimeUser(!!userData.isFirstTimeUser);
+        if (!response.ok) {
+          console.log("Not authenticated, status:", response.status);
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const userData = await response.json();
+        if (!userData || typeof userData !== 'object') {
+          throw new Error('Invalid user data received');
+        }
+        
+        console.log("Authentication successful, user:", userData);
+        setUser(userData);
+        setIsAuthenticated(true);
+        setIsFirstTimeUser(!!userData.isFirstTimeUser);
       } catch (error) {
         console.error('Failed to check authentication status:', error);
         // If there's an error, ensure user is logged out
@@ -47,9 +56,11 @@ function App() {
     checkAuth();
   }, []);
   
-  // Auth context values and functions
+  // Auth context values and functions with improved error handling
   const login = async (credentials: { username: string; password: string }) => {
     try {
+      console.log("Attempting login with username:", credentials.username);
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -59,16 +70,37 @@ function App() {
         credentials: 'include', // Important for cookies
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+      let responseData: any = null;
+      
+      try {
+        // Try to parse the response as JSON, but handle non-JSON responses
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+        } else {
+          // If not JSON, get text response
+          const textData = await response.text();
+          responseData = { message: textData || 'Unknown error' };
+        }
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        responseData = { message: 'Failed to parse server response' };
       }
       
-      const userData = await response.json();
-      setUser(userData);
+      if (!response.ok) {
+        console.error('Login failed with status:', response.status, responseData);
+        throw new Error(responseData.message || `Login failed with status ${response.status}`);
+      }
+      
+      if (!responseData || typeof responseData !== 'object') {
+        throw new Error('Invalid user data received from server');
+      }
+      
+      console.log("Login successful, user:", responseData);
+      setUser(responseData);
       setIsAuthenticated(true);
-      setIsFirstTimeUser(!!userData.isFirstTimeUser);
-      return userData;
+      setIsFirstTimeUser(!!responseData.isFirstTimeUser);
+      return responseData;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -77,6 +109,8 @@ function App() {
   
   const signup = async (credentials: RegisterCredentials) => {
     try {
+      console.log("Attempting signup with username:", credentials.username);
+      
       const response = await fetch('/api/users/register', {
         method: 'POST',
         headers: {
@@ -86,17 +120,36 @@ function App() {
         credentials: 'include', // Important for cookies
       });
       
-      // Get the response body whether the request succeeded or failed
-      const responseData = await response.json();
+      let responseData: any = null;
+      
+      try {
+        // Try to parse the response as JSON, but handle non-JSON responses
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+        } else {
+          // If not JSON, get text response
+          const textData = await response.text();
+          responseData = { message: textData || 'Unknown error' };
+        }
+      } catch (parseError) {
+        console.error('Error parsing signup response:', parseError);
+        responseData = { message: 'Failed to parse server response' };
+      }
       
       if (!response.ok) {
         // Extract the error message from the response
-        const errorMessage = responseData.message || responseData.details || 'Registration failed';
+        const errorMessage = responseData.message || responseData.details || `Registration failed with status ${response.status}`;
         console.error('Server returned error:', responseData);
         throw new Error(errorMessage);
       }
       
+      if (!responseData || typeof responseData !== 'object') {
+        throw new Error('Invalid user data received from server');
+      }
+      
       // Use the successful response data
+      console.log("Signup successful, user:", responseData);
       setUser(responseData);
       setIsAuthenticated(true);
       setIsFirstTimeUser(true); // New users are always first-time users
@@ -182,7 +235,7 @@ function App() {
     }
   }, [isAuthenticated, user]);
 
-  // Handle navigation based on auth status
+  // Handle navigation based on auth status with improved logic to prevent infinite redirects
   useEffect(() => {
     console.log(
       "Navigation effect triggered - Location:", location, 
@@ -191,45 +244,52 @@ function App() {
       "HasProjections:", hasSavedProjections
     );
     
-    // Check if we're navigating with query parameters (like projections?id=123)
+    // Extract path and query parameters
     const hasQueryParams = window.location.search !== '';
     
-    // If at root path '/' and logged in, redirect appropriately, but only if there are no query parameters
-    if (location === '/' && !hasQueryParams) {
-      if (isAuthenticated) {
-        // Logic for redirection:
-        // 1. First-time users go to Pathways
-        // 2. Users with saved projections go to Dashboard
-        // 3. Returning users without saved projections go to Dashboard
-        let destination = '/dashboard';
-        
-        if (isFirstTimeUser && !hasSavedProjections) {
-          destination = '/pathways';
-        }
-        
-        console.log(`Redirecting from / to ${destination} based on user status`);
-        setLocation(destination);
+    // PUBLIC ROUTES: Accessible to everyone
+    const publicRoutes = ["/", "/login", "/signup"];
+    
+    // SEMI-PUBLIC ROUTES: Accessible to non-authenticated users in specific cases
+    const semiPublicRoutes = ["/coffee-calculator"]; // Add more routes that should be accessible without login
+    const projectionWithQueryParams = location === '/projections' && window.location.search.includes('id=');
+    
+    // For non-authenticated users
+    if (!isAuthenticated) {
+      // Allow access to public routes and semi-public routes
+      if (publicRoutes.includes(location) || semiPublicRoutes.includes(location) || projectionWithQueryParams) {
+        // No redirection needed
+        return;
+      } else {
+        // Redirect to login for all other routes
+        console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
+        setLocation('/login');
+        return;
       }
-    } 
-    // Allow users to access dashboard even if they're first-time users
-    // This was previously redirecting first-time users away from dashboard, which was causing issues
-    else if (location === '/dashboard' && isAuthenticated) {
-      console.log("User accessing dashboard, allowing access regardless of first-time status");
-      // No redirection needed, allow access to dashboard
     }
-    // If trying to access protected routes while not authenticated
-    else if (!isAuthenticated && 
-        !["/", "/login", "/signup"].includes(location) &&
-        !(location === '/projections' && window.location.search.includes('id='))) {
-      console.log("Redirecting to login from:", location, "Auth status:", isAuthenticated);
-      setLocation('/login');
-    }
-    // After signup or login, we should be authenticated but might get bounced by the redirection logic
-    else if (isAuthenticated && ["/login", "/signup"].includes(location)) {
+    
+    // For authenticated users
+    
+    // Redirect from login/signup to appropriate page when already authenticated
+    if (["/login", "/signup"].includes(location)) {
       console.log("User is authenticated but on login/signup page, redirecting to appropriate page");
       setLocation(isFirstTimeUser ? '/pathways' : '/dashboard');
+      return;
     }
-  }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
+    
+    // Only handle root path redirects for authenticated users (no query params)
+    if (location === '/' && !hasQueryParams) {
+      // Logic for redirection:
+      // 1. First-time users go to Pathways
+      // 2. Users with saved projections or returning users go to Dashboard
+      const destination = (isFirstTimeUser && !hasSavedProjections) ? '/pathways' : '/dashboard';
+      console.log(`Redirecting from / to ${destination} based on user status`);
+      setLocation(destination);
+      return;
+    }
+    
+    // For all other paths, no redirection needed
+  }, [location, isAuthenticated, isFirstTimeUser, hasSavedProjections, setLocation]);
   
   // Special handling for the projections route with query parameters
   const hasQueryParams = window.location.search !== '';
@@ -253,7 +313,7 @@ function App() {
     completeOnboarding: completeOnboarding
   };
   
-  // Check if the current route should be displayed within the AppShell
+  // Check if the current route should be displayed without the AppShell layout
   const isPublicRoute = ["/", "/login", "/signup"].includes(location);
   
   // Routes that should be displayed without the AppShell layout
@@ -270,6 +330,20 @@ function App() {
           {() => <SignupPage {...authProps} />}
         </Route>
       </Switch>
+    );
+  }
+  
+  // Special case for semi-public routes - add AppShell but don't require authentication
+  // This allows non-authenticated users to access these routes with proper navigation
+  if (!isAuthenticated && ["/coffee-calculator"].includes(location)) {
+    return (
+      <AppShell logout={logout} user={null}>
+        <Switch>
+          <Route path="/coffee-calculator">
+            {() => <CoffeeCalculator {...authProps} />}
+          </Route>
+        </Switch>
+      </AppShell>
     );
   }
   
