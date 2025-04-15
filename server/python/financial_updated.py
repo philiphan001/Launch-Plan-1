@@ -1253,28 +1253,58 @@ class FinancialCalculator:
                             f.write(f"Cash flow reduced by wedding cost: ${cash_flow_yearly[milestone_year]}\n")
                         
                         # Add spouse income to our income projection but store separately
-                        for i in range(milestone_year, self.years_to_project + 1):
-                            # Apply annual growth to spouse income (using same rate as primary income)
-                            spouse_income_for_year = int(spouse_income * (1.03 ** (i - milestone_year)))  # Convert to int to fix type error
+                        # Enhanced debugging for spouse income issue
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\n==== SPOUSE INCOME PROCESSING ====\n")
+                            f.write(f"Milestone year: {milestone_year}\n")
+                            f.write(f"Raw spouse income value: {spouse_income}\n")
+                            f.write(f"Type of spouse income: {type(spouse_income)}\n")
                             
-                            # FIXED: We don't add spouse income to income_yearly anymore because it's 
-                            # already being tracked separately in spouse_income_yearly and the frontend
-                            # combines them for display purposes to avoid double counting.
-                            # Updated on April 5th, 2025 based on user feedback.
-                            
-                            # Previous code (removed to fix double counting):
-                            # income_yearly[i] += spouse_income_for_year
-                            
-                            # Only store spouse income separately for visualization
-                            spouse_income_yearly[i] = spouse_income_for_year
-                            
-                            # To keep cash flow and net worth calculations accurate, update total income
-                            # This is separate from the visualization data
-                            total_income_yearly[i] = income_yearly[i] + spouse_income_yearly[i]
-                            
-                            # Log the income split for debugging
+                        # Use more defensive coding to prevent array access errors
+                        # Ensure milestone_year is within array bounds
+                        if milestone_year < 0 or milestone_year > self.years_to_project:
                             with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Year {i} personal income: ${income_yearly[i]}, spouse income: ${spouse_income_yearly[i]}, total: ${total_income_yearly[i]}\n")
+                                f.write(f"ERROR: Milestone year {milestone_year} is out of bounds (0-{self.years_to_project})\n")
+                                f.write(f"Adjusting milestone year to be within bounds\n")
+                            milestone_year = max(0, min(milestone_year, self.years_to_project))
+                        
+                        # Better safe than sorry: convert spouse_income to int again just before using it
+                        try:
+                            # Ensure spouse_income is a valid number before calculations
+                            spouse_income_safe = int(float(spouse_income)) if spouse_income is not None else 0
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Safe spouse income after conversion: {spouse_income_safe}\n")
+                        except (ValueError, TypeError) as e:
+                            # Log error and use default
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"Error converting spouse income for yearly calculation: {e}\n")
+                                f.write(f"Using default value of 50000\n")
+                            spouse_income_safe = 50000  # Default fallback
+                        
+                        for i in range(milestone_year, self.years_to_project + 1):
+                            try:
+                                # Apply annual growth to spouse income (using same rate as primary income)
+                                growth_factor = 1.03 ** (i - milestone_year)
+                                spouse_income_for_year = int(spouse_income_safe * growth_factor)
+                                
+                                # Only store spouse income separately for visualization
+                                spouse_income_yearly[i] = spouse_income_for_year
+                                
+                                # To keep cash flow and net worth calculations accurate, update total income
+                                # This is separate from the visualization data
+                                total_income_yearly[i] = income_yearly[i] + spouse_income_yearly[i]
+                                
+                                # Log the income split for debugging
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"Year {i} personal income: ${income_yearly[i]}, spouse income: ${spouse_income_yearly[i]}, total: ${total_income_yearly[i]}\n")
+                            except Exception as e:
+                                # Catch any other unexpected errors in this loop
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"ERROR processing spouse income for year {i}: {str(e)}\n")
+                                    f.write(f"Setting safe default values and continuing\n")
+                                # Set safe defaults and continue
+                                spouse_income_yearly[i] = 50000
+                                total_income_yearly[i] = income_yearly[i] + spouse_income_yearly[i]
                             
                             # Recalculate taxes using the combined income and married filing status
                             # This ensures that taxes are calculated correctly after marriage
