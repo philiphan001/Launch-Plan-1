@@ -1859,25 +1859,43 @@ const loadSavedProjection = async (projectionId: number) => {
     }
     
     // Parse projection data if it's a string
-    const projectionData = typeof savedProjection.projectionData === 'string' 
-      ? JSON.parse(savedProjection.projectionData)
-      : savedProjection.projectionData;
+    let parsedProjectionData;
+    try {
+      parsedProjectionData = typeof savedProjection.projectionData === 'string' 
+        ? JSON.parse(savedProjection.projectionData)
+        : savedProjection.projectionData;
+    } catch (parseError) {
+      console.error('Error parsing projection data:', parseError);
+      throw new Error('Invalid projection data format');
+    }
+    
+    // Ensure projection data has the required properties
+    if (!parsedProjectionData || !parsedProjectionData.ages || !Array.isArray(parsedProjectionData.ages)) {
+      console.error('Missing or invalid ages array in projection data');
+      
+      // Initialize with safe defaults
+      parsedProjectionData = parsedProjectionData || {};
+      parsedProjectionData.ages = parsedProjectionData.ages || [savedProjection.startingAge || 25]; 
+      parsedProjectionData.netWorth = parsedProjectionData.netWorth || [savedProjection.startingSavings || 0];
+      parsedProjectionData.income = parsedProjectionData.income || [savedProjection.income || 0];
+      parsedProjectionData.expenses = parsedProjectionData.expenses || [savedProjection.expenses || 0];
+    }
     
     // Update all state values in a single batch
     const stateUpdates = {
-      projectionName: savedProjection.name,
-      timeframe: `${savedProjection.timeframe} Years`,
-      age: savedProjection.startingAge,
-      startingSavings: savedProjection.startingSavings,
-      income: savedProjection.income,
-      expenses: savedProjection.expenses,
-      incomeGrowth: savedProjection.incomeGrowth,
-      studentLoanDebt: savedProjection.studentLoanDebt,
-      emergencyFundAmount: savedProjection.emergencyFundAmount,
-      personalLoanTermYears: savedProjection.personalLoanTermYears,
-      personalLoanInterestRate: savedProjection.personalLoanInterestRate,
+      projectionName: savedProjection.name || 'My Projection',
+      timeframe: `${savedProjection.timeframe || 10} Years`,
+      age: savedProjection.startingAge || 25,
+      startingSavings: savedProjection.startingSavings || 0,
+      income: savedProjection.income || 0,
+      expenses: savedProjection.expenses || 0,
+      incomeGrowth: savedProjection.incomeGrowth || 0.03,
+      studentLoanDebt: savedProjection.studentLoanDebt || 0,
+      emergencyFundAmount: savedProjection.emergencyFundAmount || 10000,
+      personalLoanTermYears: savedProjection.personalLoanTermYears || 5,
+      personalLoanInterestRate: savedProjection.personalLoanInterestRate || 8.0,
       projectionData: {
-        ...projectionData,
+        ...parsedProjectionData,
         _key: `projection-${projectionId}-${new Date().getTime()}`
       }
     };
@@ -2534,6 +2552,15 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
                 <p className="text-gray-500">Loading projection data...</p>
+              </div>
+            </div>
+          ) : !projectionData ? (
+            <div className="p-6 flex justify-center items-center h-72">
+              <div className="text-center">
+                <p className="text-gray-500 mb-4">No projection data available.</p>
+                <Button variant="outline" onClick={() => setMainTab("edit")}>
+                  Create New Projection
+                </Button>
               </div>
             </div>
           ) : (
