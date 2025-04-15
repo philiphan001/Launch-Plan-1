@@ -829,25 +829,18 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                                 key={career.id || Math.random()}
                                                 value={title}
                                                 onSelect={() => {
-                                                  // Set career and income as separate operations
-                                                  // This prevents potential React state update issues
-                                                  try {
-                                                    console.log(`Selecting career: ${title} with salary: ${salary}`);
-                                                    setSpouseOccupation(title);
-                                                    
-                                                    // Always set a safe number value for income
-                                                    setTimeout(() => {
-                                                      setSpouseIncome(50000); // First set default
-                                                      setTimeout(() => {
-                                                        setSpouseIncome(salary); // Then set actual value
-                                                      }, 10);
-                                                    }, 10);
-                                                  } catch (err) {
-                                                    console.error("Error setting spouse career:", err);
-                                                    // Always set fallback values
-                                                    setSpouseOccupation(title);
-                                                    setSpouseIncome(50000);
-                                                  }
+                                                  // Ultra simple approach to avoid race conditions
+                                                  console.log(`Selecting career: ${title} with salary: ${salary}`);
+                                                  
+                                                  // Set both values directly, no timeouts or callbacks
+                                                  setSpouseOccupation(title);
+                                                  
+                                                  // Set a numeric salary value, defaulting to 50000 if needed
+                                                  const safeIncome = typeof salary === 'number' && !isNaN(salary) ? 
+                                                                     Math.round(salary) : 50000;
+                                                  setSpouseIncome(safeIncome);
+                                                  
+                                                  console.log(`Set spouse income to: ${safeIncome}`);
                                                 }}
                                                 className="flex items-center"
                                               >
