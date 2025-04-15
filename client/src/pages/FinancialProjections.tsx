@@ -216,6 +216,7 @@ const FinancialProjections = ({
   const [debtSectionOpen, setDebtSectionOpen] = useState<boolean>(true);
   const [taxSectionOpen, setTaxSectionOpen] = useState<boolean>(true);
   const [taxTableSectionOpen, setTaxTableSectionOpen] = useState<boolean>(false); // Tax table starts collapsed
+  const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState<boolean>(false); // Advanced settings start collapsed
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
   const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
   
@@ -2385,58 +2386,68 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               {/* Income Growth Rate moved to General Assumptions */}
               
               <div className="mt-6 pt-4 border-t border-gray-200">
-                <h4 className="text-md font-semibold mb-2">Advanced Settings</h4>
-                
-                <div className="mb-3">
-                  <Label>Emergency Fund Amount: {formatCurrency(emergencyFundAmount)}</Label>
-                  <div className="flex space-x-2 items-center mt-2">
-                    <Input
-                      type="number"
-                      value={emergencyFundAmount}
-                      onChange={(e) => setEmergencyFundAmount(Number(e.target.value))}
-                      min={1000}
-                      step={1000}
-                      className="w-full"
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Recommended: $10,000 minimum</p>
-                </div>
-                
-                <div className="mb-3">
-                  <Label>Personal Loan Term (Years): {personalLoanTermYears}</Label>
-                  <Slider
-                    value={[personalLoanTermYears]}
-                    onValueChange={(value) => setPersonalLoanTermYears(value[0])}
-                    min={1}
-                    max={10}
-                    step={1}
-                    className="mt-2"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Personal Loan Interest Rate: {personalLoanInterestRate}%</Label>
-                  <Slider
-                    value={[personalLoanInterestRate]}
-                    onValueChange={(value) => setPersonalLoanInterestRate(value[0])}
-                    min={3}
-                    max={20}
-                    step={0.5}
-                    className="mt-2"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Applied to negative cash flow scenarios</p>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <Label htmlFor="projectionName">Projection Name</Label>
-                  <Input
-                    id="projectionName"
-                    value={projectionName}
-                    onChange={(e) => setProjectionName(e.target.value)}
-                    placeholder="Enter a name for this projection"
-                    className="mt-2"
-                  />
-                </div>
+                <Collapsible open={advancedSettingsOpen} onOpenChange={setAdvancedSettingsOpen}>
+                  <CollapsibleTrigger className="flex justify-between w-full py-2 text-left">
+                    <h4 className="text-md font-semibold">Advanced Settings</h4>
+                    {advancedSettingsOpen ? (
+                      <ChevronUp className="h-5 w-5" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5" />
+                    )}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="mb-3 mt-3">
+                      <Label>Emergency Fund Amount: {formatCurrency(emergencyFundAmount)}</Label>
+                      <div className="flex space-x-2 items-center mt-2">
+                        <Input
+                          type="number"
+                          value={emergencyFundAmount}
+                          onChange={(e) => setEmergencyFundAmount(Number(e.target.value))}
+                          min={1000}
+                          step={1000}
+                          className="w-full"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Recommended: $10,000 minimum</p>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <Label>Personal Loan Term (Years): {personalLoanTermYears}</Label>
+                      <Slider
+                        value={[personalLoanTermYears]}
+                        onValueChange={(value) => setPersonalLoanTermYears(value[0])}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="mt-2"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Personal Loan Interest Rate: {personalLoanInterestRate}%</Label>
+                      <Slider
+                        value={[personalLoanInterestRate]}
+                        onValueChange={(value) => setPersonalLoanInterestRate(value[0])}
+                        min={3}
+                        max={20}
+                        step={0.5}
+                        className="mt-2"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Applied to negative cash flow scenarios</p>
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <Label htmlFor="projectionName">Projection Name</Label>
+                      <Input
+                        id="projectionName"
+                        value={projectionName}
+                        onChange={(e) => setProjectionName(e.target.value)}
+                        placeholder="Enter a name for this projection"
+                        className="mt-2"
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </div>
             
