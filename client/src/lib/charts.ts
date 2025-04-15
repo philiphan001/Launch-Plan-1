@@ -130,8 +130,9 @@ export function createMainProjectionChart(
       tension: 0.3,
       fill: false,
       yAxisID: 'y1',
-      borderDash: [5, 5],
       order: 2,
+      // @ts-ignore - borderDash is a valid property in Chart.js but TypeScript doesn't know about it
+      borderDash: [5, 5],
     });
   }
 
@@ -144,8 +145,9 @@ export function createMainProjectionChart(
       tension: 0.3,
       fill: false,
       yAxisID: 'y1',
-      borderDash: [5, 5],
       order: 3,
+      // @ts-ignore - borderDash is a valid property in Chart.js but TypeScript doesn't know about it
+      borderDash: [5, 5],
     });
   }
 

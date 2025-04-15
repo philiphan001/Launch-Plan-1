@@ -78,14 +78,19 @@ const ProjectionViewer = ({ user }: AuthProps) => {
               const expenses = Array.from({length: timeframe}, () => data.expenses * 12);
               
               // If we have detailed results in parsed data, use them
+              // Ensure that netWorth is always an array to prevent Chart.js errors
+              let netWorthData = Array.isArray(parsedData?.netWorth) ? 
+                parsedData.netWorth : 
+                Array.from({length: timeframe}, (_, i) => data.startingSavings + (income[i] - expenses[i]) * i);
+              
+              // Fallback to empty arrays for safety if data is missing
               const chartData = {
-                ages: parsedData?.ages || ages,
-                netWorth: parsedData?.netWorth || 
-                  Array.from({length: timeframe}, (_, i) => data.startingSavings + (income[i] - expenses[i]) * i),
-                income: parsedData?.annualIncome || income,
-                expenses: parsedData?.annualExpenses || expenses,
-                assets: parsedData?.assets || [],
-                liabilities: parsedData?.liabilities ? 
+                ages: Array.isArray(parsedData?.ages) ? parsedData.ages : ages,
+                netWorth: netWorthData,
+                income: Array.isArray(parsedData?.annualIncome) ? parsedData.annualIncome : income,
+                expenses: Array.isArray(parsedData?.annualExpenses) ? parsedData.annualExpenses : expenses,
+                assets: Array.isArray(parsedData?.assets) ? parsedData.assets : [],
+                liabilities: Array.isArray(parsedData?.liabilities) ? 
                   fixLiabilityCalculation(parsedData.liabilities) : [],
               };
               
