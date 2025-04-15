@@ -710,19 +710,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Financial projections routes
   app.post("/api/financial-projections", validateRequest({ body: insertFinancialProjectionSchema }), async (req: Request, res: Response) => {
     try {
-      const projection = await activeStorage.createFinancialProjection(req.body);
+      // Ensure projection data is stored consistently
+      const projectionData = req.body.projectionData;
+      
+      // Handle the case where projectionData might be a string
+      // This shouldn't happen with our frontend fix, but this adds an extra safety layer
+      const processedProjectionData = 
+        typeof projectionData === 'string' 
+          ? JSON.parse(projectionData) 
+          : projectionData;
+      
+      // Create a clean request body with normalized projectionData
+      const cleanedRequestBody = {
+        ...req.body,
+        projectionData: processedProjectionData
+      };
+      
+      console.log("Creating financial projection with normalized data structure");
+      const projection = await activeStorage.createFinancialProjection(cleanedRequestBody);
       res.status(201).json(projection);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create financial projection" });
+      console.error("Failed to create financial projection:", error);
+      res.status(500).json({ 
+        message: "Failed to create financial projection",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
   app.get("/api/financial-projections/:userId", async (req: Request, res: Response) => {
     try {
       const projections = await activeStorage.getFinancialProjectionsByUserId(parseInt(req.params.userId));
-      res.json(projections);
+      
+      // Process projection data for consistency before returning it
+      const processedProjections = projections.map(projection => {
+        if (projection.projectionData && typeof projection.projectionData === 'string') {
+          try {
+            // Parse string data to ensure consistent object format
+            const parsedData = JSON.parse(projection.projectionData);
+            return {
+              ...projection,
+              projectionData: parsedData
+            };
+          } catch (parseError) {
+            console.error("Error parsing projection data for list item:", parseError);
+            // Return with original format if parsing fails
+            return projection;
+          }
+        }
+        return projection;
+      });
+      
+      res.json(processedProjections);
     } catch (error) {
-      res.status(500).json({ message: "Failed to get financial projections" });
+      console.error("Error getting financial projections:", error);
+      res.status(500).json({ 
+        message: "Failed to get financial projections",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
@@ -738,10 +783,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Financial projection not found" });
       }
       
+      // Ensure projectionData is correctly parsed and normalized for consistent
+      // frontend handling
+      if (projection.projectionData) {
+        if (typeof projection.projectionData === 'string') {
+          try {
+            // Parse string data and normalize it
+            projection.projectionData = JSON.parse(projection.projectionData);
+            console.log("Parsed string projectionData for projection ID:", id);
+          } catch (parseError) {
+            console.error("Error parsing projection data:", parseError);
+            // Keep the string value if parsing fails
+          }
+        }
+      }
+      
       res.json(projection);
     } catch (error) {
       console.error("Error getting financial projection detail:", error);
-      res.status(500).json({ message: "Failed to get financial projection detail" });
+      res.status(500).json({ 
+        message: "Failed to get financial projection detail",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
   
