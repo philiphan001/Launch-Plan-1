@@ -413,21 +413,42 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       if (!title) title = "Get Married";
       type = "marriage";
       
-      // Use the current spouseIncome value directly - we no longer need to look up in careers
-      // since we set the income when occupation is selected in the dropdown
-      let spouseIncomeValue = typeof spouseIncome === 'number' && !isNaN(spouseIncome) ? 
-                             spouseIncome : 0;
+      // Use a more defensive approach to ensure spouse income is a valid number
+      // This protects against any potential type issues
+      let spouseIncomeValue;
       
+      try {
+        // First try a direct type check
+        if (typeof spouseIncome === 'number' && !isNaN(spouseIncome)) {
+          spouseIncomeValue = spouseIncome;
+        } 
+        // Then try to convert from string
+        else if (typeof spouseIncome === 'string') {
+          spouseIncomeValue = parseInt(spouseIncome);
+          if (isNaN(spouseIncomeValue)) spouseIncomeValue = 50000;
+        }
+        // Fallback to default
+        else {
+          spouseIncomeValue = 50000;
+        }
+        
+        console.log("Final spouse income value being sent:", spouseIncomeValue);
+      } catch (error) {
+        console.error("Error processing spouse income:", error);
+        spouseIncomeValue = 50000; // Safe fallback
+      }
+      
+      // Create milestone data with guaranteed number types for numeric values
       const milestoneData = {
         userId: userId as number, // Type assertion based on early null check
         type,
         title,
         date,
         yearsAway,
-        spouseOccupation: spouseOccupation || null,  // Ensure this is never undefined
-        spouseIncome: spouseIncomeValue,
-        spouseAssets,
-        spouseLiabilities,
+        spouseOccupation: spouseOccupation || "", // Empty string instead of null
+        spouseIncome: Number(spouseIncomeValue), // Force a number type
+        spouseAssets: Number(spouseAssets || 10000),
+        spouseLiabilities: Number(spouseLiabilities || 5000),
       };
       
       if (isEditing && editingMilestoneId) {
@@ -789,37 +810,54 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                         careers
                                           .filter(career => career && career.title) // Filter out any null or missing title careers
                                           .sort((a, b) => a.title.localeCompare(b.title))
-                                          .map((career) => (
-                                            <CommandItem
-                                              key={career.id || Math.random()}
-                                              value={career.title || ""}
-                                              onSelect={() => {
-                                                setSpouseOccupation(career.title || "");
-                                                // If salary is available, update spouse income
-                                                if (career.salaryMedian) {
-                                                  // Ensure we're passing a number, not a string that could cause issues
-                                                  const safeIncome = typeof career.salaryMedian === 'number' && !isNaN(career.salaryMedian) 
-                                                    ? career.salaryMedian 
-                                                    : parseInt(String(career.salaryMedian)) || 50000;
-                                                  
-                                                  // Log for debugging
-                                                  console.log("Setting spouse income:", safeIncome, "from career:", career.title);
-                                                  
-                                                  setSpouseIncome(safeIncome);
-                                                }
-                                              }}
-                                              className="flex items-center"
-                                            >
-                                              <span>{career.title || ""}</span>
-                                              <span className="ml-auto text-xs text-green-600 font-semibold">
-                                                {career.salaryMedian && 
-                                                 typeof career.salaryMedian === 'number' && 
-                                                 !isNaN(career.salaryMedian) 
-                                                  ? `$${career.salaryMedian.toLocaleString()}` 
-                                                  : '—'}
-                                              </span>
-                                            </CommandItem>
-                                          ))
+                                          .map((career) => {
+                                            // Safely extract the career title and salary median
+                                            const title = career.title || "";
+                                            // Default to 50000 if no valid number is available
+                                            const salary = typeof career.salaryMedian === 'number' && !isNaN(career.salaryMedian) 
+                                              ? career.salaryMedian 
+                                              : 50000;
+                                            
+                                            // Format salary for display safely
+                                            const formattedSalary = typeof salary === 'number' 
+                                              ? `$${salary.toLocaleString()}` 
+                                              : '—';
+                                            
+                                            // Return a completely rewritten CommandItem with simplified logic
+                                            return (
+                                              <CommandItem
+                                                key={career.id || Math.random()}
+                                                value={title}
+                                                onSelect={() => {
+                                                  // Set career and income as separate operations
+                                                  // This prevents potential React state update issues
+                                                  try {
+                                                    console.log(`Selecting career: ${title} with salary: ${salary}`);
+                                                    setSpouseOccupation(title);
+                                                    
+                                                    // Always set a safe number value for income
+                                                    setTimeout(() => {
+                                                      setSpouseIncome(50000); // First set default
+                                                      setTimeout(() => {
+                                                        setSpouseIncome(salary); // Then set actual value
+                                                      }, 10);
+                                                    }, 10);
+                                                  } catch (err) {
+                                                    console.error("Error setting spouse career:", err);
+                                                    // Always set fallback values
+                                                    setSpouseOccupation(title);
+                                                    setSpouseIncome(50000);
+                                                  }
+                                                }}
+                                                className="flex items-center"
+                                              >
+                                                <span>{title}</span>
+                                                <span className="ml-auto text-xs text-green-600 font-semibold">
+                                                  {formattedSalary}
+                                                </span>
+                                              </CommandItem>
+                                            );
+                                          })
                                         : <CommandItem value="loading">Loading careers...</CommandItem>
                                       }
                                     </CommandGroup>
