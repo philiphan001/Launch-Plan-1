@@ -24,6 +24,7 @@ interface FinancialProjection {
 const navItems: NavItem[] = [
   { path: "/", label: "Dashboard", icon: "dashboard" },
   { path: "/projections", label: "Financial Projections", icon: "trending_up" },
+  { path: "/coffee-calculator", label: "Coffee Calculator", icon: "coffee" },
   { path: "/careers", label: "Career Exploration", icon: "work" },
   { path: "/colleges", label: "College Discovery", icon: "school" },
   { path: "/pathways", label: "Pathways", icon: "alt_route" },

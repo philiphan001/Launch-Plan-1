@@ -7,6 +7,7 @@ import CareerBuilder from "@/pages/CareerBuilder";
 import CollegeDiscovery from "@/pages/CollegeDiscovery";
 import NetPriceCalculator from "@/pages/NetPriceCalculator";
 import Pathways from "@/pages/Pathways";
+import CoffeeCalculator from "@/pages/CoffeeCalculator";
 import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import LandingPage from "@/pages/LandingPage";
@@ -329,6 +330,9 @@ function App() {
         </Route>
         <Route path="/pathways">
           {() => <Pathways {...authProps} />}
+        </Route>
+        <Route path="/coffee-calculator">
+          {() => <CoffeeCalculator {...authProps} />}
         </Route>
         <Route path="/profile">
           {() => <Profile user={user} />}
