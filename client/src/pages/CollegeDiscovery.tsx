@@ -774,10 +774,8 @@ const CollegeDiscovery = ({
                           </Button>
                           <Button 
                             size="sm"
-                            variant="outline"
-                            className={isCollegeFavorite(college.id) 
-                              ? "bg-slate-900 text-white hover:bg-slate-800 border-slate-900" 
-                              : ""}
+                            variant={isCollegeFavorite(college.id) ? "default" : "outline"}
+                            className={isCollegeFavorite(college.id) ? "bg-primary" : ""}
                             onClick={() => toggleFavorite(college)}
                             disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                           >
@@ -1015,10 +1013,8 @@ const CollegeDiscovery = ({
               
               <DialogFooter className="flex gap-2">
                 <Button 
-                  variant="outline"
-                  className={isCollegeFavorite(selectedCollege.id) 
-                    ? "bg-slate-900 text-white hover:bg-slate-800 border-slate-900" 
-                    : ""}
+                  variant={isCollegeFavorite(selectedCollege.id) ? "default" : "outline"}
+                  className={isCollegeFavorite(selectedCollege.id) ? "bg-primary" : ""}
                   onClick={() => toggleFavorite(selectedCollege)}
                   disabled={addToFavoritesMutation.isPending || removeFromFavoritesMutation.isPending}
                 >
