@@ -215,6 +215,7 @@ const FinancialProjections = ({
   const [expenseSectionOpen, setExpenseSectionOpen] = useState<boolean>(true);
   const [debtSectionOpen, setDebtSectionOpen] = useState<boolean>(true);
   const [taxSectionOpen, setTaxSectionOpen] = useState<boolean>(true);
+  const [taxTableSectionOpen, setTaxTableSectionOpen] = useState<boolean>(false); // Tax table starts collapsed
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
   const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
   
@@ -3532,9 +3533,21 @@ const [projectionData, setProjectionData] = useState<any>(() => {
               <CardContent className="p-6 pt-0">
                 <TaxBreakdownChart projectionData={projectionData} isLoading={isLoading} />
                 
-                {/* Add tabular view for detailed tax data */}
+                {/* Add tabular view for detailed tax data - now collapsible */}
                 <div className="mt-6">
-                  <TaxBreakdownTable projectionData={projectionData} isLoading={isLoading} />
+                  <Collapsible open={taxTableSectionOpen} onOpenChange={setTaxTableSectionOpen}>
+                    <CollapsibleTrigger className="flex justify-between w-full p-3 text-left bg-slate-50 hover:bg-slate-100 rounded-md border">
+                      <h4 className="text-md font-medium">Tax Breakdown Table</h4>
+                      {taxTableSectionOpen ? (
+                        <ChevronUp className="h-5 w-5" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5" />
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3">
+                      <TaxBreakdownTable projectionData={projectionData} isLoading={isLoading} />
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
                 
                 <div className="mt-4">
