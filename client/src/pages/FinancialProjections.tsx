@@ -1829,7 +1829,7 @@ const saveProjection = async () => {
     
     return savedProjection;
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error saving projection:', error);
     toast({
       title: "Error",
@@ -1899,12 +1899,12 @@ const loadSavedProjection = async (projectionId: number) => {
     // Switch to view tab
     setMainTab("view");
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error loading projection:', error);
     // Show error to user
     toast({
       title: "Error",
-      description: 'Failed to load projection. Please try again.',
+      description: error.message || 'Failed to load projection. Please try again.',
       variant: "destructive"
     });
   }
@@ -1961,11 +1961,11 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       }
       
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching projection:", error);
       toast({
         title: "Error Loading Projection",
-        description: "Failed to load the saved projection. Please try again.",
+        description: error.message || "Failed to load the saved projection. Please try again.",
         variant: "destructive"
       });
       throw error;
