@@ -165,7 +165,9 @@ export function createMainProjectionChart(
           type: 'linear',
           display: true,
           position: 'left',
-          beginAtZero: data.netWorth.some(value => value < 0) ? false : true,
+          beginAtZero: Array.isArray(data.netWorth) && data.netWorth.length > 0 ?
+            data.netWorth.some(value => value < 0) ? false : true :
+            true,
           title: {
             display: true,
             text: 'Net Worth',
@@ -331,7 +333,9 @@ export function createNetWorthChart(
       maintainAspectRatio: false,
       scales: {
         y: {
-          beginAtZero: data.values.some(value => value < 0) ? false : true,
+          beginAtZero: Array.isArray(data.values) && data.values.length > 0 ? 
+            data.values.some(value => value < 0) ? false : true : 
+            true,
           ticks: {
             callback: function(value) {
               return formatCurrency(value as number);
@@ -413,7 +417,9 @@ export function createLineChart(
       maintainAspectRatio: false,
       scales: {
         y: {
-          beginAtZero: dataPoints.some(point => point < 0) ? false : true,
+          beginAtZero: Array.isArray(dataPoints) && dataPoints.length > 0 ?
+            dataPoints.some(point => point < 0) ? false : true :
+            true,
           ticks: {
             callback: function(value) {
               return formatCurrency(value as number);
