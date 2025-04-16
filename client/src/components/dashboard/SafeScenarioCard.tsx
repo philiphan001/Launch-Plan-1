@@ -1,6 +1,7 @@
 import { ScenarioData, ProjectionData, ScenarioTags } from "./ScenarioCard";
 import ScenarioCard from "./ScenarioCard";
 import { useState, useEffect } from "react";
+import { isValidProjectionData, createDefaultProjectionData } from "@/lib/validateProjectionData";
 
 interface SafeScenarioCardProps {
   scenario: ScenarioData | null | undefined;
@@ -30,7 +31,14 @@ const SafeScenarioCard = (props: SafeScenarioCardProps) => {
     }
 
     try {
-      // Create a deep copy with guaranteed valid fields
+      // Validate projection data specifically
+      const hasValidProjectionData = isValidProjectionData(scenario.projectionData);
+      
+      if (!hasValidProjectionData) {
+        console.warn(`Invalid projection data in scenario ${scenario.id} - creating clean scenario with default data`);
+      }
+      
+      // Create a clean scenario with guaranteed valid fields
       const cleanScenario: ScenarioData = {
         id: scenario.id || 0,
         title: scenario.title || `Scenario ${index + 1}`,
@@ -40,43 +48,31 @@ const SafeScenarioCard = (props: SafeScenarioCardProps) => {
           career: scenario.tags?.career || "",
           location: scenario.tags?.location || "",
         },
-        projectionData: {
-          ages: Array.isArray(scenario.projectionData?.ages) ? 
-                [...scenario.projectionData.ages] : 
-                [0, 1, 2, 3, 4, 5], // Default ages if none provided
-                
-          netWorth: Array.isArray(scenario.projectionData?.netWorth) ? 
-                    [...scenario.projectionData.netWorth] : 
-                    [0, 0, 0, 0, 0, 0], // Default netWorth if none provided
-                    
-          income: Array.isArray(scenario.projectionData?.income) ? 
-                  [...scenario.projectionData.income] : 
-                  [0, 0, 0, 0, 0, 0], // Default income if none provided
-                  
-          expenses: Array.isArray(scenario.projectionData?.expenses) ? 
-                    [...scenario.projectionData.expenses] : 
-                    [0, 0, 0, 0, 0, 0], // Default expenses if none provided
-        }
+        projectionData: hasValidProjectionData 
+          ? { ...scenario.projectionData } // Use existing valid data
+          : createDefaultProjectionData() // Use default data if invalid
       };
 
-      // Ensure arrays are the same length
-      const maxLength = Math.max(
-        cleanScenario.projectionData.ages.length,
-        cleanScenario.projectionData.netWorth.length,
-        cleanScenario.projectionData.income.length,
-        cleanScenario.projectionData.expenses.length
-      );
+      // If we have valid data, ensure arrays are the same length
+      if (hasValidProjectionData) {
+        const maxLength = Math.max(
+          cleanScenario.projectionData.ages.length,
+          cleanScenario.projectionData.netWorth.length,
+          cleanScenario.projectionData.income.length,
+          cleanScenario.projectionData.expenses.length
+        );
 
-      // Pad arrays to ensure consistent length
-      const padArray = (arr: number[], length: number): number[] => {
-        if (arr.length >= length) return arr;
-        return [...arr, ...Array(length - arr.length).fill(0)];
-      };
+        // Pad arrays to ensure consistent length
+        const padArray = (arr: number[], length: number): number[] => {
+          if (arr.length >= length) return arr;
+          return [...arr, ...Array(length - arr.length).fill(0)];
+        };
 
-      cleanScenario.projectionData.ages = padArray(cleanScenario.projectionData.ages, maxLength);
-      cleanScenario.projectionData.netWorth = padArray(cleanScenario.projectionData.netWorth, maxLength);
-      cleanScenario.projectionData.income = padArray(cleanScenario.projectionData.income, maxLength);
-      cleanScenario.projectionData.expenses = padArray(cleanScenario.projectionData.expenses, maxLength);
+        cleanScenario.projectionData.ages = padArray(cleanScenario.projectionData.ages, maxLength);
+        cleanScenario.projectionData.netWorth = padArray(cleanScenario.projectionData.netWorth, maxLength);
+        cleanScenario.projectionData.income = padArray(cleanScenario.projectionData.income, maxLength);
+        cleanScenario.projectionData.expenses = padArray(cleanScenario.projectionData.expenses, maxLength);
+      }
 
       // Set the cleaned scenario and mark as valid
       setValidatedScenario(cleanScenario);

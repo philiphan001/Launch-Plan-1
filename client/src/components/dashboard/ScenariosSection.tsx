@@ -6,6 +6,7 @@ import { Link, useLocation } from "wouter";
 import { ScenarioData } from "./ScenarioCard";
 import SafeScenarioCard from "./SafeScenarioCard";
 import { motion } from "framer-motion";
+import { isValidProjectionData } from "@/lib/validateProjectionData";
 import {
   Dialog,
   DialogContent,
@@ -214,14 +215,9 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
     }
   };
 
-  // Get the age range across all scenarios with strict checking
+  // Get the age range across all scenarios with proper validation
   const allAges = scenarios
-    .filter(scenario => 
-      scenario && 
-      scenario.projectionData && 
-      Array.isArray(scenario.projectionData.ages) && 
-      scenario.projectionData.ages.length > 0
-    )
+    .filter(scenario => isValidProjectionData(scenario?.projectionData))
     .flatMap(scenario => scenario.projectionData.ages);
     
   // Use safe defaults if no valid ages found
