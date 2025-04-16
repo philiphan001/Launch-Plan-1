@@ -81,33 +81,47 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   const [activeTab, setActiveTab] = useState('by-type');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
+  // Create a safe version of the projection data with fallbacks for all properties
+  const safeData = {
+    ...(projectionData || {}),
+    ages: projectionData?.ages || [25, 26, 27, 28, 29, 30],
+    debt: projectionData?.debt || [],
+    liabilities: projectionData?.liabilities || [],
+    mortgage: projectionData?.mortgage || [],
+    studentLoan: projectionData?.studentLoan || [],
+    educationLoans: projectionData?.educationLoans || [],
+    graduateSchoolLoans: projectionData?.graduateSchoolLoans || [],
+    carLoan: projectionData?.carLoan || [],
+    personalLoans: projectionData?.personalLoans || []
+  };
+  
   // Enhanced debugging to check the projection data structure and liability values
-  console.log('Projection Data Keys:', Object.keys(projectionData));
-  console.log('Projection Data Sample:', {
-    liabilities: projectionData.liabilities?.slice(0, 3),
-    mortgage: projectionData.mortgage?.slice(0, 3),
-    carLoan: projectionData.carLoan?.slice(0, 3),
-    studentLoan: projectionData.studentLoan?.slice(0, 3),
-    educationLoans: projectionData.educationLoans?.slice(0, 3),
-    graduateSchoolLoans: projectionData.graduateSchoolLoans?.slice(0, 3),
-    personalLoans: projectionData.personalLoans?.slice(0, 3)
+  console.log('Projection Data Keys:', Object.keys(projectionData || {}));
+  console.log('Projection Data Sample (with fallbacks):', {
+    liabilities: safeData.liabilities.slice(0, 3),
+    mortgage: safeData.mortgage.slice(0, 3),
+    carLoan: safeData.carLoan.slice(0, 3),
+    studentLoan: safeData.studentLoan.slice(0, 3),
+    educationLoans: safeData.educationLoans.slice(0, 3),
+    graduateSchoolLoans: safeData.graduateSchoolLoans.slice(0, 3),
+    personalLoans: safeData.personalLoans.slice(0, 3)
   });
   
-  // Extract necessary data
-  const ages = projectionData.ages || [];
-  const debtTotal = projectionData.debt || [];
+  // Extract necessary data (using our safe data object)
+  const ages = safeData.ages;
+  const debtTotal = safeData.debt;
   
-  // Loan type data
-  const mortgageData = projectionData.mortgage || [];
-  const studentLoanData = projectionData.studentLoan || [];
-  const educationLoansData = projectionData.educationLoans || [];
-  const graduateSchoolLoansData = projectionData.graduateSchoolLoans || []; // Add graduate school loans
-  const carLoanData = projectionData.carLoan || [];
-  const personalLoansData = projectionData.personalLoans || [];
+  // Loan type data (using our safe data object)
+  const mortgageData = safeData.mortgage;
+  const studentLoanData = safeData.studentLoan;
+  const educationLoansData = safeData.educationLoans;
+  const graduateSchoolLoansData = safeData.graduateSchoolLoans;
+  const carLoanData = safeData.carLoan;
+  const personalLoansData = safeData.personalLoans;
   
   // Enhanced debugging for personal loans
   console.log('Personal Loans Data (All Years):', personalLoansData);
-  console.log('Total Liabilities:', projectionData.liabilities);
+  console.log('Total Liabilities:', safeData.liabilities);
   
   // Add a very clear debugging output as an alert
   setTimeout(() => {
@@ -138,12 +152,12 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
        Student Loan: ${studentLoanData.slice(0, 3).join(', ')}
        Education Loans: ${educationLoansData.slice(0, 3).join(', ')}
        Graduate School Loans: ${graduateSchoolLoansData.slice(0, 3).join(', ')}
-       Total Liabilities: ${projectionData.liabilities?.slice(0, 3).join(', ')}
+       Total Liabilities: ${safeData.liabilities.slice(0, 3).join(', ')}
        
        Graduate School Loans Debug:
        - Has graduate school loans: ${hasGraduateLoans}
-       - Graduate School Loans in projectionData: ${!!projectionData.graduateSchoolLoans}
-       - Length of graduate school loans array: ${projectionData.graduateSchoolLoans?.length || 0}
+       - Graduate School Loans in projectionData: ${!!safeData.graduateSchoolLoans}
+       - Length of graduate school loans array: ${safeData.graduateSchoolLoans.length || 0}
       `;
     
     console.warn(alertSummary);
@@ -158,7 +172,7 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
     const carLoan = carLoanData[index] || 0;
     const personalLoans = personalLoansData[index] || 0;
     const sumOfLoans = mortgage + studentLoan + educationLoans + graduateSchoolLoans + carLoan + personalLoans;
-    const totalLiability = projectionData.liabilities[index] || 0;
+    const totalLiability = safeData.liabilities[index] || 0;
     const other = Math.max(0, totalLiability - sumOfLoans);
     
     return {
@@ -179,8 +193,8 @@ export const DebtBreakdownComponent: React.FC<DebtBreakdownProps> = ({ projectio
   console.log('Liability Breakdown:', debugLiabilities);
 
   // Interest/principal data (if needed for comparison)
-  const debtInterest = projectionData.debtInterest || [];
-  const debtPrincipal = projectionData.debtPrincipal || [];
+  const debtInterest = safeData.debtInterest || [];
+  const debtPrincipal = safeData.debtPrincipal || [];
 
   // Create data for the stacked bar chart by loan type
   const chartDataByType = ages.map((age: number, index: number) => {
