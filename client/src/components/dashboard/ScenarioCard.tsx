@@ -7,21 +7,25 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Eye, Pencil, Calculator, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 
+export interface ProjectionData {
+  netWorth: number[];
+  income: number[];
+  expenses: number[];
+  ages: number[];
+}
+
+export interface ScenarioTags {
+  education?: string;
+  career?: string;
+  location?: string;
+}
+
 export interface ScenarioData {
   id: number;
   title: string;
   description: string;
-  tags: {
-    education?: string;
-    career?: string;
-    location?: string;
-  };
-  projectionData: {
-    netWorth: number[];
-    income: number[];
-    expenses: number[];
-    ages: number[];
-  };
+  tags: ScenarioTags;
+  projectionData: ProjectionData;
 }
 
 interface ScenarioCardProps {

@@ -1,4 +1,4 @@
-import { ScenarioData } from "./ScenarioCard";
+import { ScenarioData, ProjectionData, ScenarioTags } from "./ScenarioCard";
 import ScenarioCard from "./ScenarioCard";
 import { useState, useEffect } from "react";
 
