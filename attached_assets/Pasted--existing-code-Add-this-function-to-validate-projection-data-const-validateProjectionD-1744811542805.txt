@@ -1,0 +1,90 @@
+// ... existing code ...
+
+// Add this function to validate projection data
+const validateProjectionData = (data: unknown): data is ProjectionData => {
+  if (!data || typeof data !== 'object') return false;
+  const projection = data as Record<string, unknown>;
+  return Array.isArray(projection.ages) && 
+         Array.isArray(projection.netWorth) && 
+         Array.isArray(projection.income) && 
+         Array.isArray(projection.expenses);
+};
+
+// Add loading state
+const [isLoadingProjection, setIsLoadingProjection] = useState(false);
+
+// Modify the load projection function
+const loadProjection = async (projectionId: number): Promise<void> => {
+  setIsLoadingProjection(true);
+  try {
+    // Clear existing data first
+    setProjectionData(null);
+    
+    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load projection: ${response.statusText}`);
+    }
+    
+    const savedProjection = await response.json() as FinancialProjection;
+    
+    // Parse the projection data
+    let parsedData: ProjectionData;
+    try {
+      parsedData = typeof savedProjection.projectionData === 'string' 
+        ? JSON.parse(savedProjection.projectionData) as ProjectionData
+        : savedProjection.projectionData as ProjectionData;
+    } catch (error) {
+      console.error('Failed to parse projection data:', error);
+      throw new Error('Invalid projection data format');
+    }
+    
+    // Validate the parsed data
+    if (!validateProjectionData(parsedData)) {
+      throw new Error('Invalid projection data structure');
+    }
+    
+    // Set all the state values
+    setProjectionName(savedProjection.name || 'Unnamed Projection');
+    setTimeframe(`${savedProjection.timeframe || 10} Years`);
+    setAge(savedProjection.startingAge || 25);
+    setStartingSavings(savedProjection.startingSavings || 0);
+    setIncome(savedProjection.income || 0);
+    setExpenses(savedProjection.expenses || 0);
+    setIncomeGrowth(savedProjection.incomeGrowth || 0.03);
+    setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
+    
+    // Add a key to force re-render
+    setProjectionData({
+      ...parsedData,
+      _key: `projection-${projectionId}-${Date.now()}`
+    });
+    
+    // Switch to view tab
+    setMainTab("view");
+    
+  } catch (error: unknown) {
+    console.error('Error loading projection:', error);
+    // Show error to user
+    toast.error(error instanceof Error ? error.message : 'Failed to load projection');
+  } finally {
+    setIsLoadingProjection(false);
+  }
+};
+
+// Modify the button that loads the projection
+<Button 
+  variant="outline" 
+  size="sm" 
+  onClick={async () => {
+    try {
+      await loadProjection(projection.id);
+    } catch (error: unknown) {
+      console.error('Error loading projection:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to load projection');
+    }
+  }}
+>
+  Load
+</Button>
+
+// ... existing code ...
