@@ -2010,74 +2010,76 @@ const Pathways = ({
                       </div>
                       
                       {selectedLocation && (
-                        <>
-                          {isLoadingLocation ? (
-                            <div className="text-center py-8">
-                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                              <p className="mt-4 text-gray-600">Loading location information...</p>
+                        <div className="p-4 border border-green-100 bg-green-50 rounded-lg mb-4">
+                          <div className="flex items-start gap-3">
+                            <div className="mt-1 text-green-600">
+                              <span className="material-icons">place</span>
                             </div>
-                          ) : locationData ? (
-                            <div className="border rounded-lg p-4 mb-6">
-                              <h4 className="font-medium mb-2">{locationData.city}, {locationData.state}</h4>
+                            <div>
+                              <h4 className="text-md font-medium text-green-700 mb-1">Location Found</h4>
+                              <p className="text-sm text-green-600 mb-3">
+                                {selectedLocation.city}, {selectedLocation.state}
+                              </p>
+                              
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                  <p className="text-sm text-gray-600 mb-1">Cost of Living Index:</p>
-                                  <p className="font-medium">{locationData.cost_of_living_index ? locationData.cost_of_living_index.toFixed(2) : 'N/A'}</p>
+                                  <p className="text-xs text-gray-600 mb-1">Cost of Living Index:</p>
+                                  <p className="text-sm font-medium">{selectedLocation.cost_of_living_index ? selectedLocation.cost_of_living_index.toFixed(2) : 'N/A'}</p>
                                 </div>
                                 <div>
-                                  <p className="text-sm text-gray-600 mb-1">Median Income:</p>
-                                  <p className="font-medium">{locationData.median_income ? formatCurrency(locationData.median_income) : 'N/A'}</p>
+                                  <p className="text-xs text-gray-600 mb-1">Median Income:</p>
+                                  <p className="text-sm font-medium">{selectedLocation.median_income ? formatCurrency(selectedLocation.median_income) : 'N/A'}</p>
                                 </div>
                               </div>
                               
-                              <h5 className="font-medium text-sm border-b pb-2 mb-3">Monthly Expense Estimates</h5>
+                              <h5 className="text-xs font-medium text-gray-700 border-b border-gray-200 pb-1 mb-2">Monthly Expense Estimates</h5>
                               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {locationData.housing && (
+                                {selectedLocation.housing && (
                                   <div>
                                     <p className="text-xs text-gray-600 mb-1">Housing:</p>
-                                    <p className="font-medium">{formatCurrency(locationData.housing)}</p>
+                                    <p className="text-sm font-medium">{formatCurrency(selectedLocation.housing)}</p>
                                   </div>
                                 )}
-                                {locationData.food && (
+                                {selectedLocation.food && (
                                   <div>
                                     <p className="text-xs text-gray-600 mb-1">Food:</p>
-                                    <p className="font-medium">{formatCurrency(locationData.food)}</p>
+                                    <p className="text-sm font-medium">{formatCurrency(selectedLocation.food)}</p>
                                   </div>
                                 )}
-                                {locationData.transportation && (
+                                {selectedLocation.transportation && (
                                   <div>
                                     <p className="text-xs text-gray-600 mb-1">Transportation:</p>
-                                    <p className="font-medium">{formatCurrency(locationData.transportation)}</p>
+                                    <p className="text-sm font-medium">{formatCurrency(selectedLocation.transportation)}</p>
                                   </div>
                                 )}
-                                {locationData.utilities && (
+                                {selectedLocation.utilities && (
                                   <div>
                                     <p className="text-xs text-gray-600 mb-1">Utilities:</p>
-                                    <p className="font-medium">{formatCurrency(locationData.utilities)}</p>
+                                    <p className="text-sm font-medium">{formatCurrency(selectedLocation.utilities)}</p>
                                   </div>
                                 )}
-                                {locationData.healthcare && (
+                                {selectedLocation.healthcare && (
                                   <div>
                                     <p className="text-xs text-gray-600 mb-1">Healthcare:</p>
-                                    <p className="font-medium">{formatCurrency(locationData.healthcare)}</p>
+                                    <p className="text-sm font-medium">{formatCurrency(selectedLocation.healthcare)}</p>
                                   </div>
                                 )}
-                                {locationData.other && (
+                                {selectedLocation.other && (
                                   <div>
                                     <p className="text-xs text-gray-600 mb-1">Other:</p>
-                                    <p className="font-medium">{formatCurrency(locationData.other)}</p>
+                                    <p className="text-sm font-medium">{formatCurrency(selectedLocation.other)}</p>
                                   </div>
                                 )}
                               </div>
                               
-                              <div className="mt-4">
+                              <div className="mt-4 flex gap-2">
                                 <Button
                                   className="w-full bg-green-500 hover:bg-green-600 text-white"
                                   onClick={async () => {
                                     // First find the careerId we need from the career search results
-                                    let careerId: number | null = null;
+                                    let careerId: number | null = selectedCareerId;
                                     
-                                    if (allCareers && allCareers.length > 0) {
+                                    if (!careerId && allCareers && allCareers.length > 0) {
                                       // Find the career with matching title
                                       const career = allCareers.find(c => 
                                         c.title?.toLowerCase() === selectedProfession?.toLowerCase()
@@ -2100,18 +2102,18 @@ const Pathways = ({
                                     // Create plan with career and location data
                                     toast({
                                       title: "Creating career plan...",
-                                      description: `Adding ${selectedProfession} in ${locationData.city}, ${locationData.state} to your plan.`,
+                                      description: `Adding ${selectedProfession} in ${selectedLocation.city}, ${selectedLocation.state} to your plan.`,
                                     });
                                     
                                     try {
                                       // The locationData might not have an id property directly, so we'll use whatever identifier we have
-                                      const locationId = locationData.id || 
-                                                        (locationData.zip_code ? parseInt(locationData.zip_code) : null);
+                                      const locationId = selectedLocation.id || 
+                                                        (selectedLocation.zip_code ? parseInt(selectedLocation.zip_code) : null);
                                       
                                       if (!locationId) {
                                         toast({
                                           title: "Location data incomplete",
-                                          description: "Could not determine the location ID. Please try another ZIP code.",
+                                          description: "Could not determine the location ID. Please try another location.",
                                           variant: "destructive"
                                         });
                                         return;
@@ -2123,7 +2125,7 @@ const Pathways = ({
                                       if (success) {
                                         toast({
                                           title: "Career plan created!",
-                                          description: `Added ${selectedProfession} in ${locationData.city}, ${locationData.state} to your plan.`,
+                                          description: `Added ${selectedProfession} in ${selectedLocation.city}, ${selectedLocation.state} to your plan.`,
                                         });
                                         
                                         // Navigate to next step
@@ -2144,14 +2146,15 @@ const Pathways = ({
                                 </Button>
                               </div>
                             </div>
-                          ) : (
-                            <div className="text-center py-6 border rounded-lg mb-6">
-                              <p className="text-gray-500">
-                                No location data found for this ZIP code.
-                              </p>
-                            </div>
-                          )}
-                        </>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {fetchingLocation && (
+                        <div className="text-center py-6 border rounded-lg mb-6">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-4 text-gray-600">Searching for location data...</p>
+                        </div>
                       )}
                     </div>
                   )}
