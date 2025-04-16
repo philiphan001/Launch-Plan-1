@@ -947,9 +947,32 @@ const FinancialProjections = ({
     pathwayDataProcessed
   ]);
   
-  // Find the included college and career calculations
-  const includedCollegeCalc = collegeCalculations?.find(calc => calc.includedInProjection);
-  const includedCareerCalc = careerCalculations?.find(calc => calc.includedInProjection);
+  // Find the included college and career calculations using useMemo to ensure they refresh when projectionId changes
+  const includedCollegeCalc = useMemo(() => {
+    // If we have a saved projection with a collegeCalculationId, prioritize that specific calculation
+    if (savedProjection?.collegeCalculationId && collegeCalculations) {
+      const specificCollegeCalc = collegeCalculations.find(calc => calc.id === savedProjection.collegeCalculationId);
+      if (specificCollegeCalc) {
+        console.log("Using college calculation from saved projection:", specificCollegeCalc);
+        return specificCollegeCalc;
+      }
+    }
+    // Otherwise use any calculation marked as includedInProjection
+    return collegeCalculations?.find(calc => calc.includedInProjection);
+  }, [collegeCalculations, savedProjection?.collegeCalculationId, projectionId]);
+  
+  const includedCareerCalc = useMemo(() => {
+    // If we have a saved projection with a careerCalculationId, prioritize that specific calculation
+    if (savedProjection?.careerCalculationId && careerCalculations) {
+      const specificCareerCalc = careerCalculations.find(calc => calc.id === savedProjection.careerCalculationId);
+      if (specificCareerCalc) {
+        console.log("Using career calculation from saved projection:", specificCareerCalc);
+        return specificCareerCalc;
+      }
+    }
+    // Otherwise use any calculation marked as includedInProjection
+    return careerCalculations?.find(calc => calc.includedInProjection);
+  }, [careerCalculations, savedProjection?.careerCalculationId, projectionId]);
   
   // Define variables to hold spouse-related assumption values with defaults
   const [spouseLoanTerm, setSpouseLoanTerm] = useState<number>(10); // Default: 10 years
