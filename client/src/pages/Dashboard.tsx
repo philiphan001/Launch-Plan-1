@@ -1,10 +1,6 @@
-import WelcomeCard from "@/components/dashboard/WelcomeCard";
 import ScenariosSection from "@/components/dashboard/ScenariosSection";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
-import { Link } from "wouter";
 
 import { User, AuthProps } from "@/interfaces/auth";
 
@@ -77,12 +73,8 @@ const Dashboard = ({
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-6">
-        <WelcomeCard username={username} />
-      </div>
-      
-      {/* Saved Scenarios Section */}
-      <ScenariosSection userId={user?.id} />
+      {/* Pass username to ScenariosSection for the welcome message */}
+      <ScenariosSection userId={user?.id} username={username} />
     </div>
   );
 };

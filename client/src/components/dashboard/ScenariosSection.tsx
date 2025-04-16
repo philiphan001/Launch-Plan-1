@@ -29,9 +29,10 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface ScenariosSectionProps {
   userId?: number;
+  username?: string;
 }
 
-const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
+const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) => {
   const [selectedScenario, setSelectedScenario] = useState<ScenarioData | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
@@ -326,7 +327,11 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   return (
     <div className="mb-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-display font-semibold text-gray-800">Saved Scenarios</h2>
+        <div>
+          <h2 className="text-2xl font-display font-semibold text-gray-800">Welcome back, {username}</h2>
+          <p className="text-gray-600 mt-1 mb-2">Continue planning your financial future</p>
+          <h3 className="text-lg font-medium text-gray-700 mt-3">Your Saved Scenarios</h3>
+        </div>
         <div className="flex items-center space-x-3">
           <Select 
             value={sortBy} 
