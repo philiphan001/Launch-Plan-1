@@ -3294,7 +3294,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                     
                                     console.log(`Loading projection ${projection.id} with fresh state and cache at timestamp: ${timestamp}`);
                                     console.log("DEBUG - Current URL:", window.location.href);
-                                    console.log("DEBUG - Will navigate to:", `/financial-projections?id=${projection.id}&t=${timestamp}`);
+                                    console.log("DEBUG - Will navigate to:", `/projections?id=${projection.id}&t=${timestamp}`);
+                                    console.log("DEBUG - IMPORTANT: The correct route is /projections, not /financial-projections");
                                     
                                     // Force UI to loading state first to ensure complete reset
                                     setMainTab("loading");
@@ -3308,7 +3309,7 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                       console.log(`Completely reset React Query cache and state before loading projection ${projection.id}`);
                                       
                                       // Use URL approach for navigation - this triggers all the proper loading mechanisms
-                                      setLocation(`/financial-projections?id=${projection.id}&t=${timestamp}`, {
+                                      setLocation(`/projections?id=${projection.id}&t=${timestamp}`, {
                                         replace: true // Replace current history entry to avoid back button issues
                                       });
                                       
