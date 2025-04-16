@@ -22,7 +22,7 @@ import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
 import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
 import { GapYearPathway } from "@/components/pathways/GapYearPathways";
 import { useLocation } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type PathChoice = "education" | "job" | "military" | "gap";
@@ -85,6 +85,15 @@ const Pathways = ({
       currency: 'USD',
       maximumFractionDigits: 0 
     }).format(salary);
+  };
+  
+  // Format any amount as currency
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(amount);
   };
   
   const [, navigate] = useLocation();
@@ -320,6 +329,48 @@ const Pathways = ({
       });
     }
   });
+  
+  // Create career calculation mutation
+  const createCareerCalculation = useMutation({
+    mutationFn: async ({ careerId, locationId }: { careerId: number, locationId: number }) => {
+      console.log(`Creating career calculation for career ${careerId} at location ${locationId}`);
+      return apiRequest('/api/financial-calculations/careers', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: user?.id || 1,
+          careerId,
+          locationId,
+          includeInProjections: true // Automatically include in projections
+        })
+      });
+    },
+    onSuccess: () => {
+      // Invalidate any queries that depend on calculations
+      queryClient.invalidateQueries({ queryKey: ['/api/financial-calculations'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/financial-projections'] });
+    }
+  });
+  
+  // Function to create a career plan (add to favorites, create calculation, and include in projections)
+  const createCareerPlan = async (careerId: number, locationId: number) => {
+    try {
+      // Step 1: Add career to favorites (if not already added)
+      await addCareerToFavorites.mutateAsync(careerId);
+      
+      // Step 2: Create career calculation (this will automatically include in projections)
+      await createCareerCalculation.mutateAsync({ careerId, locationId });
+      
+      return true;
+    } catch (error) {
+      console.error('Error creating career plan:', error);
+      toast({
+        title: "Error creating career plan",
+        description: "There was a problem creating your career plan. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
   
   // This function will set the education type and advance to the specific school question
   const selectEducationType = (type: EducationType) => {
@@ -1891,19 +1942,57 @@ const Pathways = ({
                               <div className="mt-4">
                                 <Button
                                   className="w-full bg-green-500 hover:bg-green-600 text-white"
-                                  onClick={() => {
+                                  onClick={async () => {
+                                    // First find the careerId we need from the career search results
+                                    let careerId: number | null = null;
+                                    
+                                    if (allCareers && allCareers.length > 0) {
+                                      // Find the career with matching title
+                                      const career = allCareers.find(c => 
+                                        c.title?.toLowerCase() === selectedProfession?.toLowerCase()
+                                      );
+                                      
+                                      if (career) {
+                                        careerId = career.id;
+                                      }
+                                    }
+                                    
+                                    if (!careerId) {
+                                      toast({
+                                        title: "Career not found",
+                                        description: "Please select a career from the search results.",
+                                        variant: "destructive"
+                                      });
+                                      return;
+                                    }
+                                    
                                     // Create plan with career and location data
-                                    // This should mirror the college pathway's create plan functionality
                                     toast({
-                                      title: "Career plan created!",
-                                      description: `Added ${selectedProfession} in ${locationData.city}, ${locationData.state} to your plan.`,
+                                      title: "Creating career plan...",
+                                      description: `Adding ${selectedProfession} in ${locationData.city}, ${locationData.state} to your plan.`,
                                     });
                                     
-                                    // TODO: Implement the API call to create a favorite career, 
-                                    // save to calculations, and select for projection
-                                    
-                                    // Navigate to next step
-                                    handleNext();
+                                    try {
+                                      // Use the createCareerPlan function to handle all the API calls
+                                      const success = await createCareerPlan(careerId, locationData.id);
+                                      
+                                      if (success) {
+                                        toast({
+                                          title: "Career plan created!",
+                                          description: `Added ${selectedProfession} in ${locationData.city}, ${locationData.state} to your plan.`,
+                                        });
+                                        
+                                        // Navigate to next step
+                                        handleNext();
+                                      }
+                                    } catch (error) {
+                                      console.error("Error creating career plan:", error);
+                                      toast({
+                                        title: "Error creating plan",
+                                        description: "There was a problem creating your career plan. Please try again.",
+                                        variant: "destructive"
+                                      });
+                                    }
                                   }}
                                 >
                                   <span className="material-icons text-sm mr-1">add_circle</span>
