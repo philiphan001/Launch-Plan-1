@@ -1918,23 +1918,37 @@ useEffect(() => {
 
 // Function to load a saved projection directly without triggering recalculations
 const loadProjection = async (projId: number): Promise<void> => {
+  // First set loading states to prevent any race conditions
   setIsLoadingProjection(true);
+  setIsInLoadingState(true); // Set this right away to prevent recalculation
   setError(null);
+  
   try {
-    // Clear existing data first
+    console.log(`LOAD PROJECTION: Starting load for projection ${projId} with loading state flag set to true`);
+    
+    // Clear existing data first to avoid any state conflicts
     setProjectionData(null);
     
+    // Use a cache buster to ensure we're getting fresh data
     const cacheBuster = new Date().getTime();
     const url = `/api/financial-projections/detail/${projId}?_=${cacheBuster}`;
-    console.log(`Fetching projection data for ID: ${projId} (cache bust: ${cacheBuster})`);
+    console.log(`LOAD PROJECTION: Fetching projection data for ID: ${projId} (cache bust: ${cacheBuster})`);
     
     const response = await fetch(url);
     if (!response.ok) {
+      console.error(`LOAD PROJECTION: Server returned error ${response.status}: ${response.statusText}`);
+      
+      // Handle 404 specifically - the projection may have been deleted
+      if (response.status === 404) {
+        throw new Error(`Projection not found. It may have been deleted.`);
+      }
+      
       throw new Error(`Failed to load projection: ${response.statusText}`);
     }
     
+    // Parse the response
     const savedProj = await response.json() as FinancialProjection;
-    console.log("Received saved projection:", savedProj);
+    console.log("LOAD PROJECTION: Received saved projection:", savedProj);
     
     // Parse the projection data
     let parsedData: any;
@@ -1942,48 +1956,62 @@ const loadProjection = async (projId: number): Promise<void> => {
       parsedData = typeof savedProj.projectionData === 'string' 
         ? JSON.parse(savedProj.projectionData) 
         : savedProj.projectionData;
+        
+      console.log("LOAD PROJECTION: Successfully parsed projection data");
     } catch (error) {
-      console.error('Failed to parse projection data:', error);
+      console.error('LOAD PROJECTION: Failed to parse projection data:', error);
       throw new Error('Invalid projection data format');
     }
     
     // Validate the parsed data
     if (!isValidProjectionData(parsedData)) {
-      console.error("Invalid projection data structure:", parsedData);
+      console.error("LOAD PROJECTION: Invalid projection data structure:", parsedData);
       // Don't throw error, continue with safe data
       parsedData = ensureValidProjectionData(parsedData);
+      console.log("LOAD PROJECTION: Created default projection data as fallback");
     }
     
-    // Flag to prevent recalculation while loading saved data
-    setIsInLoadingState(true);
+    console.log("LOAD PROJECTION: Setting all state values from saved projection");
     
-    // Set all the state values
-    setProjectionName(savedProj.name || 'Unnamed Projection');
-    setTimeframe(`${savedProj.timeframe || 10} Years`);
-    setAge(savedProj.startingAge || 25);
-    setStartingSavings(savedProj.startingSavings || 0);
-    setIncome(savedProj.income || 0);
-    setExpenses(savedProj.expenses || 0);
-    setIncomeGrowth(savedProj.incomeGrowth || 0.03);
-    setStudentLoanDebt(savedProj.studentLoanDebt || 0);
-    setEmergencyFundAmount(savedProj.emergencyFundAmount || 10000);
-    setPersonalLoanTermYears(savedProj.personalLoanTermYears || 5);
-    setPersonalLoanInterestRate(savedProj.personalLoanInterestRate || 8.0);
+    // TO PREVENT RACE CONDITIONS: Batch all state updates into a single operation
+    // This helps prevent intermediate state changes from triggering recalculation
+    const stateUpdates = () => {
+      // Set all the state values
+      setProjectionName(savedProj.name || 'Unnamed Projection');
+      setTimeframe(`${savedProj.timeframe || 10} Years`);
+      setAge(savedProj.startingAge || 25);
+      setStartingSavings(savedProj.startingSavings || 0);
+      setIncome(savedProj.income || 0);
+      setExpenses(savedProj.expenses || 0);
+      setIncomeGrowth(savedProj.incomeGrowth || 0.03);
+      setStudentLoanDebt(savedProj.studentLoanDebt || 0);
+      setEmergencyFundAmount(savedProj.emergencyFundAmount || 10000);
+      setPersonalLoanTermYears(savedProj.personalLoanTermYears || 5);
+      setPersonalLoanInterestRate(savedProj.personalLoanInterestRate || 8.0);
+      
+      // Add a unique key to force chart re-renders
+      parsedData._key = `loaded-projection-${projId}-${Date.now()}`;
+      
+      // Use the saved projection data directly instead of recalculating
+      console.log("LOAD PROJECTION: Setting projection data directly from saved projection, no recalculation");
+      setProjectionData(parsedData);
+      
+      // Switch to view tab
+      setMainTab("view");
+    };
     
-    // Add a unique key to force chart re-renders
-    parsedData._key = `loaded-projection-${projId}-${Date.now()}`;
+    // Execute state updates in one batch to prevent intermediate recalculations
+    stateUpdates();
     
-    // Use the saved projection data directly instead of recalculating
-    console.log("Setting projection data directly from saved projection, no recalculation");
-    setProjectionData(parsedData);
+    // Keep the loading state flag active for a longer period to ensure no premature recalculation
+    // This is essential to prevent the useEffect dependencies from triggering unwanted recalculation
+    console.log("LOAD PROJECTION: Keeping loading state active to prevent premature recalculation");
     
-    // Switch to view tab
-    setMainTab("view");
-    
-    // Wait until next render cycle to clear loading state
+    // Use a longer timeout to ensure all state updates have completed
     setTimeout(() => {
+      console.log("LOAD PROJECTION: Clearing loading state flag");
       setIsInLoadingState(false);
-    }, 100);
+    }, 500); // Increased timeout to 500ms to ensure all state updates are processed
     
   } catch (error) {
     console.error('Error loading projection:', error);
