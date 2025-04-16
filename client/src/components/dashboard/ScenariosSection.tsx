@@ -142,28 +142,44 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   // Get the net worth at specific age for a scenario
   const getNetWorthAtAge = (scenario: ScenarioData, targetAge: number): number => {
     try {
+      // Safety check - if scenario or projectionData is undefined/null, return 0
+      if (!scenario || !scenario.projectionData) {
+        console.warn("Missing scenario or projectionData in getNetWorthAtAge");
+        return 0;
+      }
+      
+      // Ensure we have valid arrays to work with
+      const ages = Array.isArray(scenario.projectionData.ages) ? scenario.projectionData.ages : [];
+      const netWorth = Array.isArray(scenario.projectionData.netWorth) ? scenario.projectionData.netWorth : [];
+      
+      // Safety check - if arrays are empty, return 0
+      if (ages.length === 0 || netWorth.length === 0) {
+        console.warn("Empty ages or netWorth array in getNetWorthAtAge");
+        return 0;
+      }
+      
       // Find the index of the age in the ages array
-      const ageIndex = scenario.projectionData.ages.findIndex(age => age === targetAge);
+      const ageIndex = ages.findIndex(age => age === targetAge);
       
       // If the exact age exists in our data, use that value
-      if (ageIndex !== -1) {
-        return scenario.projectionData.netWorth[ageIndex] || 0;
+      if (ageIndex !== -1 && ageIndex < netWorth.length) {
+        return netWorth[ageIndex] || 0;
       }
       
       // If the target age is smaller than the first age in our data
-      if (targetAge < scenario.projectionData.ages[0]) {
-        return scenario.projectionData.netWorth[0] || 0; // Return the first value
+      if (targetAge < ages[0]) {
+        return netWorth[0] || 0; // Return the first value
       }
       
       // If the target age is larger than the last age in our data
-      if (targetAge > scenario.projectionData.ages[scenario.projectionData.ages.length - 1]) {
-        return scenario.projectionData.netWorth[scenario.projectionData.netWorth.length - 1] || 0; // Return the last value
+      if (targetAge > ages[ages.length - 1]) {
+        return netWorth[netWorth.length - 1] || 0; // Return the last value
       }
       
       // Find the closest ages before and after the target and interpolate
       let lowerIndex = 0;
-      for (let i = 0; i < scenario.projectionData.ages.length; i++) {
-        if (scenario.projectionData.ages[i] <= targetAge) {
+      for (let i = 0; i < ages.length; i++) {
+        if (ages[i] <= targetAge) {
           lowerIndex = i;
         } else {
           break;
@@ -173,15 +189,20 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
       const upperIndex = lowerIndex + 1;
       
       // If we're at the last age, just return that value
-      if (upperIndex >= scenario.projectionData.ages.length) {
-        return scenario.projectionData.netWorth[lowerIndex] || 0;
+      if (upperIndex >= ages.length) {
+        return netWorth[lowerIndex] || 0;
+      }
+      
+      // Safety check on indices
+      if (lowerIndex >= netWorth.length || upperIndex >= netWorth.length) {
+        return netWorth[netWorth.length - 1] || 0;
       }
       
       // Calculate the net worth using linear interpolation
-      const lowerAge = scenario.projectionData.ages[lowerIndex];
-      const upperAge = scenario.projectionData.ages[upperIndex];
-      const lowerValue = scenario.projectionData.netWorth[lowerIndex] || 0;
-      const upperValue = scenario.projectionData.netWorth[upperIndex] || 0;
+      const lowerAge = ages[lowerIndex];
+      const upperAge = ages[upperIndex];
+      const lowerValue = netWorth[lowerIndex] || 0;
+      const upperValue = netWorth[upperIndex] || 0;
       
       // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
       const interpolatedValue = lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
@@ -193,10 +214,19 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
     }
   };
 
-  // Get the age range across all scenarios
-  const allAges = scenarios.flatMap(scenario => scenario.projectionData.ages);
-  const minAge = Math.min(...allAges);
-  const maxAge = Math.max(...allAges);
+  // Get the age range across all scenarios with strict checking
+  const allAges = scenarios
+    .filter(scenario => 
+      scenario && 
+      scenario.projectionData && 
+      Array.isArray(scenario.projectionData.ages) && 
+      scenario.projectionData.ages.length > 0
+    )
+    .flatMap(scenario => scenario.projectionData.ages);
+    
+  // Use safe defaults if no valid ages found
+  const minAge = allAges.length > 0 ? Math.min(...allAges) : 25;
+  const maxAge = allAges.length > 0 ? Math.max(...allAges) : 35;
 
   // Sort scenarios based on selected criteria
   const getSortedScenarios = () => {
@@ -225,21 +255,63 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
       });
     } else if (sortBy === "netWorth") {
       return scenariosCopy.sort((a, b) => {
-        const aMaxNetWorth = Math.max(...a.projectionData.netWorth);
-        const bMaxNetWorth = Math.max(...b.projectionData.netWorth);
-        return bMaxNetWorth - aMaxNetWorth; // Highest first
+        try {
+          // Safety checks
+          if (!a?.projectionData?.netWorth || !Array.isArray(a.projectionData.netWorth) || 
+              !b?.projectionData?.netWorth || !Array.isArray(b.projectionData.netWorth)) {
+            return 0;
+          }
+          
+          const aNetWorth = a.projectionData.netWorth.length > 0 ? a.projectionData.netWorth : [0];
+          const bNetWorth = b.projectionData.netWorth.length > 0 ? b.projectionData.netWorth : [0];
+          
+          const aMaxNetWorth = Math.max(...aNetWorth);
+          const bMaxNetWorth = Math.max(...bNetWorth);
+          return bMaxNetWorth - aMaxNetWorth; // Highest first
+        } catch (error) {
+          console.error("Error sorting by netWorth:", error);
+          return 0;
+        }
       });
     } else if (sortBy === "income") {
       return scenariosCopy.sort((a, b) => {
-        const aLastIncome = a.projectionData.income[a.projectionData.income.length - 1];
-        const bLastIncome = b.projectionData.income[b.projectionData.income.length - 1];
-        return bLastIncome - aLastIncome; // Highest first
+        try {
+          // Safety checks
+          if (!a?.projectionData?.income || !Array.isArray(a.projectionData.income) || 
+              !b?.projectionData?.income || !Array.isArray(b.projectionData.income)) {
+            return 0;
+          }
+          
+          const aIncome = a.projectionData.income;
+          const bIncome = b.projectionData.income;
+          
+          const aLastIncome = aIncome.length > 0 ? aIncome[aIncome.length - 1] : 0;
+          const bLastIncome = bIncome.length > 0 ? bIncome[bIncome.length - 1] : 0;
+          return bLastIncome - aLastIncome; // Highest first
+        } catch (error) {
+          console.error("Error sorting by income:", error);
+          return 0;
+        }
       });
     } else if (sortBy === "expenses") {
       return scenariosCopy.sort((a, b) => {
-        const aLastExpenses = a.projectionData.expenses[a.projectionData.expenses.length - 1];
-        const bLastExpenses = b.projectionData.expenses[b.projectionData.expenses.length - 1];
-        return aLastExpenses - bLastExpenses; // Lowest first
+        try {
+          // Safety checks
+          if (!a?.projectionData?.expenses || !Array.isArray(a.projectionData.expenses) || 
+              !b?.projectionData?.expenses || !Array.isArray(b.projectionData.expenses)) {
+            return 0;
+          }
+          
+          const aExpenses = a.projectionData.expenses;
+          const bExpenses = b.projectionData.expenses;
+          
+          const aLastExpenses = aExpenses.length > 0 ? aExpenses[aExpenses.length - 1] : 0;
+          const bLastExpenses = bExpenses.length > 0 ? bExpenses[bExpenses.length - 1] : 0;
+          return aLastExpenses - bLastExpenses; // Lowest first
+        } catch (error) {
+          console.error("Error sorting by expenses:", error);
+          return 0;
+        }
       });
     }
     
@@ -491,21 +563,48 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                           <ul className="space-y-3">
                             <li className="flex justify-between">
                               <span className="text-gray-600">Peak Net Worth:</span>
-                              <span className="font-medium">${Math.max(...selectedScenario.projectionData.netWorth).toLocaleString()}</span>
+                              <span className="font-medium">
+                                ${Array.isArray(selectedScenario?.projectionData?.netWorth) && selectedScenario.projectionData.netWorth.length > 0 
+                                  ? Math.max(...selectedScenario.projectionData.netWorth).toLocaleString() 
+                                  : "0"}
+                              </span>
                             </li>
                             <li className="flex justify-between">
                               <span className="text-gray-600">Final Annual Income:</span>
-                              <span className="font-medium">${selectedScenario.projectionData.income[selectedScenario.projectionData.income.length - 1].toLocaleString()}</span>
+                              <span className="font-medium">
+                                ${Array.isArray(selectedScenario?.projectionData?.income) && selectedScenario.projectionData.income.length > 0
+                                  ? selectedScenario.projectionData.income[selectedScenario.projectionData.income.length - 1].toLocaleString()
+                                  : "0"}
+                              </span>
                             </li>
                             <li className="flex justify-between">
                               <span className="text-gray-600">Final Annual Expenses:</span>
-                              <span className="font-medium">${selectedScenario.projectionData.expenses[selectedScenario.projectionData.expenses.length - 1].toLocaleString()}</span>
+                              <span className="font-medium">
+                                ${Array.isArray(selectedScenario?.projectionData?.expenses) && selectedScenario.projectionData.expenses.length > 0
+                                  ? selectedScenario.projectionData.expenses[selectedScenario.projectionData.expenses.length - 1].toLocaleString()
+                                  : "0"}
+                              </span>
                             </li>
                             <li className="flex justify-between">
                               <span className="text-gray-600">Final Annual Cash Flow:</span>
                               <span className="font-medium">
-                                ${(selectedScenario.projectionData.income[selectedScenario.projectionData.income.length - 1] - 
-                                selectedScenario.projectionData.expenses[selectedScenario.projectionData.expenses.length - 1]).toLocaleString()}
+                                ${(() => {
+                                  try {
+                                    if (!Array.isArray(selectedScenario?.projectionData?.income) || 
+                                        !Array.isArray(selectedScenario?.projectionData?.expenses) ||
+                                        selectedScenario.projectionData.income.length === 0 ||
+                                        selectedScenario.projectionData.expenses.length === 0) {
+                                      return "0";
+                                    }
+                                    
+                                    const income = selectedScenario.projectionData.income[selectedScenario.projectionData.income.length - 1] || 0;
+                                    const expenses = selectedScenario.projectionData.expenses[selectedScenario.projectionData.expenses.length - 1] || 0;
+                                    return (income - expenses).toLocaleString();
+                                  } catch (error) {
+                                    console.error("Error calculating cash flow:", error);
+                                    return "0";
+                                  }
+                                })()}
                               </span>
                             </li>
                           </ul>
