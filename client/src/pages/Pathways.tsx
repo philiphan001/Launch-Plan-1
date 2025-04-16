@@ -3584,15 +3584,17 @@ const Pathways = ({
                                           inState: isInState,
                                           householdIncome: householdIncome,
                                           householdSize: householdSize,
-                                          zip: userZipCode,
+                                          zip: userZipCode || '00000', // Ensure zip is never null
                                           tuitionUsed: finalTuitionAmount,
                                           roomAndBoardUsed: roomAndBoardAmount,
                                           onCampusHousing: true, // Default to on-campus
                                           totalCost: finalTotalCost,
                                           studentLoanAmount: finalStudentLoanAmount,
                                           financialAid: finalFinancialAid,
+                                          familyContribution: Math.floor(householdIncome * 0.1), // Add this required field
+                                          workStudy: 0, // Add default value for this field
                                           includedInProjection: true, // Auto-include in projection
-                                          notes: `Auto-generated from Pathways for ${specificSchool}`
+                                          notes: `Auto-generated from Pathways for ${specificSchool || 'selected college'}`
                                         };
                                         
                                         console.log('Auto-generating college calculation:', collegeCalculation);
