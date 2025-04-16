@@ -3401,27 +3401,38 @@ const Pathways = ({
                           
                           // Add selected college to favorites if user is authenticated
                           if (isAuthenticated && user && selectedSchoolId) {
-                            console.log(`Adding college to favorites: ID=${selectedSchoolId}, Name=${specificSchool}`);
-                            addCollegeToFavorites.mutate(selectedSchoolId, {
-                              onSuccess: () => {
-                                console.log('College added to favorites successfully');
-                                // Show success toast to the user
-                                toast({
-                                  title: "Added to favorites",
-                                  description: `${specificSchool} has been added to your favorite colleges.`,
-                                  variant: "default",
-                                });
-                              },
-                              onError: (error) => {
-                                console.error('Failed to add college to favorites:', error);
-                                // Show error toast to the user
-                                toast({
-                                  title: "Error adding to favorites",
-                                  description: "The college could not be added to your favorites. It might already exist in your favorites.",
-                                  variant: "destructive",
-                                });
-                              }
-                            });
+                            // Store the college ID in localStorage to prevent duplicate additions
+                            const alreadyAdded = localStorage.getItem('lastAddedCollegeId') === String(selectedSchoolId);
+                            
+                            if (!alreadyAdded) {
+                              console.log(`Adding college to favorites: ID=${selectedSchoolId}, Name=${specificSchool}`);
+                              
+                              // Mark this college as added in localStorage
+                              localStorage.setItem('lastAddedCollegeId', String(selectedSchoolId));
+                              
+                              addCollegeToFavorites.mutate(selectedSchoolId, {
+                                onSuccess: () => {
+                                  console.log('College added to favorites successfully');
+                                  // Show success toast to the user
+                                  toast({
+                                    title: "Added to favorites",
+                                    description: `${specificSchool} has been added to your favorite colleges.`,
+                                    variant: "default",
+                                  });
+                                },
+                                onError: (error) => {
+                                  console.error('Failed to add college to favorites:', error);
+                                  // Show error toast to the user
+                                  toast({
+                                    title: "Error adding to favorites",
+                                    description: "The college could not be added to your favorites. It might already exist in your favorites.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              });
+                            } else {
+                              console.log(`College ${selectedSchoolId} (${specificSchool}) already added to favorites, skipping`);
+                            }
                           } else {
                             console.log('Not adding college to favorites. Condition failed:', {
                               isAuthenticated,
@@ -3528,6 +3539,13 @@ const Pathways = ({
                                       
                                       // Define a function to create and save the college calculation
                                       const createAndSaveCollegeCalculation = (isInState: boolean = true) => {
+                                        // Check if this college calculation was already created in this session
+                                        const lastCalculatedCollegeId = localStorage.getItem('lastCalculatedCollegeId');
+                                        if (lastCalculatedCollegeId === String(selectedSchoolId)) {
+                                          console.log(`College calculation for ${specificSchool} (ID: ${selectedSchoolId}) was already created in this session, skipping`);
+                                          return;
+                                        }
+                                        
                                         let finalTuitionAmount = tuitionAmount;
                                         let finalTotalCost = totalCost;
                                         let finalFinancialAid = financialAid;
@@ -3618,6 +3636,9 @@ const Pathways = ({
                                               description: `College cost calculation for ${specificSchool} has been created and saved to your profile.`,
                                               variant: "default",
                                             });
+                                            
+                                            // Record that we've calculated this college in this session
+                                            localStorage.setItem('lastCalculatedCollegeId', String(selectedSchoolId));
                                           })
                                           .catch(err => {
                                             console.error('Error creating college calculation:', err);

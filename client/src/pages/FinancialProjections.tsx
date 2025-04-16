@@ -631,8 +631,16 @@ const FinancialProjections = ({
               if (pathwayData.specificSchool && pathwayData.specificSchool !== "") {
                 // Look up the college ID if needed (can be enhanced)
                 if (pathwayData.selectedSchoolId) {
-                  console.log("Adding college to favorites from pathway data:", pathwayData.selectedSchoolId);
-                  addCollegeToFavoritesMutation.mutate(pathwayData.selectedSchoolId);
+                  // Check if we've already added this college in this session
+                  const lastAddedCollegeId = localStorage.getItem('lastAddedCollegeId');
+                  if (lastAddedCollegeId !== String(pathwayData.selectedSchoolId)) {
+                    console.log("Adding college to favorites from pathway data:", pathwayData.selectedSchoolId);
+                    addCollegeToFavoritesMutation.mutate(pathwayData.selectedSchoolId);
+                    // Store that we've added this college
+                    localStorage.setItem('lastAddedCollegeId', String(pathwayData.selectedSchoolId));
+                  } else {
+                    console.log("College was already added to favorites in this session:", pathwayData.selectedSchoolId);
+                  }
                 }
               }
               
