@@ -439,18 +439,32 @@ export class PgStorage implements IStorage {
     const calculation = await db.select().from(collegeCalculations).where(eq(collegeCalculations.id, id));
     if (calculation.length === 0) return undefined;
     
+    console.log(`Retrieving college calculation with ID ${id}:`, calculation[0]);
+    
     // Now fetch the college data separately
     if (calculation[0].collegeId) {
       const collegeData = await db.select().from(colleges).where(eq(colleges.id, calculation[0].collegeId));
       if (collegeData.length > 0) {
-        // Add college data to the calculation result
-        return {
+        // Add college data to the calculation result with full details
+        const enrichedCalculation = {
           ...calculation[0],
           college: {
+            id: collegeData[0].id,
             name: collegeData[0].name,
-            type: collegeData[0].type
+            type: collegeData[0].type,
+            location: collegeData[0].location,
+            state: collegeData[0].state,
+            tuition: collegeData[0].tuition,
+            roomAndBoard: collegeData[0].roomAndBoard,
+            acceptanceRate: collegeData[0].acceptanceRate,
+            rating: collegeData[0].rating
           }
         } as CollegeCalculation;
+        
+        console.log(`Enhanced college calculation with college data:`, enrichedCalculation.college);
+        return enrichedCalculation;
+      } else {
+        console.log(`College with ID ${calculation[0].collegeId} not found for calculation ${id}`);
       }
     }
     
@@ -461,19 +475,30 @@ export class PgStorage implements IStorage {
     // Get all college calculations for this user
     const calculations = await db.select().from(collegeCalculations).where(eq(collegeCalculations.userId, userId));
     
+    // Debug log to track included projections
+    const includedCalc = calculations.find(calc => calc.includedInProjection);
+    if (includedCalc) {
+      console.log(`Found included college calculation for user ${userId}:`, includedCalc);
+    }
+    
     // Get all college IDs from the calculations
     const collegeIds = calculations.map(calc => calc.collegeId);
     
     // If there are no calculations or no college IDs, return the raw calculations
     if (calculations.length === 0 || collegeIds.length === 0) {
+      console.log(`No college calculations or college IDs found for user ${userId}`);
       return calculations;
     }
+    
+    console.log(`Fetching college data for ${collegeIds.length} colleges`);
     
     // Get all colleges for these IDs in a single query
     const collegeData = await db.select().from(colleges)
       .where(
         or(...collegeIds.map(id => eq(colleges.id, id)))
       );
+    
+    console.log(`Found ${collegeData.length} colleges for calculations`);
     
     // Create a map of college ID to college data for quick lookup
     const collegeMap = new Map();
@@ -485,14 +510,32 @@ export class PgStorage implements IStorage {
     return calculations.map(calc => {
       const college = collegeMap.get(calc.collegeId);
       if (college) {
-        return {
+        // Create a more comprehensive college object with all available data
+        const result = {
           ...calc,
           college: {
+            id: college.id,
             name: college.name,
-            type: college.type
+            type: college.type,
+            location: college.location,
+            state: college.state,
+            tuition: college.tuition,
+            roomAndBoard: college.roomAndBoard,
+            acceptanceRate: college.acceptanceRate,
+            rating: college.rating
           }
         } as CollegeCalculation;
+        
+        // Log the included college data for debugging
+        if (calc.includedInProjection) {
+          console.log(`Enhanced college data for included projection:`, result.college);
+        }
+        
+        return result;
       }
+      
+      // If college not found, log error and return basic calculation
+      console.log(`Warning: College data not found for calculation (collegeId: ${calc.collegeId})`);
       return calc as CollegeCalculation;
     });
   }
@@ -517,13 +560,20 @@ export class PgStorage implements IStorage {
     
     const college = collegeData[0];
     
-    // Add college data to each calculation
+    // Add college data to each calculation with full college details
     return calculations.map(calc => {
       return {
         ...calc,
         college: {
+          id: college.id,
           name: college.name,
-          type: college.type
+          type: college.type,
+          location: college.location,
+          state: college.state,
+          tuition: college.tuition,
+          roomAndBoard: college.roomAndBoard,
+          acceptanceRate: college.acceptanceRate,
+          rating: college.rating
         }
       } as CollegeCalculation;
     });
