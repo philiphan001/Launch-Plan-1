@@ -2100,36 +2100,38 @@ const Pathways = ({
                                       return;
                                     }
                                     
-                                    // Create plan with career and location data
+                                    // Make sure both career and location are selected
+                                    if (!selectedLocation) {
+                                      toast({
+                                        title: "Location required",
+                                        description: "Please select a location first.",
+                                        variant: "destructive"
+                                      });
+                                      return;
+                                    }
+                                    
+                                    // Show creating toast
                                     toast({
                                       title: "Creating career plan...",
                                       description: `Adding ${selectedProfession} in ${selectedLocation.city}, ${selectedLocation.state} to your plan.`,
                                     });
                                     
                                     try {
-                                      // Debug to see what's in the selectedLocation
-                                      console.log("Selected Location:", selectedLocation);
-                                      
-                                      // The locationData might not have an id property directly, so we'll use whatever identifier we have
+                                      // The locationData might not have an id property, so use ZIP code as fallback
                                       let locationId: number | null = null;
                                       
-                                      if (selectedLocation?.id) {
-                                        // If the location has an explicit ID, use it
+                                      // Try to get location ID from the location data
+                                      if (typeof selectedLocation.id === 'number') {
                                         locationId = selectedLocation.id;
-                                      } else if (selectedLocation?.zip_code) {
-                                        // Otherwise use the ZIP code as the location ID
-                                        // Make sure we're getting a number from the ZIP
-                                        const zipAsNumber = parseInt(selectedLocation.zip_code.toString());
-                                        if (!isNaN(zipAsNumber)) {
-                                          locationId = zipAsNumber;
-                                        }
+                                      } else if (selectedLocation.zip_code) {
+                                        // Use ZIP code as location ID (converted to number)
+                                        locationId = parseInt(selectedLocation.zip_code.toString());
                                       }
                                       
-                                      console.log("Location ID prepared:", locationId, "Career ID:", careerId);
-                                      
                                       if (!locationId) {
+                                        // No valid location ID found
                                         toast({
-                                          title: "Location data incomplete",
+                                          title: "Location error",
                                           description: "Could not determine the location ID. Please try another location.",
                                           variant: "destructive"
                                         });
