@@ -1873,8 +1873,12 @@ useEffect(() => {
   
   setProjectionSummaryData(summaryData);
   setIsLoadingProjectionSummary(false);
+  
+  // Log when projection summary data updates
+  console.log("Updated projection summary data:", JSON.stringify(summaryData));
 }, [effectiveCollegeCalc, effectiveCareerCalc, locationCostData, 
-    startingSavings, income, expenses, studentLoanDebt, emergencyFundAmount]);
+    startingSavings, income, expenses, studentLoanDebt, emergencyFundAmount, 
+    savedProjection, projectionId]);
 
 // Create a ref to track previous projection ID
 const previousProjectionIdRef = useRef<number | null>(null);
@@ -2078,13 +2082,58 @@ useEffect(() => {
     
     // Log that state has been completely reset based on the new projection
     console.log("State reset complete for projection ID:", projectionId);
+    
+    // Force refresh of the projection summary data
+    if (effectiveCollegeCalc || effectiveCareerCalc || locationCostData) {
+      console.log("Updating projection summary data after loading projection...");
+      
+      // Build the summary data from our effective calculations
+      const updatedSummaryData: ProjectionSummaryData = {
+        college: effectiveCollegeCalc ? {
+          id: effectiveCollegeCalc.id,
+          name: effectiveCollegeCalc.college?.name || 'Unknown College',
+          type: effectiveCollegeCalc.college?.type,
+          totalCost: effectiveCollegeCalc.netPrice || 0,
+          studentLoanAmount: effectiveCollegeCalc.studentLoanAmount || 0,
+          inState: effectiveCollegeCalc.inState
+        } : undefined,
+        
+        career: effectiveCareerCalc ? {
+          id: effectiveCareerCalc.id,
+          title: effectiveCareerCalc.career?.title || 'Unknown Career',
+          entryLevelSalary: effectiveCareerCalc.entryLevelSalary || 0,
+          projectedSalary: effectiveCareerCalc.projectedSalary || 0,
+          education: effectiveCareerCalc.education || undefined
+        } : undefined,
+        
+        location: locationCostData ? {
+          zipCode: locationCostData.zip_code,
+          city: locationCostData.city || 'Unknown',
+          state: locationCostData.state || '',
+          incomeAdjustmentFactor: locationCostData.income_adjustment_factor || undefined
+        } : undefined,
+        
+        financials: {
+          startingSavings: savedProjection.startingSavings || 0,
+          income: savedProjection.income || 0,
+          expenses: savedProjection.expenses || 0,
+          studentLoanDebt: savedProjection.studentLoanDebt || 0,
+          emergencyFundAmount: savedProjection.emergencyFundAmount || 0
+        }
+      };
+      
+      // Update the summary data state
+      setProjectionSummaryData(updatedSummaryData);
+      console.log("Projection summary data updated:", JSON.stringify(updatedSummaryData));
+    }
   }
   
   // Log any errors that occurred during projection loading
   if (savedProjectionError) {
     console.error("Error loading saved projection:", savedProjectionError);
   }
-}, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId]);
+}, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId, 
+    effectiveCollegeCalc, effectiveCareerCalc, locationCostData]);
 
 // Initialize projection data with a key that depends on projectionId to force re-renders
 const [projectionData, setProjectionData] = useState<any>(() => {
