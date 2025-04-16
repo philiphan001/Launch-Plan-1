@@ -131,3 +131,28 @@ export const validateProjectionSummaryData = (data: any): boolean => {
   
   return true;
 };
+
+/**
+ * Creates a default ProjectionSummaryData object with minimal valid structure
+ * @param initialValues Optional values to use instead of zeros
+ * @returns A valid ProjectionSummaryData object
+ */
+export const createDefaultProjectionSummaryData = (
+  initialValues?: {
+    startingSavings?: number;
+    income?: number;
+    expenses?: number;
+    studentLoanDebt?: number;
+    emergencyFundAmount?: number;
+  }
+): ProjectionSummaryData => {
+  return {
+    financials: {
+      startingSavings: initialValues?.startingSavings || 0,
+      income: initialValues?.income || 0,
+      expenses: initialValues?.expenses || 0,
+      studentLoanDebt: initialValues?.studentLoanDebt || 0,
+      emergencyFundAmount: initialValues?.emergencyFundAmount || 0
+    }
+  };
+};

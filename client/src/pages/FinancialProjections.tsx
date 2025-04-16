@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
-import { ensureValidProjectionData, isValidProjectionData, createDefaultProjectionData } from "@/lib/validateProjectionData";
+import { ensureValidProjectionData, isValidProjectionData, createDefaultProjectionData, validateProjectionSummaryData } from "@/lib/validateProjectionData";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
@@ -1872,7 +1872,25 @@ useEffect(() => {
     }
   };
   
-  setProjectionSummaryData(summaryData);
+  // Validate the summary data before setting it
+  if (validateProjectionSummaryData(summaryData)) {
+    setProjectionSummaryData(summaryData);
+    console.log("Projection summary data validated successfully");
+  } else {
+    console.error("Invalid projection summary data:", summaryData);
+    // Create a default summary data object with minimal valid structure
+    const defaultSummaryData: ProjectionSummaryData = {
+      financials: {
+        startingSavings: startingSavings || 0,
+        income: income || 0,
+        expenses: expenses || 0,
+        studentLoanDebt: studentLoanDebt || 0,
+        emergencyFundAmount: emergencyFundAmount || 0
+      }
+    };
+    setProjectionSummaryData(defaultSummaryData);
+    console.log("Using default projection summary data");
+  }
   setIsLoadingProjectionSummary(false);
   
   // Log when projection summary data updates
@@ -2118,8 +2136,25 @@ useEffect(() => {
         }
       };
       
-      // Update the summary data state
-      setProjectionSummaryData(updatedSummaryData);
+      // Validate the summary data before setting it
+      if (validateProjectionSummaryData(updatedSummaryData)) {
+        setProjectionSummaryData(updatedSummaryData);
+        console.log("Saved projection summary data validated successfully");
+      } else {
+        console.error("Invalid saved projection summary data:", updatedSummaryData);
+        // Create a default summary data object with minimal valid structure
+        const defaultSummaryData: ProjectionSummaryData = {
+          financials: {
+            startingSavings: savedProjection.startingSavings || 0,
+            income: savedProjection.income || 0,
+            expenses: savedProjection.expenses || 0,
+            studentLoanDebt: savedProjection.studentLoanDebt || 0,
+            emergencyFundAmount: savedProjection.emergencyFundAmount || 0
+          }
+        };
+        setProjectionSummaryData(defaultSummaryData);
+        console.log("Using default saved projection summary data");
+      }
       console.log("Projection summary data updated:", JSON.stringify(updatedSummaryData));
     }
   }
