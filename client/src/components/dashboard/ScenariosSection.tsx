@@ -217,8 +217,13 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
 
   // Get the age range across all scenarios with proper validation
   const allAges = scenarios
-    .filter(scenario => isValidProjectionData(scenario?.projectionData))
-    .flatMap(scenario => scenario.projectionData.ages);
+    .filter(scenario => 
+      scenario && 
+      scenario.projectionData && 
+      isValidProjectionData(scenario.projectionData) &&
+      Array.isArray(scenario.projectionData.ages)
+    )
+    .flatMap(scenario => scenario.projectionData.ages || []);
     
   // Use safe defaults if no valid ages found
   const minAge = allAges.length > 0 ? Math.min(...allAges) : 25;
@@ -402,7 +407,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
             <div className="mt-4 text-sm text-gray-600">
               <p>
                 <strong>What this shows:</strong> Net worth rankings based on projections at age {ageSliderValue}.
-                {allAges.includes(ageSliderValue) ? 
+                {Array.isArray(allAges) && allAges.includes(ageSliderValue) ? 
                   " This age appears directly in the data." : 
                   " This age is calculated through interpolation between existing data points."}
               </p>
