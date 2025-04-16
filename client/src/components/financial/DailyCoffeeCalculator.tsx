@@ -4,7 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Coffee, TrendingUp, Droplet, Timer, Coins, PiggyBank, Car, RotateCw } from "lucide-react";
+import { Coffee, TrendingUp, Droplet, Timer, Coins, PiggyBank, Car, RotateCw, CreditCard, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +35,14 @@ const DailyCoffeeCalculator = () => {
   const [jeepPercentageReached, setJeepPercentageReached] = useState<number>(0);
   const [additionalRequired, setAdditionalRequired] = useState<number>(0);
   const [monthlyForJeep, setMonthlyForJeep] = useState<number>(0);
+  
+  // Credit card calculations
+  const [creditCardInterestRate, setCreditCardInterestRate] = useState<number>(18); // 18% default
+  const [minimumPaymentPercent, setMinimumPaymentPercent] = useState<number>(3); // 3% default
+  const [creditCardYearlyCost, setCreditCardYearlyCost] = useState<number>(0);
+  const [creditCardTotalInterest, setCreditCardTotalInterest] = useState<number>(0);
+  const [creditCardTotalCost, setCreditCardTotalCost] = useState<number>(0);
+  const [creditCardPayoffMonths, setCreditCardPayoffMonths] = useState<number>(0);
   
   // Calculate how many years earlier you could retire
   const calculateRetirementYearsAdvanced = (totalAmount: number) => {
