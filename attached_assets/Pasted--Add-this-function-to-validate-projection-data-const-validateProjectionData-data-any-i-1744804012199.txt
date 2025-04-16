@@ -1,0 +1,129 @@
+// Add this function to validate projection data
+const validateProjectionData = (data: any) => {
+  if (!data) return false;
+  if (typeof data !== 'object') return false;
+  if (!Array.isArray(data.ages)) return false;
+  if (!Array.isArray(data.netWorth)) return false;
+  if (!Array.isArray(data.income)) return false;
+  if (!Array.isArray(data.expenses)) return false;
+  return true;
+};
+
+// Add loading state
+const [isLoadingProjection, setIsLoadingProjection] = useState(false);
+
+// Modify the load projection function
+const loadProjection = async (projectionId: number) => {
+  setIsLoadingProjection(true);
+  try {
+    // Clear existing data first
+    setProjectionData(null);
+    
+    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load projection: ${response.statusText}`);
+    }
+    
+    const savedProjection = await response.json();
+    
+    // Parse the projection data
+    let parsedData;
+    try {
+      parsedData = typeof savedProjection.projectionData === 'string' 
+        ? JSON.parse(savedProjection.projectionData)
+        : savedProjection.projectionData;
+    } catch (error) {
+      console.error('Failed to parse projection data:', error);
+      throw new Error('Invalid projection data format');
+    }
+    
+    // Validate the parsed data
+    if (!validateProjectionData(parsedData)) {
+      throw new Error('Invalid projection data structure');
+    }
+    
+    // Set all the state values
+    setProjectionName(savedProjection.name || 'Unnamed Projection');
+    setTimeframe(`${savedProjection.timeframe || 10} Years`);
+    setAge(savedProjection.startingAge || 25);
+    setStartingSavings(savedProjection.startingSavings || 0);
+    setIncome(savedProjection.income || 0);
+    setExpenses(savedProjection.expenses || 0);
+    setIncomeGrowth(savedProjection.incomeGrowth || 0.03);
+    setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
+    
+    // Add a key to force re-render
+    setProjectionData({
+      ...parsedData,
+      _key: `projection-${projectionId}-${Date.now()}`
+    });
+    
+    // Switch to view tab
+    setMainTab("view");
+    
+  } catch (error) {
+    console.error('Error loading projection:', error);
+    // Show error to user
+    toast.error(error.message || 'Failed to load projection');
+  } finally {
+    setIsLoadingProjection(false);
+  }
+};
+
+// Modify the button that loads the projection
+<Button 
+  variant="outline" 
+  size="sm" 
+  onClick={async () => {
+    try {
+      await loadProjection(projection.id);
+    } catch (error) {
+      console.error('Error loading projection:', error);
+      toast.error('Failed to load projection');
+    }
+  }}
+>
+  Load
+</Button>
+
+// Modify the view section
+<TabsContent value="view">
+  <div className="p-6">
+    {isLoadingProjection ? (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    ) : !projectionData ? (
+      <div className="text-center text-gray-500">
+        Select a projection to view
+      </div>
+    ) : (
+      <>
+        <h3 className="text-xl font-semibold mb-4">Projection Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Only render charts if we have valid data */}
+          {projectionData.ages && projectionData.netWorth && (
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h4 className="font-medium mb-2">Net Worth Over Time</h4>
+              <LineChart
+                data={projectionData.netWorth}
+                labels={projectionData.ages}
+              />
+            </div>
+          )}
+          
+          {projectionData.ages && projectionData.income && projectionData.expenses && (
+            <div className="bg-white p-4 rounded-lg shadow">
+              <h4 className="font-medium mb-2">Income vs Expenses</h4>
+              <DualLineChart
+                data1={projectionData.income}
+                data2={projectionData.expenses}
+                labels={projectionData.ages}
+              />
+            </div>
+          )}
+        </div>
+      </>
+    )}
+  </div>
+</TabsContent>
