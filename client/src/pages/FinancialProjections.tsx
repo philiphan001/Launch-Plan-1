@@ -579,9 +579,12 @@ const FinancialProjections = ({
     }
   }, [autoGenerate, startGeneration, deleteMilestonesMutation.isPending, deletionComplete, isAuthenticated]);
 
+  // State to track if we've already processed the pathway data for favorites
+  const [pathwayDataProcessed, setPathwayDataProcessed] = useState(false);
+
   // Handle auto-generation of financial projections based on pathway data and favorite data
   useEffect(() => {
-    if (autoGenerate && (deletionComplete || !isAuthenticated)) {
+    if (autoGenerate && (deletionComplete || !isAuthenticated) && !pathwayDataProcessed) {
       console.log("Auto-generating financial projection from pathway and favorite data");
       
       try {
@@ -635,11 +638,23 @@ const FinancialProjections = ({
               
               // If there's a career ID, add it to favorites
               if (pathwayData.selectedCareer) {
-                console.log("Adding career to favorites from pathway data:", pathwayData.selectedCareer);
-                addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
+                // Check if we've already added this career in this session by reading from localStorage
+                const lastAddedCareerId = localStorage.getItem('lastAddedCareerId');
+                if (lastAddedCareerId !== String(pathwayData.selectedCareer)) {
+                  console.log("Adding career to favorites from pathway data:", pathwayData.selectedCareer);
+                  addCareerToFavoritesMutation.mutate(pathwayData.selectedCareer);
+                  // Store that we've added this career
+                  localStorage.setItem('lastAddedCareerId', String(pathwayData.selectedCareer));
+                } else {
+                  console.log("Career was already added to favorites in this session:", pathwayData.selectedCareer);
+                }
               }
+              
+              // Mark that we've processed pathway data to prevent infinite loops
+              setPathwayDataProcessed(true);
             } else {
               console.log("User not authenticated, skipping adding favorites");
+              setPathwayDataProcessed(true);
             }
           } catch (error) {
             console.error("Error parsing pathway data from localStorage:", error);
@@ -919,7 +934,8 @@ const FinancialProjections = ({
     deleteMilestonesMutation,
     isAuthenticated,
     userId,
-    deletionComplete
+    deletionComplete,
+    pathwayDataProcessed
   ]);
   
   // Find the included college and career calculations
