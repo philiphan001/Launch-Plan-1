@@ -95,7 +95,33 @@ const Sidebar = ({ user }: SidebarProps) => {
       });
       
       if (response.ok) {
-        // If we're viewing this projection, redirect to the main projections page
+        // COMPREHENSIVE CACHE INVALIDATION:
+        
+        // 1. Remove the specific projection details from cache to prevent ghost data
+        console.log(`Removing projection ${projectionId} from cache`);
+        queryClient.removeQueries({ 
+          queryKey: ['/api/financial-projections/detail', projectionId] 
+        });
+        
+        // 2. Also invalidate any variations of the query that might use a timestamp
+        // This ensures stale data won't persist with different query key variations
+        queryClient.removeQueries({
+          predicate: (query) => {
+            const key = query.queryKey;
+            return Array.isArray(key) && 
+                   key.length >= 2 && 
+                   key[0] === '/api/financial-projections/detail' && 
+                   key[1] === projectionId;
+          }
+        });
+        
+        // 3. Force a refresh of the projections list
+        console.log(`Invalidating projections list for user ${userId}`);
+        queryClient.invalidateQueries({ 
+          queryKey: ['/api/financial-projections', userId] 
+        });
+        
+        // 4. If we're viewing this projection, redirect to the main projections page
         const urlParams = new URLSearchParams(window.location.search);
         const currentId = urlParams.get('id');
         
@@ -103,7 +129,7 @@ const Sidebar = ({ user }: SidebarProps) => {
           setLocation('/projections');
         }
         
-        // Refresh the list
+        // 5. Refresh the list with direct fetch to ensure we have the latest data
         fetchSavedProjections();
         
         toast({
