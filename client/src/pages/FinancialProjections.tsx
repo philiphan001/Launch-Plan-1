@@ -1916,10 +1916,92 @@ useEffect(() => {
     startingSavings, income, expenses, studentLoanDebt, emergencyFundAmount, 
     savedProjection, projectionId]);
 
+// Function to load a saved projection directly without triggering recalculations
+const loadProjection = async (projId: number): Promise<void> => {
+  setIsLoadingProjection(true);
+  setError(null);
+  try {
+    // Clear existing data first
+    setProjectionData(null);
+    
+    const cacheBuster = new Date().getTime();
+    const url = `/api/financial-projections/detail/${projId}?_=${cacheBuster}`;
+    console.log(`Fetching projection data for ID: ${projId} (cache bust: ${cacheBuster})`);
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to load projection: ${response.statusText}`);
+    }
+    
+    const savedProj = await response.json() as FinancialProjection;
+    console.log("Received saved projection:", savedProj);
+    
+    // Parse the projection data
+    let parsedData: any;
+    try {
+      parsedData = typeof savedProj.projectionData === 'string' 
+        ? JSON.parse(savedProj.projectionData) 
+        : savedProj.projectionData;
+    } catch (error) {
+      console.error('Failed to parse projection data:', error);
+      throw new Error('Invalid projection data format');
+    }
+    
+    // Validate the parsed data
+    if (!isValidProjectionData(parsedData)) {
+      console.error("Invalid projection data structure:", parsedData);
+      // Don't throw error, continue with safe data
+      parsedData = ensureValidProjectionData(parsedData);
+    }
+    
+    // Flag to prevent recalculation while loading saved data
+    setIsInLoadingState(true);
+    
+    // Set all the state values
+    setProjectionName(savedProj.name || 'Unnamed Projection');
+    setTimeframe(`${savedProj.timeframe || 10} Years`);
+    setAge(savedProj.startingAge || 25);
+    setStartingSavings(savedProj.startingSavings || 0);
+    setIncome(savedProj.income || 0);
+    setExpenses(savedProj.expenses || 0);
+    setIncomeGrowth(savedProj.incomeGrowth || 0.03);
+    setStudentLoanDebt(savedProj.studentLoanDebt || 0);
+    setEmergencyFundAmount(savedProj.emergencyFundAmount || 10000);
+    setPersonalLoanTermYears(savedProj.personalLoanTermYears || 5);
+    setPersonalLoanInterestRate(savedProj.personalLoanInterestRate || 8.0);
+    
+    // Add a unique key to force chart re-renders
+    parsedData._key = `loaded-projection-${projId}-${Date.now()}`;
+    
+    // Use the saved projection data directly instead of recalculating
+    console.log("Setting projection data directly from saved projection, no recalculation");
+    setProjectionData(parsedData);
+    
+    // Switch to view tab
+    setMainTab("view");
+    
+    // Wait until next render cycle to clear loading state
+    setTimeout(() => {
+      setIsInLoadingState(false);
+    }, 100);
+    
+  } catch (error) {
+    console.error('Error loading projection:', error);
+    setError('Failed to load projection. Please try again.');
+    toast({
+      title: "Error Loading Projection",
+      description: "The saved projection could not be loaded correctly.",
+      variant: "destructive"
+    });
+  } finally {
+    setIsLoadingProjection(false);
+  }
+};
+
 // Create a ref to track previous projection ID
 const previousProjectionIdRef = useRef<number | null>(null);
 
-// Load saved projection data when available - force a hard reset of state when projection ID changes
+// Load saved projection data when available
 useEffect(() => {
   // First, detect if we've switched to a different projection
   const didProjectionChange = previousProjectionIdRef.current !== projectionId;
@@ -1927,10 +2009,15 @@ useEffect(() => {
   // Update the ref
   previousProjectionIdRef.current = projectionId;
   
-  // Reset state immediately if the projection ID changed
-  if (didProjectionChange) {
-    console.log("Projection ID changed, resetting state:", projectionId);
-    // Clear all state values to defaults to prevent stale data
+  // If we have a valid projection ID, load it directly using our new function
+  if (projectionId) {
+    console.log("Loading projection with ID:", projectionId, "using loadProjection function");
+    loadProjection(projectionId);
+  }
+  // Reset state if projection ID was cleared
+  else if (didProjectionChange) {
+    console.log("Projection ID cleared, resetting to defaults");
+    // Clear all state values to defaults
     setProjectionData(null);
     setAge(25);
     setTimeframe("10 Years");
@@ -1945,8 +2032,8 @@ useEffect(() => {
     setProjectionName("");
   }
   
-  // Only proceed if we have projection data and either it just loaded or the projection ID changed
-  if (savedProjection && (!isLoadingSavedProjection || didProjectionChange)) {
+  // Legacy fallback code kept to maintain backward compatibility 
+  if (didProjectionChange && savedProjection && !isLoadingSavedProjection) {
     console.log("Loading saved projection ID:", projectionId, "Data:", savedProjection, "ID changed:", didProjectionChange);
     console.log("Projection has complete data:", 
       savedProjection.startingAge !== null &&
@@ -2352,11 +2439,16 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       }
     };
     
-    // Execute the async function
-    updateProjectionData();
+    // Only execute if not in loading state
+    if (!isInLoadingState) {
+      console.log("Not in loading state, executing updateProjectionData");
+      updateProjectionData();
+    } else {
+      console.log("In loading state, skipping updateProjectionData - preserving original projection data");
+    }
   }, [income, expenses, startingSavings, studentLoanDebt, milestones, timeframe, incomeGrowth, age, 
       spouseLoanTerm, spouseLoanRate, spouseAssetGrowth, costOfLivingFactor, years, locationCostData,
-      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers, autoGenerate]); // Include autoGenerate to recalculate when auto-generating
+      emergencyFundAmount, personalLoanTermYears, personalLoanInterestRate, careers, autoGenerate, isInLoadingState]); // Include isInLoadingState to prevent recalculation when loading saved projections
   
   // Generate financial advice based on current financial state
   useEffect(() => {
