@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Calendar } from "lucide-react";
+import { PlusCircle, Calendar, Info } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { ScenarioData } from "./ScenarioCard";
 import SafeScenarioCard from "./SafeScenarioCard";
@@ -362,19 +362,22 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
       
       {/* Age slider section - always visible */}
       {scenarios.length > 0 && (
-        <Card className="mb-6 bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center mb-2">
-              <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-              <h3 className="text-lg font-medium text-gray-800">Age Comparison Slider</h3>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-primary" />
+              <h3 className="text-lg font-semibold">Age Comparison</h3>
             </div>
-            <p className="text-gray-600 mb-6">
-              Move the slider to see how scenarios compare at different ages. Scenarios will automatically 
-              re-order based on net worth at the selected age.
-            </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center">
-              <div className="flex-1">
+            <div className="bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm flex items-center space-x-2">
+              <span className="text-sm text-gray-500">Selected Age:</span>
+              <span className="text-xl font-bold text-primary">{ageSliderValue}</span>
+            </div>
+          </div>
+          
+          <Card className="overflow-hidden">
+            <CardContent className="pt-6">
+              <div className="flex-1 mb-4">
                 <Slider
                   defaultValue={[30]}
                   min={minAge}
@@ -398,22 +401,18 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                 </div>
               </div>
               
-              <div className="text-center px-6 py-3 bg-white border border-gray-200 rounded-lg">
-                <div className="text-sm text-gray-500">Selected Age</div>
-                <div className="text-3xl font-bold text-blue-600">{ageSliderValue}</div>
+              <div className="bg-blue-50 p-3 rounded-md text-sm text-gray-600">
+                <p className="flex items-center">
+                  <Info className="h-4 w-4 mr-2 text-blue-500" />
+                  Scenarios are ranked by net worth at age {ageSliderValue}
+                  {Array.isArray(allAges) && allAges.includes(ageSliderValue) ? 
+                    " (direct data point)" : 
+                    " (interpolated value)"}
+                </p>
               </div>
-            </div>
-            
-            <div className="mt-4 text-sm text-gray-600">
-              <p>
-                <strong>What this shows:</strong> Net worth rankings based on projections at age {ageSliderValue}.
-                {Array.isArray(allAges) && allAges.includes(ageSliderValue) ? 
-                  " This age appears directly in the data." : 
-                  " This age is calculated through interpolation between existing data points."}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {isLoading ? (
