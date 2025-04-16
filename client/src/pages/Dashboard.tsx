@@ -77,14 +77,8 @@ const Dashboard = ({
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <WelcomeCard username={username} />
-        
-        <Button asChild className="bg-green-600 hover:bg-green-700">
-          <Link href="/projections">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create New Scenario
-          </Link>
-        </Button>
       </div>
       
       {/* Saved Scenarios Section */}
