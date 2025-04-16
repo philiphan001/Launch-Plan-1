@@ -1,4 +1,5 @@
 import { ProjectionData } from "@/components/dashboard/ScenarioCard";
+import { ProjectionSummaryData } from "@/components/financial/ProjectionSummary";
 
 /**
  * Validates if the given object is a valid ProjectionData object

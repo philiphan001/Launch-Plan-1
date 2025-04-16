@@ -5,7 +5,13 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
-import { ensureValidProjectionData, isValidProjectionData, createDefaultProjectionData, validateProjectionSummaryData } from "@/lib/validateProjectionData";
+import { 
+  ensureValidProjectionData, 
+  isValidProjectionData, 
+  createDefaultProjectionData, 
+  validateProjectionSummaryData,
+  createDefaultProjectionSummaryData
+} from "@/lib/validateProjectionData";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
@@ -2142,16 +2148,14 @@ useEffect(() => {
         console.log("Saved projection summary data validated successfully");
       } else {
         console.error("Invalid saved projection summary data:", updatedSummaryData);
-        // Create a default summary data object with minimal valid structure
-        const defaultSummaryData: ProjectionSummaryData = {
-          financials: {
-            startingSavings: savedProjection.startingSavings || 0,
-            income: savedProjection.income || 0,
-            expenses: savedProjection.expenses || 0,
-            studentLoanDebt: savedProjection.studentLoanDebt || 0,
-            emergencyFundAmount: savedProjection.emergencyFundAmount || 0
-          }
-        };
+        // Create a default summary data object using our utility function
+        const defaultSummaryData = createDefaultProjectionSummaryData({
+          startingSavings: savedProjection.startingSavings || 0,
+          income: savedProjection.income || 0,
+          expenses: savedProjection.expenses || 0,
+          studentLoanDebt: savedProjection.studentLoanDebt || 0,
+          emergencyFundAmount: savedProjection.emergencyFundAmount || 0
+        });
         setProjectionSummaryData(defaultSummaryData);
         console.log("Using default saved projection summary data");
       }
