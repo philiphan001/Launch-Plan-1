@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import ScenarioCard, { ScenarioData } from "./ScenarioCard";
+import { ScenarioData } from "./ScenarioCard";
+import SafeScenarioCard from "./SafeScenarioCard";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -367,7 +368,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           }}
         >
           {sortedScenarios.map((scenario, index) => (
-            <ScenarioCard
+            <SafeScenarioCard
               key={`${scenario.id}-${ageSliderValue}-${index}`}
               scenario={scenario}
               index={index}
