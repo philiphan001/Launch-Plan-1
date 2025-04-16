@@ -1,0 +1,179 @@
+// First, let's create a dedicated interface for our projection data
+interface ProjectionSummaryData {
+  college?: {
+    id: number;
+    name: string;
+    totalCost: number;
+    studentLoanAmount: number;
+  };
+  career?: {
+    id: number;
+    title: string;
+    entryLevelSalary: number;
+    projectedSalary: number;
+  };
+  location?: {
+    zipCode: string;
+    city: string;
+    state: string;
+    costOfLivingIndex: number;
+    incomeAdjustmentFactor: number;
+  };
+  financials: {
+    startingSavings: number;
+    income: number;
+    expenses: number;
+    studentLoanDebt: number;
+    emergencyFundAmount: number;
+  };
+}
+
+// Create the ProjectionSummary component
+const ProjectionSummary: React.FC<{
+  data: ProjectionSummaryData | null;
+  isLoading: boolean;
+}> = ({ data, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="animate-pulse flex space-x-4">
+          <div className="flex-1 space-y-4 py-1">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <p className="text-gray-500">No projection data available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow p-4 mb-6">
+      <h3 className="text-lg font-semibold mb-4">Current Projection Summary</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Education Section */}
+        <div className="border-r pr-4">
+          <h4 className="font-medium text-gray-600">Education Path</h4>
+          {data.college ? (
+            <div className="mt-2">
+              <p className="text-sm font-medium">{data.college.name}</p>
+              <p className="text-sm text-gray-500">
+                Total Cost: ${data.college.totalCost.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500">
+                Student Loans: ${data.college.studentLoanAmount.toLocaleString()}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 mt-2">No college selected</p>
+          )}
+        </div>
+
+        {/* Career Section */}
+        <div className="border-r px-4">
+          <h4 className="font-medium text-gray-600">Career Path</h4>
+          {data.career ? (
+            <div className="mt-2">
+              <p className="text-sm font-medium">{data.career.title}</p>
+              <p className="text-sm text-gray-500">
+                Entry Salary: ${data.career.entryLevelSalary.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500">
+                Projected: ${data.career.projectedSalary.toLocaleString()}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 mt-2">No career selected</p>
+          )}
+        </div>
+
+        {/* Location Section */}
+        <div className="pl-4">
+          <h4 className="font-medium text-gray-600">Location</h4>
+          {data.location ? (
+            <div className="mt-2">
+              <p className="text-sm font-medium">
+                {data.location.city}, {data.location.state}
+              </p>
+              <p className="text-sm text-gray-500">
+                Cost of Living: {(data.location.incomeAdjustmentFactor * 100).toFixed(0)}% of average
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 mt-2">No location selected</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Modify the loadProjection function in your FinancialProjections component
+const loadProjection = async (projectionId: number) => {
+  setIsLoadingProjection(true);
+  try {
+    // Load the projection and all related data in parallel
+    const [
+      projectionResponse,
+      collegeResponse,
+      careerResponse,
+      locationResponse
+    ] = await Promise.all([
+      fetch(`/api/financial-projections/detail/${projectionId}`),
+      fetch(`/api/college-calculations/included`),
+      fetch(`/api/career-calculations/included`),
+      fetch(`/api/location-data/current`)
+    ]);
+
+    const savedProjection = await projectionResponse.json();
+    const collegeData = collegeResponse.ok ? await collegeResponse.json() : null;
+    const careerData = careerResponse.ok ? await careerResponse.json() : null;
+    const locationData = locationResponse.ok ? await locationResponse.json() : null;
+
+    // Update all state at once to prevent multiple re-renders
+    const summaryData: ProjectionSummaryData = {
+      college: collegeData,
+      career: careerData,
+      location: locationData,
+      financials: {
+        startingSavings: savedProjection.startingSavings,
+        income: savedProjection.income,
+        expenses: savedProjection.expenses,
+        studentLoanDebt: savedProjection.studentLoanDebt,
+        emergencyFundAmount: savedProjection.emergencyFundAmount
+      }
+    };
+
+    // Update the projection data and summary
+    setProjectionData(savedProjection.projectionData);
+    setProjectionSummaryData(summaryData);
+    setMainTab("view");
+
+  } catch (error) {
+    console.error('Error loading projection:', error);
+    toast.error('Failed to load projection data');
+  } finally {
+    setIsLoadingProjection(false);
+  }
+};
+
+// In your FinancialProjections component render method
+return (
+  <div>
+    <ProjectionSummary
+      data={projectionSummaryData}
+      isLoading={isLoadingProjection}
+    />
+    {/* Rest of your component */}
+  </div>
+);

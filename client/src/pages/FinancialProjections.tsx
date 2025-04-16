@@ -14,6 +14,7 @@ import TaxBreakdownTable from "@/components/financial/TaxBreakdownTable";
 import CashFlowTable from "@/components/financial/CashFlowTable";
 import LocationAdjustmentInfo from "@/components/financial/LocationAdjustmentInfo";
 import CurrentProjectionSummary from "@/components/financial/CurrentProjectionSummary";
+import ProjectionSummary, { ProjectionSummaryData } from "@/components/financial/ProjectionSummary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -1810,6 +1811,52 @@ const effectiveCareerCalc = useMemo(() => {
   // Otherwise use any calculation marked as includedInProjection
   return includedCareerCalc;
 }, [careerCalculations, savedProjection, includedCareerCalc]);
+
+// Create projection summary data from effective calculations and location
+const [projectionSummaryData, setProjectionSummaryData] = useState<ProjectionSummaryData | null>(null);
+const [isLoadingProjectionSummary, setIsLoadingProjectionSummary] = useState<boolean>(false);
+
+// Update projection summary data when effective calculations or location change
+useEffect(() => {
+  setIsLoadingProjectionSummary(true);
+  
+  // Build the summary data from our effective calculations
+  const summaryData: ProjectionSummaryData = {
+    college: effectiveCollegeCalc ? {
+      id: effectiveCollegeCalc.id,
+      name: effectiveCollegeCalc.college?.name || 'Unknown College',
+      totalCost: effectiveCollegeCalc.netPrice || 0,
+      studentLoanAmount: effectiveCollegeCalc.studentLoanAmount || 0
+    } : undefined,
+    
+    career: effectiveCareerCalc ? {
+      id: effectiveCareerCalc.id,
+      title: effectiveCareerCalc.career?.title || 'Unknown Career',
+      entryLevelSalary: effectiveCareerCalc.entryLevelSalary || 0,
+      projectedSalary: effectiveCareerCalc.projectedSalary || 0,
+      education: effectiveCareerCalc.education || undefined
+    } : undefined,
+    
+    location: locationCostData ? {
+      zipCode: locationCostData.zip_code,
+      city: locationCostData.city || 'Unknown',
+      state: locationCostData.state || '',
+      incomeAdjustmentFactor: locationCostData.income_adjustment_factor || undefined
+    } : undefined,
+    
+    financials: {
+      startingSavings: startingSavings || 0,
+      income: income || 0,
+      expenses: expenses || 0,
+      studentLoanDebt: studentLoanDebt || 0,
+      emergencyFundAmount: emergencyFundAmount || 0
+    }
+  };
+  
+  setProjectionSummaryData(summaryData);
+  setIsLoadingProjectionSummary(false);
+}, [effectiveCollegeCalc, effectiveCareerCalc, locationCostData, 
+    startingSavings, income, expenses, studentLoanDebt, emergencyFundAmount]);
 
 // Create a ref to track previous projection ID
 const previousProjectionIdRef = useRef<number | null>(null);
