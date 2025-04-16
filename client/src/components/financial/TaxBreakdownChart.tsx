@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/utils";
 import { ProjectionData } from "@/lib/types";
+import { ensureValidProjectionData } from "@/lib/validateProjectionData";
 
 interface TaxBreakdownChartProps {
   projectionData: ProjectionData;
@@ -16,8 +17,11 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
   const [activeTab, setActiveTab] = useState<"breakdown" | "rates">("breakdown");
 
   useEffect(() => {
-    if (isLoading || !chartRef.current || !projectionData.ages) return;
+    if (isLoading || !chartRef.current) return;
 
+    // Validate projection data
+    const validData = ensureValidProjectionData(projectionData);
+    
     // Destroy any existing chart
     if (chartInstance.current) {
       chartInstance.current.destroy();
@@ -26,7 +30,10 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
     const ctx = chartRef.current.getContext("2d");
     if (!ctx) return;
     
-    const years = projectionData.ages.map(age => age.toString());
+    // Type assertion to handle dynamic fields not in the type definition
+    const data = validData as any;
+    
+    const years = validData.ages.map(age => age.toString());
     
     if (activeTab === "breakdown") {
       // Tax breakdown chart
@@ -37,28 +44,28 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
           datasets: [
             {
               label: "Federal Tax",
-              data: projectionData.federalTax || [],
+              data: validData.federalTax || [],
               backgroundColor: "rgba(54, 162, 235, 0.7)",
               borderRadius: 4,
               stack: "tax",
             },
             {
               label: "State Tax",
-              data: projectionData.stateTax || [],
+              data: validData.stateTax || [],
               backgroundColor: "rgba(75, 192, 192, 0.7)",
               borderRadius: 4,
               stack: "tax",
             },
             {
               label: "Payroll Tax",
-              data: projectionData.payrollTax || [],
+              data: validData.payrollTax || [],
               backgroundColor: "rgba(153, 102, 255, 0.7)",
               borderRadius: 4,
               stack: "tax",
             },
             {
               label: "Retirement Contributions",
-              data: projectionData.retirementContribution || [],
+              data: validData.retirementContribution || [],
               backgroundColor: "rgba(255, 205, 86, 0.7)",
               borderRadius: 4,
               stack: "tax",
@@ -116,7 +123,7 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
           datasets: [
             {
               label: "Effective Tax Rate",
-              data: projectionData.effectiveTaxRate || [],
+              data: validData.effectiveTaxRate || [],
               borderColor: "rgba(54, 162, 235, 1)",
               backgroundColor: "rgba(54, 162, 235, 0.1)",
               tension: 0.4,
@@ -126,7 +133,7 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
             },
             {
               label: "Marginal Tax Rate",
-              data: projectionData.marginalTaxRate || [],
+              data: validData.marginalTaxRate || [],
               borderColor: "rgba(255, 99, 132, 1)",
               backgroundColor: "rgba(255, 99, 132, 0.1)",
               tension: 0.4,

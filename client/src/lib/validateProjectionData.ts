@@ -31,7 +31,14 @@ export const createDefaultProjectionData = (): ProjectionData => {
     ages: [25, 26, 27, 28, 29, 30],
     netWorth: [0, 0, 0, 0, 0, 0],
     income: [0, 0, 0, 0, 0, 0],
-    expenses: [0, 0, 0, 0, 0, 0]
+    expenses: [0, 0, 0, 0, 0, 0],
+    // Tax-related fields
+    federalTax: [0, 0, 0, 0, 0, 0],
+    stateTax: [0, 0, 0, 0, 0, 0],
+    payrollTax: [0, 0, 0, 0, 0, 0],
+    retirementContribution: [0, 0, 0, 0, 0, 0],
+    effectiveTaxRate: [0, 0, 0, 0, 0, 0],
+    marginalTaxRate: [0, 0, 0, 0, 0, 0]
   };
 };
 
