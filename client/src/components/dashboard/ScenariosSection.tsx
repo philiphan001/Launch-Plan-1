@@ -43,81 +43,90 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
   const [, setLocation] = useLocation(); // Wouter hook for navigation
 
   // Fetch user scenarios
-  const { data: scenarios = [], isLoading } = useQuery<ScenarioData[]>({
+  const { data: scenarios = [], isLoading, error } = useQuery<ScenarioData[]>({
     queryKey: ['/api/financial-projections/user', userId],
-    // For demo purposes, we're using a placeholder here
-    // In a real app, this would be fetched from the API
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Only fetch if userId exists
+      if (!userId) {
+        console.log("No user ID provided, skipping projection fetch");
+        return [];
+      }
       
-      // Return mock data
-      return [
-        {
-          id: 1,
-          title: "Software Developer Path",
-          description: "4-year CS degree + Software Developer career in Seattle",
-          tags: {
-            education: "University of Washington (CS)",
-            career: "Software Developer",
-            location: "Seattle, WA"
-          },
-          projectionData: {
-            netWorth: [5000, 12000, -15000, -8000, 15000, 48000, 78000, 102000, 127540, 156000],
-            income: [24000, 25000, 30000, 62000, 65000, 68000, 72000, 76000, 80000, 85000],
-            expenses: [22000, 24000, 45000, 58000, 59000, 60000, 62000, 63000, 65000, 68000],
-            ages: [22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
-          }
-        },
-        {
-          id: 2,
-          title: "Healthcare Professional",
-          description: "Nursing degree + Registered Nurse career in Portland",
-          tags: {
-            education: "Oregon Health & Science University",
-            career: "Registered Nurse",
-            location: "Portland, OR"
-          },
-          projectionData: {
-            netWorth: [2000, 5000, -12000, -5000, 10000, 35000, 65000, 88000, 112000, 140000],
-            income: [22000, 23000, 25000, 58000, 62000, 66000, 70000, 74000, 78000, 82000],
-            expenses: [20000, 22000, 38000, 52000, 56000, 58000, 60000, 61000, 62000, 64000],
-            ages: [22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
-          }
-        },
-        {
-          id: 3,
-          title: "Business Management",
-          description: "Business degree + Marketing Manager career in Chicago",
-          tags: {
-            education: "University of Chicago (Business)",
-            career: "Marketing Manager",
-            location: "Chicago, IL"
-          },
-          projectionData: {
-            netWorth: [3000, 8000, -8000, -2000, 20000, 45000, 72000, 95000, 120000, 148000],
-            income: [26000, 28000, 32000, 60000, 68000, 74000, 80000, 86000, 94000, 102000],
-            expenses: [24000, 26000, 42000, 55000, 60000, 64000, 68000, 72000, 78000, 84000],
-            ages: [22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
-          }
-        },
-        {
-          id: 4,
-          title: "Vocational Path",
-          description: "Technical certification + Electrician career in Phoenix",
-          tags: {
-            education: "Gateway Technical College",
-            career: "Electrician",
-            location: "Phoenix, AZ"
-          },
-          projectionData: {
-            netWorth: [4000, 10000, 18000, 28000, 42000, 58000, 76000, 96000, 118000, 142000],
-            income: [28000, 36000, 45000, 52000, 58000, 64000, 68000, 72000, 76000, 80000],
-            expenses: [25000, 32000, 40000, 46000, 50000, 54000, 58000, 60000, 62000, 64000],
-            ages: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27]
-          }
+      console.log(`Fetching financial projections for user ID: ${userId}`);
+      try {
+        const response = await fetch(`/api/financial-projections/${userId}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch projections: ${response.statusText}`);
         }
-      ];
+        
+        const data = await response.json();
+        console.log(`Received ${data.length} projections for user ID ${userId}`);
+        
+        // Transform API data to match ScenarioData format
+        return data.map((projection: any) => {
+          // Ensure projectionData is properly parsed
+          let projData = projection.projectionData;
+          if (typeof projData === 'string') {
+            try {
+              projData = JSON.parse(projData);
+            } catch (err) {
+              console.error("Error parsing projection data:", err);
+              projData = { netWorth: [], income: [], expenses: [], ages: [] };
+            }
+          }
+          
+          // Extract information from title for tags if not available
+          let educationTag = '';
+          let careerTag = '';
+          let locationTag = '';
+          
+          const title = projection.name || "Untitled Projection";
+          const descriptionParts = title.split('+').map((s: string) => s.trim());
+          
+          if (descriptionParts.length > 1) {
+            // Try to infer education, career, and location from title
+            if (descriptionParts[0].toLowerCase().includes('degree') || 
+                descriptionParts[0].toLowerCase().includes('university') ||
+                descriptionParts[0].toLowerCase().includes('college')) {
+              educationTag = descriptionParts[0];
+            }
+            
+            if (descriptionParts[1]) {
+              // Try to infer career and location from the second part
+              const careerLocation = descriptionParts[1].split('in').map((s: string) => s.trim());
+              if (careerLocation.length > 0) {
+                careerTag = careerLocation[0];
+              }
+              if (careerLocation.length > 1) {
+                locationTag = careerLocation[1];
+              }
+            }
+          }
+          
+          return {
+            id: projection.id,
+            title: projection.name || "Untitled Projection",
+            description: projection.name || "Financial projection scenario",
+            tags: {
+              education: educationTag,
+              career: careerTag,
+              location: locationTag || (projection.locationZipCode ? `Zip: ${projection.locationZipCode}` : '')
+            },
+            projectionData: {
+              netWorth: Array.isArray(projData.netWorthData) ? projData.netWorthData : 
+                         Array.isArray(projData.netWorth) ? projData.netWorth : [],
+              income: Array.isArray(projData.incomeData) ? projData.incomeData : 
+                      Array.isArray(projData.income) ? projData.income : [],
+              expenses: Array.isArray(projData.expensesData) ? projData.expensesData : 
+                        Array.isArray(projData.expenses) ? projData.expenses : [],
+              ages: Array.isArray(projData.ages) ? projData.ages : []
+            }
+          };
+        });
+      } catch (error) {
+        console.error("Error fetching financial projections:", error);
+        throw error;
+      }
     },
     enabled: !!userId,
   });
@@ -427,15 +436,39 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             <p className="mt-2 text-gray-500">Loading your scenarios...</p>
           </div>
         </div>
-      ) : scenarios.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-          <h3 className="text-lg font-medium text-gray-800 mb-2">No Scenarios Yet</h3>
-          <p className="text-gray-600 mb-4">Create your first financial scenario to start seeing projections</p>
-          <Button asChild className="bg-green-600 hover:bg-green-700">
-            <Link href="/projections">
-              <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Scenario
-            </Link>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Scenarios</h3>
+          <p className="text-red-600 mb-4">We encountered a problem loading your saved financial scenarios. Please try again.</p>
+          <Button 
+            variant="outline" 
+            className="border-red-300 text-red-700 hover:bg-red-100"
+            onClick={() => window.location.reload()}
+          >
+            Retry
           </Button>
+        </div>
+      ) : scenarios.length === 0 ? (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <PlusCircle className="h-8 w-8 text-blue-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">No Saved Scenarios Yet</h3>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Create your first financial projection to see how your education, career, and life choices affect your financial future.
+          </p>
+          <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center">
+            <Button asChild className="bg-green-600 hover:bg-green-700">
+              <Link href="/projections">
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Scenario
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/careers">
+                <Info className="mr-2 h-4 w-4" /> Explore Career Options
+              </Link>
+            </Button>
+          </div>
         </div>
       ) : (
         <motion.div 
