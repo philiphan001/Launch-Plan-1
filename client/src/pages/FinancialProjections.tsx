@@ -174,7 +174,7 @@ const FinancialProjections = ({
   const [location, setLocation] = useLocation();
   // This combination of projectionId and timestamp will force a full reset when the URL changes
   const { projectionId, timestamp, autoGenerate } = useMemo(() => {
-    // Parse URL query parameters
+    // Parse URL query parameters - using window.location.search directly to ensure freshness
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const t = params.get('t') || Date.now().toString();
@@ -187,14 +187,15 @@ const FinancialProjections = ({
     console.log("Projection ID changed to:", effectiveId, 
         initialProjectionId ? "(from initialProjectionId)" : "(from URL)", 
         "with timestamp:", t,
-        "autoGenerate:", autoGen);
+        "autoGenerate:", autoGen,
+        "current URL:", window.location.href);
     
     return { 
       projectionId: effectiveId, 
       timestamp: t,
       autoGenerate: autoGen
     };
-  }, [location, initialProjectionId]);
+  }, [location, initialProjectionId, window.location.search]);
 
   // Main tabs for the FinancialProjections page (View, Edit, Compare, Manage)
   const [mainTab, setMainTab] = useState<string>("view");
