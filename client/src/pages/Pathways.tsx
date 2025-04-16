@@ -3432,27 +3432,38 @@ const Pathways = ({
                           
                           // Add selected career to favorites if user is authenticated
                           if (isAuthenticated && user && selectedCareerId) {
-                            console.log(`Adding career to favorites: ID=${selectedCareerId}, Title=${selectedProfession}`);
-                            addCareerToFavorites.mutate(selectedCareerId, {
-                              onSuccess: () => {
-                                console.log('Career added to favorites successfully');
-                                // Show success toast to the user
-                                toast({
-                                  title: "Added to favorites",
-                                  description: `${selectedProfession} has been added to your favorite careers.`,
-                                  variant: "default",
-                                });
-                              },
-                              onError: (error) => {
-                                console.error('Failed to add career to favorites:', error);
-                                // Show error toast to the user
-                                toast({
-                                  title: "Error adding to favorites",
-                                  description: "The career could not be added to your favorites. It might already exist in your favorites.",
-                                  variant: "destructive",
-                                });
-                              }
-                            });
+                            // Store the career ID in localStorage to prevent duplicate additions
+                            const alreadyAdded = localStorage.getItem('lastAddedCareerId') === String(selectedCareerId);
+                            
+                            if (!alreadyAdded) {
+                              console.log(`Adding career to favorites: ID=${selectedCareerId}, Title=${selectedProfession}`);
+                              
+                              // Mark this career as added in localStorage
+                              localStorage.setItem('lastAddedCareerId', String(selectedCareerId));
+                              
+                              addCareerToFavorites.mutate(selectedCareerId, {
+                                onSuccess: () => {
+                                  console.log('Career added to favorites successfully');
+                                  // Show success toast to the user
+                                  toast({
+                                    title: "Added to favorites",
+                                    description: `${selectedProfession} has been added to your favorite careers.`,
+                                    variant: "default",
+                                  });
+                                },
+                                onError: (error) => {
+                                  console.error('Failed to add career to favorites:', error);
+                                  // Show error toast to the user
+                                  toast({
+                                    title: "Error adding to favorites",
+                                    description: "The career could not be added to your favorites. It might already exist in your favorites.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              });
+                            } else {
+                              console.log(`Career ${selectedCareerId} (${selectedProfession}) already added to favorites, skipping`);
+                            }
                           } else {
                             console.log('Not adding career to favorites. Condition failed:', {
                               isAuthenticated,
