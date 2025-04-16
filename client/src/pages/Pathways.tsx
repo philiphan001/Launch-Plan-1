@@ -3620,14 +3620,22 @@ const Pathways = ({
                                           })
                                           .then(() => {
                                             // Then create our new calculation that will be included
+                                            // Log exactly what we're sending
+                                            const requestPayload = JSON.stringify(collegeCalculation);
+                                            console.log('Sending college calculation payload:', requestPayload);
                                             return fetch('/api/college-calculations', {
                                               method: 'POST',
                                               headers: { 'Content-Type': 'application/json' },
-                                              body: JSON.stringify(collegeCalculation)
+                                              body: requestPayload
                                             });
                                           })
-                                          .then(res => {
-                                            if (!res.ok) throw new Error('Failed to create college calculation');
+                                          .then(async res => {
+                                            if (!res.ok) {
+                                              // Get the error details from the response
+                                              const errorData = await res.json();
+                                              console.error('Server validation error:', errorData);
+                                              throw new Error(`Failed to create college calculation: ${JSON.stringify(errorData)}`);
+                                            }
                                             return res.json();
                                           })
                                           .then(data => {
