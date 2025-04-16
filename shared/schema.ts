@@ -442,25 +442,36 @@ export const collegeCalculations = pgTable("college_calculations", {
   includedInProjection: boolean("included_in_projection").default(false),
 });
 
-export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculations).pick({
-  userId: true,
-  collegeId: true,
-  netPrice: true,
-  inState: true,
-  familyContribution: true,
-  workStudy: true,
-  studentLoanAmount: true,
-  financialAid: true,
-  householdIncome: true,
-  householdSize: true,
-  zip: true,
-  tuitionUsed: true,
-  roomAndBoardUsed: true,
-  onCampusHousing: true,
-  totalCost: true,
-  notes: true,
-  includedInProjection: true,
-});
+// Make the college calculation schema more permissive to handle possible null values
+export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculations)
+  .pick({
+    userId: true,
+    collegeId: true,
+    netPrice: true,
+    inState: true,
+    familyContribution: true,
+    workStudy: true,
+    studentLoanAmount: true,
+    financialAid: true,
+    householdIncome: true,
+    householdSize: true,
+    zip: true,
+    tuitionUsed: true,
+    roomAndBoardUsed: true,
+    onCampusHousing: true,
+    totalCost: true,
+    notes: true,
+    includedInProjection: true,
+  })
+  .transform((data) => ({
+    ...data,
+    // Ensure these string fields are never null
+    zip: data.zip || '00000',
+    notes: data.notes || '',
+    // Ensure required numeric fields have defaults
+    familyContribution: data.familyContribution ?? 0,
+    workStudy: data.workStudy ?? 0
+  }));
 
 export type CollegeCalculation = typeof collegeCalculations.$inferSelect;
 export type InsertCollegeCalculation = z.infer<typeof insertCollegeCalculationSchema>;
