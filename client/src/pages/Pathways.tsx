@@ -203,6 +203,7 @@ const Pathways = ({
   
   // Location data type
   interface LocationData {
+    id?: number;              // Added id property
     zip_code: string;
     city: string;
     state: string;
@@ -2106,9 +2107,25 @@ const Pathways = ({
                                     });
                                     
                                     try {
+                                      // Debug to see what's in the selectedLocation
+                                      console.log("Selected Location:", selectedLocation);
+                                      
                                       // The locationData might not have an id property directly, so we'll use whatever identifier we have
-                                      const locationId = selectedLocation.id || 
-                                                        (selectedLocation.zip_code ? parseInt(selectedLocation.zip_code) : null);
+                                      let locationId: number | null = null;
+                                      
+                                      if (selectedLocation?.id) {
+                                        // If the location has an explicit ID, use it
+                                        locationId = selectedLocation.id;
+                                      } else if (selectedLocation?.zip_code) {
+                                        // Otherwise use the ZIP code as the location ID
+                                        // Make sure we're getting a number from the ZIP
+                                        const zipAsNumber = parseInt(selectedLocation.zip_code.toString());
+                                        if (!isNaN(zipAsNumber)) {
+                                          locationId = zipAsNumber;
+                                        }
+                                      }
+                                      
+                                      console.log("Location ID prepared:", locationId, "Career ID:", careerId);
                                       
                                       if (!locationId) {
                                         toast({
