@@ -2134,7 +2134,7 @@ useEffect(() => {
     console.error("Error loading saved projection:", savedProjectionError);
   }
 }, [savedProjection, isLoadingSavedProjection, projectionId, savedProjectionError, initialProjectionId, 
-    effectiveCollegeCalc, effectiveCareerCalc, locationCostData]);
+    effectiveCollegeCalc, effectiveCareerCalc, locationCostData, timestamp]);
 
 // Initialize projection data with a key that depends on projectionId to force re-renders
 const [projectionData, setProjectionData] = useState<any>(() => {
@@ -3322,7 +3322,12 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                   variant="outline" 
                                   size="sm" 
                                   onClick={() => {
-                                    // Reset all state related to projections
+                                    // Log that we're starting to load this projection
+                                    console.log(`----- LOADING PROJECTION ${projection.id} -----`);
+                                    console.log(`Current projection ID in state: ${projectionId}`);
+                                    console.log(`Target projection ID to load: ${projection.id}`);
+                                    
+                                    // First step: Reset all state to defaults to prevent stale data
                                     setProjectionData(null);
                                     setAge(25);
                                     setTimeframe("10 Years");
@@ -3336,37 +3341,37 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                     setPersonalLoanInterestRate(8.0);
                                     setProjectionName("");
                                     
-                                    // Force the React Query cache to evict all related data
-                                    queryClient.removeQueries({ queryKey: ['/api/financial-projections/detail', projection.id] });
-                                    
                                     // Generate a truly unique timestamp to ensure cache busting
                                     const timestamp = Date.now();
                                     
-                                    console.log(`Loading projection ${projection.id} with fresh state and cache at timestamp: ${timestamp}`);
-                                    console.log("DEBUG - Current URL:", window.location.href);
-                                    console.log("DEBUG - Will navigate to:", `/projections?id=${projection.id}&t=${timestamp}`);
-                                    console.log("DEBUG - IMPORTANT: The correct route is /projections, not /financial-projections");
+                                    // Second step: Completely reset all React Query cache
+                                    // This is the most aggressive approach but ensures all stale data is cleared
+                                    queryClient.clear();
+                                    console.log(`Cleared entire React Query cache to prevent stale data`);
                                     
-                                    // Force UI to loading state first to ensure complete reset
+                                    // Third step: Set UI to loading state to indicate transition
                                     setMainTab("loading");
+                                    console.log(`Set UI to loading state during transition`);
                                     
-                                    // Small delay to ensure React has time to process state changes
+                                    // Fourth step: Navigate with URL parameters after a small delay
+                                    // This ensures React has time to process the state resets
                                     setTimeout(() => {
-                                      // Clear the React Query cache completely to force fresh data load
-                                      // This is a more aggressive approach to ensure clean state
-                                      queryClient.clear();
+                                      console.log(`Navigating to projection ${projection.id} with timestamp ${timestamp}`);
+                                      console.log(`Navigation URL: /projections?id=${projection.id}&t=${timestamp}`);
                                       
-                                      console.log(`Completely reset React Query cache and state before loading projection ${projection.id}`);
-                                      
-                                      // Use URL approach for navigation - this triggers all the proper loading mechanisms
+                                      // Use URL approach for navigation which triggers all loading mechanisms
                                       setLocation(`/projections?id=${projection.id}&t=${timestamp}`, {
                                         replace: true // Replace current history entry to avoid back button issues
                                       });
                                       
-                                      // Switch to view tab after a longer delay to ensure all state changes have propagated
+                                      // Final step: Switch to view tab after navigation
                                       setTimeout(() => {
                                         setMainTab("view");
                                         console.log(`Switched to view tab for projection ${projection.id}`);
+                                        
+                                        // Force a refetch of the saved projection data
+                                        refetchProjection();
+                                        console.log(`Triggered manual refetch of projection data`);
                                       }, 300);
                                     }, 100);
                                   }}
