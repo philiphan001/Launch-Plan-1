@@ -1771,12 +1771,17 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
         throw new Error(`Failed to fetch saved projection: ${response.status} ${response.statusText}`);
       }
       
-      const data = await response.json();
+      let data = await response.json();
       
-      // Validate the data structure
-      if (!data || typeof data !== 'object' || !data.id) {
-        console.error("Invalid projection data structure received:", data);
-        throw new Error("Invalid projection data structure");
+      // Validate the data structure - basic validation before processing
+      if (!data || typeof data !== 'object') {
+        console.error("Invalid projection data object received:", data);
+        console.warn("Creating default data instead of throwing error");
+        data = { 
+          id: projectionId || 0,
+          name: "Default Projection",
+          projectionData: createDefaultProjectionData()
+        };
       }
       
       console.log("Successfully loaded projection data:", data.id, data.name, "with projectionData type:", typeof data.projectionData);
@@ -2057,14 +2062,18 @@ useEffect(() => {
             throw new Error('Invalid projection data format');
           }
           
-          // Validate the parsed data using the utility function
+          // Validate and ensure valid projection data
           if (!isValidProjectionData(parsedData)) {
-            console.error('Invalid projection data structure:', parsedData);
-            throw new Error('Invalid projection data structure');
+            console.warn('Invalid projection data structure detected. Creating default data instead of throwing error.');
+            console.error('Invalid data was:', parsedData);
+            
+            // Use the ensureValidProjectionData utility function to create valid data
+            parsedData = ensureValidProjectionData(parsedData);
+            console.log("Created default projection data with fields:", Object.keys(parsedData).join(", "));
+          } else {
+            // Logging for successful parsing
+            console.log("Successfully parsed and validated projection data with fields:", Object.keys(parsedData).join(", "));
           }
-          
-          // Logging for successful parsing
-          console.log("Successfully parsed and validated projection data with fields:", Object.keys(parsedData).join(", "));
           
           // Add a key with the current projection ID to force React to treat this as new data
           // and re-render all dependent components
