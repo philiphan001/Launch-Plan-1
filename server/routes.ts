@@ -821,9 +821,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
+        console.error("DEBUG - Invalid projection ID format:", req.params.id);
         return res.status(400).json({ message: "Invalid projection ID format" });
       }
       
+      console.log("DEBUG - Fetching financial projection with ID:", id);
       const projection = await activeStorage.getFinancialProjection(id);
       if (!projection) {
         return res.status(404).json({ message: "Financial projection not found" });

@@ -610,7 +610,14 @@ export class MemStorage implements IStorage {
   
   // Financial projection methods
   async getFinancialProjection(id: number): Promise<FinancialProjection | undefined> {
-    return this.financialProjections.get(id);
+    const projection = this.financialProjections.get(id);
+    if (!projection) {
+      console.log("DEBUG - Financial projection not found with ID:", id);
+      console.log("DEBUG - Available projection IDs:", [...this.financialProjections.keys()]);
+    } else {
+      console.log("DEBUG - Found financial projection:", projection.id, projection.name);
+    }
+    return projection;
   }
   
   async getFinancialProjectionsByUserId(userId: number): Promise<FinancialProjection[]> {

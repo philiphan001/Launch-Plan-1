@@ -1737,11 +1737,25 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       const url = `/api/financial-projections/detail/${id}?_=${cacheBuster}`;
       console.log(`Making fetch request to: ${url}`);
       
-      const response = await fetch(url);
+      console.log(`DEBUG - Making fetch request to URL: ${url} with full path: ${window.location.origin}${url}`);
+      
+      const response = await fetch(url).catch(error => {
+        console.error("DEBUG - Fetch error:", error);
+        throw error;
+      });
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Failed to fetch projection data: ${response.status} ${response.statusText}`, errorText);
+        
+        // Show additional debug information to help diagnose the issue
+        console.error("DEBUG - Response details:", {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          headers: [...response.headers.entries()].reduce((obj, [key, value]) => ({...obj, [key]: value}), {})
+        });
+        
         throw new Error(`Failed to fetch saved projection: ${response.status} ${response.statusText}`);
       }
       
@@ -3279,6 +3293,8 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                     const timestamp = Date.now();
                                     
                                     console.log(`Loading projection ${projection.id} with fresh state and cache at timestamp: ${timestamp}`);
+                                    console.log("DEBUG - Current URL:", window.location.href);
+                                    console.log("DEBUG - Will navigate to:", `/financial-projections?id=${projection.id}&t=${timestamp}`);
                                     
                                     // Force UI to loading state first to ensure complete reset
                                     setMainTab("loading");
