@@ -46,39 +46,57 @@ const ScenarioCard = ({
   const netWorthChartInstance = useRef<any>(null);
   const cashFlowChartInstance = useRef<any>(null);
   
+  // Safely get the last value from an array
+  const getSafeDataValue = (arr: number[] | undefined): number => {
+    if (!arr || !Array.isArray(arr) || arr.length === 0) {
+      return 0;
+    }
+    return arr[arr.length - 1];
+  };
+
   // Function to get net worth at specific age
   const getNetWorthAtAge = (targetAge: number): number => {
     try {
+      // Extra safety - validate projectionData exists and has valid arrays
+      if (!scenario?.projectionData) {
+        console.warn("Missing projectionData in scenario:", scenario?.id);
+        return 0;
+      }
+      
+      const ages = scenario.projectionData.ages || [];
+      const netWorth = scenario.projectionData.netWorth || [];
+      
       // Check for valid age data
-      if (!scenario.projectionData.ages || scenario.projectionData.ages.length === 0) {
+      if (!Array.isArray(ages) || ages.length === 0 || !Array.isArray(netWorth) || netWorth.length === 0) {
+        console.warn("Invalid ages or netWorth array in scenario:", scenario.id);
         return 0;
       }
       
       // Find the index of the age in the ages array
-      const ageIndex = scenario.projectionData.ages.findIndex(age => age === targetAge);
+      const ageIndex = ages.findIndex(age => age === targetAge);
       
       // If the exact age exists in our data, use that value
-      if (ageIndex !== -1) {
-        const value = scenario.projectionData.netWorth[ageIndex];
+      if (ageIndex !== -1 && ageIndex < netWorth.length) {
+        const value = netWorth[ageIndex];
         return value !== undefined ? value : 0;
       }
       
       // If the target age is smaller than the first age in our data
-      if (targetAge < scenario.projectionData.ages[0]) {
-        const value = scenario.projectionData.netWorth[0]; 
+      if (targetAge < ages[0] && netWorth.length > 0) {
+        const value = netWorth[0]; 
         return value !== undefined ? value : 0;
       }
       
       // If the target age is larger than the last age in our data
-      if (targetAge > scenario.projectionData.ages[scenario.projectionData.ages.length - 1]) {
-        const value = scenario.projectionData.netWorth[scenario.projectionData.netWorth.length - 1];
+      if (ages.length > 0 && netWorth.length > 0 && targetAge > ages[ages.length - 1]) {
+        const value = netWorth[netWorth.length - 1];
         return value !== undefined ? value : 0;
       }
       
       // Find the closest ages before and after the target and interpolate
       let lowerIndex = 0;
-      for (let i = 0; i < scenario.projectionData.ages.length; i++) {
-        if (scenario.projectionData.ages[i] <= targetAge) {
+      for (let i = 0; i < ages.length; i++) {
+        if (ages[i] <= targetAge) {
           lowerIndex = i;
         } else {
           break;
@@ -88,16 +106,22 @@ const ScenarioCard = ({
       const upperIndex = lowerIndex + 1;
       
       // If we're at the last age, just return that value
-      if (upperIndex >= scenario.projectionData.ages.length) {
-        const value = scenario.projectionData.netWorth[lowerIndex];
+      if (upperIndex >= ages.length) {
+        const value = netWorth[lowerIndex];
         return value !== undefined ? value : 0;
       }
       
+      // Safety check on indices
+      if (lowerIndex >= netWorth.length || upperIndex >= netWorth.length) {
+        console.warn("Index out of bounds when interpolating net worth");
+        return netWorth[netWorth.length - 1] || 0;
+      }
+      
       // Calculate the net worth using linear interpolation
-      const lowerAge = scenario.projectionData.ages[lowerIndex];
-      const upperAge = scenario.projectionData.ages[upperIndex];
-      const lowerValue = scenario.projectionData.netWorth[lowerIndex] || 0;
-      const upperValue = scenario.projectionData.netWorth[upperIndex] || 0;
+      const lowerAge = ages[lowerIndex];
+      const upperAge = ages[upperIndex];
+      const lowerValue = netWorth[lowerIndex] || 0;
+      const upperValue = netWorth[upperIndex] || 0;
       
       // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
       const interpolatedValue = lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
@@ -120,6 +144,16 @@ const ScenarioCard = ({
   const colorClass = colorVariants[index % colorVariants.length];
   
   useEffect(() => {
+    // Safety check - ensure we have valid projection data before creating charts
+    const hasValidProjectionData = scenario?.projectionData && 
+                                 Array.isArray(scenario.projectionData.ages) && 
+                                 scenario.projectionData.ages.length > 0;
+    
+    if (!hasValidProjectionData) {
+      console.warn("Missing or invalid projection data in scenario:", scenario?.id);
+      return; // Skip chart creation entirely if data is invalid
+    }
+    
     if (netWorthChartRef.current) {
       const ctx = netWorthChartRef.current.getContext("2d");
       if (ctx) {
@@ -128,8 +162,19 @@ const ScenarioCard = ({
           netWorthChartInstance.current.destroy();
         }
         
-        // Create new net worth chart
-        netWorthChartInstance.current = createMainProjectionChart(ctx, scenario.projectionData, "netWorth");
+        try {
+          // Create new net worth chart with a deep clone of the data to prevent mutations
+          const safeProjectionData = {
+            ages: [...(scenario.projectionData.ages || [])],
+            netWorth: [...(scenario.projectionData.netWorth || [])],
+            income: [...(scenario.projectionData.income || [])],
+            expenses: [...(scenario.projectionData.expenses || [])]
+          };
+          
+          netWorthChartInstance.current = createMainProjectionChart(ctx, safeProjectionData, "netWorth");
+        } catch (err) {
+          console.error("Error creating net worth chart:", err);
+        }
       }
     }
     
@@ -141,15 +186,20 @@ const ScenarioCard = ({
           cashFlowChartInstance.current.destroy();
         }
         
-        // Create cash flow chart with income and expenses
-        const cashFlowData = {
-          ages: scenario.projectionData.ages,
-          income: scenario.projectionData.income,
-          expenses: scenario.projectionData.expenses,
-          netWorth: scenario.projectionData.netWorth // Add netWorth to satisfy type requirement
-        };
-        
-        cashFlowChartInstance.current = createMainProjectionChart(ctx, cashFlowData, "income");
+        try {
+          // Create cash flow chart with income and expenses
+          // Using a fresh object to prevent unexpected mutations
+          const safeProjectionData = {
+            ages: [...(scenario.projectionData.ages || [])],
+            income: [...(scenario.projectionData.income || [])],
+            expenses: [...(scenario.projectionData.expenses || [])],
+            netWorth: [...(scenario.projectionData.netWorth || [])] // Add netWorth to satisfy type requirement
+          };
+          
+          cashFlowChartInstance.current = createMainProjectionChart(ctx, safeProjectionData, "income");
+        } catch (err) {
+          console.error("Error creating cash flow chart:", err);
+        }
       }
     }
     
@@ -266,7 +316,8 @@ const ScenarioCard = ({
                     </div>
                     <div className="text-sm text-gray-500">Net Worth at Age {ageSliderValue}</div>
                     <div className="text-xs text-blue-500 mt-1">
-                      {scenario.projectionData.ages.includes(ageSliderValue) ? 
+                      {scenario?.projectionData?.ages && Array.isArray(scenario.projectionData.ages) &&
+                       scenario.projectionData.ages.includes(ageSliderValue) ? 
                         "(Exact data point)" : 
                         "(Interpolated value)"}
                     </div>
@@ -274,7 +325,10 @@ const ScenarioCard = ({
                 ) : (
                   <>
                     <div className="text-xl font-semibold">
-                      ${Math.max(...scenario.projectionData.netWorth).toLocaleString()}
+                      ${scenario?.projectionData?.netWorth && Array.isArray(scenario.projectionData.netWorth) && 
+                         scenario.projectionData.netWorth.length > 0 ? 
+                         Math.max(...scenario.projectionData.netWorth).toLocaleString() : 
+                         "0"}
                     </div>
                     <div className="text-sm text-gray-500">Projected Peak Net Worth</div>
                   </>
@@ -289,13 +343,13 @@ const ScenarioCard = ({
               <div className="mt-2 grid grid-cols-2 gap-2 text-center">
                 <div>
                   <div className="text-green-600 text-lg font-semibold">
-                    ${scenario.projectionData.income[scenario.projectionData.income.length - 1].toLocaleString()}
+                    ${getSafeDataValue(scenario?.projectionData?.income).toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-500">Annual Income</div>
                 </div>
                 <div>
                   <div className="text-red-600 text-lg font-semibold">
-                    ${scenario.projectionData.expenses[scenario.projectionData.expenses.length - 1].toLocaleString()}
+                    ${getSafeDataValue(scenario?.projectionData?.expenses).toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-500">Annual Expenses</div>
                 </div>
