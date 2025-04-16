@@ -403,7 +403,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               
               <div className="bg-blue-50 p-3 rounded-md text-sm text-gray-600">
                 <p className="flex items-center">
-                  <Info className="h-4 w-4 mr-2 text-blue-500" />
+                  <span className="inline-flex items-center justify-center h-4 w-4 mr-2 text-blue-500 border border-blue-400 rounded-full text-xs font-bold">i</span>
                   Scenarios are ranked by net worth at age {ageSliderValue}
                   {Array.isArray(allAges) && allAges.includes(ageSliderValue) ? 
                     " (direct data point)" : 
