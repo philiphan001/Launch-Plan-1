@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
+import { ensureValidProjectionData } from "@/lib/validateProjectionData";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
@@ -3622,24 +3623,24 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       {/* Detailed Cash Flow Table with collapsible container */}
       {/* Apply the fixLiabilityCalculation function to ensure graduate school loans are properly counted */}
       <CashFlowTable 
-        {...fixLiabilityCalculation(projectionData)}
-        ages={projectionData.ages}
-        income={projectionData.income}
-        spouseIncome={projectionData.spouseIncome}
-        expenses={projectionData.expenses}
-        housingExpenses={projectionData.housing}
-        transportationExpenses={projectionData.transportation}
-        foodExpenses={projectionData.food}
-        healthcareExpenses={projectionData.healthcare}
-        personalInsuranceExpenses={projectionData.personalInsurance}
-        apparelExpenses={projectionData.apparel}
-        servicesExpenses={projectionData.services}
-        entertainmentExpenses={projectionData.entertainment}
-        otherExpenses={projectionData.other}
-        educationExpenses={projectionData.education}
-        childcareExpenses={projectionData.childcare} 
-        debtExpenses={projectionData.debt}
-        discretionaryExpenses={projectionData.discretionary}
+        {...fixLiabilityCalculation(ensureValidProjectionData(projectionData))}
+        ages={ensureValidProjectionData(projectionData).ages}
+        income={ensureValidProjectionData(projectionData).income}
+        spouseIncome={projectionData?.spouseIncome || []}
+        expenses={ensureValidProjectionData(projectionData).expenses}
+        housingExpenses={projectionData?.housing || []}
+        transportationExpenses={projectionData?.transportation || []}
+        foodExpenses={projectionData?.food || []}
+        healthcareExpenses={projectionData?.healthcare || []}
+        personalInsuranceExpenses={projectionData?.personalInsurance || []}
+        apparelExpenses={projectionData?.apparel || []}
+        servicesExpenses={projectionData?.services || []}
+        entertainmentExpenses={projectionData?.entertainment || []}
+        otherExpenses={projectionData?.other || []}
+        educationExpenses={projectionData?.education || []}
+        childcareExpenses={projectionData?.childcare || []}
+        debtExpenses={projectionData?.debt || []}
+        discretionaryExpenses={projectionData?.discretionary || []}
       />
       
       {/* Card to display included college and career calculations */}
