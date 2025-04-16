@@ -1902,26 +1902,114 @@ const Pathways = ({
                           <span className="material-icons mr-1 text-blue-500 text-sm">location_on</span>
                           Location Search
                         </h4>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <Input 
-                              type="text" 
-                              placeholder="Enter ZIP code..." 
-                              value={selectedZipCode}
-                              onChange={(e) => {
-                                setSelectedZipCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 5));
-                              }}
-                              className="flex-1 w-full"
-                              maxLength={5}
-                            />
-                          </div>
+                        
+                        {/* Location search type toggle */}
+                        <div className="flex gap-2 mb-4">
+                          <Button 
+                            variant={searchByZip ? "default" : "outline"}
+                            className={`flex-1 ${searchByZip ? "bg-primary" : ""}`}
+                            onClick={() => setSearchByZip(true)}
+                          >
+                            <span className="flex items-center gap-1">
+                              <span className="material-icons text-sm">pin_drop</span>
+                              Search by Zip Code
+                            </span>
+                          </Button>
+                          <Button 
+                            variant={!searchByZip ? "default" : "outline"} 
+                            className={`flex-1 ${!searchByZip ? "bg-primary" : ""}`}
+                            onClick={() => setSearchByZip(false)}
+                          >
+                            <span className="flex items-center gap-1">
+                              <span className="material-icons text-sm">location_city</span>
+                              Search by City
+                            </span>
+                          </Button>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Enter a ZIP code to see cost of living and salary information for that area.
-                        </p>
+                        
+                        {searchByZip ? (
+                          <div className="mb-3">
+                            <label htmlFor="location-zip-job" className="block text-sm font-medium mb-2">Zip Code</label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="location-zip-job"
+                                placeholder="Enter zip code (e.g. 90210, 02142, 94103)"
+                                className="flex-1"
+                                value={selectedZipCode}
+                                onChange={(e) => setSelectedZipCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 5))}
+                                maxLength={5}
+                              />
+                              <Button 
+                                variant="outline" 
+                                className="flex gap-2 items-center"
+                                disabled={selectedZipCode.length !== 5 || fetchingLocation}
+                                onClick={() => fetchLocationByZipCode(selectedZipCode)}
+                              >
+                                {fetchingLocation ? (
+                                  <>
+                                    <span className="material-icons animate-spin text-sm">refresh</span>
+                                    <span>Searching...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="material-icons text-sm">search</span>
+                                    <span>Find</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                            
+                            <p className="text-xs text-gray-500 mt-2">
+                              Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta)
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="mb-3">
+                            <label htmlFor="location-city-job" className="block text-sm font-medium mb-2">City and State</label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="location-city-job"
+                                placeholder="Enter city name (e.g. San Francisco)"
+                                className="flex-1"
+                                value={citySearchQuery}
+                                onChange={(e) => setCitySearchQuery(e.target.value)}
+                              />
+                              <Select value={selectedState} onValueChange={(value) => setSelectedState(value)}>
+                                <SelectTrigger className="w-[110px]">
+                                  <SelectValue placeholder="State" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectGroup>
+                                    {usStates.map(state => (
+                                      <SelectItem key={state.code} value={state.code}>{state.code}</SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                variant="outline" 
+                                className="flex gap-2 items-center"
+                                disabled={!citySearchQuery || !selectedState || fetchingLocation}
+                                onClick={() => fetchLocationByCityState(citySearchQuery, selectedState)}
+                              >
+                                {fetchingLocation ? (
+                                  <>
+                                    <span className="material-icons animate-spin text-sm">refresh</span>
+                                    <span>Searching...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="material-icons text-sm">search</span>
+                                    <span>Find</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       
-                      {selectedZipCode && selectedZipCode.length === 5 && (
+                      {selectedLocation && (
                         <>
                           {isLoadingLocation ? (
                             <div className="text-center py-8">
