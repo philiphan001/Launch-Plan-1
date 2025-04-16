@@ -6,6 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Add type declaration for our global variable to prevent TypeScript errors
+declare global {
+  interface Window {
+    _lastAddedCareerId?: number;
+  }
+}
 import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
 import RecommendationEngine from "@/components/pathways/RecommendationEngine";
 import IdentityWheel from "@/components/pathways/IdentityWheel";
@@ -294,6 +301,16 @@ const Pathways = ({
   // Add career to favorites mutation
   const addCareerToFavorites = useMutation({
     mutationFn: async (careerId: number) => {
+      // Prevent duplicate API calls with a module-level variable
+      if (window._lastAddedCareerId === careerId) {
+        console.log(`Preventing duplicate career favorite add for ID ${careerId}`);
+        return Promise.resolve({ alreadyAdded: true });
+      }
+      
+      // Set this career as the last added one
+      window._lastAddedCareerId = careerId;
+      
+      console.log(`Actually adding career ${careerId} to favorites`);
       return apiRequest('/api/favorites/careers', {
         method: 'POST',
         body: JSON.stringify({ 
