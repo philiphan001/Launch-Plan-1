@@ -1329,12 +1329,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("College calculation request body:", JSON.stringify(req.body));
       
       // Sanitize input data - ensure all required string fields have default values
+      // AND convert decimal values to integers
       const sanitizedData = {
         ...req.body,
+        // Fix string fields
         zip: req.body.zip || '00000',
         notes: req.body.notes || '',
-        familyContribution: req.body.familyContribution ?? 0,
-        workStudy: req.body.workStudy ?? 0
+        // Fix numeric fields
+        familyContribution: req.body.familyContribution ? Math.round(Number(req.body.familyContribution)) : 0,
+        workStudy: req.body.workStudy ? Math.round(Number(req.body.workStudy)) : 0,
+        // Round all decimal values to integers for database compatibility
+        netPrice: Math.round(Number(req.body.netPrice)),
+        studentLoanAmount: Math.round(Number(req.body.studentLoanAmount)),
+        financialAid: Math.round(Number(req.body.financialAid)),
+        totalCost: Math.round(Number(req.body.totalCost)),
+        tuitionUsed: Math.round(Number(req.body.tuitionUsed)),
+        roomAndBoardUsed: Math.round(Number(req.body.roomAndBoardUsed))
       };
       
       // Log the sanitized data
