@@ -231,6 +231,11 @@ const FinancialProjections = ({
   const [calculationsSectionOpen, setCalculationsSectionOpen] = useState<boolean>(true);
   const [adviceSectionOpen, setAdviceSectionOpen] = useState<boolean>(true);
   
+  // Add state to track whether we're loading projection data
+  const [isInLoadingState, setIsInLoadingState] = useState<boolean>(false);
+  const [isLoadingProjection, setIsLoadingProjection] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<any>(null);
 
