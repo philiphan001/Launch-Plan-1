@@ -93,6 +93,51 @@ const DailyCoffeeCalculator = () => {
     return numerator / denominator;
   };
   
+  // Calculate credit card payments and interest
+  const calculateCreditCardCost = (monthlyCharges: number, interestRate: number, minPaymentPercent: number) => {
+    const annualRate = interestRate / 100;
+    const monthlyRate = annualRate / 12;
+    const minPaymentDecimal = minPaymentPercent / 100;
+    
+    // Calculate yearly charges for coffee
+    const yearlyCharges = monthlyCharges * 12;
+    
+    let balance = yearlyCharges; // Initial balance after one year of coffee purchases
+    let totalPaid = 0;
+    let totalInterest = 0;
+    let months = 0;
+    
+    // Simulate paying minimum payment until balance is paid off
+    while (balance > 1) { // Using 1 as threshold to avoid floating point issues
+      // Calculate minimum payment (either percentage or $25, whichever is higher)
+      const minimumPayment = Math.max(balance * minPaymentDecimal, 25);
+      
+      // Calculate interest for this month
+      const interestThisMonth = balance * monthlyRate;
+      
+      // Apply payment
+      const principalPayment = minimumPayment - interestThisMonth;
+      balance -= principalPayment;
+      
+      // Update totals
+      totalPaid += minimumPayment;
+      totalInterest += interestThisMonth;
+      months++;
+      
+      // Safety check to prevent infinite loops
+      if (months > 1000) {
+        break;
+      }
+    }
+    
+    return {
+      totalCost: yearlyCharges + totalInterest,
+      totalInterest,
+      payoffMonths: months,
+      costMultiplier: (yearlyCharges + totalInterest) / yearlyCharges
+    };
+  };
+  
   // Update calculations when inputs change
   useEffect(() => {
     // Calculate savings
@@ -116,6 +161,9 @@ const DailyCoffeeCalculator = () => {
       ? calculateMonthlyForGoal(jeepAdditionalNeeded, yearsToJeep, annualReturn) 
       : 0;
     
+    // Calculate credit card costs
+    const creditCardResults = calculateCreditCardCost(monthlyAmount, creditCardInterestRate, minimumPaymentPercent);
+    
     // Update state
     setWeeklySavings(weeklyAmount);
     setMonthlySavings(monthlyAmount);
@@ -131,7 +179,13 @@ const DailyCoffeeCalculator = () => {
     setAdditionalRequired(jeepAdditionalNeeded);
     setMonthlyForJeep(additionalMonthly);
     
-  }, [coffeeCost, frequency, yearsToRetirement, annualReturn, currentAge, jeepCost, yearsToJeep]);
+    // Update credit card state
+    setCreditCardYearlyCost(yearlyAmount);
+    setCreditCardTotalInterest(creditCardResults.totalInterest);
+    setCreditCardTotalCost(creditCardResults.totalCost);
+    setCreditCardPayoffMonths(creditCardResults.payoffMonths);
+    
+  }, [coffeeCost, frequency, yearsToRetirement, annualReturn, currentAge, jeepCost, yearsToJeep, creditCardInterestRate, minimumPaymentPercent]);
   
   // Animation variants for the motion components
   const containerVariants = {
@@ -287,7 +341,7 @@ const DailyCoffeeCalculator = () => {
             
             {/* Scenarios Tabs */}
             <Tabs defaultValue="retirement" className="mt-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="retirement" className="flex items-center gap-2">
                   <PiggyBank className="h-4 w-4" />
                   <span>Retirement Impact</span>
@@ -295,6 +349,10 @@ const DailyCoffeeCalculator = () => {
                 <TabsTrigger value="jeep" className="flex items-center gap-2">
                   <Car className="h-4 w-4" />
                   <span>Jeep Savings Goal</span>
+                </TabsTrigger>
+                <TabsTrigger value="credit" className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  <span>Credit Card Cost</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -461,6 +519,152 @@ const DailyCoffeeCalculator = () => {
                           <span className="font-bold text-2xl text-indigo-500 mr-2">•</span>
                           <span>
                             Each <span className="font-bold text-indigo-600">{formatCurrency(coffeeCost)}</span> coffee skipped brings you <span className="font-bold text-indigo-600">{formatCurrency(jeepCost/(jeepSavingsTotal/(coffeeCost*frequency*52*yearsToJeep)))}</span> closer to your Jeep
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </TabsContent>
+              
+              {/* Credit Card Cost Scenario */}
+              <TabsContent value="credit" className="mt-4">
+                <motion.div
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="mt-2"
+                >
+                  <motion.div
+                    variants={itemVariants}
+                    className="bg-gradient-to-r from-red-50 to-rose-50 p-6 rounded-lg border border-red-100 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-red-800">Credit Card Coffee</h3>
+                        <p className="text-sm text-red-600">
+                          See the real cost when paying with credit
+                        </p>
+                      </div>
+                      <CreditCard className="h-8 w-8 text-red-500" />
+                    </div>
+                    
+                    {/* Credit Card Settings */}
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs text-red-700 uppercase tracking-wider font-medium">
+                          Credit Card Interest Rate
+                        </label>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Slider
+                            min={8}
+                            max={36}
+                            step={0.5}
+                            value={[creditCardInterestRate]}
+                            onValueChange={(value) => setCreditCardInterestRate(value[0])}
+                            className="flex-1"
+                          />
+                          <span className="text-red-700 font-semibold w-12 text-right">{creditCardInterestRate}%</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs text-red-700 uppercase tracking-wider font-medium">
+                          Minimum Payment
+                        </label>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Slider
+                            min={1}
+                            max={10}
+                            step={0.5}
+                            value={[minimumPaymentPercent]}
+                            onValueChange={(value) => setMinimumPaymentPercent(value[0])}
+                            className="flex-1"
+                          />
+                          <span className="text-red-700 font-semibold w-12 text-right">{minimumPaymentPercent}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Cost Comparison */}
+                    <div className="mt-6 bg-white/60 p-4 rounded-lg border border-red-100">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="text-sm font-medium text-red-700">Annual Coffee Cost</h4>
+                          <p className="text-2xl font-bold text-red-800">{formatCurrency(creditCardYearlyCost)}</p>
+                          <p className="text-xs text-red-600 mt-1">If you pay as you go</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-red-700">Total Credit Card Cost</h4>
+                          <p className="text-2xl font-bold text-red-800">{formatCurrency(creditCardTotalCost)}</p>
+                          <p className="text-xs text-red-600 mt-1">
+                            <span className="font-semibold">{formatCurrency(creditCardTotalInterest)}</span> in interest charges!
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="mt-4">
+                        <div className="flex justify-between text-xs text-red-600 mb-1">
+                          <span>Coffee Cost</span>
+                          <span>Interest Cost</span>
+                        </div>
+                        <div className="h-6 rounded-lg overflow-hidden bg-red-100 relative">
+                          <div 
+                            className="absolute top-0 left-0 h-full bg-amber-400"
+                            style={{ width: `${(creditCardYearlyCost / creditCardTotalCost) * 100}%` }}
+                          ></div>
+                          <div className="absolute inset-0 flex items-center justify-center text-xs font-semibold">
+                            {((creditCardTotalCost / creditCardYearlyCost) * 100).toFixed(0)}% of original cost
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Payoff Timeline */}
+                    <div className="mt-6">
+                      <div className="flex items-center">
+                        <Timer className="h-5 w-5 text-red-500 mr-2" />
+                        <h4 className="text-base font-semibold text-red-700">Payoff Timeline</h4>
+                      </div>
+                      <div className="mt-2 p-4 bg-white/60 rounded-lg border border-red-100">
+                        <div className="flex flex-col items-center">
+                          <p className="text-4xl font-bold text-red-800">
+                            {creditCardPayoffMonths > 12 
+                              ? `${Math.floor(creditCardPayoffMonths/12)} years ${creditCardPayoffMonths % 12} months` 
+                              : `${creditCardPayoffMonths} months`}
+                          </p>
+                          <p className="text-sm text-red-600 mt-1">To pay off one year of coffee purchases</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* The Insidious Cost Explanation */}
+                    <div className="mt-6 pt-6 border-t border-red-100">
+                      <div className="flex items-center">
+                        <AlertTriangle className="h-6 w-6 text-amber-500 mr-2" />
+                        <h4 className="text-lg font-semibold text-amber-600">The Insidious Cost</h4>
+                      </div>
+                      <p className="mt-2 text-lg">
+                        <span className="font-bold">By charging your coffee,</span> you actually pay:
+                      </p>
+                      <ul className="mt-2 space-y-3">
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
+                          <span>
+                            <span className="font-bold text-amber-600">{((creditCardTotalCost / creditCardYearlyCost) * 100).toFixed(0)}%</span> more than the actual cost
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
+                          <span>
+                            An extra <span className="font-bold text-amber-600">{formatCurrency(creditCardTotalInterest)}</span> in interest payments
+                          </span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="font-bold text-2xl text-amber-600 mr-2">•</span>
+                          <span>
+                            This means a <span className="font-bold text-amber-600">{formatCurrency(coffeeCost)}</span> coffee actually costs you <span className="font-bold text-amber-600">{formatCurrency(coffeeCost * (creditCardTotalCost/creditCardYearlyCost))}</span>
                           </span>
                         </li>
                       </ul>
