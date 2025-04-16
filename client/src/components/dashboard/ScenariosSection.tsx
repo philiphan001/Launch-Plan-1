@@ -38,6 +38,10 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   const [ageSliderValue, setAgeSliderValue] = useState<number>(30); // Default age of 30
   const [useAgeSlider, setUseAgeSlider] = useState<boolean>(true); // Default to active
   const [, setLocation] = useLocation(); // Wouter hook for navigation
+  const [comparisonMetric, setComparisonMetric] = useState<'netWorth' | 'income' | 'expenses'>('netWorth');
+  const [isComparing, setIsComparing] = useState(false);
+
+  const selectedScenarios = scenarios.filter(s => scenariosToCompare.includes(s.id));
 
   // Fetch user scenarios
   const { data: scenarios = [], isLoading } = useQuery<ScenarioData[]>({
@@ -47,7 +51,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
     queryFn: async () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Return mock data
       return [
         {
@@ -129,7 +133,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
     // Use timestamp to ensure React treats this as a new render
     const timestamp = Date.now();
     setLocation(`/projections?id=${scenario.id}&t=${timestamp}`);
-    
+
     // Log that we're navigating to edit
     console.log(`Navigating to edit projection ${scenario.id}`);
   };
@@ -143,22 +147,22 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
     try {
       // Find the index of the age in the ages array
       const ageIndex = scenario.projectionData.ages.findIndex(age => age === targetAge);
-      
+
       // If the exact age exists in our data, use that value
       if (ageIndex !== -1) {
         return scenario.projectionData.netWorth[ageIndex] || 0;
       }
-      
+
       // If the target age is smaller than the first age in our data
       if (targetAge < scenario.projectionData.ages[0]) {
         return scenario.projectionData.netWorth[0] || 0; // Return the first value
       }
-      
+
       // If the target age is larger than the last age in our data
       if (targetAge > scenario.projectionData.ages[scenario.projectionData.ages.length - 1]) {
         return scenario.projectionData.netWorth[scenario.projectionData.netWorth.length - 1] || 0; // Return the last value
       }
-      
+
       // Find the closest ages before and after the target and interpolate
       let lowerIndex = 0;
       for (let i = 0; i < scenario.projectionData.ages.length; i++) {
@@ -168,23 +172,23 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           break;
         }
       }
-      
+
       const upperIndex = lowerIndex + 1;
-      
+
       // If we're at the last age, just return that value
       if (upperIndex >= scenario.projectionData.ages.length) {
         return scenario.projectionData.netWorth[lowerIndex] || 0;
       }
-      
+
       // Calculate the net worth using linear interpolation
       const lowerAge = scenario.projectionData.ages[lowerIndex];
       const upperAge = scenario.projectionData.ages[upperIndex];
       const lowerValue = scenario.projectionData.netWorth[lowerIndex] || 0;
       const upperValue = scenario.projectionData.netWorth[upperIndex] || 0;
-      
+
       // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
       const interpolatedValue = lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
-      
+
       return isNaN(interpolatedValue) ? 0 : interpolatedValue;
     } catch (error) {
       console.error("Error calculating net worth at age", error);
@@ -200,10 +204,10 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
   // Sort scenarios based on selected criteria
   const getSortedScenarios = () => {
     if (!scenarios || scenarios.length === 0) return [];
-    
+
     // Make a shallow copy to avoid mutating the original array
     const scenariosCopy = [...scenarios];
-    
+
     if (useAgeSlider) {
       // Ensure the ageSliderValue is within the valid range before sorting
       return scenariosCopy.sort((a, b) => {
@@ -211,10 +215,10 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           // Sort by net worth at the specific age selected by the slider
           const aNetWorthAtAge = getNetWorthAtAge(a, ageSliderValue);
           const bNetWorthAtAge = getNetWorthAtAge(b, ageSliderValue);
-          
+
           // For debugging
           console.log(`Age ${ageSliderValue} - Scenario ${a.id}: $${aNetWorthAtAge}, Scenario ${b.id}: $${bNetWorthAtAge}`);
-          
+
           // Strict sorting without random factor to ensure consistent order
           return bNetWorthAtAge - aNetWorthAtAge; 
         } catch (error) {
@@ -241,11 +245,11 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
         return aLastExpenses - bLastExpenses; // Lowest first
       });
     }
-    
+
     // Default to recent (by ID in our mock data)
     return scenariosCopy.sort((a, b) => b.id - a.id);
   };
-  
+
   // Get the sorted scenarios
   const sortedScenarios = getSortedScenarios();
 
@@ -271,13 +275,13 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               <SelectItem value="expenses">Lowest Expenses</SelectItem>
             </SelectContent>
           </Select>
-          
+
           {scenarios.length > 1 && (
             <Button variant="outline" onClick={handleCompareScenarios}>
               Compare Scenarios
             </Button>
           )}
-          
+
           <Button asChild className="bg-green-600 hover:bg-green-700">
             <Link href="/projections">
               <PlusCircle className="mr-2 h-4 w-4" /> Create New Scenario
@@ -285,7 +289,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
           </Button>
         </div>
       </div>
-      
+
       {/* Age slider section - always visible */}
       {scenarios.length > 0 && (
         <Card className="mb-6 bg-blue-50 border-blue-200">
@@ -298,7 +302,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               Move the slider to see how scenarios compare at different ages. Scenarios will automatically 
               re-order based on net worth at the selected age.
             </p>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-center">
               <div className="flex-1">
                 <Slider
@@ -323,13 +327,13 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                   <span>Age {maxAge}</span>
                 </div>
               </div>
-              
+
               <div className="text-center px-6 py-3 bg-white border border-gray-200 rounded-lg">
                 <div className="text-sm text-gray-500">Selected Age</div>
                 <div className="text-3xl font-bold text-blue-600">{ageSliderValue}</div>
               </div>
             </div>
-            
+
             <div className="mt-4 text-sm text-gray-600">
               <p>
                 <strong>What this shows:</strong> Net worth rankings based on projections at age {ageSliderValue}.
@@ -389,7 +393,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                 <DialogTitle>{selectedScenario.title}</DialogTitle>
                 <DialogDescription>{selectedScenario.description}</DialogDescription>
               </DialogHeader>
-              
+
               <div className="grid grid-cols-3 gap-4 my-4">
                 {selectedScenario.tags.education && (
                   <div className="bg-gray-50 p-3 rounded-md">
@@ -400,7 +404,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                     <div className="font-medium">{selectedScenario.tags.education}</div>
                   </div>
                 )}
-                
+
                 {selectedScenario.tags.career && (
                   <div className="bg-gray-50 p-3 rounded-md">
                     <div className="flex items-center text-sm font-medium text-gray-500 mb-1">
@@ -410,7 +414,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                     <div className="font-medium">{selectedScenario.tags.career}</div>
                   </div>
                 )}
-                
+
                 {selectedScenario.tags.location && (
                   <div className="bg-gray-50 p-3 rounded-md">
                     <div className="flex items-center text-sm font-medium text-gray-500 mb-1">
@@ -421,13 +425,13 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                   </div>
                 )}
               </div>
-              
+
               <Tabs defaultValue="projections">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="projections">Financial Projections</TabsTrigger>
                   <TabsTrigger value="details">Scenario Details</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="projections">
                   <div className="space-y-4 py-4">
                     <div>
@@ -439,7 +443,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h4 className="font-medium mb-2">Income & Expenses</h4>
                       <div className="h-64 bg-gray-50 p-4 rounded-md">
@@ -451,7 +455,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                     </div>
                   </div>
                 </TabsContent>
-                
+
                 <TabsContent value="details">
                   <div className="space-y-4 py-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -483,7 +487,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                           </ul>
                         </div>
                       </div>
-                      
+
                       <div>
                         <h4 className="font-medium mb-2">Key Financial Metrics</h4>
                         <div className="bg-gray-50 p-4 rounded-md">
@@ -514,7 +518,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                   </div>
                 </TabsContent>
               </Tabs>
-              
+
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDetailsOpen(false)}>Close</Button>
                 <Button onClick={() => handleEditScenario(selectedScenario)}>Edit Scenario</Button>
@@ -533,7 +537,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               Select the scenarios you want to compare side by side
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4">
             <Label>Select scenarios to compare (up to 3)</Label>
             <div className="grid grid-cols-1 gap-2 mt-2">
@@ -566,7 +570,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
                 </div>
               ))}
             </div>
-            
+
             {scenariosToCompare.length > 0 && (
               <div className="mt-6 p-4 bg-gray-50 rounded-md">
                 <h4 className="font-medium mb-4">Comparison Preview</h4>
@@ -576,7 +580,7 @@ const ScenariosSection = ({ userId }: ScenariosSectionProps) => {
               </div>
             )}
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setCompareOpen(false)}>Cancel</Button>
             <Button 

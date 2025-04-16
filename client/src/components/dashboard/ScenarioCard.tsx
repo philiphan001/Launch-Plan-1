@@ -22,6 +22,19 @@ export interface ScenarioData {
     expenses: number[];
     ages: number[];
   };
+  isComparing?: boolean;
+  comparisonHighlight?: 'better' | 'worse' | 'neutral';
+}
+
+interface ScenarioCardProps {
+  scenario: ScenarioData;
+  index: number;
+  onViewDetails: (scenario: ScenarioData) => void;
+  onEdit: (scenario: ScenarioData) => void;
+  ageSliderActive?: boolean;
+  ageSliderValue?: number;
+  isComparing?: boolean;
+  comparisonMetric?: 'netWorth' | 'income' | 'expenses';
 }
 
 interface ScenarioCardProps {
