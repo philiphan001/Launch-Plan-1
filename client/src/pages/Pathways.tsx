@@ -1928,7 +1928,7 @@ const Pathways = ({
                           ) : locationData ? (
                             <div className="border rounded-lg p-4 mb-6">
                               <h4 className="font-medium mb-2">{locationData.city}, {locationData.state}</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
                                   <p className="text-sm text-gray-600 mb-1">Cost of Living Index:</p>
                                   <p className="font-medium">{locationData.cost_of_living_index ? locationData.cost_of_living_index.toFixed(2) : 'N/A'}</p>
@@ -1937,6 +1937,46 @@ const Pathways = ({
                                   <p className="text-sm text-gray-600 mb-1">Median Income:</p>
                                   <p className="font-medium">{locationData.median_income ? formatCurrency(locationData.median_income) : 'N/A'}</p>
                                 </div>
+                              </div>
+                              
+                              <h5 className="font-medium text-sm border-b pb-2 mb-3">Monthly Expense Estimates</h5>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {locationData.housing && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Housing:</p>
+                                    <p className="font-medium">{formatCurrency(locationData.housing)}</p>
+                                  </div>
+                                )}
+                                {locationData.food && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Food:</p>
+                                    <p className="font-medium">{formatCurrency(locationData.food)}</p>
+                                  </div>
+                                )}
+                                {locationData.transportation && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Transportation:</p>
+                                    <p className="font-medium">{formatCurrency(locationData.transportation)}</p>
+                                  </div>
+                                )}
+                                {locationData.utilities && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Utilities:</p>
+                                    <p className="font-medium">{formatCurrency(locationData.utilities)}</p>
+                                  </div>
+                                )}
+                                {locationData.healthcare && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Healthcare:</p>
+                                    <p className="font-medium">{formatCurrency(locationData.healthcare)}</p>
+                                  </div>
+                                )}
+                                {locationData.other && (
+                                  <div>
+                                    <p className="text-xs text-gray-600 mb-1">Other:</p>
+                                    <p className="font-medium">{formatCurrency(locationData.other)}</p>
+                                  </div>
+                                )}
                               </div>
                               
                               <div className="mt-4">
@@ -1973,8 +2013,21 @@ const Pathways = ({
                                     });
                                     
                                     try {
+                                      // The locationData might not have an id property directly, so we'll use whatever identifier we have
+                                      const locationId = locationData.id || 
+                                                        (locationData.zip_code ? parseInt(locationData.zip_code) : null);
+                                      
+                                      if (!locationId) {
+                                        toast({
+                                          title: "Location data incomplete",
+                                          description: "Could not determine the location ID. Please try another ZIP code.",
+                                          variant: "destructive"
+                                        });
+                                        return;
+                                      }
+                                      
                                       // Use the createCareerPlan function to handle all the API calls
-                                      const success = await createCareerPlan(careerId, locationData.id);
+                                      const success = await createCareerPlan(careerId, locationId);
                                       
                                       if (success) {
                                         toast({
