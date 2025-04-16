@@ -75,8 +75,10 @@ interface CollegeCalculation {
   netPrice: number;
   studentLoanAmount: number;
   includedInProjection: boolean;
+  inState?: boolean;
   college?: {
     name: string;
+    type?: string;
   };
 }
 
@@ -1825,8 +1827,10 @@ useEffect(() => {
     college: effectiveCollegeCalc ? {
       id: effectiveCollegeCalc.id,
       name: effectiveCollegeCalc.college?.name || 'Unknown College',
+      type: effectiveCollegeCalc.college?.type,
       totalCost: effectiveCollegeCalc.netPrice || 0,
-      studentLoanAmount: effectiveCollegeCalc.studentLoanAmount || 0
+      studentLoanAmount: effectiveCollegeCalc.studentLoanAmount || 0,
+      inState: effectiveCollegeCalc.inState
     } : undefined,
     
     career: effectiveCareerCalc ? {
@@ -2327,8 +2331,13 @@ const [projectionData, setProjectionData] = useState<any>(() => {
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
       
-      {/* Only show current projection summary if we have college or career calculations */}
-      {(effectiveCollegeCalc || effectiveCareerCalc) ? (
+      {/* Show the new ProjectionSummary component when available */}
+      {projectionSummaryData ? (
+        <ProjectionSummary 
+          data={projectionSummaryData}
+          isLoading={isLoadingProjectionSummary}
+        />
+      ) : (effectiveCollegeCalc || effectiveCareerCalc) ? (
         <CurrentProjectionSummary 
           collegeCalculation={effectiveCollegeCalc} 
           careerCalculation={effectiveCareerCalc}
