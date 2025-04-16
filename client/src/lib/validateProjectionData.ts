@@ -27,19 +27,24 @@ export const isValidProjectionData = (data: any): boolean => {
  * @returns A default ProjectionData object
  */
 export const createDefaultProjectionData = (): ProjectionData => {
-  return {
+  // Create a default ProjectionData object with required fields
+  const defaultData: ProjectionData = {
     ages: [25, 26, 27, 28, 29, 30],
     netWorth: [0, 0, 0, 0, 0, 0],
     income: [0, 0, 0, 0, 0, 0],
-    expenses: [0, 0, 0, 0, 0, 0],
-    // Tax-related fields
-    federalTax: [0, 0, 0, 0, 0, 0],
-    stateTax: [0, 0, 0, 0, 0, 0],
-    payrollTax: [0, 0, 0, 0, 0, 0],
-    retirementContribution: [0, 0, 0, 0, 0, 0],
-    effectiveTaxRate: [0, 0, 0, 0, 0, 0],
-    marginalTaxRate: [0, 0, 0, 0, 0, 0]
+    expenses: [0, 0, 0, 0, 0, 0]
   };
+  
+  // Add extended fields - TypeScript will allow this because of the index signature in ProjectionData
+  const extendedData = defaultData as any;
+  extendedData.federalTax = [0, 0, 0, 0, 0, 0];
+  extendedData.stateTax = [0, 0, 0, 0, 0, 0];
+  extendedData.payrollTax = [0, 0, 0, 0, 0, 0];
+  extendedData.retirementContribution = [0, 0, 0, 0, 0, 0];
+  extendedData.effectiveTaxRate = [0, 0, 0, 0, 0, 0];
+  extendedData.marginalTaxRate = [0, 0, 0, 0, 0, 0];
+  
+  return extendedData;
 };
 
 /**

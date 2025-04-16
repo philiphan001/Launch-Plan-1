@@ -12,6 +12,17 @@ export interface ProjectionData {
   income: number[];
   expenses: number[];
   ages: number[];
+  
+  // Tax-related fields
+  federalTax?: number[];
+  stateTax?: number[];
+  payrollTax?: number[];
+  retirementContribution?: number[];
+  effectiveTaxRate?: number[];
+  marginalTaxRate?: number[];
+  
+  // Allow for additional dynamic fields
+  [key: string]: any;
 }
 
 export interface ScenarioTags {

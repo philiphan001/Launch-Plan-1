@@ -33,7 +33,7 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
     // Type assertion to handle dynamic fields not in the type definition
     const data = validData as any;
     
-    const years = validData.ages.map(age => age.toString());
+    const years = data.ages.map((age: number) => age.toString());
     
     if (activeTab === "breakdown") {
       // Tax breakdown chart
@@ -44,28 +44,28 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
           datasets: [
             {
               label: "Federal Tax",
-              data: validData.federalTax || [],
+              data: data.federalTax || [],
               backgroundColor: "rgba(54, 162, 235, 0.7)",
               borderRadius: 4,
               stack: "tax",
             },
             {
               label: "State Tax",
-              data: validData.stateTax || [],
+              data: data.stateTax || [],
               backgroundColor: "rgba(75, 192, 192, 0.7)",
               borderRadius: 4,
               stack: "tax",
             },
             {
               label: "Payroll Tax",
-              data: validData.payrollTax || [],
+              data: data.payrollTax || [],
               backgroundColor: "rgba(153, 102, 255, 0.7)",
               borderRadius: 4,
               stack: "tax",
             },
             {
               label: "Retirement Contributions",
-              data: validData.retirementContribution || [],
+              data: data.retirementContribution || [],
               backgroundColor: "rgba(255, 205, 86, 0.7)",
               borderRadius: 4,
               stack: "tax",
@@ -123,7 +123,7 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
           datasets: [
             {
               label: "Effective Tax Rate",
-              data: validData.effectiveTaxRate || [],
+              data: data.effectiveTaxRate || [],
               borderColor: "rgba(54, 162, 235, 1)",
               backgroundColor: "rgba(54, 162, 235, 0.1)",
               tension: 0.4,
@@ -133,7 +133,7 @@ const TaxBreakdownChart = ({ projectionData, isLoading }: TaxBreakdownChartProps
             },
             {
               label: "Marginal Tax Rate",
-              data: validData.marginalTaxRate || [],
+              data: data.marginalTaxRate || [],
               borderColor: "rgba(255, 99, 132, 1)",
               backgroundColor: "rgba(255, 99, 132, 0.1)",
               tension: 0.4,
