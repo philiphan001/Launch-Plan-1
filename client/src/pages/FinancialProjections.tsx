@@ -388,14 +388,17 @@ const FinancialProjections = ({
   
   // Query for saved financial projections
   const { data: savedProjections = [], isLoading: isLoadingSavedProjections } = useQuery({
-    queryKey: ['/api/financial-projections', userId],
+    queryKey: ['/api/financial-projections', userId, timestamp], // Include timestamp to force fresh data
     queryFn: async () => {
-      const response = await fetch(`/api/financial-projections/${userId}`);
+      const cacheBuster = new Date().getTime();
+      const response = await fetch(`/api/financial-projections/${userId}?_=${cacheBuster}`);
       if (!response.ok) throw new Error('Failed to fetch saved projections');
       return response.json();
     },
     enabled: !!userId,
-    refetchOnWindowFocus: true
+    staleTime: 10000, // Consider data stale after 10 seconds
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window gains focus
   });
   
   // Get all available careers for reference in milestone processing
@@ -1726,7 +1729,9 @@ const [projectionName, setProjectionName] = useState<string>(`Projection - ${new
 
 // Fetch saved projection data if an ID is provided
 const { data: savedProjection, isLoading: isLoadingSavedProjection, error: savedProjectionError, refetch: refetchProjection } = useQuery({
-  queryKey: ['/api/financial-projections/detail', projectionId], // Use only projectionId to allow cache invalidation
+  queryKey: ['/api/financial-projections/detail', projectionId, timestamp], // Include timestamp to force fresh data
+  staleTime: 0, // Override the default Infinity staleTime to ensure fresh data is fetched
+  enabled: !!projectionId, // Only run query when projectionId exists
   queryFn: async ({ queryKey }) => {
     // Extract the projectionId from the query key for consistency
     const id = queryKey[1] as number | null;
@@ -1799,9 +1804,7 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
       throw error;
     }
   },
-  enabled: !!projectionId, // Only enable this query when we have a projection ID
   retry: 2, // Retry failed requests up to 2 times
-  staleTime: 0, // Consider data immediately stale to allow refetching
   gcTime: 0, // Don't cache results between component mounts (gcTime replaces cacheTime in v5)
   refetchOnMount: true, // Always refetch on component mount
   refetchOnWindowFocus: true // Always refetch when window gains focus
