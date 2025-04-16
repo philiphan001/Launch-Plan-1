@@ -2281,10 +2281,10 @@ const [projectionData, setProjectionData] = useState<any>(() => {
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">Financial Projections</h1>
       
       {/* Only show current projection summary if we have college or career calculations */}
-      {(includedCollegeCalc || includedCareerCalc) ? (
+      {(effectiveCollegeCalc || effectiveCareerCalc) ? (
         <CurrentProjectionSummary 
-          collegeCalculation={includedCollegeCalc} 
-          careerCalculation={includedCareerCalc}
+          collegeCalculation={effectiveCollegeCalc} 
+          careerCalculation={effectiveCareerCalc}
           locationData={locationCostData}
         />
       ) : pathwaySummary && (
@@ -2422,9 +2422,9 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                   onChange={(e) => setStudentLoanDebt(Number(e.target.value))} 
                   className="mt-1"
                 />
-                {includedCollegeCalc && (
+                {effectiveCollegeCalc && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Using student loan amount from {includedCollegeCalc.college?.name}
+                    Using student loan amount from {effectiveCollegeCalc.college?.name}
                   </p>
                 )}
               </div>
@@ -2438,9 +2438,9 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                   onChange={(e) => setIncome(Number(e.target.value))} 
                   className="mt-1"
                 />
-                {includedCareerCalc && (
+                {effectiveCareerCalc && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Using salary from {includedCareerCalc.career?.title} career
+                    Using salary from {effectiveCareerCalc.career?.title} career
                   </p>
                 )}
               </div>
@@ -2554,10 +2554,10 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                       incomeGrowth,
                       studentLoanDebt,
                       projectionData: projectionData,
-                      includesCollegeCalculation: !!includedCollegeCalc,
-                      includesCareerCalculation: !!includedCareerCalc,
-                      collegeCalculationId: includedCollegeCalc?.id || null,
-                      careerCalculationId: includedCareerCalc?.id || null,
+                      includesCollegeCalculation: !!effectiveCollegeCalc,
+                      includesCareerCalculation: !!effectiveCareerCalc,
+                      collegeCalculationId: effectiveCollegeCalc?.id || null,
+                      careerCalculationId: effectiveCareerCalc?.id || null,
                       locationAdjusted: !!locationCostData,
                       locationZipCode: userData?.zipCode || null,
                       costOfLivingIndex: locationCostData ? 
@@ -2903,10 +2903,10 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                         incomeGrowth,
                         studentLoanDebt,
                         projectionData: projectionData,
-                        includesCollegeCalculation: !!includedCollegeCalc,
-                        includesCareerCalculation: !!includedCareerCalc,
-                        collegeCalculationId: includedCollegeCalc?.id || null,
-                        careerCalculationId: includedCareerCalc?.id || null,
+                        includesCollegeCalculation: !!effectiveCollegeCalc,
+                        includesCareerCalculation: !!effectiveCareerCalc,
+                        collegeCalculationId: effectiveCollegeCalc?.id || null,
+                        careerCalculationId: effectiveCareerCalc?.id || null,
                         locationAdjusted: !!locationCostData,
                         locationZipCode: userData?.zipCode || null,
                         costOfLivingIndex: locationCostData ? 
