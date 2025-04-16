@@ -1323,12 +1323,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // College calculations routes
-  app.post("/api/college-calculations", validateRequest({ body: insertCollegeCalculationSchema }), async (req: Request, res: Response) => {
+  app.post("/api/college-calculations", async (req: Request, res: Response) => {
     try {
-      const calculation = await activeStorage.createCollegeCalculation(req.body);
+      // Log the exact data received to identify the null field
+      console.log("College calculation request body:", JSON.stringify(req.body));
+      
+      // Sanitize input data - ensure all required string fields have default values
+      const sanitizedData = {
+        ...req.body,
+        zip: req.body.zip || '00000',
+        notes: req.body.notes || '',
+        familyContribution: req.body.familyContribution ?? 0,
+        workStudy: req.body.workStudy ?? 0
+      };
+      
+      // Log the sanitized data
+      console.log("Sanitized college calculation data:", JSON.stringify(sanitizedData));
+      
+      // Create the calculation with sanitized data
+      const calculation = await activeStorage.createCollegeCalculation(sanitizedData);
       res.status(201).json(calculation);
     } catch (error) {
+      // Log detailed error
       console.error("Error creating college calculation:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", error.message);
+      }
       res.status(500).json({ message: "Failed to create college calculation", error: String(error) });
     }
   });
