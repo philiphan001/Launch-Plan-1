@@ -1,0 +1,59 @@
+// ... existing code ...
+
+const loadProjection = async (projectionId: number): Promise<void> => {
+  setIsLoadingProjection(true);
+  try {
+    // Clear existing data first
+    setProjectionData(null);
+    
+    const response = await fetch(`/api/financial-projections/detail/${projectionId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to load projection: ${response.statusText}`);
+    }
+    
+    const savedProjection = await response.json() as FinancialProjection;
+    
+    // Parse the projection data
+    let parsedData: ProjectionData;
+    try {
+      parsedData = typeof savedProjection.projectionData === 'string' 
+        ? JSON.parse(savedProjection.projectionData) as ProjectionData
+        : savedProjection.projectionData as ProjectionData;
+    } catch (error) {
+      console.error('Failed to parse projection data:', error);
+      throw new Error('Invalid projection data format');
+    }
+    
+    // Validate the parsed data
+    if (!validateProjectionData(parsedData)) {
+      throw new Error('Invalid projection data structure');
+    }
+    
+    // Set all the state values
+    setProjectionName(savedProjection.name || 'Unnamed Projection');
+    setTimeframe(`${savedProjection.timeframe || 10} Years`);
+    setAge(savedProjection.startingAge || 25);
+    setStartingSavings(savedProjection.startingSavings || 0);
+    setIncome(savedProjection.income || 0);
+    setExpenses(savedProjection.expenses || 0);
+    setIncomeGrowth(savedProjection.incomeGrowth || 0.03);
+    setStudentLoanDebt(savedProjection.studentLoanDebt || 0);
+    
+    // Use the saved projection data directly instead of recalculating
+    setProjectionData({
+      ...parsedData,
+      _key: `projection-${projectionId}-${Date.now()}`
+    });
+    
+    // Switch to view tab
+    setMainTab("view");
+    
+  } catch (error) {
+    console.error('Error loading projection:', error);
+    setError('Failed to load projection. Please try again.');
+  } finally {
+    setIsLoadingProjection(false);
+  }
+};
+
+// ... existing code ...
