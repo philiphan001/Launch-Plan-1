@@ -3530,8 +3530,40 @@ const [projectionData, setProjectionData] = useState<any>(() => {
                                         });
                                         
                                         if (response.ok) {
-                                          // Refresh the list after deletion
-                                          queryClient.invalidateQueries({ queryKey: ['/api/financial-projections', userId] });
+                                          // Remove the specific projection from the cache to prevent ghost data
+                                          queryClient.removeQueries({ 
+                                            queryKey: ['/api/financial-projections/detail', projection.id] 
+                                          });
+                                          
+                                          // Also invalidate the list to refresh it
+                                          queryClient.invalidateQueries({ 
+                                            queryKey: ['/api/financial-projections', userId] 
+                                          });
+                                          
+                                          // If we're currently viewing this projection, reset the URL
+                                          if (projectionId === projection.id) {
+                                            // Reset the URL to the base projections page
+                                            window.history.pushState({}, '', '/projections');
+                                            // Reset component state
+                                            setProjectionData(null);
+                                            setAge(25);
+                                            setTimeframe("10 Years");
+                                            setStartingSavings(5000);
+                                            setIncome(40000);
+                                            setExpenses(35000);
+                                            setIncomeGrowth(3.0);
+                                            setStudentLoanDebt(0);
+                                            setEmergencyFundAmount(10000);
+                                            setPersonalLoanTermYears(5);
+                                            setPersonalLoanInterestRate(8.0);
+                                            setProjectionName("");
+                                          }
+                                          
+                                          // Show success message
+                                          toast({
+                                            title: "Projection deleted",
+                                            description: `Successfully deleted "${projection.name}"`,
+                                          });
                                         } else {
                                           throw new Error('Failed to delete projection');
                                         }

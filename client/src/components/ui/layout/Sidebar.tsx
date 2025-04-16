@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Props-based approach for more reliable auth
 interface SidebarProps {
@@ -37,6 +38,7 @@ const Sidebar = ({ user }: SidebarProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [expandProjections, setExpandProjections] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Get user ID from auth context
   const userId = user?.id;
