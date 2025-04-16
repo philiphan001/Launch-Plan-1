@@ -1837,12 +1837,15 @@ const Pathways = ({
                                 onClick={() => {
                                   setSelectedProfession(career.title);
                                   setCareerSearchQuery(career.title);
+                                  setSelectedCareerId(career.id);
                                   
                                   // Update narrative
                                   setUserJourney(`After high school, I am interested in finding a ${
                                     jobType === 'fulltime' ? 'full-time job' : 
                                     jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
                                   } as a ${career.title}.`);
+                                  
+                                  // Don't automatically advance yet - let user see location selection
                                 }}
                               >
                                 <CardContent className="p-4">
@@ -2293,6 +2296,12 @@ const Pathways = ({
               />
             </Step>
           );
+        }
+        // Job pathway - Don't do anything special here, let it continue to the regular flow
+        else if (selectedPath === 'job' && jobType) {
+          // Simply continue with the regular flow from handleNext
+          // This will allow proper job search -> location selection -> create plan
+          return renderCurrentStep();
         }
         // Gap year pathway diagram
         else if (selectedPath === 'gap' && gapYearActivity) {
