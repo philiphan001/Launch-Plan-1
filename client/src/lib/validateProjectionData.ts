@@ -83,3 +83,51 @@ export const createProjectionDataTable = (projectionData: ProjectionData): Array
     expenses: validData.expenses[index] || 0
   }));
 };
+
+/**
+ * Validates if the provided data conforms to the ProjectionSummaryData interface
+ * @param data The data to validate
+ * @returns True if the data is valid, false otherwise
+ */
+export const validateProjectionSummaryData = (data: any): boolean => {
+  if (!data) return false;
+  if (typeof data !== 'object') return false;
+  
+  // Check if the financials object exists and has all required properties
+  if (!data.financials) return false;
+  if (typeof data.financials !== 'object') return false;
+  
+  // Verify the required financials properties
+  const requiredFinancialProps = ['startingSavings', 'income', 'expenses', 'studentLoanDebt', 'emergencyFundAmount'];
+  for (const prop of requiredFinancialProps) {
+    if (typeof data.financials[prop] !== 'number') return false;
+  }
+  
+  // College data is optional, but if present, must have correct structure
+  if (data.college) {
+    if (typeof data.college !== 'object') return false;
+    if (typeof data.college.id !== 'number') return false;
+    if (typeof data.college.name !== 'string') return false;
+    if (typeof data.college.totalCost !== 'number') return false;
+    if (typeof data.college.studentLoanAmount !== 'number') return false;
+  }
+  
+  // Career data is optional, but if present, must have correct structure
+  if (data.career) {
+    if (typeof data.career !== 'object') return false;
+    if (typeof data.career.id !== 'number') return false;
+    if (typeof data.career.title !== 'string') return false;
+    if (typeof data.career.entryLevelSalary !== 'number') return false;
+    if (typeof data.career.projectedSalary !== 'number') return false;
+  }
+  
+  // Location data is optional, but if present, must have correct structure
+  if (data.location) {
+    if (typeof data.location !== 'object') return false;
+    if (typeof data.location.zipCode !== 'string') return false;
+    if (typeof data.location.city !== 'string') return false;
+    if (typeof data.location.state !== 'string') return false;
+  }
+  
+  return true;
+};

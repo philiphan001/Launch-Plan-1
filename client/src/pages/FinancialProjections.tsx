@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { createMainProjectionChart, fixLiabilityCalculation } from "@/lib/charts";
-import { ensureValidProjectionData } from "@/lib/validateProjectionData";
+import { ensureValidProjectionData, isValidProjectionData, createDefaultProjectionData } from "@/lib/validateProjectionData";
 import ExpenseBreakdownChart from "@/components/financial/ExpenseBreakdownChart";
 import ExpenseDebugHelper from "@/components/financial/ExpenseDebugHelper";
 import { DebtBreakdownComponent } from "@/components/financial/DebtBreakdownComponent";
@@ -2008,44 +2008,38 @@ useEffect(() => {
         setPersonalLoanInterestRate(savedProjection.personalLoanInterestRate || 8.0);
       }
       
-      // Parse the saved projection data
+      // Parse the saved projection data with improved validation
       if (savedProjection.projectionData) {
         try {
-          // Handle multi-level stringification that might occur
+          // First, clear existing data to prevent stale information
+          setProjectionData(null);
+          
+          // Parse the projection data with proper validation
           let parsedData;
-          if (typeof savedProjection.projectionData === 'string') {
-            console.log("Parsing string projectionData...");
-            try {
-              // First try to parse it as a string
-              parsedData = JSON.parse(savedProjection.projectionData);
+          
+          try {
+            parsedData = typeof savedProjection.projectionData === 'string' 
+              ? JSON.parse(savedProjection.projectionData)
+              : savedProjection.projectionData;
               
-              // Check if the parsed result is still a string (double-stringified)
-              if (typeof parsedData === 'string') {
-                console.log("Detected double-stringified data, parsing again...");
-                parsedData = JSON.parse(parsedData);
-              }
-              
-              // Verify the parsed data has the expected structure
-              if (!parsedData.ages || !parsedData.netWorth) {
-                console.warn("Parsed data doesn't have expected fields (ages, netWorth):", parsedData);
-              } else {
-                console.log("Successfully parsed projection data with fields:", Object.keys(parsedData).join(", "));
-              }
-            } catch (parseError) {
-              console.error("Error parsing projection data string:", parseError);
-              // Try to parse using a more tolerant approach if regular parsing fails
-              try {
-                parsedData = JSON.parse(savedProjection.projectionData.replace(/\\"/g, '"'));
-                console.log("Parsed data using alternate method");
-              } catch (secondError) {
-                console.error("Failed alternate parsing method:", secondError);
-                throw new Error("Unable to parse projection data");
-              }
+            // Handle double-stringified data that might occur
+            if (typeof parsedData === 'string') {
+              console.log("Detected double-stringified data, parsing again...");
+              parsedData = JSON.parse(parsedData);
             }
-          } else {
-            console.log("Using object projectionData directly...");
-            parsedData = savedProjection.projectionData;
+          } catch (parseError) {
+            console.error('Failed to parse projection data:', parseError);
+            throw new Error('Invalid projection data format');
           }
+          
+          // Validate the parsed data using the utility function
+          if (!isValidProjectionData(parsedData)) {
+            console.error('Invalid projection data structure:', parsedData);
+            throw new Error('Invalid projection data structure');
+          }
+          
+          // Logging for successful parsing
+          console.log("Successfully parsed and validated projection data with fields:", Object.keys(parsedData).join(", "));
           
           // Add a key with the current projection ID to force React to treat this as new data
           // and re-render all dependent components
@@ -2057,23 +2051,24 @@ useEffect(() => {
           console.log("Setting projection data with key:", dataWithKey._key);
           setProjectionData(dataWithKey);
         } catch (error) {
-          console.error("Failed to parse saved projection data:", error);
-          // If we fail to parse, we may need to use the projectionData directly
-          if (typeof savedProjection.projectionData === 'object') {
-            console.log("Using projectionData object directly after parse error");
-            const dataWithKey = {
-              ...savedProjection.projectionData,
-              _key: `projection-${projectionId}-${new Date().getTime()}-recovery`
-            };
-            setProjectionData(dataWithKey);
-          } else {
-            console.error("Cannot recover, projectionData is not an object:", typeof savedProjection.projectionData);
-            toast({
-              title: "Error Loading Projection",
-              description: "There was a problem loading this financial projection. Please try a different one.",
-              variant: "destructive"
-            });
-          }
+          console.error("Failed to process saved projection data:", error);
+          
+          // Provide user feedback
+          toast({
+            title: "Error Loading Projection",
+            description: error instanceof Error ? error.message : "Failed to load projection data",
+            variant: "destructive"
+          });
+          
+          // Use ensureValidProjectionData to create valid default data
+          const defaultData = ensureValidProjectionData(null);
+          const dataWithKey = {
+            ...defaultData,
+            _key: `projection-${projectionId}-${new Date().getTime()}-default`
+          };
+          
+          console.log("Using default projection data as fallback");
+          setProjectionData(dataWithKey);
         }
       }
     };
