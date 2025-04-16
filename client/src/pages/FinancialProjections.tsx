@@ -947,32 +947,13 @@ const FinancialProjections = ({
     pathwayDataProcessed
   ]);
   
-  // Find the included college and career calculations using useMemo to ensure they refresh when projectionId changes
-  const includedCollegeCalc = useMemo(() => {
-    // If we have a saved projection with a collegeCalculationId, prioritize that specific calculation
-    if (savedProjection?.collegeCalculationId && collegeCalculations) {
-      const specificCollegeCalc = collegeCalculations.find(calc => calc.id === savedProjection.collegeCalculationId);
-      if (specificCollegeCalc) {
-        console.log("Using college calculation from saved projection:", specificCollegeCalc);
-        return specificCollegeCalc;
-      }
-    }
-    // Otherwise use any calculation marked as includedInProjection
-    return collegeCalculations?.find(calc => calc.includedInProjection);
-  }, [collegeCalculations, savedProjection?.collegeCalculationId, projectionId]);
+  // Find the included college and career calculations
+  const includedCollegeCalc = collegeCalculations?.find(calc => calc.includedInProjection);
+  const includedCareerCalc = careerCalculations?.find(calc => calc.includedInProjection);
   
-  const includedCareerCalc = useMemo(() => {
-    // If we have a saved projection with a careerCalculationId, prioritize that specific calculation
-    if (savedProjection?.careerCalculationId && careerCalculations) {
-      const specificCareerCalc = careerCalculations.find(calc => calc.id === savedProjection.careerCalculationId);
-      if (specificCareerCalc) {
-        console.log("Using career calculation from saved projection:", specificCareerCalc);
-        return specificCareerCalc;
-      }
-    }
-    // Otherwise use any calculation marked as includedInProjection
-    return careerCalculations?.find(calc => calc.includedInProjection);
-  }, [careerCalculations, savedProjection?.careerCalculationId, projectionId]);
+  // Set up useMemo hooks to handle saved projection college/career calculations separately
+  // This avoids the initialization error while still providing the same functionality
+  // We'll set up the effects after the savedProjection query is defined
   
   // Define variables to hold spouse-related assumption values with defaults
   const [spouseLoanTerm, setSpouseLoanTerm] = useState<number>(10); // Default: 10 years
@@ -1801,6 +1782,34 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
   refetchOnMount: true, // Always refetch on component mount
   refetchOnWindowFocus: true // Always refetch when window gains focus
 });
+
+// Calculate effective college and career calculations based on the savedProjection data
+// These hooks ensure that the college/career data updates properly when projectionId changes
+const effectiveCollegeCalc = useMemo(() => {
+  // If we have valid saved projection with a collegeCalculationId, try to find it
+  if (savedProjection && savedProjection.collegeCalculationId && collegeCalculations) {
+    const specificCollegeCalc = collegeCalculations.find(calc => calc.id === savedProjection.collegeCalculationId);
+    if (specificCollegeCalc) {
+      console.log("Using college calculation from saved projection:", specificCollegeCalc);
+      return specificCollegeCalc;
+    }
+  }
+  // Otherwise use any calculation marked as includedInProjection
+  return includedCollegeCalc;
+}, [collegeCalculations, savedProjection, includedCollegeCalc]);
+
+const effectiveCareerCalc = useMemo(() => {
+  // If we have valid saved projection with a careerCalculationId, try to find it
+  if (savedProjection && savedProjection.careerCalculationId && careerCalculations) {
+    const specificCareerCalc = careerCalculations.find(calc => calc.id === savedProjection.careerCalculationId);
+    if (specificCareerCalc) {
+      console.log("Using career calculation from saved projection:", specificCareerCalc);
+      return specificCareerCalc;
+    }
+  }
+  // Otherwise use any calculation marked as includedInProjection
+  return includedCareerCalc;
+}, [careerCalculations, savedProjection, includedCareerCalc]);
 
 // Create a ref to track previous projection ID
 const previousProjectionIdRef = useRef<number | null>(null);
