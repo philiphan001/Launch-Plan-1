@@ -895,55 +895,68 @@ const FinancialProjections = ({
         setStartingSavings(financialProfile.savingsAmount);
       }
       
-      // Set student loan debt from college calculations
-      if (collegeCalculations && collegeCalculations.length > 0) {
-        // Find the college calculation that's included in projections
-        const includedCollegeCalc = collegeCalculations.find(calc => calc.includedInProjection);
-        if (includedCollegeCalc) {
-          setStudentLoanDebt(includedCollegeCalc.studentLoanAmount || 0);
-        }
-      }
-      
-      // Set income from career calculations
-      if (careerCalculations && careerCalculations.length > 0) {
-        // Find the career calculation that's included in projections
-        const includedCareerCalc = careerCalculations.find(calc => calc.includedInProjection);
-        if (includedCareerCalc && includedCareerCalc.entryLevelSalary) {
-          setIncome(includedCareerCalc.entryLevelSalary);
-        } else if (includedCareerCalc) {
-          setIncome(includedCareerCalc.projectedSalary);
-        }
-      }
-      
-      // Set appropriate defaults for expenses based on income and location
-      if (income > 0) {
-        // Base expenses on income (typically 70-80% of income)
-        const baseExpenses = income * 0.75;
+      // IMPORTANT: Don't apply saved calculations when loading a projection
+      // This check prevents saved calculations from overriding loaded projection data
+      if (!isInLoadingState) {
+        console.log("DEFAULT INITIALIZATION: Not in loading state, applying saved calculations");
         
-        // Apply location adjustment if available
-        if (locationCostData) {
-          // Calculate annual expenses directly from monthly cost of living data
-          const monthlyExpenses = (
-            (locationCostData.housing || 0) +
-            (locationCostData.food || 0) +
-            (locationCostData.transportation || 0) +
-            (locationCostData.healthcare || 0) +
-            (locationCostData.personal_insurance || 0) + 
-            (locationCostData.entertainment || 0) +
-            (locationCostData.services || 0) +
-            (locationCostData.apparel || 0) +
-            (locationCostData.other || 0)
-          );
-          
-          // Convert monthly to annual
-          const annualExpenses = monthlyExpenses * 12;
-          
-          // Use the calculated annual expenses, but ensure it's at least 50% of income
-          // as a sanity check (people generally don't spend less than half their income)
-          setExpenses(Math.max(Math.round(annualExpenses), Math.round(income * 0.5)));
-        } else {
-          setExpenses(Math.round(baseExpenses));
+        // Set student loan debt from college calculations
+        if (collegeCalculations && collegeCalculations.length > 0) {
+          // Find the college calculation that's included in projections
+          const includedCollegeCalc = collegeCalculations.find(calc => calc.includedInProjection);
+          if (includedCollegeCalc) {
+            console.log("DEFAULT INITIALIZATION: Using student loan debt from college calculation:", includedCollegeCalc.studentLoanAmount || 0);
+            setStudentLoanDebt(includedCollegeCalc.studentLoanAmount || 0);
+          }
         }
+        
+        // Set income from career calculations
+        if (careerCalculations && careerCalculations.length > 0) {
+          // Find the career calculation that's included in projections
+          const includedCareerCalc = careerCalculations.find(calc => calc.includedInProjection);
+          if (includedCareerCalc && includedCareerCalc.entryLevelSalary) {
+            console.log("DEFAULT INITIALIZATION: Using entry level salary from career calculation:", includedCareerCalc.entryLevelSalary);
+            setIncome(includedCareerCalc.entryLevelSalary);
+          } else if (includedCareerCalc) {
+            console.log("DEFAULT INITIALIZATION: Using projected salary from career calculation:", includedCareerCalc.projectedSalary);
+            setIncome(includedCareerCalc.projectedSalary);
+          }
+        }
+        
+        // Set appropriate defaults for expenses based on income and location
+        if (income > 0) {
+          // Base expenses on income (typically 70-80% of income)
+          const baseExpenses = income * 0.75;
+          
+          // Apply location adjustment if available
+          if (locationCostData) {
+            // Calculate annual expenses directly from monthly cost of living data
+            const monthlyExpenses = (
+              (locationCostData.housing || 0) +
+              (locationCostData.food || 0) +
+              (locationCostData.transportation || 0) +
+              (locationCostData.healthcare || 0) +
+              (locationCostData.personal_insurance || 0) + 
+              (locationCostData.entertainment || 0) +
+              (locationCostData.services || 0) +
+              (locationCostData.apparel || 0) +
+              (locationCostData.other || 0)
+            );
+            
+            // Convert monthly to annual
+            const annualExpenses = monthlyExpenses * 12;
+            
+            // Use the calculated annual expenses, but ensure it's at least 50% of income
+            // as a sanity check (people generally don't spend less than half their income)
+            console.log("DEFAULT INITIALIZATION: Setting expenses based on location data:", Math.max(Math.round(annualExpenses), Math.round(income * 0.5)));
+            setExpenses(Math.max(Math.round(annualExpenses), Math.round(income * 0.5)));
+          } else {
+            console.log("DEFAULT INITIALIZATION: Setting expenses based on income percentage:", Math.round(baseExpenses));
+            setExpenses(Math.round(baseExpenses));
+          }
+        }
+      } else {
+        console.log("DEFAULT INITIALIZATION: In loading state, skipping saved calculations to preserve loaded projection data");
       }
     }
   }, [
@@ -962,7 +975,8 @@ const FinancialProjections = ({
     isAuthenticated,
     userId,
     deletionComplete,
-    pathwayDataProcessed
+    pathwayDataProcessed,
+    isInLoadingState
   ]);
   
   // Find the included college and career calculations
