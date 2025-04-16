@@ -1,0 +1,131 @@
+// ... existing code ...
+
+const toggleCollegeProjectionMutation = useMutation({
+  mutationFn: async (calculationId: number) => {
+    console.log("Toggling college projection for ID:", calculationId);
+    
+    // First, get all college calculations to find the currently selected one
+    const response = await fetch(`/api/college-calculations/user/${userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch college calculations');
+    }
+    const allCalculations = await response.json();
+    
+    // Find the currently selected calculation
+    const currentlySelected = allCalculations.find((calc: CollegeCalculation) => calc.includedInProjection);
+    
+    // If there's a currently selected calculation and it's not the one we're toggling,
+    // deselect it first
+    if (currentlySelected && currentlySelected.id !== calculationId) {
+      await fetch(`/api/college-calculations/${currentlySelected.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          includedInProjection: false
+        }),
+      });
+    }
+    
+    // Now toggle the new calculation
+    const toggleResponse = await fetch(`/api/college-calculations/${calculationId}/toggle-projection`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+    
+    if (!toggleResponse.ok) {
+      throw new Error('Failed to toggle college projection inclusion');
+    }
+    
+    return toggleResponse.json();
+  },
+  onSuccess: (data) => {
+    console.log("College toggle success, invalidating query cache");
+    // Force an immediate refetch to update the UI
+    queryClient.invalidateQueries({ queryKey: ['/api/college-calculations/user', userId] });
+    queryClient.refetchQueries({ queryKey: ['/api/college-calculations/user', userId] });
+    
+    toast({
+      title: "Financial Projection Updated",
+      description: "This college scenario is now selected for your financial projections. Any previously selected college has been deselected.",
+    });
+  },
+  onError: (error) => {
+    console.error("Error toggling college projection inclusion:", error);
+    toast({
+      title: "Error updating projection",
+      description: "There was a problem including this calculation in your projections. Please try again.",
+      variant: "destructive",
+    });
+  }
+});
+
+const toggleCareerProjectionMutation = useMutation({
+  mutationFn: async (calculationId: number) => {
+    console.log("Toggling career projection for ID:", calculationId);
+    
+    // First, get all career calculations to find the currently selected one
+    const response = await fetch(`/api/career-calculations/user/${userId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch career calculations');
+    }
+    const allCalculations = await response.json();
+    
+    // Find the currently selected calculation
+    const currentlySelected = allCalculations.find((calc: CareerCalculation) => calc.includedInProjection);
+    
+    // If there's a currently selected calculation and it's not the one we're toggling,
+    // deselect it first
+    if (currentlySelected && currentlySelected.id !== calculationId) {
+      await fetch(`/api/career-calculations/${currentlySelected.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          includedInProjection: false
+        }),
+      });
+    }
+    
+    // Now toggle the new calculation
+    const toggleResponse = await fetch(`/api/career-calculations/${calculationId}/toggle-projection`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+    
+    if (!toggleResponse.ok) {
+      throw new Error('Failed to toggle career projection inclusion');
+    }
+    
+    return toggleResponse.json();
+  },
+  onSuccess: (data) => {
+    console.log("Career toggle success, invalidating query cache");
+    // Force an immediate refetch to update the UI
+    queryClient.invalidateQueries({ queryKey: ['/api/career-calculations/user', userId] });
+    queryClient.refetchQueries({ queryKey: ['/api/career-calculations/user', userId] });
+    
+    toast({
+      title: "Financial Projection Updated",
+      description: "This career scenario is now selected for your financial projections. Any previously selected career has been deselected.",
+    });
+  },
+  onError: (error) => {
+    console.error("Error toggling career projection inclusion:", error);
+    toast({
+      title: "Error updating projection",
+      description: "There was a problem including this calculation in your projections. Please try again.",
+      variant: "destructive",
+    });
+  }
+});
+
+// ... existing code ...

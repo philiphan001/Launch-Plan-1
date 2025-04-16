@@ -1349,6 +1349,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         roomAndBoardUsed: Math.round(Number(req.body.roomAndBoardUsed))
       };
       
+      // If this calculation is being included in projections, ensure any existing included calculations are deselected
+      if (sanitizedData.includedInProjection === true && sanitizedData.userId) {
+        console.log(`New college calculation being included in projections for user ${sanitizedData.userId}`);
+        
+        // First, get all college calculations to find the currently selected one
+        const existingCalculations = await activeStorage.getCollegeCalculationsByUserId(sanitizedData.userId);
+        
+        // Find the currently selected calculation
+        const currentlySelected = existingCalculations.find(calc => calc.includedInProjection === true);
+        
+        // If there's a currently selected calculation, deselect it first
+        if (currentlySelected) {
+          console.log(`Deselecting previously included college calculation with ID ${currentlySelected.id}`);
+          await activeStorage.updateCollegeCalculation(currentlySelected.id, {
+            includedInProjection: false
+          });
+        }
+      }
+      
       // Log the sanitized data
       console.log("Sanitized college calculation data:", JSON.stringify(sanitizedData));
       
@@ -1482,6 +1501,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Career calculations routes
   app.post("/api/career-calculations", validateRequest({ body: insertCareerCalculationSchema }), async (req: Request, res: Response) => {
     try {
+      // If this calculation is being included in projections, ensure any existing included calculations are deselected
+      if (req.body.includedInProjection === true && req.body.userId) {
+        console.log(`New career calculation being included in projections for user ${req.body.userId}`);
+        
+        // First, get all career calculations to find the currently selected one
+        const response = await activeStorage.getCareerCalculationsByUserId(req.body.userId);
+        
+        // Find the currently selected calculation
+        const currentlySelected = response.find(calc => calc.includedInProjection);
+        
+        // If there's a currently selected calculation, deselect it first
+        if (currentlySelected) {
+          console.log(`Deselecting previously included career calculation with ID ${currentlySelected.id}`);
+          await activeStorage.updateCareerCalculation(currentlySelected.id, {
+            includedInProjection: false
+          });
+        }
+      }
+      
       const calculation = await activeStorage.createCareerCalculation(req.body);
       res.status(201).json(calculation);
     } catch (error) {
