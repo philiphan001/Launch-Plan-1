@@ -1,5 +1,4 @@
 import WelcomeCard from "@/components/dashboard/WelcomeCard";
-import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import ScenariosSection from "@/components/dashboard/ScenariosSection";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -87,9 +86,6 @@ const Dashboard = ({
           </Link>
         </Button>
       </div>
-      
-      {/* Financial Overview Tabs */}
-      <FinancialOverview userId={user?.id} />
       
       {/* Saved Scenarios Section */}
       <ScenariosSection userId={user?.id} />
