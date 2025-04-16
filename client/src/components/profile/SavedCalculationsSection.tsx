@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Calculator, School, Trash2, Briefcase, Book, GraduationCap } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,6 +98,10 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
   const [activeTab, setActiveTab] = useState<'college' | 'career'>('college');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedCalculationId, setSelectedCalculationId] = useState<number | null>(null);
+  
+  // State to track selected calculations
+  const [selectedCollegeId, setSelectedCollegeId] = useState<number | null>(null);
+  const [selectedCareerId, setSelectedCareerId] = useState<number | null>(null);
   
   // Fetch saved college calculations with automatic refresh
   const { data: collegeCalculations, isLoading: isLoadingCollegeCalcs, error: collegeError } = useQuery({
@@ -392,6 +396,21 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
     const career = careers.find(c => c.id === careerId);
     return career ? career.title : 'Unknown Career';
   };
+  
+  // useEffect to initialize the selected calculations
+  useEffect(() => {
+    // Find the currently selected college calculation
+    const selectedCollege = collegeCalculations?.find(calc => calc.includedInProjection);
+    if (selectedCollege) {
+      setSelectedCollegeId(selectedCollege.id);
+    }
+
+    // Find the currently selected career calculation
+    const selectedCareer = careerCalculations?.find(calc => calc.includedInProjection);
+    if (selectedCareer) {
+      setSelectedCareerId(selectedCareer.id);
+    }
+  }, [collegeCalculations, careerCalculations]);
   
   const isLoading = isLoadingCollegeCalcs || isLoadingColleges || isLoadingCareerCalcs || isLoadingCareers;
   

@@ -1,0 +1,163 @@
+// In Profile.tsx or wherever your saved calculations section is
+
+// First, let's add some state to track the currently selected calculations
+const [selectedCollegeId, setSelectedCollegeId] = useState<number | null>(null);
+const [selectedCareerId, setSelectedCareerId] = useState<number | null>(null);
+
+// Function to update college calculation selection
+const handleCollegeSelectionChange = async (calculationId: number, isSelected: boolean) => {
+  try {
+    // If this calculation is being selected, first deselect any other college calculation
+    if (isSelected) {
+      // Deselect previous selection if exists
+      if (selectedCollegeId && selectedCollegeId !== calculationId) {
+        await fetch(`/api/college-calculations/${selectedCollegeId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            includedInProjection: false
+          }),
+        });
+      }
+      setSelectedCollegeId(calculationId);
+    } else {
+      setSelectedCollegeId(null);
+    }
+
+    // Update the selected/deselected calculation
+    const response = await fetch(`/api/college-calculations/${calculationId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        includedInProjection: isSelected
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update college calculation');
+    }
+
+    // Refresh the calculations list
+    await refetchCollegeCalculations();
+    toast.success(isSelected ? 'College calculation selected for projection' : 'College calculation deselected');
+  } catch (error) {
+    console.error('Error updating college calculation:', error);
+    toast.error('Failed to update college calculation');
+  }
+};
+
+// Function to update career calculation selection
+const handleCareerSelectionChange = async (calculationId: number, isSelected: boolean) => {
+  try {
+    // If this calculation is being selected, first deselect any other career calculation
+    if (isSelected) {
+      // Deselect previous selection if exists
+      if (selectedCareerId && selectedCareerId !== calculationId) {
+        await fetch(`/api/career-calculations/${selectedCareerId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            includedInProjection: false
+          }),
+        });
+      }
+      setSelectedCareerId(calculationId);
+    } else {
+      setSelectedCareerId(null);
+    }
+
+    // Update the selected/deselected calculation
+    const response = await fetch(`/api/career-calculations/${calculationId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        includedInProjection: isSelected
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update career calculation');
+    }
+
+    // Refresh the calculations list
+    await refetchCareerCalculations();
+    toast.success(isSelected ? 'Career calculation selected for projection' : 'Career calculation deselected');
+  } catch (error) {
+    console.error('Error updating career calculation:', error);
+    toast.error('Failed to update career calculation');
+  }
+};
+
+// In your JSX, modify the college calculations section:
+<div className="space-y-4">
+  <h3 className="text-lg font-semibold">Saved College Calculations</h3>
+  {collegeCalculations?.map((calc) => (
+    <div key={calc.id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
+      <div>
+        <h4 className="font-medium">{calc.collegeName}</h4>
+        <p className="text-sm text-gray-600">
+          Total Cost: ${calc.totalCost?.toLocaleString()}
+        </p>
+      </div>
+      <div className="flex items-center space-x-4">
+        <Switch
+          checked={calc.includedInProjection}
+          onCheckedChange={(checked) => handleCollegeSelectionChange(calc.id, checked)}
+          aria-label="Include in projection"
+        >
+          <span className="text-sm text-gray-600">
+            {calc.includedInProjection ? 'Selected for Projection' : 'Select for Projection'}
+          </span>
+        </Switch>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleDeleteCollegeCalculation(calc.id)}
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
+  ))}
+</div>
+
+{/* Career calculations section */}
+<div className="space-y-4">
+  <h3 className="text-lg font-semibold">Saved Career Calculations</h3>
+  {careerCalculations?.map((calc) => (
+    <div key={calc.id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow">
+      <div>
+        <h4 className="font-medium">{calc.careerTitle}</h4>
+        <p className="text-sm text-gray-600">
+          Projected Salary: ${calc.projectedSalary?.toLocaleString()}
+        </p>
+      </div>
+      <div className="flex items-center space-x-4">
+        <Switch
+          checked={calc.includedInProjection}
+          onCheckedChange={(checked) => handleCareerSelectionChange(calc.id, checked)}
+          aria-label="Include in projection"
+        >
+          <span className="text-sm text-gray-600">
+            {calc.includedInProjection ? 'Selected for Projection' : 'Select for Projection'}
+          </span>
+        </Switch>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleDeleteCareerCalculation(calc.id)}
+        >
+          Delete
+        </Button>
+      </div>
+    </div>
+  ))}
+</div>
