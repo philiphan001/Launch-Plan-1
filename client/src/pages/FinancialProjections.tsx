@@ -1884,16 +1884,14 @@ useEffect(() => {
     console.log("Projection summary data validated successfully");
   } else {
     console.error("Invalid projection summary data:", summaryData);
-    // Create a default summary data object with minimal valid structure
-    const defaultSummaryData: ProjectionSummaryData = {
-      financials: {
-        startingSavings: startingSavings || 0,
-        income: income || 0,
-        expenses: expenses || 0,
-        studentLoanDebt: studentLoanDebt || 0,
-        emergencyFundAmount: emergencyFundAmount || 0
-      }
-    };
+    // Create a default summary data object using our utility function
+    const defaultSummaryData = createDefaultProjectionSummaryData({
+      startingSavings: startingSavings || 0,
+      income: income || 0,
+      expenses: expenses || 0,
+      studentLoanDebt: studentLoanDebt || 0,
+      emergencyFundAmount: emergencyFundAmount || 0
+    });
     setProjectionSummaryData(defaultSummaryData);
     console.log("Using default projection summary data");
   }
