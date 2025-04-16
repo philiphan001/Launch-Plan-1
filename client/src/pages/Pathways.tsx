@@ -1702,39 +1702,37 @@ const Pathways = ({
               
               {jobType && (
                 <>
-                  <div className="mt-4 mb-6">
-                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-                      <h4 className="text-sm font-semibold mb-2 flex items-center">
-                        <span className="material-icons mr-1 text-blue-500 text-sm">work</span>
-                        Career Search
-                      </h4>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                            <span className="material-icons text-sm">search</span>
-                          </span>
-                          <Input 
-                            type="text" 
-                            placeholder="Search for careers or occupations..." 
-                            value={careerSearchQuery}
-                            onChange={(e) => {
-                              setCareerSearchQuery(e.target.value);
-                              // Set a narrative if they select a career
-                              if (e.target.value.trim()) {
-                                setUserJourney(`After high school, I am interested in finding a ${
-                                  jobType === 'fulltime' ? 'full-time job' : 
-                                  jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
-                                } as a ${e.target.value.trim()}.`);
-                              }
-                            }}
-                            className="pl-9 flex-1 w-full"
-                          />
-                        </div>
+                  <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                    <h4 className="text-sm font-semibold mb-2 flex items-center">
+                      <span className="material-icons mr-1 text-blue-500 text-sm">work</span>
+                      Career Search
+                    </h4>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                          <span className="material-icons text-sm">search</span>
+                        </span>
+                        <Input 
+                          type="text" 
+                          placeholder="Search for careers or occupations..." 
+                          value={careerSearchQuery}
+                          onChange={(e) => {
+                            setCareerSearchQuery(e.target.value);
+                            // Set a narrative if they select a career
+                            if (e.target.value.trim()) {
+                              setUserJourney(`After high school, I am interested in finding a ${
+                                jobType === 'fulltime' ? 'full-time job' : 
+                                jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
+                              } as a ${e.target.value.trim()}.`);
+                            }
+                          }}
+                          className="pl-9 flex-1 w-full"
+                        />
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Search for careers that interest you. You can search for specific job titles or broader categories.
-                      </p>
                     </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Search for careers that interest you. You can search for specific job titles or broader categories.
+                    </p>
                   </div>
                   
                   {careerSearchQuery.length > 2 && (
@@ -1750,7 +1748,6 @@ const Pathways = ({
                         </div>
                       ) : allCareers && allCareers.length > 0 ? (
                         <div className="space-y-4 mb-6">
-                          {/* Filter careers that match the query AND job type */}
                           {allCareers
                             .filter(career => {
                               // Match search query
@@ -1763,8 +1760,7 @@ const Pathways = ({
                                 (career.alias4 && career.alias4.toLowerCase().includes(careerSearchQuery.toLowerCase())) ||
                                 (career.alias5 && career.alias5.toLowerCase().includes(careerSearchQuery.toLowerCase()));
                               
-                              // Match job type (this could be expanded with more accurate filtering)
-                              // For now, we'll simplify by assuming category or education hints at job type
+                              // Match job type (simple filtering)
                               const matchesJobType = 
                                 jobType === 'fulltime' ? true : // most careers are full-time eligible
                                 jobType === 'parttime' ? 
@@ -1796,9 +1792,6 @@ const Pathways = ({
                                     jobType === 'fulltime' ? 'full-time job' : 
                                     jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
                                   } as a ${career.title}.`);
-                                  
-                                  // Move to next step if there's one
-                                  // handleNext();
                                 }}
                               >
                                 <CardContent className="p-4">
@@ -1815,7 +1808,7 @@ const Pathways = ({
                                       {career.growth_rate && (
                                         <Badge variant="outline" className="mt-1">
                                           {career.growth_rate === 'fast' ? 'Growing Fast' : 
-                                           career.growth_rate === 'average' ? 'Stable Growth' : 'Slow Growth'}
+                                          career.growth_rate === 'average' ? 'Stable Growth' : 'Slow Growth'}
                                         </Badge>
                                       )}
                                     </div>
@@ -1824,7 +1817,6 @@ const Pathways = ({
                               </Card>
                             ))}
                           
-                          {/* Clear Search button */}
                           <div className="flex justify-center">
                             <Button 
                               variant="outline" 
@@ -1846,6 +1838,89 @@ const Pathways = ({
                         </div>
                       )}
                     </>
+                  )}
+                  
+                  {selectedProfession && (
+                    <div className="mt-6 border-t pt-6 border-gray-200">
+                      <h3 className="text-lg font-semibold mb-4">Where would you like to work?</h3>
+                      <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                        <h4 className="text-sm font-semibold mb-2 flex items-center">
+                          <span className="material-icons mr-1 text-blue-500 text-sm">location_on</span>
+                          Location Search
+                        </h4>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input 
+                              type="text" 
+                              placeholder="Enter ZIP code..." 
+                              value={selectedZipCode}
+                              onChange={(e) => {
+                                setSelectedZipCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 5));
+                              }}
+                              className="flex-1 w-full"
+                              maxLength={5}
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Enter a ZIP code to see cost of living and salary information for that area.
+                        </p>
+                      </div>
+                      
+                      {selectedZipCode && selectedZipCode.length === 5 && (
+                        <>
+                          {isLoadingLocation ? (
+                            <div className="text-center py-8">
+                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                              <p className="mt-4 text-gray-600">Loading location information...</p>
+                            </div>
+                          ) : locationData ? (
+                            <div className="border rounded-lg p-4 mb-6">
+                              <h4 className="font-medium mb-2">{locationData.city}, {locationData.state}</h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <p className="text-sm text-gray-600 mb-1">Cost of Living Index:</p>
+                                  <p className="font-medium">{locationData.cost_of_living_index ? locationData.cost_of_living_index.toFixed(2) : 'N/A'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-600 mb-1">Median Income:</p>
+                                  <p className="font-medium">{locationData.median_income ? formatCurrency(locationData.median_income) : 'N/A'}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="mt-4">
+                                <Button
+                                  className="w-full bg-green-500 hover:bg-green-600 text-white"
+                                  onClick={() => {
+                                    // Create plan with career and location data
+                                    // This should mirror the college pathway's create plan functionality
+                                    toast({
+                                      title: "Career plan created!",
+                                      description: `Added ${selectedProfession} in ${locationData.city}, ${locationData.state} to your plan.`,
+                                    });
+                                    
+                                    // TODO: Implement the API call to create a favorite career, 
+                                    // save to calculations, and select for projection
+                                    
+                                    // Navigate to next step
+                                    handleNext();
+                                  }}
+                                >
+                                  <span className="material-icons text-sm mr-1">add_circle</span>
+                                  Create Plan
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-6 border rounded-lg mb-6">
+                              <p className="text-gray-500">
+                                No location data found for this ZIP code.
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   )}
                   
                   <div className="flex justify-between mt-6">
