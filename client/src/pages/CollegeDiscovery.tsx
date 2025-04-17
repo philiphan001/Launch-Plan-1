@@ -300,12 +300,24 @@ const CollegeDiscovery = ({
       (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank > 0 && liberalArtsRank <= 300) : true;
       
     // Check if college is a vocational school (degreePredominant = 1)
+    // We also need to check for schools that have certain keywords in their name
     const matchesVocationalSchool = vocationalSchoolFilter ?
-      (college.degreePredominant === 1) : true;
+      (college.degreePredominant === 1 || 
+       (college.name && (
+         college.name.toLowerCase().includes("technical") ||
+         college.name.toLowerCase().includes("vocational") ||
+         college.name.toLowerCase().includes("trade") ||
+         college.name.toLowerCase().includes("career") ||
+         college.name.toLowerCase().includes("institute")
+       ))
+      ) : true;
       
     // Check if college is a community college (degreePredominant = 2)
+    // We also need to check for schools that have "community college" in their name
     const matchesCommunityCollege = communityCollegeFilter ?
-      (college.degreePredominant === 2) : true;
+      (college.degreePredominant === 2 || 
+       (college.name && college.name.toLowerCase().includes("community college"))
+      ) : true;
     
     return matchesSearch && matchesTuition && matchesAcceptance && 
            matchesType && matchesState && matchesSize && 
@@ -618,6 +630,8 @@ const CollegeDiscovery = ({
                     setSelectedSizes([]);
                     setUsNewsTop150Filter(false);
                     setBestLiberalArtsFilter(false);
+                    setVocationalSchoolFilter(false);
+                    setCommunityCollegeFilter(false);
                     setSortBy('name');  // Reset sort to default
                     setSortOrder('asc'); // Reset sort order to default
                     setCurrentPage(1);
