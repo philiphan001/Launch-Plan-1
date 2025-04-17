@@ -1003,10 +1003,86 @@ const CollegeDiscovery = ({
                   
                   <div className="mt-4">
                     <h3 className="text-lg font-medium mb-2">Additional Information</h3>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-600 text-sm mb-4">
                       This is a {selectedCollege.type || 'college/university'} located in {selectedCollege.location || 'the United States'}.
                       {selectedCollege.size && ` It is considered a ${selectedCollege.size} size institution.`}
+                      {selectedCollege.degreePredominant && ` The predominant degree awarded is ${
+                        selectedCollege.degreePredominant === 1 ? 'Certificate' :
+                        selectedCollege.degreePredominant === 2 ? 'Associate\'s' :
+                        selectedCollege.degreePredominant === 3 ? 'Bachelor\'s' :
+                        selectedCollege.degreePredominant === 4 ? 'Graduate' : 'Unknown'
+                      }.`}
+                      {selectedCollege.degreeHighest && ` The highest degree awarded is ${
+                        selectedCollege.degreeHighest === 1 ? 'Certificate' :
+                        selectedCollege.degreeHighest === 2 ? 'Associate\'s' :
+                        selectedCollege.degreeHighest === 3 ? 'Bachelor\'s' :
+                        selectedCollege.degreeHighest === 4 ? 'Graduate' : 'Unknown'
+                      }.`}
                     </p>
+                    
+                    {/* Academic Metrics Section */}
+                    <h4 className="text-md font-medium mt-4 mb-2">Academic Metrics</h4>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {selectedCollege.admissionRate !== null && selectedCollege.admissionRate !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Admission Rate</div>
+                          <div className="font-medium">{(selectedCollege.admissionRate * 100).toFixed(1)}%</div>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.satAverage !== null && selectedCollege.satAverage !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Average SAT Score</div>
+                          <div className="font-medium">{selectedCollege.satAverage}</div>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.pellGrantRate !== null && selectedCollege.pellGrantRate !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Pell Grant Rate</div>
+                          <div className="font-medium">{(selectedCollege.pellGrantRate * 100).toFixed(1)}%</div>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.completionRate4yr !== null && selectedCollege.completionRate4yr !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">4-Year Completion Rate</div>
+                          <div className="font-medium">{(selectedCollege.completionRate4yr * 100).toFixed(1)}%</div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Financial Metrics Section */}
+                    <h4 className="text-md font-medium mt-4 mb-2">Financial Metrics</h4>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {selectedCollege.medianEarnings10yr !== null && selectedCollege.medianEarnings10yr !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Median Earnings (10 years after)</div>
+                          <div className="font-medium">${selectedCollege.medianEarnings10yr.toLocaleString()}/year</div>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.medianFamilyIncome !== null && selectedCollege.medianFamilyIncome !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Median Family Income</div>
+                          <div className="font-medium">${selectedCollege.medianFamilyIncome.toLocaleString()}</div>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.medianDebtCompleters !== null && selectedCollege.medianDebtCompleters !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Median Debt (Graduates)</div>
+                          <div className="font-medium">${selectedCollege.medianDebtCompleters.toLocaleString()}</div>
+                        </div>
+                      )}
+                      
+                      {selectedCollege.medianDebtNoncompleters !== null && selectedCollege.medianDebtNoncompleters !== undefined && (
+                        <div className="bg-gray-50 p-3 rounded">
+                          <div className="text-sm text-gray-500">Median Debt (Non-completers)</div>
+                          <div className="font-medium">${selectedCollege.medianDebtNoncompleters.toLocaleString()}</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
