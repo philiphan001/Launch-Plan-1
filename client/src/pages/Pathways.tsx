@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -110,6 +111,7 @@ const Pathways = ({
   const [, navigate] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPath, setSelectedPath] = useState<PathChoice | null>(null);
+  const [showLoadingScreen, setShowLoadingScreen] = useState<boolean>(false);
   
   // A type guard function to check if the path is education
   const isEducationPath = (path: PathChoice | null): path is EducationPathChoice => {
@@ -2412,13 +2414,16 @@ const Pathways = ({
                           console.log("Storing enhanced pathway data for financial planning:", pathwayDataForFinancialPlan);
                           localStorage.setItem('pathwayData', JSON.stringify(pathwayDataForFinancialPlan));
 
+                          // Show loading screen while waiting for data to be processed
+                          setShowLoadingScreen(true);
+                          
                           // Redirect to the financial projections page with auto-generate flag
                           // Add a longer delay to ensure college calculations are fully excluded before generating projection
                           console.log("Setting timeout before navigation to ensure college data is excluded");
                           setTimeout(() => {
                             console.log("Navigating to projections with all college data excluded");
                             navigate('/projections?autoGenerate=true&fromJobPathway=true');
-                          }, 800);
+                          }, 1500);
                         }}
                         disabled={!selectedLocation || !selectedCareerId || !selectedProfession}
                       >
@@ -5180,8 +5185,13 @@ const Pathways = ({
                           console.log("Storing enhanced pathway data for financial planning:", pathwayDataForFinancialPlan);
                           localStorage.setItem('pathwayData', JSON.stringify(pathwayDataForFinancialPlan));
                           
-                          // Redirect to the financial projections page with auto-generate flag
-                          navigate('/projections?autoGenerate=true');
+                          // Show loading screen while data is processed
+                          setShowLoadingScreen(true);
+                          
+                          // Redirect to the financial projections page with auto-generate flag after a delay
+                          setTimeout(() => {
+                            navigate('/projections?autoGenerate=true');
+                          }, 1500);
                         }}
                         disabled={!selectedLocation || selectedZipCode.length !== 5}
                       >
