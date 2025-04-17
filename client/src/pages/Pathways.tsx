@@ -3245,13 +3245,27 @@ const Pathways = ({
                           } else {
                             const updatedNarrative = `${userJourney} and plan to enter the workforce after completing my associate's degree.`;
                             setUserJourney(updatedNarrative);
-                            // Move to profession selection directly as the user won't need field of study
-                            handleNext();
+                            
+                            // Set a default field of study for 2-year degree paths
+                            // This allows the career selection UI to work properly
+                            if (educationType === '2year') {
+                              // Use the already selected field of study from step 5
+                              // This ensures career options are appropriate for their field
+                              if (!selectedFieldOfStudy) {
+                                // If somehow no field was selected, use a general business field
+                                setSelectedFieldOfStudy("Business, Management, Marketing, and Related Support Services");
+                              }
+                              // Skip to profession selection step
+                              setCurrentStep(6);
+                            } else {
+                              // For other education types, just move to the next step
+                              handleNext();
+                            }
                           }
                         }}
                         className="bg-green-500 hover:bg-green-600"
                       >
-                        {transferOption === 'yes' ? 'Next: Choose Field of Study' : 'Next: Choose Profession'}
+                        {transferOption === 'yes' ? 'Next: Choose Field of Study' : 'Next'}
                       </Button>
                     )}
                   </div>
@@ -3356,7 +3370,7 @@ const Pathways = ({
                         }}
                         className="bg-green-500 hover:bg-green-600"
                       >
-                        Next: Choose Career
+                        Next
                       </Button>
                     )}
                   </div>
