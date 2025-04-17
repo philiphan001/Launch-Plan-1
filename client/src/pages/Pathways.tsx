@@ -2932,19 +2932,7 @@ const Pathways = ({
                       
                       {selectedFieldOfStudy && (
                         <div className="mt-6">
-                          <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg">
-                            <div className="flex items-start">
-                              <div className="bg-blue-100 rounded-full p-1.5 mt-0.5 mr-3">
-                                <span className="material-icons text-blue-600 text-sm">info</span>
-                              </div>
-                              <div>
-                                <h5 className="font-medium text-blue-800 mb-1">Career Options Coming Up Next</h5>
-                                <p className="text-sm text-blue-700">
-                                  In the next step, you'll see all the career paths available for {selectedFieldOfStudy}.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+
                         </div>
                       )}
                       
@@ -2963,7 +2951,7 @@ const Pathways = ({
                             }}
                             className="bg-green-500 hover:bg-green-600"
                           >
-                            Next: {educationType === '2year' ? 'Transfer Options' : 'Choose Profession'}
+                            Next
                           </Button>
                         )}
                       </div>
