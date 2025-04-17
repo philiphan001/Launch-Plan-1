@@ -2178,6 +2178,52 @@ const Pathways = ({
                             }
                           }
 
+                          // Step 3: Unselect any existing college calculations since this is a "get a job" pathway
+                          if (isAuthenticated && user) {
+                            // Fetch all college calculations for the user
+                            fetch(`/api/college-calculations/user/${user.id}`)
+                              .then(res => res.json())
+                              .then(collegeCalculations => {
+                                // Find any that are included in projection
+                                const includedCollegeCalculations = collegeCalculations.filter(calc => calc.includedInProjection);
+                                
+                                // For each included college calculation, toggle it off
+                                includedCollegeCalculations.forEach(calculation => {
+                                  fetch(`/api/college-calculations/${calculation.id}/toggle-projection`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ includedInProjection: false }),
+                                  })
+                                    .then(res => {
+                                      if (!res.ok) {
+                                        throw new Error(`Failed to toggle college calculation ${calculation.id}`);
+                                      }
+                                      return res.json();
+                                    })
+                                    .then(() => {
+                                      console.log(`Excluded college calculation ${calculation.id} from projection for job pathway`);
+                                    })
+                                    .catch(err => {
+                                      console.error(`Error excluding college calculation ${calculation.id}:`, err);
+                                    });
+                                });
+
+                                if (includedCollegeCalculations.length > 0) {
+                                  // Notify the user that we're excluding college data
+                                  toast({
+                                    title: "College data excluded",
+                                    description: "Since you're choosing a job pathway, we've excluded any college costs from your financial projection.",
+                                    variant: "default"
+                                  });
+                                }
+                              })
+                              .catch(err => {
+                                console.error('Error fetching college calculations:', err);
+                              });
+                          }
+
                           // Collect pathway data with enhanced location info
                           const pathwayDataForFinancialPlan = {
                             selectedProfession,
@@ -2190,14 +2236,19 @@ const Pathways = ({
                             // Add these additional fields for better compatibility
                             zipCode: selectedZipCode,
                             selectedCareer: selectedCareerId,
-                            jobType
+                            jobType,
+                            // Mark that this is from job pathway to ensure consistency
+                            fromJobPathway: true
                           };
 
                           console.log("Storing enhanced pathway data for financial planning:", pathwayDataForFinancialPlan);
                           localStorage.setItem('pathwayData', JSON.stringify(pathwayDataForFinancialPlan));
 
                           // Redirect to the financial projections page with auto-generate flag
-                          navigate('/projections?autoGenerate=true');
+                          // Add a small delay to ensure college calculations are toggled off before generating projection
+                          setTimeout(() => {
+                            navigate('/projections?autoGenerate=true');
+                          }, 300);
                         }}
                         disabled={!selectedLocation || !selectedCareerId || !selectedProfession}
                       >
