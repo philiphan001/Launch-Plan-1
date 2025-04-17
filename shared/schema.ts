@@ -64,6 +64,17 @@ export const colleges = pgTable("colleges", {
   feesByIncome: jsonb("fees_by_income"),
   usNewsTop150: integer("us_news_top_150"), // Ranking or identifier in US News Top 150
   bestLiberalArtsColleges: integer("best_liberal_arts_colleges"), // Ranking or identifier for best liberal arts colleges
+  tuitionDoubled: real("tuition_doubled"), // Added in a previous migration
+  degreePredominant: integer("degrees_awarded_predominant"), // Predominant degree awarded (integers 1-4)
+  degreeHighest: integer("degrees_awarded_highest"), // Highest degree awarded (integers 1-4)
+  admissionRate: real("admission_rate_overall"), // Overall admission rate (0-1)
+  satAverage: integer("sat_scores_average_overall"), // Average SAT score
+  pellGrantRate: real("pell_grant_rate"), // Rate of students receiving Pell grants (0-1)
+  completionRate4yr: real("completion_rate_4yr_150nt"), // 4-year completion rate within 150% of normal time
+  medianDebtCompleters: integer("median_debt_completers_overall"), // Median debt for students who complete degree
+  medianDebtNoncompleters: integer("median_debt_noncompleters"), // Median debt for students who don't complete
+  medianFamilyIncome: real("demographics_median_family_income"), // Median family income of students
+  medianEarnings10yr: integer("median_earnings_10yrs_after_entry"), // Median earnings 10 years after entry
 });
 
 export const insertCollegeSchema = createInsertSchema(colleges).pick({
@@ -80,6 +91,17 @@ export const insertCollegeSchema = createInsertSchema(colleges).pick({
   feesByIncome: true,
   usNewsTop150: true,
   bestLiberalArtsColleges: true,
+  tuitionDoubled: true,
+  degreePredominant: true,
+  degreeHighest: true,
+  admissionRate: true,
+  satAverage: true,
+  pellGrantRate: true,
+  completionRate4yr: true,
+  medianDebtCompleters: true,
+  medianDebtNoncompleters: true,
+  medianFamilyIncome: true,
+  medianEarnings10yr: true,
 });
 
 // Careers table
