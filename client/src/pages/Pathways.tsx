@@ -3368,8 +3368,8 @@ const Pathways = ({
                         serviceLength === '6year' ? '6 years' : 'several years'
                       }, I plan to attend college using my GI Bill benefits`);
                       
-                      // Go to field of study selection for education path
-                      setCurrentStep(5);
+                      // Go to college selection for education path (step 3)
+                      setCurrentStep(3);
                       
                     } else if (postMilitaryPath === 'job') {
                       // Set up for job pathway with military experience
@@ -3389,8 +3389,8 @@ const Pathways = ({
                         serviceLength === '6year' ? '6 years' : 'several years'
                       }, I plan to enter the workforce using my military experience`);
                       
-                      // Go directly to career search for job path
-                      setCurrentStep(6);
+                      // Go to job type selection for job path (step 3)
+                      setCurrentStep(3);
                     }
                   }}
                   disabled={!postMilitaryPath}
