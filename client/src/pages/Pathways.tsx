@@ -1199,11 +1199,16 @@ const Pathways = ({
             } else if (pathType === 'career') {
               setSelectedPath('job');
               
-              // Determine job type based on recommendation
+              // Set job type to full-time as default
+              setJobType('fulltime');
+              
+              // For trades, indicate part-time
               if (id === 'trades') {
-                setJobType('apprenticeship');
+                setIsPartTime(true);
+                setWeeklyHours(25); // Default part-time hours for trades
               } else {
-                setJobType('fulltime');
+                setIsPartTime(false);
+                setWeeklyHours(40);
               }
               
               // Jump to the appropriate next step
@@ -1850,8 +1855,7 @@ const Pathways = ({
                             // Set a narrative if they select a career
                             if (e.target.value.trim()) {
                               setUserJourney(`After high school, I am interested in finding a ${
-                                jobType === 'fulltime' ? 'full-time job' : 
-                                jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
+                                jobType === 'fulltime' ? 'full-time job' : 'part-time job'
                               } as a ${e.target.value.trim()}.`);
                             }
                           }}
@@ -1896,13 +1900,9 @@ const Pathways = ({
                                   career.category?.toLowerCase().includes('service') || 
                                   career.category?.toLowerCase().includes('retail') ||
                                   career.category?.toLowerCase().includes('food') ||
-                                  career.category?.toLowerCase().includes('hospitality') : 
-                                jobType === 'apprenticeship' ?
-                                  career.category?.toLowerCase().includes('trade') ||
-                                  career.category?.toLowerCase().includes('construction') ||
-                                  career.category?.toLowerCase().includes('manufacturing') ||
-                                  career.education?.toLowerCase().includes('vocational') ||
-                                  career.education?.toLowerCase().includes('certificate') : 
+                                  career.category?.toLowerCase().includes('hospitality') || 
+                                  // Part-time jobs can be in most categories
+                                  true : 
                                 true;
                               
                               return matchesQuery && matchesJobType;
@@ -1922,8 +1922,7 @@ const Pathways = ({
                                   
                                   // Update narrative
                                   setUserJourney(`After high school, I am interested in finding a ${
-                                    jobType === 'fulltime' ? 'full-time job' : 
-                                    jobType === 'parttime' ? 'part-time job' : 'apprenticeship'
+                                    jobType === 'fulltime' ? 'full-time job' : 'part-time job'
                                   } as a ${career.title}.`);
                                   
                                   // Don't automatically advance yet - let user see location selection
