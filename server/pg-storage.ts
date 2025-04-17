@@ -145,18 +145,24 @@ export class PgStorage implements IStorage {
           break;
         case '2year':
           typeCondition = or(
+            // Match on type field
             sql`LOWER(${colleges.type}) LIKE '%community%'`,
             sql`LOWER(${colleges.type}) LIKE '%2-year%'`,
             sql`LOWER(${colleges.type}) LIKE '%2 year%'`,
-            sql`LOWER(${colleges.type}) LIKE '%junior%'`
+            sql`LOWER(${colleges.type}) LIKE '%junior%'`,
+            // Also match on degreePredominant field (2 = Associate's degree)
+            sql`${colleges.degreePredominant} = 2`
           );
           break;
         case 'vocational':
           typeCondition = or(
+            // Match on type field
             sql`LOWER(${colleges.type}) LIKE '%vocational%'`,
             sql`LOWER(${colleges.type}) LIKE '%technical%'`,
             sql`LOWER(${colleges.type}) LIKE '%trade%'`,
-            sql`LOWER(${colleges.type}) LIKE '%career%'`
+            sql`LOWER(${colleges.type}) LIKE '%career%'`,
+            // Also match on degreePredominant field (1 = Certificate programs)
+            sql`${colleges.degreePredominant} = 1`
           );
           break;
         default:
