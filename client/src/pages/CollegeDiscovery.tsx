@@ -463,7 +463,6 @@ const CollegeDiscovery = ({
                         Best Liberal Arts Colleges
                       </label>
                     </div>
-                    
                     <div className="flex items-center">
                       <Checkbox 
                         id="vocational-school"
