@@ -2103,7 +2103,7 @@ const Pathways = ({
                                 // Find any currently included calculation
                                 const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
                                 
-                                // If one exists, un-include it first by setting includedInProjection to false
+                                // If one exists, use our new endpoint to explicitly exclude it from projections
                                 if (includedCalculation) {
                                   console.log("Excluding college calculation from projection:", includedCalculation.id);
                                   
@@ -2114,12 +2114,11 @@ const Pathways = ({
                                     variant: "default"
                                   });
                                   
-                                  return fetch(`/api/college-calculations/${includedCalculation.id}`, {
-                                    method: 'PATCH',
+                                  // Use our dedicated endpoint for excluding college calculations
+                                  return fetch(`/api/college-calculations/${includedCalculation.id}/exclude-from-projection`, {
+                                    method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      includedInProjection: false
-                                    })
+                                    body: JSON.stringify({ userId: user.id })
                                   });
                                 }
                                 return new Response(null, { status: 200 });
@@ -2232,10 +2231,12 @@ const Pathways = ({
                           localStorage.setItem('pathwayData', JSON.stringify(pathwayDataForFinancialPlan));
 
                           // Redirect to the financial projections page with auto-generate flag
-                          // Add a small delay to ensure college calculations are toggled off before generating projection
+                          // Add a longer delay to ensure college calculations are fully excluded before generating projection
+                          console.log("Setting timeout before navigation to ensure college data is excluded");
                           setTimeout(() => {
-                            navigate('/projections?autoGenerate=true');
-                          }, 300);
+                            console.log("Navigating to projections with all college data excluded");
+                            navigate('/projections?autoGenerate=true&fromJobPathway=true');
+                          }, 800);
                         }}
                         disabled={!selectedLocation || !selectedCareerId || !selectedProfession}
                       >

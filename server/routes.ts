@@ -1498,6 +1498,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // New endpoint specifically for excluding college calculations from projections
+  app.post("/api/college-calculations/:id/exclude-from-projection", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = parseInt(req.body.userId);
+      
+      if (isNaN(id) || isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Get the calculation first to validate ownership
+      const calculation = await activeStorage.getCollegeCalculation(id);
+      if (!calculation || calculation.userId !== userId) {
+        return res.status(404).json({ message: `College calculation with ID ${id} not found or does not belong to the user` });
+      }
+      
+      // Only update if it's currently included
+      if (calculation.includedInProjection) {
+        const updated = await activeStorage.updateCollegeCalculation(id, { includedInProjection: false });
+        console.log(`Successfully excluded college calculation ${id} from projection for user ${userId}`);
+        return res.json(updated);
+      }
+      
+      // Already excluded, just return the current state
+      return res.json(calculation);
+    } catch (error) {
+      console.error("Error excluding college calculation from projection:", error);
+      res.status(500).json({ message: "Failed to exclude college calculation from projection", error: String(error) });
+    }
+  });
+  
   // Career calculations routes
   app.post("/api/career-calculations", validateRequest({ body: insertCareerCalculationSchema }), async (req: Request, res: Response) => {
     try {
