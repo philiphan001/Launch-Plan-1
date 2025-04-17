@@ -178,7 +178,7 @@ const Pathways = ({
   };
 
   // Function to search careers with a given term - directly matching Go To Work pathway
-  const searchCareers = (searchTerm: string) => {
+  const searchCareers = (searchTerm: string, showWarnings = false) => {
     if (!searchTerm.trim()) {
       setFilteredCareerPaths(null);
       return;
@@ -237,8 +237,12 @@ const Pathways = ({
         // Auto-select the first career (critical for financial planning)
         setSelectedCareerId(matchingCareers[0].id);
         
-        // Check if this career needs education warning
-        checkCareerEducationRequirement(matchingCareers[0].id);
+        // Only check for education warnings when explicitly requested
+        // This prevents warnings from showing during typing in the search field
+        if (showWarnings) {
+          // Check if this career needs education warning
+          checkCareerEducationRequirement(matchingCareers[0].id);
+        }
       } else {
         setFilteredCareerPaths([]);
       }
@@ -3418,8 +3422,8 @@ const Pathways = ({
                                   
                                   // For search term longer than 2 characters
                                   if (e.target.value.trim() && e.target.value.trim().length >= 2) {
-                                    // Use the API-based search function
-                                    searchCareers(e.target.value.trim());
+                                    // Use the API-based search function - but don't show warnings during typing
+                                    searchCareers(e.target.value.trim(), false);
                                   } else {
                                     // Clear filtered paths when search is empty
                                     setFilteredCareerPaths(null);
@@ -3622,7 +3626,8 @@ const Pathways = ({
                                 setGlobalCareerSearch(true);
                                 
                                 // Search for this career title to get actual career ID
-                                searchCareers(path.career_title);
+                                // We want to show warnings when a user actively selects a career
+                                searchCareers(path.career_title, true);
                                 
                                 // Complete the narrative with the selected profession
                                 let narrative = '';
