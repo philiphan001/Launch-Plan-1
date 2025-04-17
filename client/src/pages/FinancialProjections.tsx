@@ -179,12 +179,13 @@ const FinancialProjections = ({
   // Get the current location for parsing query parameters and navigation
   const [location, setLocation] = useLocation();
   // This combination of projectionId and timestamp will force a full reset when the URL changes
-  const { projectionId, timestamp, autoGenerate } = useMemo(() => {
+  const { projectionId, timestamp, autoGenerate, fromJobPathway } = useMemo(() => {
     // Parse URL query parameters - using window.location.search directly to ensure freshness
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
     const t = params.get('t') || Date.now().toString();
     const autoGen = params.get('autoGenerate') === 'true';
+    const fromJob = params.get('fromJobPathway') === 'true';
     
     // Give priority to initialProjectionId if provided (from App.tsx)
     const effectiveId = initialProjectionId || (id ? parseInt(id, 10) : null);
@@ -194,12 +195,14 @@ const FinancialProjections = ({
         initialProjectionId ? "(from initialProjectionId)" : "(from URL)", 
         "with timestamp:", t,
         "autoGenerate:", autoGen,
+        "fromJobPathway:", fromJob,
         "current URL:", window.location.href);
     
     return { 
       projectionId: effectiveId, 
       timestamp: t,
-      autoGenerate: autoGen
+      autoGenerate: autoGen,
+      fromJobPathway: fromJob
     };
   }, [location, initialProjectionId, window.location.search]);
 
@@ -1837,6 +1840,12 @@ const { data: savedProjection, isLoading: isLoadingSavedProjection, error: saved
 // Calculate effective college and career calculations based on the savedProjection data
 // These hooks ensure that the college/career data updates properly when projectionId changes
 const effectiveCollegeCalc = useMemo(() => {
+  // If coming from job pathway, explicitly force null to exclude college data
+  if (fromJobPathway) {
+    console.log("Coming from job pathway - explicitly excluding all college calculations");
+    return null;
+  }
+  
   // If we have valid saved projection with a collegeCalculationId, try to find it
   if (savedProjection && savedProjection.collegeCalculationId && collegeCalculations) {
     const specificCollegeCalc = collegeCalculations.find(calc => calc.id === savedProjection.collegeCalculationId);
@@ -1847,7 +1856,7 @@ const effectiveCollegeCalc = useMemo(() => {
   }
   // Otherwise use any calculation marked as includedInProjection
   return includedCollegeCalc;
-}, [collegeCalculations, savedProjection, includedCollegeCalc]);
+}, [collegeCalculations, savedProjection, includedCollegeCalc, fromJobPathway]);
 
 const effectiveCareerCalc = useMemo(() => {
   // If we have valid saved projection with a careerCalculationId, try to find it
