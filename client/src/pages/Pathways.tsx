@@ -3376,6 +3376,77 @@ const Pathways = ({
           );
         }
       
+      case 4.5:
+        // Post-gap year navigation - what to do next
+        if (selectedPath === 'gap' && gapYearActivity) {
+          return (
+            <Step
+              title="What's your next step after your gap year?"
+              subtitle={`After your ${getTimeDescription()} gap year for ${gapYearActivity}, what would you like to do next?`}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                {/* College option */}
+                <div 
+                  className="border border-gray-200 hover:border-blue-500 rounded-lg p-5 cursor-pointer transition-all hover:shadow-md flex flex-col"
+                  onClick={() => {
+                    setSelectedPath('education');
+                    setEducationType('4year'); // Default to 4-year college
+                    setCurrentStep(4); // Go to education path
+                  }}
+                >
+                  <div className="rounded-full bg-blue-100 w-16 h-16 flex items-center justify-center mb-4 mx-auto">
+                    <span className="material-icons text-blue-600 text-2xl">school</span>
+                  </div>
+                  <h3 className="text-lg font-medium text-center mb-2">Go to College</h3>
+                  <p className="text-gray-600 text-center text-sm flex-grow">Pursue higher education at a university, community college, or vocational school</p>
+                  <Button className="w-full mt-4" variant="outline">Select</Button>
+                </div>
+                
+                {/* Job option */}
+                <div 
+                  className="border border-gray-200 hover:border-green-500 rounded-lg p-5 cursor-pointer transition-all hover:shadow-md flex flex-col"
+                  onClick={() => {
+                    setSelectedPath('job');
+                    setJobType('fulltime'); // Default to full-time job
+                    setCurrentStep(3); // Go to job type selection
+                  }}
+                >
+                  <div className="rounded-full bg-green-100 w-16 h-16 flex items-center justify-center mb-4 mx-auto">
+                    <span className="material-icons text-green-600 text-2xl">work</span>
+                  </div>
+                  <h3 className="text-lg font-medium text-center mb-2">Get a Job</h3>
+                  <p className="text-gray-600 text-center text-sm flex-grow">Enter the workforce with a full-time or part-time position</p>
+                  <Button className="w-full mt-4" variant="outline">Select</Button>
+                </div>
+                
+                {/* Military option */}
+                <div 
+                  className="border border-gray-200 hover:border-red-500 rounded-lg p-5 cursor-pointer transition-all hover:shadow-md flex flex-col"
+                  onClick={() => {
+                    setSelectedPath('military');
+                    setMilitaryBranch('army'); // Default to Army
+                    setCurrentStep(3); // Go to military branch selection
+                  }}
+                >
+                  <div className="rounded-full bg-red-100 w-16 h-16 flex items-center justify-center mb-4 mx-auto">
+                    <span className="material-icons text-red-600 text-2xl">military_tech</span>
+                  </div>
+                  <h3 className="text-lg font-medium text-center mb-2">Join the Military</h3>
+                  <p className="text-gray-600 text-center text-sm flex-grow">Serve your country in one of the military branches</p>
+                  <Button className="w-full mt-4" variant="outline">Select</Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={handleBack}>
+                  <span className="material-icons mr-2">arrow_back</span>
+                  Back
+                </Button>
+              </div>
+            </Step>
+          );
+        }
+        
       case 5:
         // Post-military path selection
         if (selectedPath === 'military' && militaryBranch && serviceLength !== 'career') {
