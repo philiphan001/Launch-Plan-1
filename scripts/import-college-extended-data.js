@@ -3,11 +3,34 @@
  * This adds detailed information about degree types, admission rates, completion rates, etc.
  */
 
-import { db } from "../server/db.js";
-import { colleges } from "../shared/schema.js";
-import { eq } from "drizzle-orm";
-import fs from "fs";
-import { parse } from "csv-parse";
+const { drizzle } = require('drizzle-orm/postgres-js');
+const postgres = require('postgres');
+const { eq } = require("drizzle-orm");
+const fs = require("fs");
+const { parse } = require("csv-parse");
+require('dotenv').config();
+
+// Create a Postgres client with the database connection string
+const pgSql = postgres(process.env.DATABASE_URL);
+
+// Create a Drizzle instance with the Postgres client
+const db = drizzle(pgSql);
+
+// Define the colleges table structure
+const colleges = {
+  id: { name: "id" },
+  name: { name: "name" },
+  degreePredominant: { name: "degrees_awarded_predominant" },
+  degreeHighest: { name: "degrees_awarded_highest" },
+  admissionRate: { name: "admission_rate_overall" },
+  satAverage: { name: "sat_scores_average_overall" },
+  pellGrantRate: { name: "pell_grant_rate" },
+  completionRate4yr: { name: "completion_rate_4yr_150nt" },
+  medianDebtCompleters: { name: "median_debt_completers_overall" },
+  medianDebtNoncompleters: { name: "median_debt_noncompleters" },
+  medianFamilyIncome: { name: "demographics_median_family_income" },
+  medianEarnings10yr: { name: "median_earnings_10yrs_after_entry" }
+};
 
 // Path to the CSV file with updated college data
 const CSV_FILE_PATH = "./attached_assets/Updated_Most-Recent-Cohorts-Institution.csv";

@@ -6,13 +6,15 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { sql } from "drizzle-orm";
-import * as schema from "../shared/schema.js";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Create a Postgres client with the database connection string
 const pgSql = postgres(process.env.DATABASE_URL);
 
-// Create a Drizzle instance with the Postgres client and schema
-const db = drizzle(pgSql, { schema });
+// Create a Drizzle instance with the Postgres client
+const db = drizzle(pgSql);
 
 async function updateCollegeSchema() {
   console.log("Starting college schema update...");
