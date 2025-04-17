@@ -3436,6 +3436,9 @@ const Pathways = ({
                                 type="button"
                                 onClick={() => {
                                   if (careerSearchQuery.trim()) {
+                                    // Re-execute search with warnings enabled
+                                    searchCareers(careerSearchQuery.trim(), true);
+                                    
                                     // Set the profession name
                                     setSelectedProfession(careerSearchQuery.trim());
                                     
@@ -3444,6 +3447,9 @@ const Pathways = ({
                                       // Use the first filtered career's ID
                                       setSelectedCareerId(filteredCareerPaths[0].id);
                                       console.log(`Using career ID ${filteredCareerPaths[0].id} for custom career: ${careerSearchQuery.trim()}`);
+                                      
+                                      // Also check for education requirements now that a career is actively selected
+                                      checkCareerEducationRequirement(filteredCareerPaths[0].id);
                                     } else {
                                       // If no matches, we can't set a career ID, which may affect financial planning
                                       console.log('Warning: No career ID found for custom career - this may affect financial calculations');
@@ -3546,6 +3552,9 @@ const Pathways = ({
                                     setSelectedProfession(career.title);
                                     setCareerSearchQuery(career.title);
                                     setSelectedCareerId(career.id);
+                                    
+                                    // Check for education requirements when selecting from search results
+                                    checkCareerEducationRequirement(career.id);
                                     
                                     // Complete the narrative with the selected profession
                                     let narrative = '';
