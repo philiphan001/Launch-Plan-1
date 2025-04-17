@@ -1758,51 +1758,74 @@ const Pathways = ({
           );
         } else if (selectedPath === 'job') {
           return (
-            <Step title="What type of job are you looking for?">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div 
-                  className={`border ${jobType === 'fulltime' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setJobType('fulltime')}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${jobType === 'fulltime' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${jobType === 'fulltime' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">business_center</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${jobType === 'fulltime' ? 'text-primary' : ''}`}>Full-Time Job</h5>
-                      <p className="text-sm text-gray-600">40+ hours per week</p>
-                    </div>
+            <Step title="Your Employment Options">
+              <div className="border border-gray-200 rounded-lg p-6 mb-8 bg-white">
+                <div className="flex items-center mb-5">
+                  <div className="rounded-full bg-primary h-10 w-10 flex items-center justify-center text-white mr-3">
+                    <span className="material-icons text-sm">business_center</span>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-lg">Full-Time Employment</h5>
+                    <p className="text-sm text-gray-600">Find a job after high school and start earning right away</p>
                   </div>
                 </div>
                 
-                <div 
-                  className={`border ${jobType === 'parttime' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setJobType('parttime')}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${jobType === 'parttime' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${jobType === 'parttime' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">schedule</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${jobType === 'parttime' ? 'text-primary' : ''}`}>Part-Time Job</h5>
-                      <p className="text-sm text-gray-600">Less than 40 hours per week</p>
-                    </div>
-                  </div>
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                  <p className="text-sm text-blue-700 mb-2">
+                    <span className="material-icons text-sm inline-block align-text-bottom mr-1">info</span>
+                    By default, we'll calculate your future based on full-time work (40 hours per week).
+                  </p>
                 </div>
                 
-                <div 
-                  className={`border ${jobType === 'apprenticeship' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => setJobType('apprenticeship')}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${jobType === 'apprenticeship' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${jobType === 'apprenticeship' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">construction</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${jobType === 'apprenticeship' ? 'text-primary' : ''}`}>Apprenticeship</h5>
-                      <p className="text-sm text-gray-600">On-the-job training</p>
-                    </div>
+                <div className="mb-6">
+                  <div className="flex items-center mb-3">
+                    <input
+                      type="checkbox"
+                      id="part-time-checkbox"
+                      className="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary"
+                      checked={isPartTime}
+                      onChange={(e) => {
+                        setIsPartTime(e.target.checked);
+                        setJobType(e.target.checked ? 'parttime' : 'fulltime');
+                        // If changing to full-time, reset to 40 hours
+                        if (!e.target.checked) {
+                          setWeeklyHours(40);
+                        }
+                      }}
+                    />
+                    <label htmlFor="part-time-checkbox" className="ml-2 text-sm font-medium text-gray-700">
+                      I plan to work part-time
+                    </label>
                   </div>
+                  
+                  {isPartTime && (
+                    <div className="ml-6 mt-3">
+                      <label htmlFor="weekly-hours" className="block text-sm font-medium text-gray-700 mb-1">
+                        Hours per week
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="number"
+                          id="weekly-hours"
+                          min="1"
+                          max="39"
+                          className="w-20 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                          value={weeklyHours}
+                          onChange={(e) => {
+                            const hours = Math.min(39, Math.max(1, parseInt(e.target.value) || 20));
+                            setWeeklyHours(hours);
+                          }}
+                        />
+                        <span className="text-sm text-gray-500">hours</span>
+                        
+                        <div className="ml-4 text-sm text-gray-600">
+                          {weeklyHours > 0 && (
+                            <span>({Math.round((weeklyHours / 40) * 100)}% of full-time earnings)</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
