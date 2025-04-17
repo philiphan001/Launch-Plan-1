@@ -1888,6 +1888,9 @@ const Pathways = ({
                                   setCareerSearchQuery(career.title);
                                   setSelectedCareerId(career.id);
                                   
+                                  // Check for education requirements
+                                  checkCareerEducationRequirement(career.id);
+                                  
                                   // Update narrative
                                   setUserJourney(`After high school, I am interested in finding a ${
                                     jobType === 'fulltime' ? 'full-time job' : 
@@ -3502,6 +3505,9 @@ const Pathways = ({
                               key={path.id} 
                               className="border cursor-pointer transition-all hover:shadow-md hover:scale-105"
                               onClick={() => {
+                                // Check for education requirements when selecting a career from career paths
+                                checkCareerEducationRequirement(path.id);
+                                
                                 // Auto-fill the search box with the selected career title from career_paths
                                 setCareerSearchQuery(path.career_title);
                                 
@@ -4328,6 +4334,51 @@ const Pathways = ({
       {/* Progress indicator removed as requested */}
       
       {renderCurrentStep()}
+      
+      {/* Education Requirement Warning Dialog */}
+      <AlertDialog open={showEducationWarning} onOpenChange={setShowEducationWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Education Requirement Notice</AlertDialogTitle>
+            <AlertDialogDescription>
+              <p className="mb-4">
+                This career typically requires higher education: <span className="font-medium">{selectedCareerEducation}</span>
+              </p>
+              <p className="mb-4">
+                The job market for this career may be competitive without the recommended education. 
+                You might want to consider exploring the college pathway to gain the qualifications 
+                necessary for this career.
+              </p>
+              <p>
+                Would you like to continue with this career choice in the job pathway, 
+                or would you prefer to explore the college pathway instead?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                // Continue with job pathway despite education warning
+                setShowEducationWarning(false);
+              }}
+            >
+              Continue with Job Pathway
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                // Switch to college pathway
+                setShowEducationWarning(false);
+                setSelectedPath("education");
+                setEducationType("4year");
+                setCurrentStep(4);
+                setUserJourney("After high school, I am interested in attending a 4-year college or university where...");
+              }}
+            >
+              Switch to College Pathway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
