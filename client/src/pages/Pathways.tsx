@@ -44,7 +44,7 @@ type EducationPathChoice = "education";
 type OtherPathChoice = "job" | "military" | "gap";
 
 type EducationType = "4year" | "2year" | "vocational" | null;
-type JobType = "fulltime" | "parttime" | "apprenticeship" | null;
+type JobType = "fulltime" | "parttime" | null;
 type MilitaryBranch = "army" | "navy" | "airforce" | "marines" | "coastguard" | "spaceguard" | null;
 type GapYearActivity = "travel" | "volunteer" | "work" | "other" | null;
 // For the transfer option
@@ -325,6 +325,10 @@ const Pathways = ({
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
+  
+  // Part-time job settings
+  const [isPartTime, setIsPartTime] = useState<boolean>(false);
+  const [weeklyHours, setWeeklyHours] = useState<number>(40);
   
   // Education requirement warning state
   const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
