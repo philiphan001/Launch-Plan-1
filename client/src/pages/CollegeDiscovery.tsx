@@ -68,6 +68,8 @@ const CollegeDiscovery = ({
   const [selectedSizes, setSelectedSizes] = useState<string[]>(initialParams.sizes);
   const [usNewsTop150Filter, setUsNewsTop150Filter] = useState<boolean>(initialParams.usNewsTop150);
   const [bestLiberalArtsFilter, setBestLiberalArtsFilter] = useState<boolean>(initialParams.bestLiberalArts);
+  const [vocationalSchoolFilter, setVocationalSchoolFilter] = useState<boolean>(false);
+  const [communityCollegeFilter, setCommunityCollegeFilter] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(initialParams.page);
   const [sortBy, setSortBy] = useState<string>(initialParams.sortBy);
   const [sortOrder, setSortOrder] = useState<string>(initialParams.sortOrder);
@@ -296,10 +298,19 @@ const CollegeDiscovery = ({
       
     const matchesBestLiberalArts = bestLiberalArtsFilter ? 
       (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank > 0 && liberalArtsRank <= 300) : true;
+      
+    // Check if college is a vocational school (degreePredominant = 1)
+    const matchesVocationalSchool = vocationalSchoolFilter ?
+      (college.degreePredominant === 1) : true;
+      
+    // Check if college is a community college (degreePredominant = 2)
+    const matchesCommunityCollege = communityCollegeFilter ?
+      (college.degreePredominant === 2) : true;
     
     return matchesSearch && matchesTuition && matchesAcceptance && 
            matchesType && matchesState && matchesSize && 
-           matchesUsNewsTop150 && matchesBestLiberalArts;
+           matchesUsNewsTop150 && matchesBestLiberalArts &&
+           matchesVocationalSchool && matchesCommunityCollege;
   });
   
   // Sort the filtered colleges based on sort parameters
@@ -438,6 +449,48 @@ const CollegeDiscovery = ({
                         className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
                         Best Liberal Arts Colleges
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id="vocational-school"
+                        checked={vocationalSchoolFilter}
+                        onCheckedChange={(checked) => {
+                          setVocationalSchoolFilter(checked === true);
+                          // Reset community college filter if vocational is selected
+                          if (checked === true && communityCollegeFilter) {
+                            setCommunityCollegeFilter(false);
+                          }
+                          setCurrentPage(1); // Reset to first page on filter change
+                        }}
+                      />
+                      <label 
+                        htmlFor="vocational-school"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Vocational/Technical Schools
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <Checkbox 
+                        id="community-college"
+                        checked={communityCollegeFilter}
+                        onCheckedChange={(checked) => {
+                          setCommunityCollegeFilter(checked === true);
+                          // Reset vocational filter if community college is selected
+                          if (checked === true && vocationalSchoolFilter) {
+                            setVocationalSchoolFilter(false);
+                          }
+                          setCurrentPage(1); // Reset to first page on filter change
+                        }}
+                      />
+                      <label 
+                        htmlFor="community-college"
+                        className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Community Colleges
                       </label>
                     </div>
                   </div>
