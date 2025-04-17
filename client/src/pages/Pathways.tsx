@@ -657,7 +657,12 @@ const Pathways = ({
   };
   
   const handleNext = () => {
-    setCurrentStep(currentStep + 1);
+    // Special handling for gap year pathway - add a step for post-gap year navigation
+    if (selectedPath === 'gap' && gapYearActivity && currentStep === 4) {
+      setCurrentStep(4.5); // Use a decimal step to insert a new step between 4 and 5
+    } else {
+      setCurrentStep(currentStep + 1);
+    }
   };
   
   const handleBack = () => {
