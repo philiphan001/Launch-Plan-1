@@ -6,6 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Add type declaration for our global variable to prevent TypeScript errors
 declare global {
@@ -133,6 +143,37 @@ const Pathways = ({
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
   
+  // Function to check if a career requires higher education
+  const checkCareerEducationRequirement = (careerId: number) => {
+    if (!allCareers || !Array.isArray(allCareers)) return;
+    
+    const career = allCareers.find(c => c.id === careerId);
+    if (!career) return;
+    
+    // Check education field for degree requirements
+    const educationReq = career.education;
+    
+    if (educationReq && (
+        educationReq.toLowerCase().includes("bachelor") || 
+        educationReq.toLowerCase().includes("degree") ||
+        educationReq.toLowerCase().includes("master") ||
+        educationReq.toLowerCase().includes("phd") ||
+        educationReq.toLowerCase().includes("doctorate")
+    )) {
+      console.log(`Career "${career.title}" requires higher education: ${educationReq}`);
+      setSelectedCareerEducation(educationReq);
+      
+      // Show the warning dialog if the user is in the job pathway
+      if (selectedPath === 'job') {
+        setShowEducationWarning(true);
+      }
+    } else {
+      console.log(`Career "${career.title}" doesn't require higher education or requirement not specified`);
+      setSelectedCareerEducation(null);
+      setShowEducationWarning(false);
+    }
+  };
+
   // Function to search careers with a given term - directly matching Go To Work pathway
   const searchCareers = (searchTerm: string) => {
     if (!searchTerm.trim()) {
@@ -192,6 +233,9 @@ const Pathways = ({
         
         // Auto-select the first career (critical for financial planning)
         setSelectedCareerId(matchingCareers[0].id);
+        
+        // Check if this career needs education warning
+        checkCareerEducationRequirement(matchingCareers[0].id);
       } else {
         setFilteredCareerPaths([]);
       }
@@ -281,6 +325,10 @@ const Pathways = ({
   const [selectedState, setSelectedState] = useState<string>('CA');
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
+  
+  // Education requirement warning state
+  const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
+  const [selectedCareerEducation, setSelectedCareerEducation] = useState<string | null>(null);
   
   // Add location to favorites mutation
   const addLocationToFavorites = useMutation({
