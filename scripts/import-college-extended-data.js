@@ -3,12 +3,14 @@
  * This adds detailed information about degree types, admission rates, completion rates, etc.
  */
 
-const { drizzle } = require('drizzle-orm/postgres-js');
-const postgres = require('postgres');
-const { eq } = require("drizzle-orm");
-const fs = require("fs");
-const { parse } = require("csv-parse");
-require('dotenv').config();
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import { eq, sql } from "drizzle-orm";
+import fs from "fs";
+import * as csvParse from "csv-parse";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Create a Postgres client with the database connection string
 const pgSql = postgres(process.env.DATABASE_URL);
@@ -16,21 +18,8 @@ const pgSql = postgres(process.env.DATABASE_URL);
 // Create a Drizzle instance with the Postgres client
 const db = drizzle(pgSql);
 
-// Define the colleges table structure
-const colleges = {
-  id: { name: "id" },
-  name: { name: "name" },
-  degreePredominant: { name: "degrees_awarded_predominant" },
-  degreeHighest: { name: "degrees_awarded_highest" },
-  admissionRate: { name: "admission_rate_overall" },
-  satAverage: { name: "sat_scores_average_overall" },
-  pellGrantRate: { name: "pell_grant_rate" },
-  completionRate4yr: { name: "completion_rate_4yr_150nt" },
-  medianDebtCompleters: { name: "median_debt_completers_overall" },
-  medianDebtNoncompleters: { name: "median_debt_noncompleters" },
-  medianFamilyIncome: { name: "demographics_median_family_income" },
-  medianEarnings10yr: { name: "median_earnings_10yrs_after_entry" }
-};
+// Define the colleges table
+const colleges = { name: "colleges" };
 
 // Path to the CSV file with updated college data
 const CSV_FILE_PATH = "./attached_assets/Updated_Most-Recent-Cohorts-Institution.csv";
@@ -52,7 +41,7 @@ async function importCollegeExtendedData() {
   const records = [];
   await new Promise((resolve, reject) => {
     fs.createReadStream(CSV_FILE_PATH)
-      .pipe(parse({ columns: true, delimiter: "," }))
+      .pipe(csvParse.parse({ columns: true, delimiter: "," }))
       .on("data", (data) => {
         // Only process records with a name
         if (data.name) {
@@ -112,10 +101,23 @@ async function importCollegeExtendedData() {
             parseInt(record["10_yrs_after_entry.median"]) : null
         };
         
-        // Update the college record in the database
-        await db.update(colleges)
-          .set(updatedCollege)
-          .where(eq(colleges.id, college.id));
+        // Update the college record in the database using raw SQL
+        await db.execute(sql`
+          UPDATE colleges 
+          SET 
+            degrees_awarded_predominant = ${updatedCollege.degreePredominant},
+            degrees_awarded_highest = ${updatedCollege.degreeHighest},
+            admission_rate_overall = ${updatedCollege.admissionRate},
+            sat_scores_average_overall = ${updatedCollege.satAverage},
+            pell_grant_rate = ${updatedCollege.pellGrantRate},
+            completion_rate_4yr_150nt = ${updatedCollege.completionRate4yr},
+            median_debt_completers_overall = ${updatedCollege.medianDebtCompleters},
+            median_debt_noncompleters = ${updatedCollege.medianDebtNoncompleters},
+            demographics_median_family_income = ${updatedCollege.medianFamilyIncome},
+            median_earnings_10yrs_after_entry = ${updatedCollege.medianEarnings10yr}
+          WHERE 
+            id = ${college.id}
+        `);
           
         updateCount++;
         
