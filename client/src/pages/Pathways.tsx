@@ -2096,131 +2096,116 @@ const Pathways = ({
                         onClick={async () => {
                           // Auto-generate career calculation if user is authenticated
                           if (isAuthenticated && user) {
-                            // Step 1: Add career to favorites if not already added
-                            if (selectedCareerId) {
-                              addCareerToFavorites.mutate(selectedCareerId, {
-                                onSuccess: () => {
-                                  console.log('Career added to favorites successfully');
-                                  toast({
-                                    title: "Added to favorites",
-                                    description: `${selectedProfession} has been added to your favorite careers.`,
-                                    variant: "default",
-                                  });
-                                },
-                                onError: (error) => {
-                                  console.error('Failed to add career to favorites:', error);
-                                }
-                              });
-                            }
-
-                            // Step 2: Create a career calculation if a career was selected
-                            if (selectedCareerId && selectedProfession) {
-                              fetch(`/api/careers/${selectedCareerId}`)
-                                .then(res => res.json())
-                                .then(career => {
-                                  // Use salary data from the career, with fallbacks
-                                  const projectedSalary = career.salary || 50000;
-                                  const entryLevelSalary = career.salary_pct_10 || projectedSalary * 0.8;
-                                  const midCareerSalary = career.salary_pct_50 || projectedSalary * 1.5;
-                                  const experiencedSalary = career.salary_pct_90 || projectedSalary * 2;
-
-                                  // Create the career calculation
-                                  const careerCalculation = {
-                                    userId: user.id,
-                                    careerId: selectedCareerId,
-                                    projectedSalary: projectedSalary,
-                                    entryLevelSalary: entryLevelSalary,
-                                    midCareerSalary: midCareerSalary,
-                                    experiencedSalary: experiencedSalary,
-                                    education: 'direct_entry', // Since this is the "get a job" pathway
-                                    additionalNotes: `Auto-generated from Pathways for ${selectedProfession}`,
-                                    includedInProjection: true, // Auto-include in projection
-                                    locationZip: selectedZipCode,
-                                    adjustedForLocation: true // Since we have location data
-                                  };
-
-                                  console.log('Auto-generating career calculation:', careerCalculation);
-
-                                  // Save the career calculation
-                                  fetch('/api/career-calculations', {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify(careerCalculation),
-                                  })
-                                    .then(res => {
-                                      if (!res.ok) {
-                                        throw new Error('Failed to save career calculation');
-                                      }
-                                      return res.json();
-                                    })
-                                    .then(savedCalculation => {
-                                      console.log('Career calculation saved:', savedCalculation);
-                                      toast({
-                                        title: "Career Calculation Saved",
-                                        description: `Financial calculation for ${selectedProfession} has been created.`,
-                                        variant: "default"
-                                      });
-                                    })
-                                    .catch(err => {
-                                      console.error('Error saving career calculation:', err);
-                                      toast({
-                                        title: "Error",
-                                        description: "Failed to save career calculation. Please try again.",
-                                        variant: "destructive"
-                                      });
-                                    });
-                                })
-                                .catch(err => {
-                                  console.error('Error fetching career data:', err);
-                                });
-                            }
-                          }
-
-                          // Step 3: Unselect any existing college calculations since this is a "get a job" pathway
-                          if (isAuthenticated && user) {
-                            // Fetch all college calculations for the user
+                            // First, deselect any previously selected college calculation
                             fetch(`/api/college-calculations/user/${user.id}`)
                               .then(res => res.json())
-                              .then(collegeCalculations => {
-                                // Find any that are included in projection
-                                const includedCollegeCalculations = collegeCalculations.filter(calc => calc.includedInProjection);
+                              .then(calculations => {
+                                // Find any currently included calculation
+                                const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
                                 
-                                // For each included college calculation, toggle it off
-                                includedCollegeCalculations.forEach(calculation => {
-                                  fetch(`/api/college-calculations/${calculation.id}/toggle-projection`, {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({ includedInProjection: false }),
-                                  })
-                                    .then(res => {
-                                      if (!res.ok) {
-                                        throw new Error(`Failed to toggle college calculation ${calculation.id}`);
-                                      }
-                                      return res.json();
-                                    })
-                                    .then(() => {
-                                      console.log(`Excluded college calculation ${calculation.id} from projection for job pathway`);
-                                    })
-                                    .catch(err => {
-                                      console.error(`Error excluding college calculation ${calculation.id}:`, err);
-                                    });
-                                });
-
-                                if (includedCollegeCalculations.length > 0) {
+                                // If one exists, un-include it first
+                                if (includedCalculation) {
+                                  console.log("Excluding college calculation from projection:", includedCalculation.id);
+                                  
                                   // Notify the user that we're excluding college data
                                   toast({
                                     title: "College data excluded",
                                     description: "Since you're choosing a job pathway, we've excluded any college costs from your financial projection.",
                                     variant: "default"
                                   });
+                                  
+                                  return fetch(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: user.id })
+                                  });
+                                }
+                                return new Response(null, { status: 200 });
+                              })
+                              .then(() => {
+                                // Step 1: Add career to favorites if not already added
+                                if (selectedCareerId) {
+                                  addCareerToFavorites.mutate(selectedCareerId, {
+                                    onSuccess: () => {
+                                      console.log('Career added to favorites successfully');
+                                      toast({
+                                        title: "Added to favorites",
+                                        description: `${selectedProfession} has been added to your favorite careers.`,
+                                        variant: "default",
+                                      });
+                                    },
+                                    onError: (error) => {
+                                      console.error('Failed to add career to favorites:', error);
+                                    }
+                                  });
+                                }
+
+                                // Step 2: Create a career calculation if a career was selected
+                                if (selectedCareerId && selectedProfession) {
+                                  fetch(`/api/careers/${selectedCareerId}`)
+                                    .then(res => res.json())
+                                    .then(career => {
+                                      // Use salary data from the career, with fallbacks
+                                      const projectedSalary = career.salary || 50000;
+                                      const entryLevelSalary = career.salary_pct_10 || projectedSalary * 0.8;
+                                      const midCareerSalary = career.salary_pct_50 || projectedSalary * 1.5;
+                                      const experiencedSalary = career.salary_pct_90 || projectedSalary * 2;
+
+                                      // Create the career calculation
+                                      const careerCalculation = {
+                                        userId: user.id,
+                                        careerId: selectedCareerId,
+                                        projectedSalary: projectedSalary,
+                                        entryLevelSalary: entryLevelSalary,
+                                        midCareerSalary: midCareerSalary,
+                                        experiencedSalary: experiencedSalary,
+                                        education: 'direct_entry', // Since this is the "get a job" pathway
+                                        additionalNotes: `Auto-generated from Pathways for ${selectedProfession}`,
+                                        includedInProjection: true, // Auto-include in projection
+                                        locationZip: selectedZipCode,
+                                        adjustedForLocation: true // Since we have location data
+                                      };
+
+                                      console.log('Auto-generating career calculation:', careerCalculation);
+
+                                      // Save the career calculation
+                                      fetch('/api/career-calculations', {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify(careerCalculation),
+                                      })
+                                        .then(res => {
+                                          if (!res.ok) {
+                                            throw new Error('Failed to save career calculation');
+                                          }
+                                          return res.json();
+                                        })
+                                        .then(savedCalculation => {
+                                          console.log('Career calculation saved:', savedCalculation);
+                                          toast({
+                                            title: "Career Calculation Saved",
+                                            description: `Financial calculation for ${selectedProfession} has been created.`,
+                                            variant: "default"
+                                          });
+                                        })
+                                        .catch(err => {
+                                          console.error('Error saving career calculation:', err);
+                                          toast({
+                                            title: "Error",
+                                            description: "Failed to save career calculation. Please try again.",
+                                            variant: "destructive"
+                                          });
+                                        });
+                                    })
+                                    .catch(err => {
+                                      console.error('Error fetching career data:', err);
+                                    });
                                 }
                               })
                               .catch(err => {
-                                console.error('Error fetching college calculations:', err);
+                                console.error('Error managing college calculations:', err);
                               });
                           }
 
