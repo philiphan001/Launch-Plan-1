@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 
 interface GapYearPathwayProps {
   activity: string;
+  length?: "3month" | "6month" | "9month" | "12month" | null;
+  budget?: number;
   handleBack: () => void;
   handleNext: () => void;
   handleSelectPathway: (pathway: string) => void;
@@ -12,10 +14,21 @@ interface GapYearPathwayProps {
 
 export const GapYearPathway: React.FC<GapYearPathwayProps> = ({
   activity,
-  handleBack,
+  length,
+  budget,
+  handleBack, 
   handleNext,
   handleSelectPathway
 }) => {
+  // Format currency helper
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
   // Render Travel pathway
   if (activity === 'travel') {
     return (

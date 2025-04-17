@@ -3159,13 +3159,26 @@ const Pathways = ({
         }
         // Gap year pathway diagram
         else if (selectedPath === 'gap' && gapYearActivity) {
+          // Get friendly time description for subtitle
+          const getTimeDescription = () => {
+            switch(gapYearLength) {
+              case '3month': return '3-month';
+              case '6month': return '6-month';
+              case '9month': return '9-month';
+              case '12month': return 'full-year';
+              default: return '';
+            }
+          };
+          
           return (
             <Step 
               title={userJourney} 
-              subtitle={`Gap year pathway for ${gapYearActivity.charAt(0).toUpperCase()}${gapYearActivity.slice(1)} activities`}
+              subtitle={`${getTimeDescription()} gap year for ${gapYearActivity.charAt(0).toUpperCase()}${gapYearActivity.slice(1)} activities | Budget: ${formatCurrency(gapYearBudget)}`}
             >
               <GapYearPathway 
                 activity={gapYearActivity}
+                length={gapYearLength}
+                budget={gapYearBudget}
                 handleBack={handleBack}
                 handleNext={handleNext}
                 handleSelectPathway={(pathway: string) => {
