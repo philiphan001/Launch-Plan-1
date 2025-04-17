@@ -33,8 +33,8 @@ export interface IStorage {
   
   // College methods
   getCollege(id: number): Promise<College | undefined>;
-  getColleges(): Promise<College[]>;
-  searchColleges(query: string, educationType?: string): Promise<College[]>;
+  getColleges(collegeType?: string): Promise<College[]>;
+  searchColleges(query: string, educationType?: string, collegeType?: string): Promise<College[]>;
   createCollege(college: InsertCollege): Promise<College>;
   
   // Career methods

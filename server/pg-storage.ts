@@ -81,9 +81,37 @@ export class PgStorage implements IStorage {
     return result[0];
   }
   
-  async getColleges(): Promise<College[]> {
-    const result = await db.select().from(colleges);
-    console.log(`Retrieved ${result.length} colleges from database. First college:`, result[0]);
+  async getColleges(collegeType?: string): Promise<College[]> {
+    let query = db.select().from(colleges);
+    
+    // Apply filters for college type based on degrees_awarded_predominant field
+    if (collegeType) {
+      switch(collegeType.toLowerCase()) {
+        case 'vocational':
+        case 'vocational school':
+          query = query.where(eq(colleges.degreePredominant, 1));
+          break;
+        case 'community':
+        case 'community college':
+          query = query.where(eq(colleges.degreePredominant, 2));
+          break;
+        case 'bachelors':
+        case 'bachelor':
+        case 'bachelors institution':
+          query = query.where(eq(colleges.degreePredominant, 3));
+          break;
+        case 'graduate':
+        case 'graduate institution':
+          query = query.where(eq(colleges.degreePredominant, 4));
+          break;
+      }
+    }
+    
+    const result = await query;
+    console.log(`Retrieved ${result.length} colleges from database${collegeType ? ' with type: ' + collegeType : ''}`);
+    if (result.length > 0) {
+      console.log(`First college:`, result[0]);
+    }
     return result;
   }
   
