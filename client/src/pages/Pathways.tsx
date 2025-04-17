@@ -4452,50 +4452,44 @@ const Pathways = ({
       
       {/* Education Requirement Warning Dialog */}
       <AlertDialog open={showEducationWarning} onOpenChange={setShowEducationWarning}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Education Requirement Notice</AlertDialogTitle>
-            <AlertDialogDescription>
-              <p className="mb-4">
-                This career typically requires higher education: <span className="font-medium">{selectedCareerEducation}</span>
-              </p>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader className="pb-2">
+            <div className="flex items-center gap-2 text-orange-600">
+              <span className="material-icons">school</span>
+              <AlertDialogTitle>Education Requirement Notice</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="mt-2">
+              <div className="bg-orange-50 p-3 border border-orange-100 rounded-md mb-3">
+                <p className="text-sm font-medium text-orange-800">
+                  This career typically requires: <span className="font-bold">{selectedCareerEducation}</span>
+                </p>
+              </div>
+              
               {selectedPath === 'job' ? (
-                <>
-                  <p className="mb-4">
-                    The job market for this career may be competitive without the recommended education. 
-                    You might want to consider exploring the college pathway to gain the qualifications 
-                    necessary for this career.
-                  </p>
-                  <p>
-                    Would you like to continue with this career choice in the job pathway, 
-                    or would you prefer to explore the college pathway instead?
-                  </p>
-                </>
+                <p className="text-sm text-gray-600 mb-2">
+                  The job market for this career may be competitive without the recommended education. Consider exploring the college pathway for better opportunities.
+                </p>
               ) : (
-                <>
-                  <p className="mb-4">
-                    {selectedPath === 'education' && educationType === '2year' ? 
-                      'This career typically requires a 4-year bachelor\'s degree or higher. A 2-year associate degree may not provide sufficient education for this career.' : 
-                      'This career typically requires a 4-year bachelor\'s degree or higher. A vocational certificate may not provide sufficient education for this career.'}
-                  </p>
-                  <p>
-                    Would you like to continue with your current pathway, or would you prefer to 
-                    explore the 4-year college pathway instead?
-                  </p>
-                </>
+                <p className="text-sm text-gray-600 mb-2">
+                  {selectedPath === 'education' && educationType === '2year' ? 
+                    'A 2-year associate degree may not provide sufficient education for this career path, which typically requires a 4-year bachelor\'s degree or higher.' : 
+                    'A vocational certificate may not provide sufficient education for this career path, which typically requires a 4-year bachelor\'s degree or higher.'}
+                </p>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel 
+              className="text-sm"
               onClick={() => {
                 // Continue with current pathway despite education warning
                 setShowEducationWarning(false);
               }}
             >
-              Continue with Current Pathway
+              Continue Anyway
             </AlertDialogCancel>
             <AlertDialogAction
+              className="bg-blue-600 hover:bg-blue-700 text-sm"
               onClick={() => {
                 // Switch to 4-year college pathway
                 setShowEducationWarning(false);
@@ -4505,7 +4499,7 @@ const Pathways = ({
                 setUserJourney("After high school, I am interested in attending a 4-year college or university where...");
               }}
             >
-              Switch to 4-Year College Pathway
+              Switch to 4-Year College
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
