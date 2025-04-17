@@ -318,7 +318,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           usNewsTop150: college.usNewsTop150 !== undefined ? Number(college.usNewsTop150) : 
                       (college as any).us_news_top_150 !== undefined ? Number((college as any).us_news_top_150) : null,
           bestLiberalArtsColleges: college.bestLiberalArtsColleges !== undefined ? Number(college.bestLiberalArtsColleges) : 
-                                 (college as any).best_liberal_arts_colleges !== undefined ? Number((college as any).best_liberal_arts_colleges) : null
+                                 (college as any).best_liberal_arts_colleges !== undefined ? Number((college as any).best_liberal_arts_colleges) : null,
+          // New fields from the extended college data
+          degreesAwardedPredominant: (college as any).degrees_awarded_predominant,
+          degreesAwardedHighest: (college as any).degrees_awarded_highest,
+          admissionRateOverall: (college as any).admission_rate_overall,
+          satScoresAverageOverall: (college as any).sat_scores_average_overall,
+          pellGrantRate: (college as any).pell_grant_rate,
+          completionRate4yr150nt: (college as any).completion_rate_4yr_150nt,
+          medianDebtCompletersOverall: (college as any).median_debt_completers_overall,
+          medianDebtNoncompleters: (college as any).median_debt_noncompleters,
+          demographicsMedianFamilyIncome: (college as any).demographics_median_family_income,
+          medianEarnings10yrsAfterEntry: (college as any).median_earnings_10yrs_after_entry
         };
         
         // Debug output for top colleges
@@ -404,7 +415,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         usNewsTop150: college.usNewsTop150 !== undefined ? Number(college.usNewsTop150) : 
                       (college as any).us_news_top_150 !== undefined ? Number((college as any).us_news_top_150) : null,
         bestLiberalArtsColleges: college.bestLiberalArtsColleges !== undefined ? Number(college.bestLiberalArtsColleges) : 
-                                (college as any).best_liberal_arts_colleges !== undefined ? Number((college as any).best_liberal_arts_colleges) : null
+                                (college as any).best_liberal_arts_colleges !== undefined ? Number((college as any).best_liberal_arts_colleges) : null,
+        // New fields from the extended college data
+        degreesAwardedPredominant: (college as any).degrees_awarded_predominant,
+        degreesAwardedHighest: (college as any).degrees_awarded_highest,
+        admissionRateOverall: (college as any).admission_rate_overall,
+        satScoresAverageOverall: (college as any).sat_scores_average_overall,
+        pellGrantRate: (college as any).pell_grant_rate,
+        completionRate4yr150nt: (college as any).completion_rate_4yr_150nt,
+        medianDebtCompletersOverall: (college as any).median_debt_completers_overall,
+        medianDebtNoncompleters: (college as any).median_debt_noncompleters,
+        demographicsMedianFamilyIncome: (college as any).demographics_median_family_income,
+        medianEarnings10yrsAfterEntry: (college as any).median_earnings_10yrs_after_entry
       };
       
       res.json(transformedCollege);
