@@ -2180,12 +2180,128 @@ const Pathways = ({
                   
                   <div className="flex justify-between mt-6">
                     <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button 
-                      onClick={handleNext}
-                      className="bg-green-500 hover:bg-green-600 text-white"
-                    >
-                      Next Step
-                    </Button>
+                    <div className="space-x-2">
+                      {selectedLocation && selectedCareerId && selectedProfession && (
+                        <Button
+                          className="bg-green-500 hover:bg-green-600 text-white"
+                          onClick={async () => {
+                            // Auto-generate career calculation if user is authenticated
+                            if (isAuthenticated && user) {
+                              // Step 1: Add career to favorites if not already added
+                              if (selectedCareerId) {
+                                addCareerToFavorites.mutate(selectedCareerId, {
+                                  onSuccess: () => {
+                                    console.log('Career added to favorites successfully');
+                                    toast({
+                                      title: "Added to favorites",
+                                      description: `${selectedProfession} has been added to your favorite careers.`,
+                                      variant: "default",
+                                    });
+                                  },
+                                  onError: (error) => {
+                                    console.error('Failed to add career to favorites:', error);
+                                  }
+                                });
+                              }
+
+                              // Step 2: Create a career calculation if a career was selected
+                              if (selectedCareerId && selectedProfession) {
+                                fetch(`/api/careers/${selectedCareerId}`)
+                                  .then(res => res.json())
+                                  .then(career => {
+                                    // Use salary data from the career, with fallbacks
+                                    const projectedSalary = career.salary || 50000;
+                                    const entryLevelSalary = career.salary_pct_10 || projectedSalary * 0.8;
+                                    const midCareerSalary = career.salary_pct_50 || projectedSalary * 1.5;
+                                    const experiencedSalary = career.salary_pct_90 || projectedSalary * 2;
+
+                                    // Create the career calculation
+                                    const careerCalculation = {
+                                      userId: user.id,
+                                      careerId: selectedCareerId,
+                                      projectedSalary: projectedSalary,
+                                      entryLevelSalary: entryLevelSalary,
+                                      midCareerSalary: midCareerSalary,
+                                      experiencedSalary: experiencedSalary,
+                                      education: 'direct_entry', // Since this is the "get a job" pathway
+                                      additionalNotes: `Auto-generated from Pathways for ${selectedProfession}`,
+                                      includedInProjection: true, // Auto-include in projection
+                                      locationZip: selectedZipCode,
+                                      adjustedForLocation: true // Since we have location data
+                                    };
+
+                                    console.log('Auto-generating career calculation:', careerCalculation);
+
+                                    // Save the career calculation
+                                    fetch('/api/career-calculations', {
+                                      method: 'POST',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                      },
+                                      body: JSON.stringify(careerCalculation),
+                                    })
+                                      .then(res => {
+                                        if (!res.ok) {
+                                          throw new Error('Failed to save career calculation');
+                                        }
+                                        return res.json();
+                                      })
+                                      .then(savedCalculation => {
+                                        console.log('Career calculation saved:', savedCalculation);
+                                        toast({
+                                          title: "Career Calculation Saved",
+                                          description: `Financial calculation for ${selectedProfession} has been created.`,
+                                          variant: "default"
+                                        });
+                                      })
+                                      .catch(err => {
+                                        console.error('Error saving career calculation:', err);
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to save career calculation. Please try again.",
+                                          variant: "destructive"
+                                        });
+                                      });
+                                  })
+                                  .catch(err => {
+                                    console.error('Error fetching career data:', err);
+                                  });
+                              }
+                            }
+
+                            // Collect pathway data with enhanced location info
+                            const pathwayDataForFinancialPlan = {
+                              selectedProfession,
+                              location: selectedLocation ? {
+                                zipCode: selectedZipCode,
+                                city: selectedLocation.city,
+                                state: selectedLocation.state
+                              } : null,
+                              userJourney,
+                              // Add these additional fields for better compatibility
+                              zipCode: selectedZipCode,
+                              selectedCareer: selectedCareerId,
+                              jobType
+                            };
+
+                            console.log("Storing enhanced pathway data for financial planning:", pathwayDataForFinancialPlan);
+                            localStorage.setItem('pathwayData', JSON.stringify(pathwayDataForFinancialPlan));
+
+                            // Redirect to the financial projections page with auto-generate flag
+                            navigate('/projections?autoGenerate=true');
+                          }}
+                          disabled={!selectedLocation || !selectedCareerId || !selectedProfession}
+                        >
+                          Create Financial Plan
+                        </Button>
+                      )}
+                      <Button 
+                        onClick={handleNext}
+                        className="bg-green-500 hover:bg-green-600 text-white"
+                      >
+                        Next Step
+                      </Button>
+                    </div>
                   </div>
                 </>
               )}
