@@ -2628,126 +2628,340 @@ const Pathways = ({
               title={userJourney} 
               subtitle={`How long do you plan to serve in the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)}?`}
             >
+              {/* Dynamically show appropriate service length options based on branch */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div 
-                  className={`border ${serviceLength === '2year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setServiceLength('2year');
-                    // Update benefits
-                    setMilitaryBenefits({
-                      giBillEligible: true,
-                      giBillPercentage: 50, // 50% for 2 years
-                      housingAllowance: true,
-                      veteransPreference: true,
-                      retirementEligible: false
-                    });
-                    setAdjustedStartingAge(20); // 18 + 2 years service
-                    setUserJourney(userJourney + " for a 2-year enlistment");
-                  }}
-                >
-                  <div className="flex items-center mb-4">
-                    <div className={`rounded-full ${serviceLength === '2year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '2year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">timer</span>
+                {/* Different branches have different typical service lengths */}
+                {militaryBranch === 'army' && (
+                  <>
+                    <div 
+                      className={`border ${serviceLength === '3year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('3year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 60, // 60% for 3 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(21); // 18 + 3 years service
+                        setUserJourney(userJourney + " for a 3-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '3year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '3year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '3year' ? 'text-primary' : ''}`}>3-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Standard Army initial term</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Partial GI Bill (60%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Housing stipend available</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
+                          <span>No retirement eligibility</span>
+                        </div>
+                      </div>
                     </div>
-                    <h5 className={`font-medium ${serviceLength === '2year' ? 'text-primary' : ''}`}>2-Year Enlistment</h5>
-                  </div>
-                  <p className="text-sm text-gray-600">Minimum commitment with partial benefits</p>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Partial GI Bill (50%)</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Housing stipend available</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
-                      <span>No retirement eligibility</span>
-                    </div>
-                  </div>
-                </div>
 
-                <div 
-                  className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setServiceLength('4year');
-                    // Update benefits
-                    setMilitaryBenefits({
-                      giBillEligible: true,
-                      giBillPercentage: 100, // 100% for 4 years
-                      housingAllowance: true,
-                      veteransPreference: true,
-                      retirementEligible: false
-                    });
-                    setAdjustedStartingAge(22); // 18 + 4 years service
-                    setUserJourney(userJourney + " for a 4-year enlistment");
-                  }}
-                >
-                  <div className="flex items-center mb-4">
-                    <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">timer</span>
+                    <div 
+                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('4year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 100, // 100% for 4 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(22); // 18 + 4 years service
+                        setUserJourney(userJourney + " for a 4-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Extended commitment with full benefits</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Full GI Bill (100%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Housing stipend available</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Potential enlistment bonus</span>
+                        </div>
+                      </div>
                     </div>
-                    <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
-                  </div>
-                  <p className="text-sm text-gray-600">Standard commitment with full benefits</p>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Full GI Bill (100%)</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Housing stipend available</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
-                      <span>No retirement eligibility</span>
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
 
-                <div 
-                  className={`border ${serviceLength === '6year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setServiceLength('6year');
-                    // Update benefits
-                    setMilitaryBenefits({
-                      giBillEligible: true,
-                      giBillPercentage: 100, // 100% for 6 years
-                      housingAllowance: true,
-                      veteransPreference: true,
-                      retirementEligible: false
-                    });
-                    setAdjustedStartingAge(24); // 18 + 6 years service
-                    setUserJourney(userJourney + " for a 6-year enlistment");
-                  }}
-                >
-                  <div className="flex items-center mb-4">
-                    <div className={`rounded-full ${serviceLength === '6year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '6year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">timer</span>
+                {militaryBranch === 'navy' && (
+                  <>
+                    <div 
+                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('4year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 80, // 80% for 4 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(22); // 18 + 4 years service
+                        setUserJourney(userJourney + " for a 4-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Standard Navy contract</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Partial GI Bill (80%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Housing stipend available</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
+                          <span>No retirement eligibility</span>
+                        </div>
+                      </div>
                     </div>
-                    <h5 className={`font-medium ${serviceLength === '6year' ? 'text-primary' : ''}`}>6-Year Enlistment</h5>
-                  </div>
-                  <p className="text-sm text-gray-600">Extended commitment with additional benefits</p>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Full GI Bill (100%)</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Enhanced housing stipend</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Reenlistment bonus eligibility</span>
-                    </div>
-                  </div>
-                </div>
 
+                    <div 
+                      className={`border ${serviceLength === '5year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('5year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 100, // 100% for 5 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(23); // 18 + 5 years service
+                        setUserJourney(userJourney + " for a 5-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '5year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '5year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '5year' ? 'text-primary' : ''}`}>5-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Extended Navy commitment</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Full GI Bill (100%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Enhanced housing stipend</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Technical training opportunities</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {militaryBranch === 'airforce' && (
+                  <>
+                    <div 
+                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('4year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 80, // 80% for 4 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(22); // 18 + 4 years service
+                        setUserJourney(userJourney + " for a 4-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Minimum Air Force term</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Partial GI Bill (80%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Housing allowance</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Technical training</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div 
+                      className={`border ${serviceLength === '6year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('6year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 100, // 100% for 6 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(24); // 18 + 6 years service
+                        setUserJourney(userJourney + " for a 6-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '6year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '6year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '6year' ? 'text-primary' : ''}`}>6-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Extended Air Force commitment</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Full GI Bill (100%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Enhanced enlistment bonus</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Advanced training options</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {(militaryBranch === 'marines' || militaryBranch === 'coastguard' || militaryBranch === 'spaceguard') && (
+                  <>
+                    <div 
+                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('4year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 80, // 80% for 4 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(22); // 18 + 4 years service
+                        setUserJourney(userJourney + " for a 4-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Standard commitment</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Partial GI Bill (80%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Housing stipend available</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
+                          <span>No retirement eligibility</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div 
+                      className={`border ${serviceLength === '5year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                      onClick={() => {
+                        setServiceLength('5year');
+                        // Update benefits
+                        setMilitaryBenefits({
+                          giBillEligible: true,
+                          giBillPercentage: 100, // 100% for 5 years
+                          housingAllowance: true,
+                          veteransPreference: true,
+                          retirementEligible: false
+                        });
+                        setAdjustedStartingAge(23); // 18 + 5 years service
+                        setUserJourney(userJourney + " for a 5-year enlistment");
+                      }}
+                    >
+                      <div className="flex items-center mb-4">
+                        <div className={`rounded-full ${serviceLength === '5year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '5year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                          <span className="material-icons text-sm">timer</span>
+                        </div>
+                        <h5 className={`font-medium ${serviceLength === '5year' ? 'text-primary' : ''}`}>5-Year Enlistment</h5>
+                      </div>
+                      <p className="text-sm text-gray-600">Extended commitment with full benefits</p>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Full GI Bill (100%)</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Enhanced housing stipend</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                          <span>Specialized training opportunities</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Career option available for all branches */}
                 <div 
-                  className={`border ${serviceLength === 'career' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                  className={`border ${serviceLength === 'career' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors col-span-1 md:col-span-2`}
                   onClick={() => {
                     setServiceLength('career');
                     // Update benefits
@@ -2769,22 +2983,26 @@ const Pathways = ({
                     <h5 className={`font-medium ${serviceLength === 'career' ? 'text-primary' : ''}`}>Career Service (20+ years)</h5>
                   </div>
                   <p className="text-sm text-gray-600">Full career with retirement benefits</p>
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Full GI Bill (100%)</span>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                        <span>Full GI Bill (100%)</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                        <span>Full housing benefits</span>
+                      </div>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Full housing benefits</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Military pension (50%+ of base pay)</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                      <span>Lifetime healthcare (Tricare)</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                        <span>Military pension (50%+ of base pay)</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                        <span>Lifetime healthcare (Tricare)</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -3138,14 +3356,41 @@ const Pathways = ({
                       // Set up for education pathway with military benefits
                       setSelectedPath('education');
                       setEducationType('4year'); // Default to 4-year with GI Bill
-                      setCurrentStep(7); // Skip to location selection
+                      
+                      // Set military-to-education flag for benefits tracking
+                      setMilitaryToEducation(true);
+                      
+                      // Update user journey to reflect path
+                      setUserJourney(`After serving in the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)} for ${
+                        serviceLength === '3year' ? '3 years' : 
+                        serviceLength === '4year' ? '4 years' : 
+                        serviceLength === '5year' ? '5 years' : 
+                        serviceLength === '6year' ? '6 years' : 'several years'
+                      }, I plan to attend college using my GI Bill benefits`);
+                      
+                      // Go to field of study selection for education path
+                      setCurrentStep(5);
+                      
                     } else if (postMilitaryPath === 'job') {
                       // Set up for job pathway with military experience
                       setSelectedPath('job');
                       setJobType('fulltime');
                       setIsPartTime(false);
                       setWeeklyHours(40);
-                      setCurrentStep(6); // Skip to career search
+                      
+                      // Set military-to-job flag for veteran preference
+                      setMilitaryToJob(true);
+                      
+                      // Update user journey
+                      setUserJourney(`After serving in the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)} for ${
+                        serviceLength === '3year' ? '3 years' : 
+                        serviceLength === '4year' ? '4 years' : 
+                        serviceLength === '5year' ? '5 years' : 
+                        serviceLength === '6year' ? '6 years' : 'several years'
+                      }, I plan to enter the workforce using my military experience`);
+                      
+                      // Go directly to career search for job path
+                      setCurrentStep(6);
                     }
                   }}
                   disabled={!postMilitaryPath}
