@@ -511,13 +511,90 @@ const Pathways = ({
     enabled: !!selectedZipCode && selectedZipCode.length === 5 && currentStep === 7
   });
   
-  // School search query using our new college search API with education type filter
+  // Query to fetch all colleges for local filtering
+  const { data: allColleges = [], isLoading: isLoadingColleges } = useQuery<any[]>({
+    queryKey: ['/api/colleges'],
+    queryFn: async () => {
+      const response = await fetch('/api/colleges');
+      if (!response.ok) {
+        throw new Error('Failed to fetch colleges');
+      }
+      return response.json();
+    },
+    // Only fetch when on college selection step and for 2-year/vocational education types
+    enabled: currentStep === 8 && (educationType === '2year' || educationType === 'vocational')
+  });
+  
+  // School search query - search from API for 4-year colleges, filter locally for 2-year/vocational
   const { data: searchResults, isLoading: isLoadingSearch } = useQuery<any[]>({
-    queryKey: ['/api/colleges/search', searchQuery, educationType],
+    queryKey: ['/api/colleges/search', searchQuery, educationType, allColleges],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
+      
+      // For 2-year colleges and vocational schools, filter from the fetched colleges locally
+      if ((educationType === '2year' || educationType === 'vocational') && allColleges.length > 0) {
+        console.log(`Local search for ${searchQuery} in ${educationType} colleges from ${allColleges.length} total colleges`);
+        
+        // First, filter by education type
+        let filteredColleges = allColleges.filter(college => {
+          if (!college.type) return false;
+          
+          const collegeType = college.type.toLowerCase();
+          
+          // Filter based on education type
+          if (educationType === '2year') {
+            // Filter for 2-year/community colleges by type or degreePredominant=2
+            return (
+              collegeType.includes('community') || 
+              collegeType.includes('2-year') || 
+              collegeType.includes('2 year') || 
+              collegeType.includes('junior') ||
+              college.degreePredominant === 2 ||
+              (college.name && college.name.toLowerCase().includes('community college'))
+            );
+          } else if (educationType === 'vocational') {
+            // Filter for vocational/technical schools by type or degreePredominant=1
+            return (
+              collegeType.includes('vocational') || 
+              collegeType.includes('technical') || 
+              collegeType.includes('trade') || 
+              collegeType.includes('career') ||
+              college.degreePredominant === 1 ||
+              (college.name && (
+                college.name.toLowerCase().includes('technical') ||
+                college.name.toLowerCase().includes('vocational') ||
+                college.name.toLowerCase().includes('trade') ||
+                college.name.toLowerCase().includes('career') ||
+                college.name.toLowerCase().includes('institute')
+              ))
+            );
+          }
+          
+          return false;
+        });
+        
+        // Then, search by name/location from the filtered set
+        const searchLower = searchQuery.toLowerCase();
+        const searchResults = filteredColleges.filter(college => {
+          const collegeName = college.name ? college.name.toLowerCase() : '';
+          const collegeLocation = college.location ? college.location.toLowerCase() : '';
+          
+          return collegeName.includes(searchLower) || collegeLocation.includes(searchLower);
+        });
+        
+        // Transform results to match API format and return top 10
+        return searchResults.slice(0, 10).map(college => ({
+          id: college.id,
+          name: college.name,
+          city: college.location?.split(',')[0]?.trim() || '',
+          state: college.state || '',
+          type: college.type
+        }));
+      } 
+      
+      // Default behavior for other education types: use API search
       const url = `/api/colleges/search?q=${encodeURIComponent(searchQuery)}${educationType ? `&educationType=${educationType}` : ''}`;
-      console.log(`Searching colleges with query: ${searchQuery}, educationType: ${educationType || 'all'}`);
+      console.log(`API search for ${searchQuery}, educationType: ${educationType || 'all'}`);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to search colleges');
