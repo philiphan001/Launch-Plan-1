@@ -119,6 +119,18 @@ const Pathways = ({
   const [isPartTime, setIsPartTime] = useState<boolean>(false);
   const [weeklyHours, setWeeklyHours] = useState<number>(40);
   const [militaryBranch, setMilitaryBranch] = useState<MilitaryBranch>(null);
+  const [serviceLength, setServiceLength] = useState<string>('4year'); // Default 4 years
+  const [postMilitaryPath, setPostMilitaryPath] = useState<'education' | 'job' | null>(null);
+  const [militaryToEducation, setMilitaryToEducation] = useState<boolean>(false);
+  const [militaryToJob, setMilitaryToJob] = useState<boolean>(false);
+  const [adjustedStartingAge, setAdjustedStartingAge] = useState<number>(18); // Default starting age
+  const [militaryBenefits, setMilitaryBenefits] = useState<{
+    giBillEligible: boolean;
+    giBillPercentage: number;
+    housingAllowance: boolean;
+    veteransPreference: boolean;
+    retirementEligible: boolean;
+  } | null>(null);
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
@@ -734,6 +746,12 @@ const Pathways = ({
     setEducationType(null);
     setJobType(null);
     setMilitaryBranch(null);
+    setServiceLength('4year');
+    setPostMilitaryPath(null);
+    setMilitaryToEducation(false);
+    setMilitaryToJob(false);
+    setAdjustedStartingAge(18);
+    setMilitaryBenefits(null);
     setGapYearActivity(null);
     setNeedsGuidance(null);
     setSelectedFieldOfStudy(null);
@@ -2603,18 +2621,200 @@ const Pathways = ({
         return null;
       
       case 4:
-        // Military career path diagram
+        // Military service length selection
         if (selectedPath === 'military' && militaryBranch) {
           return (
             <Step 
               title={userJourney} 
-              subtitle={`Military career pathway for the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)}`}
+              subtitle={`How long do you plan to serve in the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)}?`}
             >
-              <MilitaryPathway 
-                militaryBranch={militaryBranch || 'army'}
-                handleBack={handleBack}
-                handleNext={handleNext}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div 
+                  className={`border ${serviceLength === '2year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setServiceLength('2year');
+                    // Update benefits
+                    setMilitaryBenefits({
+                      giBillEligible: true,
+                      giBillPercentage: 50, // 50% for 2 years
+                      housingAllowance: true,
+                      veteransPreference: true,
+                      retirementEligible: false
+                    });
+                    setAdjustedStartingAge(20); // 18 + 2 years service
+                    setUserJourney(userJourney + " for a 2-year enlistment");
+                  }}
+                >
+                  <div className="flex items-center mb-4">
+                    <div className={`rounded-full ${serviceLength === '2year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '2year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">timer</span>
+                    </div>
+                    <h5 className={`font-medium ${serviceLength === '2year' ? 'text-primary' : ''}`}>2-Year Enlistment</h5>
+                  </div>
+                  <p className="text-sm text-gray-600">Minimum commitment with partial benefits</p>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Partial GI Bill (50%)</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Housing stipend available</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
+                      <span>No retirement eligibility</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setServiceLength('4year');
+                    // Update benefits
+                    setMilitaryBenefits({
+                      giBillEligible: true,
+                      giBillPercentage: 100, // 100% for 4 years
+                      housingAllowance: true,
+                      veteransPreference: true,
+                      retirementEligible: false
+                    });
+                    setAdjustedStartingAge(22); // 18 + 4 years service
+                    setUserJourney(userJourney + " for a 4-year enlistment");
+                  }}
+                >
+                  <div className="flex items-center mb-4">
+                    <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">timer</span>
+                    </div>
+                    <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
+                  </div>
+                  <p className="text-sm text-gray-600">Standard commitment with full benefits</p>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Full GI Bill (100%)</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Housing stipend available</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
+                      <span>No retirement eligibility</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className={`border ${serviceLength === '6year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setServiceLength('6year');
+                    // Update benefits
+                    setMilitaryBenefits({
+                      giBillEligible: true,
+                      giBillPercentage: 100, // 100% for 6 years
+                      housingAllowance: true,
+                      veteransPreference: true,
+                      retirementEligible: false
+                    });
+                    setAdjustedStartingAge(24); // 18 + 6 years service
+                    setUserJourney(userJourney + " for a 6-year enlistment");
+                  }}
+                >
+                  <div className="flex items-center mb-4">
+                    <div className={`rounded-full ${serviceLength === '6year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '6year' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">timer</span>
+                    </div>
+                    <h5 className={`font-medium ${serviceLength === '6year' ? 'text-primary' : ''}`}>6-Year Enlistment</h5>
+                  </div>
+                  <p className="text-sm text-gray-600">Extended commitment with additional benefits</p>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Full GI Bill (100%)</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Enhanced housing stipend</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Reenlistment bonus eligibility</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div 
+                  className={`border ${serviceLength === 'career' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
+                  onClick={() => {
+                    setServiceLength('career');
+                    // Update benefits
+                    setMilitaryBenefits({
+                      giBillEligible: true,
+                      giBillPercentage: 100, // 100% for career
+                      housingAllowance: true,
+                      veteransPreference: true,
+                      retirementEligible: true
+                    });
+                    setAdjustedStartingAge(38); // 18 + 20 years service (retirement eligible)
+                    setUserJourney(userJourney + " as a career service member");
+                  }}
+                >
+                  <div className="flex items-center mb-4">
+                    <div className={`rounded-full ${serviceLength === 'career' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === 'career' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">military_tech</span>
+                    </div>
+                    <h5 className={`font-medium ${serviceLength === 'career' ? 'text-primary' : ''}`}>Career Service (20+ years)</h5>
+                  </div>
+                  <p className="text-sm text-gray-600">Full career with retirement benefits</p>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Full GI Bill (100%)</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Full housing benefits</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Military pension (50%+ of base pay)</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Lifetime healthcare (Tricare)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between mt-6">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                >
+                  <span className="material-icons mr-2">arrow_back</span>
+                  Back
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    if (serviceLength !== 'career') {
+                      // For non-career, go to post-military path selection
+                      handleNext();
+                    } else {
+                      // For career, go to location selection (skip post-military)
+                      setCurrentStep(6);
+                    }
+                  }}
+                  disabled={!serviceLength}
+                >
+                  Continue
+                  <span className="material-icons ml-2">arrow_forward</span>
+                </Button>
+              </div>
             </Step>
           );
         }
@@ -2826,8 +3026,139 @@ const Pathways = ({
         }
       
       case 5:
+        // Post-military path selection
+        if (selectedPath === 'military' && militaryBranch && serviceLength !== 'career') {
+          return (
+            <Step 
+              title={userJourney} 
+              subtitle="What would you like to do after your military service?"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div 
+                  className={`border ${postMilitaryPath === 'education' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors h-full`}
+                  onClick={() => {
+                    setPostMilitaryPath('education');
+                    setMilitaryToEducation(true);
+                    setUserJourney(userJourney + " and afterward, I plan to attend college using my military benefits");
+                  }}
+                >
+                  <div className="flex items-center mb-4">
+                    <div className={`rounded-full ${postMilitaryPath === 'education' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${postMilitaryPath === 'education' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">school</span>
+                    </div>
+                    <h5 className={`font-medium ${postMilitaryPath === 'education' ? 'text-primary' : ''}`}>Attend College</h5>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">Use your GI Bill benefits to pursue higher education</p>
+                  
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>GI Bill covers tuition and fees</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Monthly housing allowance</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Books and supplies stipend</span>
+                    </div>
+                    {militaryBenefits?.giBillPercentage && militaryBenefits.giBillPercentage < 100 && (
+                      <div className="flex items-center text-sm">
+                        <span className="material-icons text-amber-500 mr-2 text-sm">warning</span>
+                        <span>You qualify for {militaryBenefits.giBillPercentage}% of GI Bill benefits</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div 
+                  className={`border ${postMilitaryPath === 'job' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors h-full`}
+                  onClick={() => {
+                    setPostMilitaryPath('job');
+                    setMilitaryToJob(true);
+                    setUserJourney(userJourney + " and afterward, I plan to enter the workforce using my military experience");
+                  }}
+                >
+                  <div className="flex items-center mb-4">
+                    <div className={`rounded-full ${postMilitaryPath === 'job' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${postMilitaryPath === 'job' ? 'text-white' : 'text-gray-600'} mr-3`}>
+                      <span className="material-icons text-sm">work</span>
+                    </div>
+                    <h5 className={`font-medium ${postMilitaryPath === 'job' ? 'text-primary' : ''}`}>Enter Workforce</h5>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">Utilize your military skills and experience in the civilian job market</p>
+                  
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Veterans preference in government jobs</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Access to veteran employment services</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Valuable military experience on resume</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
+                      <span>Higher starting salary potential</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                <div className="flex items-start">
+                  <span className="material-icons text-blue-500 mr-2 mt-0.5">info</span>
+                  <div>
+                    <h6 className="font-medium text-sm">Your Military Benefits</h6>
+                    <p className="text-sm text-gray-600">
+                      Based on your {serviceLength === '2year' ? '2-year' : serviceLength === '4year' ? '4-year' : '6-year'} service, 
+                      you'll qualify for {militaryBenefits?.giBillPercentage}% of GI Bill benefits, 
+                      veterans preference in hiring, and more.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between mt-6">
+                <Button
+                  variant="outline"
+                  onClick={handleBack}
+                >
+                  <span className="material-icons mr-2">arrow_back</span>
+                  Back
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    if (postMilitaryPath === 'education') {
+                      // Set up for education pathway with military benefits
+                      setSelectedPath('education');
+                      setEducationType('4year'); // Default to 4-year with GI Bill
+                      setCurrentStep(7); // Skip to location selection
+                    } else if (postMilitaryPath === 'job') {
+                      // Set up for job pathway with military experience
+                      setSelectedPath('job');
+                      setJobType('fulltime');
+                      setIsPartTime(false);
+                      setWeeklyHours(40);
+                      setCurrentStep(6); // Skip to career search
+                    }
+                  }}
+                  disabled={!postMilitaryPath}
+                >
+                  Continue
+                  <span className="material-icons ml-2">arrow_forward</span>
+                </Button>
+              </div>
+            </Step>
+          );
+        }
         // Field of Study selection step
-        if (isEducationPath(selectedPath)) {
+        else if (isEducationPath(selectedPath)) {
           return (
             <Step title={userJourney} subtitle="Choose a field of study that interests you">
               <Card>
