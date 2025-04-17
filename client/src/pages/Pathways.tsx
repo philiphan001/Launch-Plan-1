@@ -116,6 +116,8 @@ const Pathways = ({
   };
   const [educationType, setEducationType] = useState<EducationType>(null);
   const [jobType, setJobType] = useState<JobType>(null);
+  const [isPartTime, setIsPartTime] = useState<boolean>(false);
+  const [weeklyHours, setWeeklyHours] = useState<number>(40);
   const [militaryBranch, setMilitaryBranch] = useState<MilitaryBranch>(null);
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
@@ -326,9 +328,7 @@ const Pathways = ({
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(null);
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
   
-  // Part-time job settings
-  const [isPartTime, setIsPartTime] = useState<boolean>(false);
-  const [weeklyHours, setWeeklyHours] = useState<number>(40);
+  // Education requirement warning state
   
   // Education requirement warning state
   const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
@@ -550,6 +550,8 @@ const Pathways = ({
       setEducationType('4year'); // Default to 4-year college
     } else if (path === 'job') {
       setJobType('fulltime'); // Default to full-time job
+      setIsPartTime(false);    // Default to full-time
+      setWeeklyHours(40);      // Default to 40 hours
     } else if (path === 'military') {
       setMilitaryBranch('army'); // Default to Army
     } else if (path === 'gap') {
