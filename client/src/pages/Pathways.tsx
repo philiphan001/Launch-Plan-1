@@ -2103,7 +2103,7 @@ const Pathways = ({
                                 // Find any currently included calculation
                                 const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
                                 
-                                // If one exists, un-include it first
+                                // If one exists, un-include it first by setting includedInProjection to false
                                 if (includedCalculation) {
                                   console.log("Excluding college calculation from projection:", includedCalculation.id);
                                   
@@ -2114,10 +2114,12 @@ const Pathways = ({
                                     variant: "default"
                                   });
                                   
-                                  return fetch(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
-                                    method: 'POST',
+                                  return fetch(`/api/college-calculations/${includedCalculation.id}`, {
+                                    method: 'PATCH',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ userId: user.id })
+                                    body: JSON.stringify({
+                                      includedInProjection: false
+                                    })
                                   });
                                 }
                                 return new Response(null, { status: 200 });
