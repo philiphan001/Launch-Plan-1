@@ -47,6 +47,7 @@ type EducationType = "4year" | "2year" | "vocational" | null;
 type JobType = "fulltime" | "parttime" | null;
 type MilitaryBranch = "army" | "navy" | "airforce" | "marines" | "coastguard" | "spaceguard" | null;
 type GapYearActivity = "travel" | "volunteer" | "work" | "other" | null;
+type GapYearLength = "3month" | "6month" | "9month" | "12month" | null;
 // For the transfer option
 type TransferOption = "yes" | "no" | null;
 
@@ -132,6 +133,8 @@ const Pathways = ({
     retirementEligible: boolean;
   } | null>(null);
   const [gapYearActivity, setGapYearActivity] = useState<GapYearActivity>(null);
+  const [gapYearLength, setGapYearLength] = useState<GapYearLength>(null);
+  const [gapYearBudget, setGapYearBudget] = useState<number>(10000); // Default $10,000 budget
   const [needsGuidance, setNeedsGuidance] = useState<boolean | null>(null);
   const [selectedFieldOfStudy, setSelectedFieldOfStudy] = useState<string | null>(null);
   const [hasSpecificSchool, setHasSpecificSchool] = useState<boolean | null>(null);
