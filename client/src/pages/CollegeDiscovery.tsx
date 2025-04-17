@@ -52,6 +52,8 @@ const CollegeDiscovery = ({
       sizes: params.get('sizes')?.split(',').filter(Boolean) || [],
       usNewsTop150: params.get('usNewsTop150') === 'true',
       bestLiberalArts: params.get('bestLiberalArts') === 'true',
+      vocationalSchool: params.get('vocationalSchool') === 'true',
+      communityCollege: params.get('communityCollege') === 'true',
       page: parseInt(params.get('page') || "1"),
       sortBy: params.get('sortBy') || "name", // Default sort by name
       sortOrder: params.get('sortOrder') || "asc" // Default sort ascending
@@ -91,6 +93,8 @@ const CollegeDiscovery = ({
     if (selectedSizes.length) params.set('sizes', selectedSizes.join(','));
     if (usNewsTop150Filter) params.set('usNewsTop150', 'true');
     if (bestLiberalArtsFilter) params.set('bestLiberalArts', 'true');
+    if (vocationalSchoolFilter) params.set('vocationalSchool', 'true');
+    if (communityCollegeFilter) params.set('communityCollege', 'true');
     if (currentPage !== 1) params.set('page', currentPage.toString());
     if (sortBy !== 'name') params.set('sortBy', sortBy);
     if (sortOrder !== 'asc') params.set('sortOrder', sortOrder);
@@ -244,6 +248,8 @@ const CollegeDiscovery = ({
     selectedSizes, 
     usNewsTop150Filter,
     bestLiberalArtsFilter,
+    vocationalSchoolFilter,
+    communityCollegeFilter,
     currentPage,
     sortBy,
     sortOrder
