@@ -756,6 +756,8 @@ const Pathways = ({
     setAdjustedStartingAge(18);
     setMilitaryBenefits(null);
     setGapYearActivity(null);
+    setGapYearLength(null);
+    setGapYearBudget(10000);
     setNeedsGuidance(null);
     setSelectedFieldOfStudy(null);
     setHasSpecificSchool(null);
@@ -2552,72 +2554,182 @@ const Pathways = ({
           );
         } else if (selectedPath === 'gap') {
           return (
-            <Step title="What do you plan to do during your gap year?">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div 
-                  className={`border ${gapYearActivity === 'travel' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setGapYearActivity('travel');
-                    setUserJourney("After high school, I am interested in taking a gap year to travel and explore new places and cultures.");
-                    handleNext(); // Auto-advance
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${gapYearActivity === 'travel' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'travel' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">flight_takeoff</span>
+            <Step title="What do you plan to do during your gap year?" subtitle="Choose an activity and plan your gap year experience">
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div 
+                    className={`border ${gapYearActivity === 'travel' ? 'border-primary bg-blue-50 ring-2 ring-primary ring-opacity-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-5 cursor-pointer transition-all hover:shadow-md`}
+                    onClick={() => {
+                      setGapYearActivity('travel');
+                      setUserJourney("After high school, I am interested in taking a gap year to travel and explore new places and cultures.");
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <div className="rounded-full bg-blue-100 text-blue-700 w-12 h-12 flex items-center justify-center mr-4 shadow-sm">
+                        <span className="material-icons">explore</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Travel</h3>
+                        <p className="text-sm text-gray-500">Explore new places and cultures</p>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className={`font-medium ${gapYearActivity === 'travel' ? 'text-primary' : ''}`}>Travel</h5>
-                      <p className="text-sm text-gray-600">Explore new places and cultures</p>
+                  </div>
+                  
+                  <div 
+                    className={`border ${gapYearActivity === 'volunteer' ? 'border-primary bg-blue-50 ring-2 ring-primary ring-opacity-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-5 cursor-pointer transition-all hover:shadow-md`}
+                    onClick={() => {
+                      setGapYearActivity('volunteer');
+                      setUserJourney("After high school, I am interested in taking a gap year to volunteer and give back to the community.");
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <div className="rounded-full bg-green-100 text-green-700 w-12 h-12 flex items-center justify-center mr-4 shadow-sm">
+                        <span className="material-icons">volunteer_activism</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Volunteer</h3>
+                        <p className="text-sm text-gray-500">Give back to the community</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`border ${gapYearActivity === 'work' ? 'border-primary bg-blue-50 ring-2 ring-primary ring-opacity-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-5 cursor-pointer transition-all hover:shadow-md`}
+                    onClick={() => {
+                      setGapYearActivity('work');
+                      setUserJourney("After high school, I am interested in taking a gap year to work and gain real-world experience.");
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <div className="rounded-full bg-amber-100 text-amber-700 w-12 h-12 flex items-center justify-center mr-4 shadow-sm">
+                        <span className="material-icons">work</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Work</h3>
+                        <p className="text-sm text-gray-500">Gain real-world experience</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    className={`border ${gapYearActivity === 'other' ? 'border-primary bg-blue-50 ring-2 ring-primary ring-opacity-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-5 cursor-pointer transition-all hover:shadow-md`}
+                    onClick={() => {
+                      setGapYearActivity('other');
+                      setUserJourney("After high school, I am interested in taking a gap year to learn new skills and pursue my personal interests and hobbies.");
+                    }}
+                  >
+                    <div className="flex items-center">
+                      <div className="rounded-full bg-purple-100 text-purple-700 w-12 h-12 flex items-center justify-center mr-4 shadow-sm">
+                        <span className="material-icons">self_improvement</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Personal Growth</h3>
+                        <p className="text-sm text-gray-500">Learn new skills and pursue hobbies</p>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div 
-                  className={`border ${gapYearActivity === 'volunteer' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setGapYearActivity('volunteer');
-                    setUserJourney("After high school, I am interested in taking a gap year to volunteer and give back to the community.");
-                    handleNext(); // Auto-advance
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${gapYearActivity === 'volunteer' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'volunteer' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">volunteer_activism</span>
+                {gapYearActivity && (
+                  <>
+                    <div className="border rounded-lg p-5 bg-slate-50">
+                      <h3 className="text-lg font-semibold mb-4">Gap Year Planning</h3>
+                      
+                      <div className="space-y-6">
+                        {/* Time Length Selection */}
+                        <div>
+                          <h4 className="font-medium text-gray-800 mb-2">How long do you plan to take for your gap year?</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div 
+                              className={`border rounded-lg px-4 py-3 cursor-pointer text-center ${gapYearLength === '3month' ? 'bg-blue-100 border-blue-400 shadow-sm' : 'bg-white hover:bg-blue-50 border-gray-200'}`}
+                              onClick={() => setGapYearLength('3month')}
+                            >
+                              <div className="font-medium">3 Months</div>
+                              <div className="text-xs text-gray-500">Summer Break</div>
+                            </div>
+                            
+                            <div 
+                              className={`border rounded-lg px-4 py-3 cursor-pointer text-center ${gapYearLength === '6month' ? 'bg-blue-100 border-blue-400 shadow-sm' : 'bg-white hover:bg-blue-50 border-gray-200'}`}
+                              onClick={() => setGapYearLength('6month')}
+                            >
+                              <div className="font-medium">6 Months</div>
+                              <div className="text-xs text-gray-500">Half Year</div>
+                            </div>
+                            
+                            <div 
+                              className={`border rounded-lg px-4 py-3 cursor-pointer text-center ${gapYearLength === '9month' ? 'bg-blue-100 border-blue-400 shadow-sm' : 'bg-white hover:bg-blue-50 border-gray-200'}`}
+                              onClick={() => setGapYearLength('9month')}
+                            >
+                              <div className="font-medium">9 Months</div>
+                              <div className="text-xs text-gray-500">Academic Year</div>
+                            </div>
+                            
+                            <div 
+                              className={`border rounded-lg px-4 py-3 cursor-pointer text-center ${gapYearLength === '12month' ? 'bg-blue-100 border-blue-400 shadow-sm' : 'bg-white hover:bg-blue-50 border-gray-200'}`}
+                              onClick={() => setGapYearLength('12month')}
+                            >
+                              <div className="font-medium">12 Months</div>
+                              <div className="text-xs text-gray-500">Full Year</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Budget Planning */}
+                        <div>
+                          <h4 className="font-medium text-gray-800 mb-2">What's your budget for your gap year?</h4>
+                          <div className="flex flex-col md:flex-row items-center gap-4">
+                            <div className="w-full md:w-2/3">
+                              <input
+                                type="range"
+                                min="1000"
+                                max="30000"
+                                step="1000"
+                                value={gapYearBudget}
+                                onChange={(e) => setGapYearBudget(parseInt(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                              <div className="flex justify-between text-xs text-gray-600 mt-1">
+                                <span>$1,000</span>
+                                <span>$15,000</span>
+                                <span>$30,000</span>
+                              </div>
+                            </div>
+                            <div className="w-full md:w-1/3">
+                              <div className="border border-gray-200 rounded-lg bg-white p-3 text-center">
+                                <div className="text-gray-500 text-sm">Budget</div>
+                                <div className="text-2xl font-bold text-primary">{formatCurrency(gapYearBudget)}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-sm text-gray-500">
+                            {gapYearBudget < 5000 ? 
+                              "Budget traveler: You'll need to be frugal and may want to consider work opportunities." :
+                              gapYearBudget < 15000 ? 
+                                "Moderate budget: Good for most gap year activities with careful planning." :
+                                "Comfortable budget: You'll have flexibility for higher-cost programs and experiences."
+                            }
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h5 className={`font-medium ${gapYearActivity === 'volunteer' ? 'text-primary' : ''}`}>Volunteer</h5>
-                      <p className="text-sm text-gray-600">Give back to the community</p>
+                    
+                    <div className="flex justify-between">
+                      <Button variant="outline" onClick={handleBack}>
+                        <span className="material-icons mr-2">arrow_back</span>
+                        Back
+                      </Button>
+                      <Button 
+                        className="bg-green-500 hover:bg-green-600 text-white" 
+                        onClick={handleNext}
+                        disabled={!gapYearLength}
+                      >
+                        Continue
+                        <span className="material-icons ml-2">arrow_forward</span>
+                      </Button>
                     </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border ${gapYearActivity === 'other' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setGapYearActivity('other');
-                    setUserJourney("After high school, I am interested in taking a gap year to learn new skills and pursue my personal interests and hobbies.");
-                    handleNext(); // Auto-advance
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${gapYearActivity === 'other' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${gapYearActivity === 'other' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">more_horiz</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${gapYearActivity === 'other' ? 'text-primary' : ''}`}>Other Activities</h5>
-                      <p className="text-sm text-gray-600">Learn new skills, pursue hobbies</p>
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
-              
-              {gapYearActivity && (
-                <div className="flex justify-between mt-6">
-                  <Button variant="outline" onClick={handleBack}>Back</Button>
-                  <Button onClick={handleNext}>Next Step</Button>
-                </div>
-              )}
             </Step>
           );
         }
