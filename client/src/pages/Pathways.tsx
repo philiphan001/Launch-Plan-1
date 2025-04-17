@@ -2418,12 +2418,12 @@ const Pathways = ({
                           setShowLoadingScreen(true);
                           
                           // Redirect to the financial projections page with auto-generate flag
-                          // Add a longer delay to ensure college calculations are fully excluded before generating projection
-                          console.log("Setting timeout before navigation to ensure college data is excluded");
+                          // Add a longer delay to ensure all calculations (including college data) are fully processed
+                          console.log("Setting timeout before navigation to ensure all data is processed");
                           setTimeout(() => {
-                            console.log("Navigating to projections with all college data excluded");
+                            console.log("Navigating to projections with fully processed data");
                             navigate('/projections?autoGenerate=true&fromJobPathway=true');
-                          }, 1500);
+                          }, 3000);
                         }}
                         disabled={!selectedLocation || !selectedCareerId || !selectedProfession}
                       >
@@ -5189,9 +5189,10 @@ const Pathways = ({
                           setShowLoadingScreen(true);
                           
                           // Redirect to the financial projections page with auto-generate flag after a delay
+                          // Using longer delay to ensure college data is fully loaded
                           setTimeout(() => {
                             navigate('/projections?autoGenerate=true');
-                          }, 1500);
+                          }, 3000);
                         }}
                         disabled={!selectedLocation || selectedZipCode.length !== 5}
                       >

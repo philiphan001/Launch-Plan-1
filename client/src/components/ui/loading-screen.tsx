@@ -27,9 +27,14 @@ export function LoadingScreen({
         </h2>
         
         {showCalculatingText && (
-          <p className="text-gray-600 mb-4">
-            Calculating your financial projections based on your selections...
-          </p>
+          <div className="space-y-2 mb-4">
+            <p className="text-gray-600">
+              Calculating your financial projections based on your selections...
+            </p>
+            <p className="text-gray-500 text-sm">
+              Loading both career and college data for your personalized plan...
+            </p>
+          </div>
         )}
         
         <div className="flex justify-center items-center space-x-2 text-sm text-gray-500">
