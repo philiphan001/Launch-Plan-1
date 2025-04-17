@@ -5212,6 +5212,9 @@ const Pathways = ({
   
   return (
     <div className="max-w-5xl mx-auto">
+      {/* Loading screen overlay */}
+      {showLoadingScreen && <LoadingScreen message="Preparing your financial plan..." />}
+      
       <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/70 to-primary-dark/70 shadow-sm mb-6 p-4">
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500"></div>
         <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTYwMCAwdjYwMEgwVjBaIi8+PHBhdGggc3Ryb2tlPSIjZmZmZmZmMTAiIGZpbGw9Im5vbmUiIGQ9Ik02MDAgMEgwdjYwMGg2MDBWMFoiLz48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTAgMzAwaDYwME0zMDAgMHY2MDAiLz48cGF0aCBkPSJNMCAwdjYwMGw2MDAtNjAwSDBaIiBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik02MDAgMHY2MDBMODAwIDYwMFYwSDYwMFoiIHN0cm9rZT0iI2ZmZmZmZjEwIiBmaWxsPSJub25lIi8+PC9zdmc+')]"></div>
