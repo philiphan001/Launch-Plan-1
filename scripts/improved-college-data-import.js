@@ -1,6 +1,6 @@
 /**
  * Improved script to import extended college data from the Department of Education dataset
- * This version uses fuzzy matching for college names to improve match rate
+ * This version matches by ID field from the CSV directly to our database IDs
  */
 
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -24,87 +24,6 @@ const colleges = { name: "colleges" };
 // Path to the CSV file with updated college data
 const CSV_FILE_PATH = "./attached_assets/Updated_Most-Recent-Cohorts-Institution.csv";
 
-// Function to calculate string similarity (Levenshtein distance)
-function levenshteinDistance(a, b) {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-
-  const matrix = [];
-
-  // Initialize matrix
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  // Fill matrix
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
-}
-
-// Function to normalize college names for better matching
-function normalizeCollegeName(name) {
-  if (!name) return '';
-  
-  return name.toLowerCase()
-    .replace(/\buniversity\b/g, 'univ')
-    .replace(/\bcollege\b/g, 'coll')
-    .replace(/\binstitute\b/g, 'inst')
-    .replace(/\b(of|and|&|the)\b/g, '')
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-// Function to find the best match for a college name
-function findBestMatch(name, collegeMap) {
-  const normalizedName = normalizeCollegeName(name);
-  if (!normalizedName) return null;
-  
-  // First try exact match on normalized name
-  for (const [collegeName, college] of collegeMap.entries()) {
-    if (normalizeCollegeName(collegeName) === normalizedName) {
-      return college;
-    }
-  }
-  
-  // If no exact match, try fuzzy matching
-  let bestMatch = null;
-  let bestScore = Infinity;
-  
-  for (const [collegeName, college] of collegeMap.entries()) {
-    const normalizedCollegeName = normalizeCollegeName(collegeName);
-    const score = levenshteinDistance(normalizedName, normalizedCollegeName);
-    
-    // Normalize the score by the length of the longer string
-    const normalizedScore = score / Math.max(normalizedName.length, normalizedCollegeName.length);
-    
-    // If the score is below a certain threshold and better than our previous best match
-    if (normalizedScore < 0.3 && normalizedScore < bestScore) {
-      bestMatch = college;
-      bestScore = normalizedScore;
-    }
-  }
-  
-  return bestMatch;
-}
-
 async function importCollegeExtendedData() {
   console.log("Starting improved college extended data import...");
 
@@ -112,11 +31,14 @@ async function importCollegeExtendedData() {
   const existingColleges = await db.select().from(colleges);
   console.log(`Found ${existingColleges.length} existing colleges in database`);
 
-  // Create a map for quick lookup by name
+  // Create a map for quick lookup by ID
   const collegeMap = new Map();
   for (const college of existingColleges) {
-    collegeMap.set(college.name, college);
+    collegeMap.set(college.id, college);
   }
+
+  console.log("Sample college from database:", 
+    existingColleges.length > 0 ? JSON.stringify(existingColleges[0], null, 2) : "No colleges found");
 
   // Load and parse the CSV file
   const records = [];
@@ -124,8 +46,8 @@ async function importCollegeExtendedData() {
     fs.createReadStream(CSV_FILE_PATH)
       .pipe(csvParse.parse({ columns: true, delimiter: "," }))
       .on("data", (data) => {
-        // Only process records with a name
-        if (data.name) {
+        // Only process records with an ID
+        if (data.id) {
           records.push(data);
         }
       })
@@ -139,31 +61,33 @@ async function importCollegeExtendedData() {
       });
   });
 
-  console.log("Sample record:", records.length > 0 ? JSON.stringify(records[0], null, 2) : "No records found");
+  console.log("Sample record from CSV:", records.length > 0 ? JSON.stringify(records[0], null, 2) : "No records found");
 
   // Counter for matches
   let matchCount = 0;
   let updateCount = 0;
-  let fuzzyMatchCount = 0;
 
   // Track which colleges were updated
   const updatedCollegeIds = new Set();
 
   // Process records and update matching colleges
   for (const record of records) {
-    const institutionName = record.name;
+    const csvId = parseInt(record.id);
     
-    if (!institutionName) continue;
+    if (isNaN(csvId)) {
+      console.log(`Skipping record with invalid ID: ${record.id}`);
+      continue;
+    }
     
-    // Find matching college in our database - try both exact and fuzzy matching
-    const college = findBestMatch(institutionName, collegeMap);
+    // Find matching college in our database by ID
+    const college = collegeMap.get(csvId);
     
     if (college) {
       matchCount++;
       
       // Check if we've already updated this college
       if (updatedCollegeIds.has(college.id)) {
-        console.log(`Skipping duplicate match for ${institutionName} (ID: ${college.id})`);
+        console.log(`Skipping duplicate match for ${record.name} (ID: ${college.id})`);
         continue;
       }
       
@@ -219,7 +143,11 @@ async function importCollegeExtendedData() {
           console.log(`Updated ${updateCount} colleges so far...`);
         }
       } catch (error) {
-        console.error(`Error updating college ${institutionName}:`, error);
+        console.error(`Error updating college ${record.name} (ID: ${csvId}):`, error);
+      }
+    } else {
+      if (csvId > 0 && csvId < 10000) {  // Just log missing matches for reasonable IDs
+        console.log(`No match found for college ID ${csvId}: ${record.name}`);
       }
     }
   }
@@ -240,7 +168,7 @@ async function importCollegeExtendedData() {
   console.log("Degrees awarded predominant distribution:");
   console.table(degreesReport);
 
-  console.log(`Matched ${matchCount} colleges from the CSV file (${fuzzyMatchCount} via fuzzy matching)`);
+  console.log(`Matched ${matchCount} colleges from the CSV file`);
   console.log(`Successfully updated ${updateCount} colleges with extended data`);
 
   // Create indexes to improve query performance
