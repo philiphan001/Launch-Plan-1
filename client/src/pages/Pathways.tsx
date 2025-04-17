@@ -1775,13 +1775,6 @@ const Pathways = ({
                   </div>
                 </div>
                 
-                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                  <p className="text-sm text-blue-700 mb-2">
-                    <span className="material-icons text-sm inline-block align-text-bottom mr-1">info</span>
-                    By default, we'll calculate your future based on full-time work (40 hours per week).
-                  </p>
-                </div>
-                
                 <div className="mb-6">
                   <div className="flex items-center mb-3">
                     <input
