@@ -20,6 +20,12 @@ const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
+  next();
+});
+
 // Configure session
 const oneDay = 1000 * 60 * 60 * 24;
 if (process.env.DATABASE_URL) {
@@ -124,6 +130,7 @@ passport.deserializeUser(async (id: number, done) => {
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Add API request logging
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -152,6 +159,12 @@ app.use((req, res, next) => {
   });
 
   next();
+});
+
+// Add error handling middleware
+app.use((err: any, req: any, res: any, next: any) => {
+  console.error('Application error:', err);
+  res.status(500).json({ error: err.message });
 });
 
 (async () => {
@@ -186,9 +199,6 @@ app.use((req, res, next) => {
     
     // Send error response
     res.status(status).json(errorResponse);
-    
-    // Don't throw the error again as it's already been handled
-    // and would crash the server
   });
 
   // importantly only setup vite in development and after
@@ -200,15 +210,35 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  const port = 3000;
+  const host = '0.0.0.0';
+  
+  // Add error handling for the server
+  server.on('error', (error: any) => {
+    console.error('Server error:', error);
+    if (error.syscall !== 'listen') {
+      throw error;
+    }
+
+    switch (error.code) {
+      case 'EACCES':
+        console.error(`Port ${port} requires elevated privileges`);
+        process.exit(1);
+        break;
+      case 'EADDRINUSE':
+        console.error(`Port ${port} is already in use`);
+        process.exit(1);
+        break;
+      default:
+        throw error;
+    }
+  });
+
+  server.listen(port, host, () => {
+    console.log('----------------------------------------');
+    console.log(`Server is running at:`);
+    console.log(`- Local: http://localhost:${port}`);
+    console.log(`- Network: http://${host}:${port}`);
+    console.log('----------------------------------------');
   });
 })();

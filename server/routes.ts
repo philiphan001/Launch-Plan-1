@@ -111,14 +111,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Add the complete-onboarding endpoint
-  app.post("/api/users/complete-onboarding", (req: Request, res: Response) => {
+  app.post("/api/users/complete-onboarding", async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    
-    console.log("User completing onboarding:", req.user);
-    // We're just returning success here since we're already forcing isFirstTimeUser to false
-    return res.status(200).json({ success: true, message: "Onboarding completed" });
+
+    try {
+      const userId = (req.user as any).id;
+      const updatedUser = await activeStorage.updateUser(userId, {
+        onboardingCompleted: true
+      });
+
+      if (!updatedUser) {
+        throw new Error('Failed to update user');
+      }
+
+      // Don't return password in response
+      const { password, ...userWithoutPassword } = updatedUser;
+
+      console.log("User completed onboarding:", userWithoutPassword);
+      return res.status(200).json({ 
+        success: true, 
+        message: "Onboarding completed",
+        user: userWithoutPassword
+      });
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Failed to complete onboarding",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
   });
   
   // User routes with secure password hashing

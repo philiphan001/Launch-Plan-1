@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   location: text("location"),
   zipCode: text("zip_code"),
   birthYear: integer("birth_year"),
+  onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -25,6 +26,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   location: true,
   zipCode: true,
   birthYear: true,
+  onboardingCompleted: true,
 });
 
 // Financial profiles table

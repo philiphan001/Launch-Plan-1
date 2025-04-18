@@ -182,9 +182,11 @@ const Pathways = ({
       console.log(`Career "${career.title}" requires higher education: ${educationReq}`);
       setSelectedCareerEducation(educationReq);
       
-      // Show the warning dialog if the user is in job, 2-year college, or vocational pathway
+      // Show the warning dialog if the user is in job, 2-year college without transfer, or vocational pathway
       if (selectedPath === 'job' || 
-          (selectedPath === 'education' && (educationType === '2year' || educationType === 'vocational'))) {
+          (selectedPath === 'education' && 
+           ((educationType === '2year' && transferOption !== 'yes') || 
+            educationType === 'vocational'))) {
         setShowEducationWarning(true);
       }
     } else {

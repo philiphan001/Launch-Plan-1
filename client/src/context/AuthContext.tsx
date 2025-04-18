@@ -152,26 +152,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           credentials: 'include',
         });
         
-        if (response.ok) {
+        if (!response.ok) {
+          throw new Error('Failed to update onboarding status');
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.user) {
           setIsFirstTimeUser(false);
           setUser({
-            ...user,
+            ...data.user,
             isFirstTimeUser: false
           });
         } else {
-          throw new Error('Failed to update onboarding status');
+          throw new Error(data.message || 'Failed to update onboarding status');
         }
       }
     } catch (error) {
       console.error('Error updating onboarding status:', error);
-      // Fallback to local update if server update fails
-      setIsFirstTimeUser(false);
-      if (user) {
-        setUser({
-          ...user,
-          isFirstTimeUser: false
-        });
-      }
+      // No longer doing fallback local update - we want to ensure server state is consistent
+      throw error;
     }
   };
   
