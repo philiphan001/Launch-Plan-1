@@ -5,3 +5,23 @@ server/public
 vite.config.ts.*
 *.tar.gz
 .env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Debug logs
+*.log
+education_income_debug.log
+healthcare_debug.log
+
+# Cookies and session files
+cookies.txt
+*.session
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
