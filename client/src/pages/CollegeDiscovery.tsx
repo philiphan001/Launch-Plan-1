@@ -122,7 +122,7 @@ const CollegeDiscovery = ({
     queryFn: async () => {
       if (!userId) return [];
       
-      const response = await fetch(`/api/favorites/colleges?userId=${userId}`);
+      const response = await fetch(`/api/favorites/colleges/${userId}`);
       if (!response.ok) {
         console.error('Failed to fetch favorite colleges:', response.statusText);
         return [];
@@ -277,8 +277,8 @@ const CollegeDiscovery = ({
                          
     const matchesTuition = college.tuition ? college.tuition <= maxTuition : true;
     const matchesAcceptance = college.acceptanceRate ? 
-                            college.acceptanceRate >= acceptanceRange[0] && 
-                            college.acceptanceRate <= acceptanceRange[1] : true;
+                            college.acceptanceRate <= acceptanceRange[1] && 
+                            college.acceptanceRate >= acceptanceRange[0] : true;
     const matchesType = selectedTypes.length === 0 || 
                        (college.type && selectedTypes.includes(college.type));
     const matchesState = selectedStates.length === 0 || 
@@ -287,43 +287,46 @@ const CollegeDiscovery = ({
                        (college.size && selectedSizes.includes(college.size));
     
     // Check preset filter matches
-    // Check if the college is in the US News Top 150 rankings (rank <= 150)
+    // Check if the college is in the US News Top 150 rankings
+    const usNewsRank = typeof college.usNewsTop150 === 'number' ? college.usNewsTop150 : null;
+    const matchesUsNewsTop150 = !usNewsTop150Filter || 
+      (usNewsRank !== null && usNewsRank > 0 && usNewsRank <= 150);
     
-    // Use proper numeric parsing and exclude 0 values
-    const usNewsRank = college.usNewsTop150 !== null && college.usNewsTop150 !== undefined ? 
-      Number(college.usNewsTop150) : null;
-      
-    const matchesUsNewsTop150 = usNewsTop150Filter ? 
-      (usNewsRank !== null && !isNaN(usNewsRank) && usNewsRank > 0 && usNewsRank <= 150) : true;
+    // Check if the college is among the top liberal arts colleges
+    const liberalArtsRank = typeof college.bestLiberalArtsColleges === 'number' ? college.bestLiberalArtsColleges : null;
+    const matchesBestLiberalArts = !bestLiberalArtsFilter || 
+      (liberalArtsRank !== null && liberalArtsRank > 0 && liberalArtsRank <= 300);
     
-    // Check if the college is among the top liberal arts colleges (rank <= 300)
+    // Check if college is a vocational school
+    const matchesVocationalSchool = !vocationalSchoolFilter || (
+      // Primary check: degree predominant is certificate/vocational (1)
+      college.degreesAwardedPredominant === 1 || 
+      // Secondary check: type indicates vocational/technical nature
+      (college.type && (
+        college.type.toLowerCase().includes('vocational') ||
+        college.type.toLowerCase().includes('technical') ||
+        college.type.toLowerCase().includes('trade')
+      )) ||
+      // Tertiary check: name clearly indicates vocational/technical nature
+      (college.name && (
+        /\b(vocational|technical|trade)\b/i.test(college.name)
+      ))
+    );
     
-    // Apply the same numeric parsing approach to liberal arts
-    const liberalArtsRank = college.bestLiberalArtsColleges !== null && college.bestLiberalArtsColleges !== undefined ? 
-      Number(college.bestLiberalArtsColleges) : null;
-      
-    const matchesBestLiberalArts = bestLiberalArtsFilter ? 
-      (liberalArtsRank !== null && !isNaN(liberalArtsRank) && liberalArtsRank > 0 && liberalArtsRank <= 300) : true;
-      
-    // Check if college is a vocational school (degreePredominant = 1)
-    // We also need to check for schools that have certain keywords in their name
-    const matchesVocationalSchool = vocationalSchoolFilter ?
-      (college.degreePredominant === 1 || 
-       (college.name && (
-         college.name.toLowerCase().includes("technical") ||
-         college.name.toLowerCase().includes("vocational") ||
-         college.name.toLowerCase().includes("trade") ||
-         college.name.toLowerCase().includes("career") ||
-         college.name.toLowerCase().includes("institute")
-       ))
-      ) : true;
-      
-    // Check if college is a community college (degreePredominant = 2)
-    // We also need to check for schools that have "community college" in their name
-    const matchesCommunityCollege = communityCollegeFilter ?
-      (college.degreePredominant === 2 || 
-       (college.name && college.name.toLowerCase().includes("community college"))
-      ) : true;
+    // Check if college is a community college
+    const matchesCommunityCollege = !communityCollegeFilter || (
+      // Primary check: degree predominant is associate's (2)
+      college.degreesAwardedPredominant === 2 || 
+      // Secondary check: type indicates community college
+      (college.type && (
+        college.type.toLowerCase().includes('community college') ||
+        college.type.toLowerCase().includes('junior college')
+      )) ||
+      // Tertiary check: name clearly indicates community college
+      (college.name && (
+        /\b(community college|junior college)\b/i.test(college.name)
+      ))
+    );
     
     return matchesSearch && matchesTuition && matchesAcceptance && 
            matchesType && matchesState && matchesSize && 
@@ -526,10 +529,10 @@ const CollegeDiscovery = ({
                 </div>
                 
                 <div>
-                  <Label>Acceptance Rate: {acceptanceRange[0]}% - {acceptanceRange[1]}%</Label>
+                  <Label>Acceptance Rate: {acceptanceRange[1]}% - {acceptanceRange[0]}%</Label>
                   <Slider
-                    value={acceptanceRange}
-                    onValueChange={(value) => setAcceptanceRange(value)}
+                    value={[acceptanceRange[1], acceptanceRange[0]]}
+                    onValueChange={(value) => setAcceptanceRange([value[1], value[0]])}
                     min={0}
                     max={100}
                     step={5}
@@ -1078,11 +1081,11 @@ const CollegeDiscovery = ({
                     <p className="text-gray-600 text-sm mb-4">
                       This is a {selectedCollege.type || 'college/university'} located in {selectedCollege.location || 'the United States'}.
                       {selectedCollege.size && ` It is considered a ${selectedCollege.size} size institution.`}
-                      {selectedCollege.degreePredominant && ` The predominant degree awarded is ${
-                        selectedCollege.degreePredominant === 1 ? 'Certificate' :
-                        selectedCollege.degreePredominant === 2 ? 'Associate\'s' :
-                        selectedCollege.degreePredominant === 3 ? 'Bachelor\'s' :
-                        selectedCollege.degreePredominant === 4 ? 'Graduate' : 'Unknown'
+                      {selectedCollege.degreesAwardedPredominant && ` The predominant degree awarded is ${
+                        selectedCollege.degreesAwardedPredominant === 1 ? 'Certificate' :
+                        selectedCollege.degreesAwardedPredominant === 2 ? 'Associate\'s' :
+                        selectedCollege.degreesAwardedPredominant === 3 ? 'Bachelor\'s' :
+                        selectedCollege.degreesAwardedPredominant === 4 ? 'Graduate' : 'Unknown'
                       }.`}
                       {selectedCollege.degreeHighest && ` The highest degree awarded is ${
                         selectedCollege.degreeHighest === 1 ? 'Certificate' :

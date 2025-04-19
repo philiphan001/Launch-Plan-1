@@ -67,7 +67,7 @@ export const colleges = pgTable("colleges", {
   usNewsTop150: integer("us_news_top_150"), // Ranking or identifier in US News Top 150
   bestLiberalArtsColleges: integer("best_liberal_arts_colleges"), // Ranking or identifier for best liberal arts colleges
   tuitionDoubled: real("tuition_doubled"), // Added in a previous migration
-  degreePredominant: integer("degrees_awarded_predominant"), // Predominant degree awarded (integers 1-4)
+  degreesAwardedPredominant: integer("degrees_awarded_predominant"), // Predominant degree awarded (integers 1-4)
   degreeHighest: integer("degrees_awarded_highest"), // Highest degree awarded (integers 1-4)
   admissionRate: real("admission_rate_overall"), // Overall admission rate (0-1)
   satAverage: integer("sat_scores_average_overall"), // Average SAT score
@@ -94,7 +94,7 @@ export const insertCollegeSchema = createInsertSchema(colleges).pick({
   usNewsTop150: true,
   bestLiberalArtsColleges: true,
   tuitionDoubled: true,
-  degreePredominant: true,
+  degreesAwardedPredominant: true,
   degreeHighest: true,
   admissionRate: true,
   satAverage: true,

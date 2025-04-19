@@ -10,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import SavedCalculationsSection from "@/components/profile/SavedCalculationsSection";
 import { AuthProps } from "@/interfaces/auth";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import CollegeList from "@/components/profile/CollegeList";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 
 // Types for the favorites
 type FavoriteCollege = {
@@ -295,249 +296,214 @@ const Profile = ({ user }: ProfileProps) => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">My Profile</h1>
+    <div className="max-w-7xl mx-auto">
+      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">User Profile</h1>
+      
+      <Tabs defaultValue="profile">
+        <TabsList className="mb-6">
+          <TabsTrigger value="profile">Personal Info</TabsTrigger>
+          <TabsTrigger value="financial">Financial Profile</TabsTrigger>
+          <TabsTrigger value="favorites">My Favorites</TabsTrigger>
+          <TabsTrigger value="calculations">Saved Calculations</TabsTrigger>
+        </TabsList>
         
-        <ScrollArea className="h-[calc(100vh-200px)]">
-          <Tabs defaultValue="profile">
-            <TabsList className="mb-6 sticky top-0 bg-background z-10">
-              <TabsTrigger value="profile">Personal Info</TabsTrigger>
-              <TabsTrigger value="financial">Financial Profile</TabsTrigger>
-              <TabsTrigger value="favorites">My Favorites</TabsTrigger>
-              <TabsTrigger value="calculations">Saved Calculations</TabsTrigger>
-            </TabsList>
-            
-            <div className="space-y-6">
-              <TabsContent value="profile">
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-medium mb-4">Personal Information</h3>
-                    
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input 
-                            id="firstName" 
-                            value={firstName} 
-                            onChange={(e) => setFirstName(e.target.value)} 
-                            className="mt-1"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input 
-                            id="lastName" 
-                            value={lastName} 
-                            onChange={(e) => setLastName(e.target.value)} 
-                            className="mt-1"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input 
-                          id="email" 
-                          type="email" 
-                          value={email} 
-                          onChange={(e) => setEmail(e.target.value)} 
-                          className="mt-1"
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="location">Current Location</Label>
-                          <Input 
-                            id="location" 
-                            value={currentLocation} 
-                            onChange={(e) => setCurrentLocation(e.target.value)} 
-                            className="mt-1"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="zipCode">Zip Code</Label>
-                          <Input 
-                            id="zipCode" 
-                            value={zipCode} 
-                            onChange={(e) => setZipCode(e.target.value)} 
-                            className="mt-1"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="birthYear">Birth Year</Label>
-                        <Input 
-                          id="birthYear" 
-                          type="number" 
-                          value={birthYear} 
-                          onChange={(e) => setBirthYear(parseInt(e.target.value))} 
-                          className="mt-1"
-                          min="1900"
-                          max={new Date().getFullYear()}
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button className="mt-6" onClick={handleSaveProfile}>Save Changes</Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+        <TabsContent value="profile">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-medium mb-4">Personal Information</h3>
               
-              <TabsContent value="financial">
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-medium mb-4">Financial Information</h3>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="income">Annual Household Income</Label>
-                        <div className="flex items-center mt-1">
-                          <span className="mr-2">$</span>
-                          <Input 
-                            id="income" 
-                            type="number" 
-                            value={householdIncome} 
-                            onChange={(e) => setHouseholdIncome(e.target.value)} 
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="householdSize">Household Size</Label>
-                        <Select 
-                          value={householdSize} 
-                          onValueChange={setHouseholdSize}
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="Select household size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 person</SelectItem>
-                            <SelectItem value="2">2 people</SelectItem>
-                            <SelectItem value="3">3 people</SelectItem>
-                            <SelectItem value="4">4 people</SelectItem>
-                            <SelectItem value="5">5 people</SelectItem>
-                            <SelectItem value="6+">6+ people</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="savings">Current Savings</Label>
-                        <div className="flex items-center mt-1">
-                          <span className="mr-2">$</span>
-                          <Input 
-                            id="savings" 
-                            type="number" 
-                            value={savingsAmount} 
-                            onChange={(e) => setSavingsAmount(e.target.value)} 
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="studentLoans">Student Loan Debt</Label>
-                        <div className="flex items-center mt-1">
-                          <span className="mr-2">$</span>
-                          <Input 
-                            id="studentLoans" 
-                            type="number" 
-                            value={studentLoanAmount} 
-                            onChange={(e) => setStudentLoanAmount(e.target.value)} 
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="otherDebt">Other Debt</Label>
-                        <div className="flex items-center mt-1">
-                          <span className="mr-2">$</span>
-                          <Input 
-                            id="otherDebt" 
-                            type="number" 
-                            value={otherDebtAmount} 
-                            onChange={(e) => setOtherDebtAmount(e.target.value)} 
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <Button className="mt-6" onClick={handleSaveFinancial}>Save Financial Information</Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="favorites">
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-medium mb-4">Favorite Colleges</h3>
-                    
-                    {favoriteColleges && favoriteColleges.length > 0 ? (
-                      <div className="space-y-3">
-                        {favoriteColleges.map((favoriteCollege: FavoriteCollege) => (
-                          <div 
-                            key={favoriteCollege.id} 
-                            className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
-                          >
-                            <div className="flex items-center">
-                              <span className="font-bold text-primary mr-2">🎓</span>
-                              <span>{favoriteCollege.college.name}</span>
-                            </div>
-                            <div className="flex space-x-1">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-8 w-8 p-0 text-destructive"
-                                onClick={() => removeFavoriteCollege(favoriteCollege.id)}
-                              >
-                                ✕
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <span className="text-gray-400 text-3xl">📚</span>
-                        <p className="text-gray-500 mt-2">No favorite colleges added yet</p>
-                        <Button className="mt-4" onClick={() => window.location.href = "/colleges"}>
-                          Explore Colleges
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input 
+                      id="firstName" 
+                      value={firstName} 
+                      onChange={(e) => setFirstName(e.target.value)} 
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input 
+                      id="lastName" 
+                      value={lastName} 
+                      onChange={(e) => setLastName(e.target.value)} 
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
                 
-                <Card>
-                  <CardContent className="pt-6">
-                    <h3 className="text-lg font-medium mb-4">Favorite Careers</h3>
-                    
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="location">Current Location</Label>
+                    <Input 
+                      id="location" 
+                      value={currentLocation} 
+                      onChange={(e) => setCurrentLocation(e.target.value)} 
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="zipCode">Zip Code</Label>
+                    <Input 
+                      id="zipCode" 
+                      value={zipCode} 
+                      onChange={(e) => setZipCode(e.target.value)} 
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.
+                    </p>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="birthYear">Birth Year</Label>
+                  <Input 
+                    id="birthYear" 
+                    type="number" 
+                    value={birthYear} 
+                    onChange={(e) => setBirthYear(parseInt(e.target.value))} 
+                    className="mt-1"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+              </div>
+              
+              <Button className="mt-6" onClick={handleSaveProfile}>Save Changes</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="financial">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-medium mb-4">Financial Information</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="income">Annual Household Income</Label>
+                  <div className="flex items-center mt-1">
+                    <span className="mr-2">$</span>
+                    <Input 
+                      id="income" 
+                      type="number" 
+                      value={householdIncome} 
+                      onChange={(e) => setHouseholdIncome(e.target.value)} 
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="householdSize">Household Size</Label>
+                  <Select 
+                    value={householdSize} 
+                    onValueChange={setHouseholdSize}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select household size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 person</SelectItem>
+                      <SelectItem value="2">2 people</SelectItem>
+                      <SelectItem value="3">3 people</SelectItem>
+                      <SelectItem value="4">4 people</SelectItem>
+                      <SelectItem value="5">5 people</SelectItem>
+                      <SelectItem value="6+">6+ people</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="savings">Current Savings</Label>
+                  <div className="flex items-center mt-1">
+                    <span className="mr-2">$</span>
+                    <Input 
+                      id="savings" 
+                      type="number" 
+                      value={savingsAmount} 
+                      onChange={(e) => setSavingsAmount(e.target.value)} 
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="studentLoans">Student Loan Debt</Label>
+                  <div className="flex items-center mt-1">
+                    <span className="mr-2">$</span>
+                    <Input 
+                      id="studentLoans" 
+                      type="number" 
+                      value={studentLoanAmount} 
+                      onChange={(e) => setStudentLoanAmount(e.target.value)} 
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="otherDebt">Other Debt</Label>
+                  <div className="flex items-center mt-1">
+                    <span className="mr-2">$</span>
+                    <Input 
+                      id="otherDebt" 
+                      type="number" 
+                      value={otherDebtAmount} 
+                      onChange={(e) => setOtherDebtAmount(e.target.value)} 
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <Button className="mt-6" onClick={handleSaveFinancial}>Save Financial Information</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="favorites">
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardContent className="pt-6">
+                <Tabs defaultValue="colleges" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="colleges">Colleges</TabsTrigger>
+                    <TabsTrigger value="careers">Careers</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="colleges">
+                    {userId && <CollegeList userId={userId} />}
+                  </TabsContent>
+                  <TabsContent value="careers">
                     {favoriteCareers && favoriteCareers.length > 0 ? (
                       <div className="space-y-3">
-                        {favoriteCareers.map((career: FavoriteCareer) => (
+                        {favoriteCareers.map((favorite: FavoriteCareer) => (
                           <div 
-                            key={career.id} 
+                            key={favorite.id} 
                             className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
                           >
                             <div className="flex items-center">
                               <span className="font-bold text-primary mr-2">💼</span>
-                              <span>{career.career?.title || "Unknown Career"}</span>
+                              <span>{favorite.career?.title || "Unknown Career"}</span>
                             </div>
                             <div className="flex space-x-1">
                               <Button 
                                 variant="ghost" 
                                 size="sm"
                                 className="h-8 w-8 p-0 text-destructive"
-                                onClick={() => removeFavoriteCareer(career.id)}
+                                onClick={() => removeFavoriteCareer(favorite.id)}
                               >
                                 ✕
                               </Button>
@@ -546,29 +512,21 @@ const Profile = ({ user }: ProfileProps) => {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <span className="text-gray-400 text-3xl">💼</span>
-                        <p className="text-gray-500 mt-2">No favorite careers added yet</p>
-                        <Button className="mt-4" onClick={() => window.location.href = "/careers"}>
-                          Explore Careers
-                        </Button>
+                      <div className="text-center py-6 text-muted-foreground">
+                        No favorite careers yet
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="calculations">
-                <Card>
-                  <CardContent className="pt-6">
-                    <SavedCalculationsSection user={user} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </div>
-          </Tabs>
-        </ScrollArea>
-      </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="calculations">
+          <SavedCalculationsSection user={user} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

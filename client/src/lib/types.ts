@@ -114,21 +114,32 @@ export type CollegeSize = "small" | "medium" | "large";
 export type CollegeType = "Public Research" | "Private Research" | "Public Liberal Arts" | "Private Liberal Arts" | "Community College" | "For-Profit";
 
 export interface College {
-  id: string;
+  id: number;
   name: string;
-  rating: number;
-  location: string;
-  state: string;
-  type: string;
-  tuition: number;
-  acceptanceRate: number;
-  isInState?: boolean;
-  rank?: number;
-  size: CollegeSize;
-  roomAndBoard?: number;
-  feesByIncome?: {
+  location: string | null;
+  state: string | null;
+  type: string | null;
+  tuition: number | null;
+  roomAndBoard: number | null;
+  acceptanceRate: number | null;
+  rating: number | null;
+  size: string | null;
+  rank: number | null;
+  feesByIncome: string | null | {
     [key: string]: number;
   };
+  usNewsTop150: number | null;
+  bestLiberalArtsColleges: number | null;
+  degreesAwardedPredominant: number | null;
+  degreesAwardedHighest: number | null;
+  admissionRateOverall: number | null;
+  satScoresAverageOverall: number | null;
+  pellGrantRate: number | null;
+  completionRate4yr150nt: number | null;
+  medianDebtCompletersOverall: number | null;
+  medianDebtNoncompleters: number | null;
+  demographicsMedianFamilyIncome: number | null;
+  medianEarnings10yrsAfterEntry: number | null;
 }
 
 // Pathway related types

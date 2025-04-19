@@ -11,48 +11,9 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { users } from "../shared/schema";
 import { eq } from "drizzle-orm";
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { sql } from 'drizzle-orm';
-import * as schema from '@shared/schema';
 
 // Use PostgreSQL storage if available
 export const activeStorage = process.env.DATABASE_URL ? pgStorage : storage;
-
-// Create a Postgres client with the database connection string and SSL configuration
-const pgClient = postgres(process.env.DATABASE_URL!, {
-  ssl: {
-    rejectUnauthorized: false, // Allow self-signed certificates
-    require: true // Require SSL connection
-  },
-  connect_timeout: 10, // 10 second timeout
-  max: 1 // Only one connection for migrations
-});
-
-// Create a Drizzle instance with the Postgres client and schema
-const dbInstance = drizzle(pgClient, { schema });
-
-// Function to ensure required columns exist
-async function ensureColumns() {
-  try {
-    await dbInstance.execute(sql`
-      DO $$ 
-      BEGIN
-          IF NOT EXISTS (
-              SELECT 1 
-              FROM information_schema.columns 
-              WHERE table_name = 'users' 
-              AND column_name = 'onboarding_completed'
-          ) THEN
-              ALTER TABLE users ADD COLUMN onboarding_completed BOOLEAN DEFAULT FALSE;
-          END IF;
-      END $$;
-    `);
-    console.log('Database schema check completed');
-  } catch (error) {
-    console.error('Error checking database schema:', error);
-  }
-}
 
 const app = express();
 // Increase JSON body size limit to 50MB to handle large career datasets
@@ -101,7 +62,7 @@ passport.use(new LocalStrategy({
 }, async (username, password, done) => {
   try {
     // Find user in database
-    const result = await dbInstance.select().from(users).where(eq(users.username, username)).limit(1);
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
     const user = result[0];
     
     if (!user) {
@@ -150,7 +111,7 @@ passport.serializeUser((user: any, done) => {
 // Deserialize user from the session
 passport.deserializeUser(async (id: number, done) => {
   try {
-    const result = await dbInstance.select().from(users).where(eq(users.id, id)).limit(1);
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
     const user = result[0];
     
     if (user) {
@@ -248,9 +209,6 @@ app.use((err: any, req: any, res: any, next: any) => {
   } else {
     serveStatic(app);
   }
-
-  // Ensure columns exist before starting the server
-  await ensureColumns();
 
   const port = 3000;
   const host = '0.0.0.0';

@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { User } from "@/interfaces/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { College } from "@/lib/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,14 +42,6 @@ interface CollegeCalculation {
   notes: string;
   calculationDate: string;
   includedInProjection: boolean;
-}
-
-interface College {
-  id: number;
-  name: string;
-  location: string;
-  state: string;
-  type: string;
 }
 
 interface CareerCalculation {
@@ -386,14 +379,14 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
   // Function to get college name by ID
   const getCollegeName = (collegeId: number): string => {
     if (!colleges) return 'Unknown College';
-    const college = colleges.find(c => c.id === collegeId);
+    const college = colleges.find(c => Number(c.id) === collegeId);
     return college ? college.name : 'Unknown College';
   };
   
   // Function to get career title by ID
   const getCareerTitle = (careerId: number): string => {
     if (!careers) return 'Unknown Career';
-    const career = careers.find(c => c.id === careerId);
+    const career = careers.find(c => Number(c.id) === careerId);
     return career ? career.title : 'Unknown Career';
   };
   
@@ -501,73 +494,138 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
             {/* College Calculations Tab */}
             <TabsContent value="college">
               {collegeCalculations && collegeCalculations.length > 0 ? (
-                <div className="space-y-4">
-                  {collegeCalculations.map((calc) => (
-                    <div key={calc.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
-                      <div className="flex justify-between items-start mb-1">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <School className="h-4 w-4 text-primary mr-1.5" />
-                            <h3 className="font-medium text-sm">{getCollegeName(calc.collegeId)}</h3>
-                            <Badge variant={calc.inState ? "outline" : "secondary"} className="ml-2 text-xs">
-                              {calc.inState ? "In-State" : "Out-of-State"}
-                            </Badge>
-                          </div>
-                          {calc.notes && (
-                            <p className="text-xs text-muted-foreground">{calc.notes}</p>
-                          )}
-                        </div>
-                      </div>
+                <div className="space-y-6">
+                  {/* Group calculations by college type */}
+                  {Object.entries(
+                    collegeCalculations.reduce((acc, calc) => {
+                      const college = colleges?.find(c => c.id === calc.collegeId);
                       
-                      <div className="grid grid-cols-2 gap-2 mt-2">
-                        <div>
-                          <div className="flex justify-between">
-                            <span className="text-xs text-muted-foreground">Net Price:</span>
-                            <span className="font-medium text-sm">{formatCurrency(calc.netPrice)}</span>
+                      // Primary categorization based on type field for community colleges
+                      let type = 'Other';
+                      if (college?.type?.toLowerCase().includes('community') || 
+                          college?.type?.toLowerCase().includes('2-year') || 
+                          college?.type?.toLowerCase().includes('2 year') || 
+                          college?.type?.toLowerCase().includes('junior') ||
+                          (college?.name && college?.name.toLowerCase().includes('community college'))) {
+                        type = 'Community College';
+                      }
+                      // Then check degreesAwardedPredominant for other types
+                      else if (college?.degreesAwardedPredominant === 1) {
+                        type = 'Vocational';
+                      }
+                      else if (college?.degreesAwardedPredominant === 2 && type !== 'Community College') {
+                        type = 'Community College';
+                      }
+                      else if (college?.degreesAwardedPredominant === 4) {
+                        type = 'Graduate';
+                      }
+                      else if (college?.degreesAwardedPredominant === 3) {
+                        type = '4-Year';
+                      }
+                      // Fallback to type field for other categories
+                      else if (college?.type) {
+                        if (/vocational|technical|trade/i.test(college.type)) {
+                          type = 'Vocational';
+                        }
+                        else if (/graduate|professional/i.test(college.type)) {
+                          type = 'Graduate';
+                        }
+                        else {
+                          // Default to 4-year if type doesn't match other categories
+                          type = '4-Year';
+                        }
+                      }
+                      else {
+                        // Default to 4-year if no categorization information is available
+                        type = '4-Year';
+                      }
+                      
+                      if (!acc[type]) {
+                        acc[type] = [];
+                      }
+                      acc[type].push(calc);
+                      return acc;
+                    }, {} as Record<string, CollegeCalculation[]>)
+                  ).map(([type, calculations]) => (
+                    <div key={type} className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        {type === 'Vocational' && <Book className="h-4 w-4 text-primary" />}
+                        {type === 'Community College' && <School className="h-4 w-4 text-primary" />}
+                        {type === '4-Year' && <GraduationCap className="h-4 w-4 text-primary" />}
+                        {type === 'Graduate' && <GraduationCap className="h-4 w-4 text-primary" />}
+                        <h3 className="font-medium text-sm">{type} Institutions</h3>
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {calculations.length} {calculations.length === 1 ? 'calculation' : 'calculations'}
+                        </Badge>
+                      </div>
+                      {calculations.map((calc) => (
+                        <div key={calc.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex-1">
+                              <div className="flex items-center">
+                                <School className="h-4 w-4 text-primary mr-1.5" />
+                                <h3 className="font-medium text-sm">{getCollegeName(calc.collegeId)}</h3>
+                                <Badge variant={calc.inState ? "outline" : "secondary"} className="ml-2 text-xs">
+                                  {calc.inState ? "In-State" : "Out-of-State"}
+                                </Badge>
+                              </div>
+                              {calc.notes && (
+                                <p className="text-xs text-muted-foreground">{calc.notes}</p>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-xs text-muted-foreground">Total Cost:</span>
-                            <span className="font-medium text-sm">{formatCurrency(calc.totalCost)}</span>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div>
+                              <div className="flex justify-between">
+                                <span className="text-xs text-muted-foreground">Net Price:</span>
+                                <span className="font-medium text-sm">{formatCurrency(calc.netPrice)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-xs text-muted-foreground">Total Cost:</span>
+                                <span className="font-medium text-sm">{formatCurrency(calc.totalCost)}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex justify-between">
+                                <span className="text-xs text-muted-foreground">Family Contribution:</span>
+                                <span className="font-medium text-sm">{formatCurrency(calc.familyContribution)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-xs text-muted-foreground">Loans:</span>
+                                <span className="font-medium text-sm">{formatCurrency(calc.studentLoanAmount)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-xs text-muted-foreground mt-1">
+                            <p>{formatDate(new Date(calc.calculationDate))}</p>
+                          </div>
+                          
+                          <div className="mt-2 pt-2 border-t flex justify-end gap-2">
+                            <Button 
+                              variant={calc.includedInProjection ? "default" : "outline"} 
+                              size="sm"
+                              className={`h-7 text-xs ${calc.includedInProjection ? "bg-primary text-primary-foreground" : "bg-background"}`}
+                              onClick={() => toggleCollegeProjectionInclusion(calc.id)}
+                              disabled={toggleCollegeProjectionMutation.isPending}
+                            >
+                              <Calculator className="h-3 w-3 mr-1" />
+                              {calc.includedInProjection ? "✓ Selected for Projection" : "Select for Projection"}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                              onClick={() => removeCollegeCalculation(calc.id)}
+                              disabled={deleteCollegeMutation.isPending}
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Remove
+                            </Button>
                           </div>
                         </div>
-                        <div>
-                          <div className="flex justify-between">
-                            <span className="text-xs text-muted-foreground">Family:</span>
-                            <span className="font-medium text-sm">{formatCurrency(calc.familyContribution)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-xs text-muted-foreground">Loans:</span>
-                            <span className="font-medium text-sm">{formatCurrency(calc.studentLoanAmount)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground mt-1">
-                        <p>{formatDate(new Date(calc.calculationDate))}</p>
-                      </div>
-                      
-                      <div className="mt-2 pt-2 border-t flex justify-end gap-2">
-                        <Button 
-                          variant={calc.includedInProjection ? "default" : "outline"} 
-                          size="sm"
-                          className={`h-7 text-xs ${calc.includedInProjection ? "bg-primary text-primary-foreground" : "bg-background"}`}
-                          onClick={() => toggleCollegeProjectionInclusion(calc.id)}
-                          disabled={toggleCollegeProjectionMutation.isPending}
-                        >
-                          <Calculator className="h-3 w-3 mr-1" />
-                          {calc.includedInProjection ? "✓ Selected for Projection" : "Select for Projection"}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="h-7 text-xs text-destructive hover:bg-destructive/10"
-                          onClick={() => removeCollegeCalculation(calc.id)}
-                          disabled={deleteCollegeMutation.isPending}
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Remove
-                        </Button>
-                      </div>
+                      ))}
                     </div>
                   ))}
                 </div>

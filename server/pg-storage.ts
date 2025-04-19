@@ -89,20 +89,20 @@ export class PgStorage implements IStorage {
       switch(collegeType.toLowerCase()) {
         case 'vocational':
         case 'vocational school':
-          query = query.where(eq(colleges.degreePredominant, 1));
+          query = query.where(eq(colleges.degreesAwardedPredominant, 1));
           break;
         case 'community':
         case 'community college':
-          query = query.where(eq(colleges.degreePredominant, 2));
+          query = query.where(eq(colleges.degreesAwardedPredominant, 2));
           break;
         case 'bachelors':
         case 'bachelor':
         case 'bachelors institution':
-          query = query.where(eq(colleges.degreePredominant, 3));
+          query = query.where(eq(colleges.degreesAwardedPredominant, 3));
           break;
         case 'graduate':
         case 'graduate institution':
-          query = query.where(eq(colleges.degreePredominant, 4));
+          query = query.where(eq(colleges.degreesAwardedPredominant, 4));
           break;
       }
     }
@@ -151,7 +151,7 @@ export class PgStorage implements IStorage {
             sql`LOWER(${colleges.type}) LIKE '%2 year%'`,
             sql`LOWER(${colleges.type}) LIKE '%junior%'`,
             // Also match on degreePredominant field (2 = Associate's degree)
-            sql`${colleges.degreePredominant} = 2`
+            sql`${colleges.degreesAwardedPredominant} = 2`
           );
           break;
         case 'vocational':
@@ -162,7 +162,7 @@ export class PgStorage implements IStorage {
             sql`LOWER(${colleges.type}) LIKE '%trade%'`,
             sql`LOWER(${colleges.type}) LIKE '%career%'`,
             // Also match on degreePredominant field (1 = Certificate programs)
-            sql`${colleges.degreePredominant} = 1`
+            sql`${colleges.degreesAwardedPredominant} = 1`
           );
           break;
         default:
