@@ -343,20 +343,17 @@ const mapGameResponsesToPreferences = (gameResults: GameResults): Record<string,
   return preferences;
 };
 
-export default function RecommendationEngine({ gameResults, onSelectPath }: RecommendationEngineProps) {
+export default function RecommendationEngine({ preferences, onSelectPath }: RecommendationEngineProps) {
   const [activeTab, setActiveTab] = useState('education');
   const [isLoading, setIsLoading] = useState(true);
   const [recommendations, setRecommendations] = useState<any>(null);
-  
-  // Convert game results to preferences
-  const preferences = mapGameResponsesToPreferences(gameResults);
   
   useEffect(() => {
     setIsLoading(true);
     const results = analyzePreferences(preferences);
     setRecommendations(results);
     setIsLoading(false);
-  }, [gameResults]);
+  }, [preferences]);
 
   // Group preferences by category and split into liked and not interested
   const groupedPreferences = Object.entries(preferences).reduce((acc, [key, liked]) => {

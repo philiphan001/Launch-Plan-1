@@ -1122,9 +1122,10 @@ const Pathways = ({
                         team_role: '',
                         wildcard: ''
                       });
+                      // Reset the summary shown state
+                      setHasShownQuickSpinSummary(false);
                       // Increment reset counter to ensure component remounts with fresh state
                       setResetCounter(prev => prev + 1);
-                      handleNext(); // Automatically proceed to next step
                     }}
                   >
                     <div className="bg-gradient-to-r from-amber-400 to-yellow-500 py-5">
@@ -1640,6 +1641,27 @@ const Pathways = ({
           }
           
           // If the exploration method is 'quickSpin', check if we have quick spin results
+          // If no quickSpin results yet, show the QuickSpinWheel component first
+          if (explorationMethod === 'quickSpin' && (!quickSpinResults || Object.values(quickSpinResults).every(val => !val))) {
+            return (
+              <Step 
+                title="Quick Spin Game" 
+                subtitle="Spin the wheel to explore your future identity"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <QuickSpinWheel
+                      key={`quick-spin-${resetCounter}`}
+                      onComplete={(results) => {
+                        setQuickSpinResults(results);
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
           // If we have results but haven't shown the summary yet, show it first
           if (explorationMethod === 'quickSpin' && quickSpinResults && !hasShownQuickSpinSummary) {
             return (
@@ -1678,17 +1700,10 @@ const Pathways = ({
               >
                 <Card>
                   <CardContent className="p-6">
-                    <RecommendationEngine 
-                      preferences={preferences} 
-                      onSelectPath={handleSelectPath} 
+                    <RecommendationEngine
+                      preferences={preferences}
+                      onSelectPath={handleSelectPath}
                     />
-                    <div className="flex justify-between mt-6">
-                      <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">sports_esports</span>
-                        Play Game Again
-                      </Button>
-                      <Button onClick={handleNext}>Continue to Pathways</Button>
-                    </div>
                   </CardContent>
                 </Card>
               </Step>

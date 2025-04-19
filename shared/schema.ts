@@ -455,6 +455,24 @@ export const insertZipCodeIncomeSchema = createInsertSchema(zipCodeIncome).pick(
 export type ZipCodeIncome = typeof zipCodeIncome.$inferSelect;
 export type InsertZipCodeIncome = z.infer<typeof insertZipCodeIncomeSchema>;
 
+// Exploration results table
+export const explorationResults = pgTable("exploration_results", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  method: text("method").notNull(),
+  results: jsonb("results").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertExplorationResultSchema = createInsertSchema(explorationResults).pick({
+  userId: true,
+  method: true,
+  results: true,
+});
+
+export type ExplorationResult = typeof explorationResults.$inferSelect;
+export type InsertExplorationResult = z.infer<typeof insertExplorationResultSchema>;
+
 // College net price calculation results table
 export const collegeCalculations = pgTable("college_calculations", {
   id: serial("id").primaryKey(),

@@ -1747,6 +1747,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Save exploration results
+  app.post("/api/exploration-results", async (req: Request, res: Response) => {
+    try {
+      const { userId, method, results } = req.body;
+      
+      if (!userId || !method || !results) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const explorationResult = await activeStorage.saveExplorationResult({
+        userId,
+        method,
+        results,
+        createdAt: new Date()
+      });
+      
+      res.status(201).json(explorationResult);
+    } catch (error) {
+      console.error("Error saving exploration result:", error);
+      res.status(500).json({ message: "Failed to save exploration result", error: String(error) });
+    }
+  });
+
+  // Get exploration results for a user
+  app.get("/api/exploration-results/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const results = await activeStorage.getExplorationResultsByUserId(userId);
+      res.json(results);
+    } catch (error) {
+      console.error("Error getting exploration results:", error);
+      res.status(500).json({ message: "Failed to get exploration results", error: String(error) });
+    }
+  });
+
+  // Get a specific exploration result
+  app.get("/api/exploration-results/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid result ID format" });
+      }
+      
+      const result = await activeStorage.getExplorationResult(id);
+      if (!result) {
+        return res.status(404).json({ message: `Exploration result with ID ${id} not found` });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error getting exploration result:", error);
+      res.status(500).json({ message: "Failed to get exploration result", error: String(error) });
+    }
+  });
+
   app.get("/api/milestones/user/:userId", async (req: Request, res: Response) => {
     try {
       const userId = parseInt(req.params.userId);

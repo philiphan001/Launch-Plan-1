@@ -163,6 +163,36 @@ export interface IStorage {
   getQuickSpinResponse(id: number): Promise<QuickSpinResponse | undefined>;
   updateQuickSpinResponse(id: number, data: Partial<InsertQuickSpinResponse>): Promise<QuickSpinResponse | undefined>;
   deleteQuickSpinResponse(id: number): Promise<void>;
+
+  // Exploration results
+  saveExplorationResult(result: {
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }): Promise<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }>;
+  
+  getExplorationResultsByUserId(userId: number): Promise<Array<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }>>;
+  
+  getExplorationResult(id: number): Promise<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  } | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -204,6 +234,15 @@ export class MemStorage implements IStorage {
   private assumptionId: number;
   private pathwayResponseId: number;
   private pathwaySwipeResponseId: number;
+
+  private explorationResults: Array<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }> = [];
+  private nextId = 1;
 
   constructor() {
     this.users = new Map();
@@ -1081,6 +1120,50 @@ export class MemStorage implements IStorage {
 
   async deleteQuickSpinResponse(id: number): Promise<void> {
     this.pathwaySwipeResponses.delete(id);
+  }
+
+  // Exploration results
+  async saveExplorationResult(result: {
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }): Promise<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }> {
+    const newResult = {
+      id: this.nextId++,
+      ...result
+    };
+    
+    this.explorationResults.push(newResult);
+    return newResult;
+  }
+  
+  async getExplorationResultsByUserId(userId: number): Promise<Array<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }>> {
+    return this.explorationResults
+      .filter(result => result.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getExplorationResult(id: number): Promise<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  } | null> {
+    return this.explorationResults.find(result => result.id === id) || null;
   }
 }
 

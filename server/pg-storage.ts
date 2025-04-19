@@ -879,10 +879,7 @@ export class PgStorage implements IStorage {
   }
 
   async deleteQuickSpinResponse(id: number): Promise<void> {
-    await this.pool.query(
-      'DELETE FROM quick_spin_responses WHERE id = $1',
-      [id]
-    );
+    await db.delete(quickSpinResponses).where(eq(quickSpinResponses.id, id));
   }
 
   private mapQuickSpinResponse(row: any): QuickSpinResponse {
@@ -893,9 +890,61 @@ export class PgStorage implements IStorage {
       ideal_day: row.ideal_day,
       values: row.values,
       activities: row.activities,
-      preferences: JSON.parse(row.preferences),
+      preferences: row.preferences,
       createdAt: row.created_at
     };
+  }
+
+  // Exploration results methods
+  async saveExplorationResult(result: {
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }): Promise<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }> {
+    const [savedResult] = await db.execute(sql`
+      INSERT INTO exploration_results (user_id, method, results, created_at)
+      VALUES (${result.userId}, ${result.method}, ${JSON.stringify(result.results)}, ${result.createdAt})
+      RETURNING id, user_id as "userId", method, results, created_at as "createdAt"
+    `);
+    return savedResult;
+  }
+
+  async getExplorationResultsByUserId(userId: number): Promise<Array<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  }>> {
+    const results = await db.execute(sql`
+      SELECT id, user_id as "userId", method, results, created_at as "createdAt"
+      FROM exploration_results
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+    `);
+    return results;
+  }
+
+  async getExplorationResult(id: number): Promise<{
+    id: number;
+    userId: number;
+    method: string;
+    results: any;
+    createdAt: Date;
+  } | null> {
+    const [result] = await db.execute(sql`
+      SELECT id, user_id as "userId", method, results, created_at as "createdAt"
+      FROM exploration_results
+      WHERE id = ${id}
+    `);
+    return result || null;
   }
 }
 

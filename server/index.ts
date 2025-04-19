@@ -238,7 +238,7 @@ app.use((err: any, req: any, res: any, next: any) => {
     serveStatic(app);
   }
 
-  const port = 3000;
+  const PORT = parseInt(process.env.PORT || '3001', 10);
   const host = '0.0.0.0';
   
   // Add error handling for the server
@@ -250,11 +250,11 @@ app.use((err: any, req: any, res: any, next: any) => {
 
     switch (error.code) {
       case 'EACCES':
-        console.error(`Port ${port} requires elevated privileges`);
+        console.error(`Port ${PORT} requires elevated privileges`);
         process.exit(1);
         break;
       case 'EADDRINUSE':
-        console.error(`Port ${port} is already in use`);
+        console.error(`Port ${PORT} is already in use`);
         process.exit(1);
         break;
       default:
@@ -262,11 +262,11 @@ app.use((err: any, req: any, res: any, next: any) => {
     }
   });
 
-  server.listen(port, host, () => {
+  server.listen(PORT, host, () => {
     console.log('----------------------------------------');
     console.log(`Server is running at:`);
-    console.log(`- Local: http://localhost:${port}`);
-    console.log(`- Network: http://${host}:${port}`);
+    console.log(`- Local: http://localhost:${PORT}`);
+    console.log(`- Network: http://${host}:${PORT}`);
     console.log('----------------------------------------');
   });
 })();
