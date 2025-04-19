@@ -234,28 +234,31 @@ const ScenarioCard = ({
       key={`scenario-${scenario.id}-${index}`}
       layout="position"
       layoutId={`scenario-${scenario.id}`}
-      initial={{ opacity: 0.8, scale: 0.95 }}
+      initial={{ opacity: 0.8, scale: 0.98 }}
       animate={{ 
         opacity: 1, 
         scale: 1,
         transition: {
           type: "spring",
-          stiffness: 80,
+          stiffness: 70,  // Reduced for smoother motion
           damping: 20,
-          duration: 1.0
+          duration: 0.4   // Faster duration
         }
       }}
       whileHover={{ 
-        scale: 1.02,
-        transition: { duration: 0.3 } 
+        scale: 1.01,     // Reduced scale effect
+        transition: { 
+          duration: 0.2,  // Faster hover transition
+          ease: "easeOut" 
+        } 
       }}
       transition={{
         layout: { 
           type: "spring", 
-          bounce: 0.2,
-          duration: 1.0,
-          mass: 1.2,  // More mass makes it feel "weightier"
-          damping: 20 // Higher damping means less oscillation
+          bounce: 0.13,   // Reduced bounce
+          duration: 0.6,  // Consistent with parent timing
+          mass: 0.8,      // Reduced mass for lighter feel
+          damping: 20     // Consistent damping
         }
       }}
       className="h-full"

@@ -38,15 +38,21 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
   const [compareOpen, setCompareOpen] = useState(false);
   const [scenariosToCompare, setScenariosToCompare] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState("recent");
-  const [ageSliderValue, setAgeSliderValue] = useState<number>(30); // Default age of 30
-  const [useAgeSlider, setUseAgeSlider] = useState<boolean>(true); // Default to active
-  const [, setLocation] = useLocation(); // Wouter hook for navigation
+  const [ageSliderValue, setAgeSliderValue] = useState<number>(30);
+  const [useAgeSlider, setUseAgeSlider] = useState<boolean>(true);
+  const [displayAge, setDisplayAge] = useState<number>(30);
+  const [, setLocation] = useLocation();
 
-  // Fetch user scenarios
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDisplayAge(ageSliderValue);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [ageSliderValue]);
+
   const { data: scenarios = [], isLoading, error } = useQuery<ScenarioData[]>({
     queryKey: ['/api/financial-projections/user', userId],
     queryFn: async () => {
-      // Only fetch if userId exists
       if (!userId) {
         console.log("No user ID provided, skipping projection fetch");
         return [];
@@ -62,9 +68,7 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
         const data = await response.json();
         console.log(`Received ${data.length} projections for user ID ${userId}`);
         
-        // Transform API data to match ScenarioData format
         return data.map((projection: any) => {
-          // Ensure projectionData is properly parsed
           let projData = projection.projectionData;
           if (typeof projData === 'string') {
             try {
@@ -75,7 +79,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             }
           }
           
-          // Extract information from title for tags if not available
           let educationTag = '';
           let careerTag = '';
           let locationTag = '';
@@ -84,7 +87,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
           const descriptionParts = title.split('+').map((s: string) => s.trim());
           
           if (descriptionParts.length > 1) {
-            // Try to infer education, career, and location from title
             if (descriptionParts[0].toLowerCase().includes('degree') || 
                 descriptionParts[0].toLowerCase().includes('university') ||
                 descriptionParts[0].toLowerCase().includes('college')) {
@@ -92,7 +94,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             }
             
             if (descriptionParts[1]) {
-              // Try to infer career and location from the second part
               const careerLocation = descriptionParts[1].split('in').map((s: string) => s.trim());
               if (careerLocation.length > 0) {
                 careerTag = careerLocation[0];
@@ -137,12 +138,9 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
   };
 
   const handleEditScenario = (scenario: ScenarioData) => {
-    // Navigate to the edit page with correct query parameters
-    // Use timestamp to ensure React treats this as a new render
     const timestamp = Date.now();
     setLocation(`/projections?id=${scenario.id}&t=${timestamp}`);
     
-    // Log that we're navigating to edit
     console.log(`Navigating to edit projection ${scenario.id}`);
   };
 
@@ -150,44 +148,35 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
     setCompareOpen(true);
   };
 
-  // Get the net worth at specific age for a scenario
   const getNetWorthAtAge = (scenario: ScenarioData, targetAge: number): number => {
     try {
-      // Safety check - if scenario or projectionData is undefined/null, return 0
       if (!scenario || !scenario.projectionData) {
         console.warn("Missing scenario or projectionData in getNetWorthAtAge");
         return 0;
       }
       
-      // Ensure we have valid arrays to work with
       const ages = Array.isArray(scenario.projectionData.ages) ? scenario.projectionData.ages : [];
       const netWorth = Array.isArray(scenario.projectionData.netWorth) ? scenario.projectionData.netWorth : [];
       
-      // Safety check - if arrays are empty, return 0
       if (ages.length === 0 || netWorth.length === 0) {
         console.warn("Empty ages or netWorth array in getNetWorthAtAge");
         return 0;
       }
       
-      // Find the index of the age in the ages array
       const ageIndex = ages.findIndex(age => age === targetAge);
       
-      // If the exact age exists in our data, use that value
       if (ageIndex !== -1 && ageIndex < netWorth.length) {
         return netWorth[ageIndex] || 0;
       }
       
-      // If the target age is smaller than the first age in our data
       if (targetAge < ages[0]) {
-        return netWorth[0] || 0; // Return the first value
+        return netWorth[0] || 0;
       }
       
-      // If the target age is larger than the last age in our data
       if (targetAge > ages[ages.length - 1]) {
-        return netWorth[netWorth.length - 1] || 0; // Return the last value
+        return netWorth[netWorth.length - 1] || 0;
       }
       
-      // Find the closest ages before and after the target and interpolate
       let lowerIndex = 0;
       for (let i = 0; i < ages.length; i++) {
         if (ages[i] <= targetAge) {
@@ -199,33 +188,28 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
       
       const upperIndex = lowerIndex + 1;
       
-      // If we're at the last age, just return that value
       if (upperIndex >= ages.length) {
         return netWorth[lowerIndex] || 0;
       }
       
-      // Safety check on indices
       if (lowerIndex >= netWorth.length || upperIndex >= netWorth.length) {
         return netWorth[netWorth.length - 1] || 0;
       }
       
-      // Calculate the net worth using linear interpolation
       const lowerAge = ages[lowerIndex];
       const upperAge = ages[upperIndex];
       const lowerValue = netWorth[lowerIndex] || 0;
       const upperValue = netWorth[upperIndex] || 0;
       
-      // Linear interpolation formula: y = y1 + (x - x1) * ((y2 - y1) / (x2 - x1))
       const interpolatedValue = lowerValue + (targetAge - lowerAge) * ((upperValue - lowerValue) / (upperAge - lowerAge));
       
       return isNaN(interpolatedValue) ? 0 : interpolatedValue;
     } catch (error) {
       console.error("Error calculating net worth at age", error);
-      return 0; // Return 0 as fallback to ensure containers remain visible
+      return 0;
     }
   };
 
-  // Get the age range across all scenarios with proper validation
   const allAges = scenarios
     .filter(scenario => 
       scenario && 
@@ -235,39 +219,31 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
     )
     .flatMap(scenario => scenario.projectionData.ages || []);
     
-  // Use safe defaults if no valid ages found
   const minAge = allAges.length > 0 ? Math.min(...allAges) : 25;
   const maxAge = allAges.length > 0 ? Math.max(...allAges) : 35;
 
-  // Sort scenarios based on selected criteria
   const getSortedScenarios = () => {
     if (!scenarios || scenarios.length === 0) return [];
     
-    // Make a shallow copy to avoid mutating the original array
     const scenariosCopy = [...scenarios];
     
     if (useAgeSlider) {
-      // Ensure the ageSliderValue is within the valid range before sorting
       return scenariosCopy.sort((a, b) => {
         try {
-          // Sort by net worth at the specific age selected by the slider
           const aNetWorthAtAge = getNetWorthAtAge(a, ageSliderValue);
           const bNetWorthAtAge = getNetWorthAtAge(b, ageSliderValue);
           
-          // For debugging
           console.log(`Age ${ageSliderValue} - Scenario ${a.id}: $${aNetWorthAtAge}, Scenario ${b.id}: $${bNetWorthAtAge}`);
           
-          // Strict sorting without random factor to ensure consistent order
           return bNetWorthAtAge - aNetWorthAtAge; 
         } catch (error) {
           console.error("Error in sorting by age:", error);
-          return 0; // Don't change order if an error occurs
+          return 0;
         }
       });
     } else if (sortBy === "netWorth") {
       return scenariosCopy.sort((a, b) => {
         try {
-          // Safety checks
           if (!a?.projectionData?.netWorth || !Array.isArray(a.projectionData.netWorth) || 
               !b?.projectionData?.netWorth || !Array.isArray(b.projectionData.netWorth)) {
             return 0;
@@ -278,7 +254,7 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
           
           const aMaxNetWorth = Math.max(...aNetWorth);
           const bMaxNetWorth = Math.max(...bNetWorth);
-          return bMaxNetWorth - aMaxNetWorth; // Highest first
+          return bMaxNetWorth - aMaxNetWorth;
         } catch (error) {
           console.error("Error sorting by netWorth:", error);
           return 0;
@@ -287,7 +263,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
     } else if (sortBy === "income") {
       return scenariosCopy.sort((a, b) => {
         try {
-          // Safety checks
           if (!a?.projectionData?.income || !Array.isArray(a.projectionData.income) || 
               !b?.projectionData?.income || !Array.isArray(b.projectionData.income)) {
             return 0;
@@ -298,7 +273,7 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
           
           const aLastIncome = aIncome.length > 0 ? aIncome[aIncome.length - 1] : 0;
           const bLastIncome = bIncome.length > 0 ? bIncome[bIncome.length - 1] : 0;
-          return bLastIncome - aLastIncome; // Highest first
+          return bLastIncome - aLastIncome;
         } catch (error) {
           console.error("Error sorting by income:", error);
           return 0;
@@ -307,7 +282,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
     } else if (sortBy === "expenses") {
       return scenariosCopy.sort((a, b) => {
         try {
-          // Safety checks
           if (!a?.projectionData?.expenses || !Array.isArray(a.projectionData.expenses) || 
               !b?.projectionData?.expenses || !Array.isArray(b.projectionData.expenses)) {
             return 0;
@@ -318,7 +292,7 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
           
           const aLastExpenses = aExpenses.length > 0 ? aExpenses[aExpenses.length - 1] : 0;
           const bLastExpenses = bExpenses.length > 0 ? bExpenses[bExpenses.length - 1] : 0;
-          return aLastExpenses - bLastExpenses; // Lowest first
+          return aLastExpenses - bLastExpenses;
         } catch (error) {
           console.error("Error sorting by expenses:", error);
           return 0;
@@ -326,11 +300,9 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
       });
     }
     
-    // Default to recent (by ID in our mock data)
     return scenariosCopy.sort((a, b) => b.id - a.id);
   };
   
-  // Get the sorted scenarios
   const sortedScenarios = getSortedScenarios();
 
   return (
@@ -346,7 +318,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             value={sortBy} 
             onValueChange={(value) => {
               setSortBy(value);
-              // Age slider always active regardless of sorting option
             }}
           >
             <SelectTrigger className="w-[180px]">
@@ -374,7 +345,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
         </div>
       </div>
       
-      {/* Age slider section - always visible */}
       {scenarios.length > 0 && (
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
@@ -385,7 +355,7 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             
             <div className="bg-white border border-gray-200 rounded-full px-4 py-2 shadow-sm flex items-center space-x-2">
               <span className="text-sm text-gray-500">Selected Age:</span>
-              <span className="text-xl font-bold text-primary">{ageSliderValue}</span>
+              <span className="text-xl font-bold text-primary">{displayAge}</span>
             </div>
           </div>
           
@@ -399,11 +369,9 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
                   step={1}
                   value={[ageSliderValue]}
                   onValueChange={(values) => {
-                    // Only update the slider value without triggering re-render
                     setAgeSliderValue(values[0]);
                   }}
                   onValueCommit={(values) => {
-                    // Only after slider is released, update the sort
                     setAgeSliderValue(values[0]);
                     setUseAgeSlider(true);
                   }}
@@ -473,9 +441,19 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
       ) : (
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          layout
           transition={{
-            layout: { type: "spring", bounce: 0.2, duration: 1.2 }
+            layout: {
+              type: "spring",
+              bounce: 0.15,
+              duration: 0.6,
+              damping: 26,
+              stiffness: 100
+            },
+            opacity: { duration: 0.3 }
           }}
+          animate={{ opacity: 1 }}
+          initial={{ opacity: 0.8 }}
         >
           {sortedScenarios.map((scenario, index) => (
             <SafeScenarioCard
@@ -491,7 +469,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
         </motion.div>
       )}
 
-      {/* Scenario Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-4xl">
           {selectedScenario && (
@@ -544,7 +521,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
                     <div>
                       <h4 className="font-medium mb-2">Net Worth Projection</h4>
                       <div className="h-64 bg-gray-50 p-4 rounded-md">
-                        {/* This would be a detailed chart in the actual implementation */}
                         <div className="text-center h-full flex items-center justify-center">
                           <p className="text-gray-500">Detailed net worth chart would appear here</p>
                         </div>
@@ -554,7 +530,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
                     <div>
                       <h4 className="font-medium mb-2">Income & Expenses</h4>
                       <div className="h-64 bg-gray-50 p-4 rounded-md">
-                        {/* This would be a detailed chart in the actual implementation */}
                         <div className="text-center h-full flex items-center justify-center">
                           <p className="text-gray-500">Detailed income and expenses chart would appear here</p>
                         </div>
@@ -662,7 +637,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
         </DialogContent>
       </Dialog>
 
-      {/* Compare Scenarios Dialog */}
       <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
@@ -686,12 +660,10 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
                     checked={scenariosToCompare.includes(scenario.id)}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        // Add to compare list (up to 3)
                         if (scenariosToCompare.length < 3) {
                           setScenariosToCompare([...scenariosToCompare, scenario.id]);
                         }
                       } else {
-                        // Remove from compare list
                         setScenariosToCompare(scenariosToCompare.filter(id => id !== scenario.id));
                       }
                     }}
@@ -720,7 +692,6 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             <Button 
               disabled={scenariosToCompare.length < 2} 
               onClick={() => {
-                // Navigate to the comparison page
                 setLocation(`/projections/compare?ids=${scenariosToCompare.join(',')}`);
               }}
             >

@@ -14,8 +14,24 @@ import {
   zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
   collegeCalculations, type CollegeCalculation, type InsertCollegeCalculation,
   careerCalculations, type CareerCalculation, type InsertCareerCalculation,
-  assumptions, type Assumption, type InsertAssumption, defaultAssumptions
+  assumptions, type Assumption, type InsertAssumption, defaultAssumptions,
+  pathwayResponses, type PathwayResponse, type InsertPathwayResponse,
+  pathwaySwipeResponses, type PathwaySwipeResponse, type InsertPathwaySwipeResponse
 } from "@shared/schema";
+
+export interface InsertQuickSpinResponse {
+  userId: number;
+  superpower: string;
+  ideal_day: string;
+  values: string;
+  activities: string;
+  preferences: Record<string, boolean>;
+}
+
+export interface QuickSpinResponse extends InsertQuickSpinResponse {
+  id: number;
+  createdAt: Date;
+}
 
 // Storage interface with CRUD methods for all entities
 export interface IStorage {
@@ -126,6 +142,27 @@ export interface IStorage {
   updateAssumption(id: number, data: Partial<InsertAssumption>): Promise<Assumption | undefined>;
   deleteAssumption(id: number): Promise<void>;
   initializeDefaultAssumptions(userId: number): Promise<Assumption[]>;
+
+  // Pathway response methods
+  getPathwayResponse(id: number): Promise<PathwayResponse | undefined>;
+  getPathwayResponsesByUserId(userId: number): Promise<PathwayResponse[]>;
+  createPathwayResponse(response: InsertPathwayResponse): Promise<PathwayResponse>;
+  updatePathwayResponse(id: number, data: Partial<InsertPathwayResponse>): Promise<PathwayResponse | undefined>;
+  deletePathwayResponse(id: number): Promise<void>;
+
+  // Pathway swipe response methods
+  getPathwaySwipeResponse(id: number): Promise<PathwaySwipeResponse | undefined>;
+  getPathwaySwipeResponsesByUserId(userId: number): Promise<PathwaySwipeResponse[]>;
+  createPathwaySwipeResponse(response: InsertPathwaySwipeResponse): Promise<PathwaySwipeResponse>;
+  updatePathwaySwipeResponse(id: number, data: Partial<InsertPathwaySwipeResponse>): Promise<PathwaySwipeResponse | undefined>;
+  deletePathwaySwipeResponse(id: number): Promise<void>;
+
+  // Quick Spin Response methods
+  createQuickSpinResponse(response: InsertQuickSpinResponse): Promise<QuickSpinResponse>;
+  getQuickSpinResponsesByUserId(userId: number): Promise<QuickSpinResponse[]>;
+  getQuickSpinResponse(id: number): Promise<QuickSpinResponse | undefined>;
+  updateQuickSpinResponse(id: number, data: Partial<InsertQuickSpinResponse>): Promise<QuickSpinResponse | undefined>;
+  deleteQuickSpinResponse(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -145,6 +182,8 @@ export class MemStorage implements IStorage {
   private collegeCalculations: Map<number, CollegeCalculation>;
   private careerCalculations: Map<number, CareerCalculation>;
   private assumptions: Map<number, Assumption>;
+  private pathwayResponses: Map<number, PathwayResponse>;
+  private pathwaySwipeResponses: Map<number, PathwaySwipeResponse>;
   
   // Auto-increment IDs
   private userId: number;
@@ -163,6 +202,8 @@ export class MemStorage implements IStorage {
   private collegeCalculationId: number;
   private careerCalculationId: number;
   private assumptionId: number;
+  private pathwayResponseId: number;
+  private pathwaySwipeResponseId: number;
 
   constructor() {
     this.users = new Map();
@@ -181,6 +222,8 @@ export class MemStorage implements IStorage {
     this.collegeCalculations = new Map();
     this.careerCalculations = new Map();
     this.assumptions = new Map();
+    this.pathwayResponses = new Map();
+    this.pathwaySwipeResponses = new Map();
     
     this.userId = 1;
     this.financialProfileId = 1;
@@ -198,6 +241,8 @@ export class MemStorage implements IStorage {
     this.collegeCalculationId = 1;
     this.careerCalculationId = 1;
     this.assumptionId = 1;
+    this.pathwayResponseId = 1;
+    this.pathwaySwipeResponseId = 1;
     
     // Initialize with some sample data
     this.initializeSampleData();
@@ -862,80 +907,12 @@ export class MemStorage implements IStorage {
     return this.careerCalculations?.get(id);
   }
 
-  async getCareerCalculationsByUserId(userId: number): Promise<(CareerCalculation & { career: Career })[]> {
-    if (!this.careerCalculations) {
-      this.careerCalculations = new Map();
-      return [];
-    }
-    
-    const calculations = Array.from(this.careerCalculations.values()).filter(
-      (calculation) => calculation.userId === userId,
-    );
-    
-    return calculations.map(calculation => {
-      const career = this.careers.get(calculation.careerId);
-      if (!career) {
-        throw new Error(`Career not found for calculation ID ${calculation.id}`);
-      }
-      return { ...calculation, career };
-    });
-  }
-
-  async getCareerCalculationsByUserAndCareer(userId: number, careerId: number): Promise<CareerCalculation[]> {
-    if (!this.careerCalculations) {
-      this.careerCalculations = new Map();
-      return [];
-    }
-    
-    return Array.from(this.careerCalculations.values()).filter(
-      (calculation) => calculation.userId === userId && calculation.careerId === careerId,
-    );
-  }
-
-  async createCareerCalculation(insertCalculation: InsertCareerCalculation): Promise<CareerCalculation> {
-    if (!this.careerCalculations) {
-      this.careerCalculations = new Map();
-    }
-    
-    const id = this.careerCalculationId++;
-    const timestamp = new Date();
-    const calculation: CareerCalculation = { ...insertCalculation, id, calculationDate: timestamp };
-    this.careerCalculations.set(id, calculation);
-    return calculation;
-  }
-
-  async updateCareerCalculation(id: number, data: Partial<InsertCareerCalculation>): Promise<CareerCalculation | undefined> {
-    const calculation = await this.getCareerCalculation(id);
-    if (!calculation) return undefined;
-    
-    const updatedCalculation = { ...calculation, ...data };
-    this.careerCalculations.set(id, updatedCalculation);
-    return updatedCalculation;
-  }
-
-  async deleteCareerCalculation(id: number): Promise<void> {
-    if (this.careerCalculations) {
-      this.careerCalculations.delete(id);
-    }
-  }
-  
-  async toggleCareerProjectionInclusion(id: number, userId: number): Promise<CareerCalculation | undefined> {
-    const calculation = await this.getCareerCalculation(id);
-    if (!calculation || calculation.userId !== userId) {
-      return undefined;
-    }
-    
-    // First reset all career calculations for this user
-    const userCalculations = await this.getCareerCalculationsByUserId(userId);
-    for (const calc of userCalculations) {
-      if (calc.includedInProjection) {
-        await this.updateCareerCalculation(calc.id, { includedInProjection: false });
-      }
-    }
-    
-    // Then set this specific calculation to true
-    return await this.updateCareerCalculation(id, { includedInProjection: true });
-  }
+  async getCareerCalculationsByUserId(userId: number): Promise<(CareerCalculation & { career: Career })[]>;
+  getCareerCalculationsByUserAndCareer(userId: number, careerId: number): Promise<CareerCalculation[]>;
+  createCareerCalculation(calculation: InsertCareerCalculation): Promise<CareerCalculation>;
+  updateCareerCalculation(id: number, data: Partial<InsertCareerCalculation>): Promise<CareerCalculation | undefined>;
+  deleteCareerCalculation(id: number): Promise<void>;
+  toggleCareerProjectionInclusion(id: number, userId: number): Promise<CareerCalculation | undefined>;
 
   // Assumption methods
   async getAssumption(id: number): Promise<Assumption | undefined> {
@@ -975,18 +952,135 @@ export class MemStorage implements IStorage {
   }
 
   async initializeDefaultAssumptions(userId: number): Promise<Assumption[]> {
-    const userAssumptions = defaultAssumptions.map(assumption => ({
+    const assumptions: InsertAssumption[] = defaultAssumptions.map(assumption => ({
       ...assumption,
       userId
     }));
     
-    const results: Assumption[] = [];
-    for (const assumptionData of userAssumptions) {
-      const assumption = await this.createAssumption(assumptionData);
-      results.push(assumption);
-    }
+    return Promise.all(assumptions.map(assumption => this.createAssumption(assumption)));
+  }
+
+  // Pathway response methods
+  async getPathwayResponse(id: number): Promise<PathwayResponse | undefined> {
+    return this.pathwayResponses.get(id);
+  }
+
+  async getPathwayResponsesByUserId(userId: number): Promise<PathwayResponse[]> {
+    return Array.from(this.pathwayResponses.values()).filter(
+      response => response.userId === userId
+    );
+  }
+
+  async createPathwayResponse(insertResponse: InsertPathwayResponse): Promise<PathwayResponse> {
+    const id = this.pathwayResponseId++;
+    const timestamp = new Date();
+    const response: PathwayResponse = { 
+      ...insertResponse, 
+      id,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+    this.pathwayResponses.set(id, response);
+    return response;
+  }
+
+  async updatePathwayResponse(id: number, data: Partial<InsertPathwayResponse>): Promise<PathwayResponse | undefined> {
+    const response = await this.getPathwayResponse(id);
+    if (!response) return undefined;
     
-    return results;
+    const updatedResponse = { 
+      ...response, 
+      ...data,
+      updatedAt: new Date()
+    };
+    this.pathwayResponses.set(id, updatedResponse);
+    return updatedResponse;
+  }
+
+  async deletePathwayResponse(id: number): Promise<void> {
+    this.pathwayResponses.delete(id);
+  }
+
+  // Pathway swipe response methods
+  async getPathwaySwipeResponse(id: number): Promise<PathwaySwipeResponse | undefined> {
+    return this.pathwaySwipeResponses.get(id);
+  }
+
+  async getPathwaySwipeResponsesByUserId(userId: number): Promise<PathwaySwipeResponse[]> {
+    return Array.from(this.pathwaySwipeResponses.values()).filter(
+      response => response.userId === userId
+    );
+  }
+
+  async createPathwaySwipeResponse(insertResponse: InsertPathwaySwipeResponse): Promise<PathwaySwipeResponse> {
+    const id = this.pathwaySwipeResponseId++;
+    const timestamp = new Date();
+    const response: PathwaySwipeResponse = { 
+      ...insertResponse, 
+      id,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+    this.pathwaySwipeResponses.set(id, response);
+    return response;
+  }
+
+  async updatePathwaySwipeResponse(id: number, data: Partial<InsertPathwaySwipeResponse>): Promise<PathwaySwipeResponse | undefined> {
+    const response = await this.getPathwaySwipeResponse(id);
+    if (!response) return undefined;
+    
+    const updatedResponse = { 
+      ...response, 
+      ...data,
+      updatedAt: new Date()
+    };
+    this.pathwaySwipeResponses.set(id, updatedResponse);
+    return updatedResponse;
+  }
+
+  async deletePathwaySwipeResponse(id: number): Promise<void> {
+    this.pathwaySwipeResponses.delete(id);
+  }
+
+  // Quick Spin Response methods
+  async createQuickSpinResponse(response: InsertQuickSpinResponse): Promise<QuickSpinResponse> {
+    const id = this.pathwaySwipeResponseId++;
+    const timestamp = new Date();
+    const quickSpinResponse: QuickSpinResponse = { 
+      ...response, 
+      id,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+    this.pathwaySwipeResponses.set(id, quickSpinResponse);
+    return quickSpinResponse;
+  }
+
+  async getQuickSpinResponsesByUserId(userId: number): Promise<QuickSpinResponse[]> {
+    return Array.from(this.pathwaySwipeResponses.values()).filter(
+      response => response.userId === userId
+    );
+  }
+
+  async getQuickSpinResponse(id: number): Promise<QuickSpinResponse | undefined> {
+    return this.pathwaySwipeResponses.get(id);
+  }
+
+  async updateQuickSpinResponse(id: number, data: Partial<InsertQuickSpinResponse>): Promise<QuickSpinResponse | undefined> {
+    const response = await this.getQuickSpinResponse(id);
+    if (!response) return undefined;
+    
+    const updatedResponse = { 
+      ...response, 
+      ...data,
+      updatedAt: new Date()
+    };
+    this.pathwaySwipeResponses.set(id, updatedResponse);
+    return updatedResponse;
+  }
+
+  async deleteQuickSpinResponse(id: number): Promise<void> {
+    this.pathwaySwipeResponses.delete(id);
   }
 }
 

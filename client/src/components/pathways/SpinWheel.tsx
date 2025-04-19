@@ -15,7 +15,7 @@ interface WheelOption {
 interface SpinWheelProps {
   title?: string;
   options: WheelOption[];
-  onComplete: (results: Record<string, string>) => void;
+  onComplete: (results: Record<string, string[]>) => void;
   resetKey?: number; // Add reset key prop for forcing re-mount
 }
 
@@ -28,7 +28,7 @@ const SpinWheel = ({
   const [spinning, setSpinning] = useState(false);
   const [selectedOption, setSelectedOption] = useState<WheelOption | null>(null);
   const [response, setResponse] = useState('');
-  const [completedOptions, setCompletedOptions] = useState<Record<string, string>>({});
+  const [completedOptions, setCompletedOptions] = useState<Record<string, string[]>>({});
   const [remainingOptions, setRemainingOptions] = useState<WheelOption[]>([]);
   const [showPrompt, setShowPrompt] = useState(false);
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
@@ -127,7 +127,9 @@ const SpinWheel = ({
     // Store response
     const updatedResponses = {
       ...completedOptions,
-      [selectedOption.id]: response
+      [selectedOption.id]: completedOptions[selectedOption.id] 
+        ? [...completedOptions[selectedOption.id], response]
+        : [response]
     };
     
     setCompletedOptions(updatedResponses);
@@ -253,7 +255,7 @@ const SpinWheel = ({
                   return (
                     <li key={optionId} className="flex">
                       <span className="font-medium mr-2">{option?.label}:</span>
-                      <span className="text-gray-600 truncate">{completedOptions[optionId]}</span>
+                      <span className="text-gray-600 truncate">{completedOptions[optionId].join(', ')}</span>
                     </li>
                   );
                 })}

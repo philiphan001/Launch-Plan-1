@@ -1,4 +1,16 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, real } from "drizzle-orm/pg-core";
+import { 
+  pgTable, 
+  text, 
+  serial, 
+  integer, 
+  boolean, 
+  jsonb, 
+  timestamp, 
+  real,
+  uuid,
+  varchar,
+  json
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -772,3 +784,51 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     isEnabled: true
   }
 ];
+
+export const pathwaySwipeResponses = pgTable('pathway_swipe_responses', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  sessionId: uuid('session_id').notNull(),
+  cardId: varchar('card_id', { length: 50 }).notNull(),
+  cardTitle: text('card_title').notNull(),
+  cardCategory: varchar('card_category', { length: 50 }).notNull(),
+  response: boolean('response').notNull(),  // true for like, false for dislike
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Add to existing relations
+export type PathwaySwipeResponse = typeof pathwaySwipeResponses.$inferSelect;
+export type InsertPathwaySwipeResponse = typeof pathwaySwipeResponses.$inferInsert;
+
+export const insertPathwayResponseSchema = z.object({
+  userId: z.number(),
+  questionId: z.string(),
+  response: z.string(),
+});
+
+export const pathwayResponses = pgTable("pathway_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  questionId: text("question_id").notNull(),
+  response: text("response").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
+});
+
+export type PathwayResponse = typeof pathwayResponses.$inferSelect;
+export type InsertPathwayResponse = typeof pathwayResponses.$inferInsert;
+
+export const quickSpinResponses = pgTable('quick_spin_responses', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  superpower: text('superpower').notNull(),
+  ideal_day: text('ideal_day').notNull(),
+  values: text('values').notNull(),
+  activities: text('activities').notNull(),
+  preferences: json('preferences').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+export type QuickSpinResponse = typeof quickSpinResponses.$inferSelect;
+export type InsertQuickSpinResponse = typeof quickSpinResponses.$inferInsert;

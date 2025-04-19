@@ -15,7 +15,9 @@ import {
   zipCodeIncome, type ZipCodeIncome, type InsertZipCodeIncome,
   collegeCalculations, type CollegeCalculation as DrizzleCollegeCalculation, type InsertCollegeCalculation,
   careerCalculations, type CareerCalculation, type InsertCareerCalculation,
-  assumptions, type Assumption, type InsertAssumption, defaultAssumptions
+  assumptions, type Assumption, type InsertAssumption, defaultAssumptions,
+  InsertPathwayResponse, PathwayResponse, pathwayResponses,
+  InsertQuickSpinResponse, QuickSpinResponse
 } from "@shared/schema";
 
 // Extended type for college calculations with college data
@@ -767,6 +769,133 @@ export class PgStorage implements IStorage {
     // Insert all defaults in one batch
     const result = await db.insert(assumptions).values(userAssumptions).returning();
     return result;
+  }
+
+  async getPathwayResponse(id: number): Promise<PathwayResponse | undefined> {
+    const [result] = await db.select().from(pathwayResponses).where(eq(pathwayResponses.id, id));
+    return result;
+  }
+
+  async createPathwayResponse(response: InsertPathwayResponse): Promise<PathwayResponse> {
+    const [result] = await db.insert(pathwayResponses).values(response).returning();
+    return result;
+  }
+
+  async getPathwayResponsesByUserId(userId: number): Promise<PathwayResponse[]> {
+    return await db.select().from(pathwayResponses).where(eq(pathwayResponses.userId, userId));
+  }
+
+  async updatePathwayResponse(id: number, response: string): Promise<PathwayResponse> {
+    const [result] = await db
+      .update(pathwayResponses)
+      .set({ response, updatedAt: new Date() })
+      .where(eq(pathwayResponses.id, id))
+      .returning();
+    return result;
+  }
+
+  async deletePathwayResponse(id: number): Promise<void> {
+    await db.delete(pathwayResponses).where(eq(pathwayResponses.id, id));
+  }
+
+  // Quick Spin Response methods
+  async createQuickSpinResponse(response: InsertQuickSpinResponse): Promise<QuickSpinResponse> {
+    const result = await this.pool.query(
+      `INSERT INTO quick_spin_responses (
+        user_id,
+        superpower,
+        ideal_day,
+        values,
+        activities,
+        preferences
+      ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [
+        response.userId,
+        response.superpower,
+        response.ideal_day,
+        response.values,
+        response.activities,
+        JSON.stringify(response.preferences)
+      ]
+    );
+    return this.mapQuickSpinResponse(result.rows[0]);
+  }
+
+  async getQuickSpinResponsesByUserId(userId: number): Promise<QuickSpinResponse[]> {
+    const result = await this.pool.query(
+      'SELECT * FROM quick_spin_responses WHERE user_id = $1',
+      [userId]
+    );
+    return result.rows.map(row => this.mapQuickSpinResponse(row));
+  }
+
+  async getQuickSpinResponse(id: number): Promise<QuickSpinResponse | undefined> {
+    const result = await this.pool.query(
+      'SELECT * FROM quick_spin_responses WHERE id = $1',
+      [id]
+    );
+    return result.rows.length ? this.mapQuickSpinResponse(result.rows[0]) : undefined;
+  }
+
+  async updateQuickSpinResponse(id: number, data: Partial<InsertQuickSpinResponse>): Promise<QuickSpinResponse | undefined> {
+    const updates: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+
+    if (data.superpower !== undefined) {
+      updates.push(`superpower = $${paramCount}`);
+      values.push(data.superpower);
+      paramCount++;
+    }
+    if (data.ideal_day !== undefined) {
+      updates.push(`ideal_day = $${paramCount}`);
+      values.push(data.ideal_day);
+      paramCount++;
+    }
+    if (data.values !== undefined) {
+      updates.push(`values = $${paramCount}`);
+      values.push(data.values);
+      paramCount++;
+    }
+    if (data.activities !== undefined) {
+      updates.push(`activities = $${paramCount}`);
+      values.push(data.activities);
+      paramCount++;
+    }
+    if (data.preferences !== undefined) {
+      updates.push(`preferences = $${paramCount}`);
+      values.push(JSON.stringify(data.preferences));
+      paramCount++;
+    }
+
+    if (updates.length === 0) return this.getQuickSpinResponse(id);
+
+    values.push(id);
+    const result = await this.pool.query(
+      `UPDATE quick_spin_responses SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+      values
+    );
+    return result.rows.length ? this.mapQuickSpinResponse(result.rows[0]) : undefined;
+  }
+
+  async deleteQuickSpinResponse(id: number): Promise<void> {
+    await this.pool.query(
+      'DELETE FROM quick_spin_responses WHERE id = $1',
+      [id]
+    );
+  }
+
+  private mapQuickSpinResponse(row: any): QuickSpinResponse {
+    return {
+      id: row.id,
+      userId: row.user_id,
+      superpower: row.superpower,
+      ideal_day: row.ideal_day,
+      values: row.values,
+      activities: row.activities,
+      preferences: JSON.parse(row.preferences),
+      createdAt: row.created_at
+    };
   }
 }
 

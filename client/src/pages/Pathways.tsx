@@ -35,6 +35,7 @@ import { GapYearPathway } from "@/components/pathways/GapYearPathways";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import QuickSpinSummary from "@/components/pathways/QuickSpinSummary";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -479,6 +480,7 @@ const Pathways = ({
     team_role: '',
     wildcard: ''
   });
+  const [hasShownQuickSpinSummary, setHasShownQuickSpinSummary] = useState(false);
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
@@ -1637,31 +1639,55 @@ const Pathways = ({
             );
           }
           
-          // If the exploration method is 'quickSpin', check if we have quickSpin results
-          // If no quickSpin results yet, show the QuickSpinWheel component first
-          if (explorationMethod === 'quickSpin' && 
-              (!quickSpinResults || quickSpinResults.superpower === '')) {
+          // If the exploration method is 'quickSpin', check if we have quick spin results
+          // If we have results but haven't shown the summary yet, show it first
+          if (explorationMethod === 'quickSpin' && quickSpinResults && !hasShownQuickSpinSummary) {
             return (
               <Step 
-                title="Spin the Identity Wheel" 
-                subtitle="Discover what makes you unique through this fun wheel game"
+                title="Your Quick Spin Results" 
+                subtitle="Here's what we learned about your interests and preferences"
               >
                 <Card>
                   <CardContent className="p-6">
-                    <QuickSpinWheel 
-                      key={`quick-spin-${resetCounter}`}
-                      resetKey={resetCounter}
-                      onComplete={(results) => {
-                        setQuickSpinResults(results);
-                        // Don't automatically move to the next step
-                        // Let this same case 3 handle it with the quickSpin results
-                      }}
+                    <QuickSpinSummary 
+                      results={quickSpinResults} 
+                      onContinue={() => setHasShownQuickSpinSummary(true)}
                     />
-                    <div className="flex justify-center mt-6">
+                    <div className="flex justify-between mt-6">
                       <Button variant="outline" onClick={handleRestartExploration}>
                         <span className="material-icons text-sm mr-1">sports_esports</span>
                         Play Game Again
                       </Button>
+                      <Button onClick={() => setHasShownQuickSpinSummary(true)}>
+                        Continue to Recommendations
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
+          // If we have quick spin results and have shown the summary, show recommendations
+          if (explorationMethod === 'quickSpin' && quickSpinResults && hasShownQuickSpinSummary) {
+            const preferences = convertQuickSpinResultsToPreferences();
+            return (
+              <Step 
+                title="Your Personalized Recommendations" 
+                subtitle="Based on your Quick Spin Game results, here are paths that might be the best fit for you"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <RecommendationEngine 
+                      preferences={preferences} 
+                      onSelectPath={handleSelectPath} 
+                    />
+                    <div className="flex justify-between mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                      <Button onClick={handleNext}>Continue to Pathways</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1766,16 +1792,38 @@ const Pathways = ({
           }
           
           // Determine which results to use based on the exploration method
-          let preferences: Record<string, boolean>;
+          let preferences: Record<string, boolean> = {};
           
-          if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
-            preferences = convertWheelResultsToPreferences();
-          } else if (explorationMethod === 'avatar') {
-            preferences = convertAvatarResultsToPreferences();
-          } else if (explorationMethod === 'quickSpin') {
-            preferences = convertQuickSpinResultsToPreferences();
-          } else {
-            preferences = swipeResults;
+          try {
+            if (explorationMethod === 'wheel' || explorationMethod === 'advancedWheel') {
+              preferences = convertWheelResultsToPreferences();
+            } else if (explorationMethod === 'avatar') {
+              preferences = convertAvatarResultsToPreferences();
+            } else if (explorationMethod === 'quickSpin') {
+              preferences = convertQuickSpinResultsToPreferences();
+            } else {
+              preferences = swipeResults;
+            }
+          } catch (error) {
+            console.error('Error converting results to preferences:', error);
+            return (
+              <Step
+                title="Oops! Something went wrong"
+                subtitle="There was an error processing your results"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <p className="text-gray-600 mb-4">We encountered an error while processing your results. Would you like to try again?</p>
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">refresh</span>
+                        Start Over
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
           }
           
           // Determine the activity name for the subtitle

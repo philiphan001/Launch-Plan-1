@@ -10,7 +10,7 @@ import { pgStorage } from "./pg-storage";
 import { storage } from "./storage";
 import { db } from "./db";
 import { users } from "../shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 // Use PostgreSQL storage if available
 export const activeStorage = process.env.DATABASE_URL ? pgStorage : storage;
@@ -167,6 +167,34 @@ app.use((err: any, req: any, res: any, next: any) => {
   res.status(500).json({ error: err.message });
 });
 
+// Add this right after creating the app instance, before setting up routes
+// Create necessary tables on startup
+(async () => {
+  try {
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS pathway_swipe_responses (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        session_id UUID NOT NULL,
+        card_id VARCHAR(50) NOT NULL,
+        card_title TEXT NOT NULL,
+        card_category VARCHAR(50) NOT NULL,
+        response BOOLEAN NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_pathway_swipe_responses_user_id 
+      ON pathway_swipe_responses(user_id);
+
+      CREATE INDEX IF NOT EXISTS idx_pathway_swipe_responses_session_id 
+      ON pathway_swipe_responses(session_id);
+    `));
+    console.log('Pathway responses table created or verified successfully');
+  } catch (error) {
+    console.error('Error setting up pathway responses table:', error);
+  }
+})();
+
 (async () => {
   const server = await registerRoutes(app);
 
@@ -242,3 +270,34 @@ app.use((err: any, req: any, res: any, next: any) => {
     console.log('----------------------------------------');
   });
 })();
+
+// Development only - create pathway_swipe_responses table
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/dev/init-pathway-responses', async (req, res) => {
+    try {
+      await db.execute(sql.raw(`
+        CREATE TABLE IF NOT EXISTS pathway_swipe_responses (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          session_id UUID NOT NULL,
+          card_id VARCHAR(50) NOT NULL,
+          card_title TEXT NOT NULL,
+          card_category VARCHAR(50) NOT NULL,
+          response BOOLEAN NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_pathway_swipe_responses_user_id 
+        ON pathway_swipe_responses(user_id);
+
+        CREATE INDEX IF NOT EXISTS idx_pathway_swipe_responses_session_id 
+        ON pathway_swipe_responses(session_id);
+      `));
+      
+      res.json({ success: true, message: 'Pathway responses table created successfully' });
+    } catch (error) {
+      console.error('Error creating table:', error);
+      res.status(500).json({ success: false, error: String(error) });
+    }
+  });
+}

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
+import { ApolloClient, InMemoryCache, ApolloProvider, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
 import Dashboard from "@/pages/Dashboard";
 import FinancialProjections from "@/pages/FinancialProjections";
 import CareerExploration from "@/pages/CareerExploration";
@@ -17,6 +19,28 @@ import NotFound from "@/pages/not-found";
 import AppShell from "@/components/ui/layout/AppShell";
 
 import { User, AuthProps, RegisterCredentials } from "@/interfaces/auth";
+
+// Create an Apollo Client instance
+const httpLink = createHttpLink({
+  uri: '/graphql',
+});
+
+const authLink = setContext((_, { headers }) => {
+  // Get the authentication token from local storage if it exists
+  const token = localStorage.getItem('token');
+  // Return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+    }
+  }
+});
+
+const client = new ApolloClient({
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache()
+});
 
 function App() {
   const [location, setLocation] = useLocation();
@@ -198,9 +222,7 @@ function App() {
         setIsFirstTimeUser(false);
         return true;
       } catch (error) {
-        console.error('Error updating onboarding status:', error);
-        // Fallback to local update if server update fails
-        setIsFirstTimeUser(false);
+        console.error('Error completing onboarding:', error);
         return false;
       }
     }
@@ -349,87 +371,97 @@ function App() {
   
   // Routes that should be displayed within the AppShell layout
   return (
-    <AppShell logout={logout} user={user}>
-      <Switch>
-        <Route path="/dashboard">
-          {() => {
-            console.log("Dashboard route rendering", { 
-              auth: isAuthenticated, 
-              firstTime: isFirstTimeUser,
-              user: user
-            });
-            return <Dashboard {...authProps} />;
-          }}
-        </Route>
-        <Route path="/projections">
-          {() => {
-            // Get projection ID from URL query parameters
-            const params = new URLSearchParams(window.location.search);
-            const projectionId = params.get('id');
-            const timestamp = params.get('t') || Date.now().toString();
-            
-            // Log the projection ID detection during routing
-            if (projectionId) {
-              console.log("App.tsx: Creating new FinancialProjections with ID:", projectionId, "timestamp:", timestamp);
+    <ApolloProvider client={client}>
+      <AppShell
+        logout={logout}
+        user={user}
+        isAuthenticated={isAuthenticated}
+        isFirstTimeUser={isFirstTimeUser}
+        login={login}
+        signup={signup}
+        completeOnboarding={completeOnboarding}
+      >
+        <Switch>
+          <Route path="/dashboard">
+            {() => {
+              console.log("Dashboard route rendering", { 
+                auth: isAuthenticated, 
+                firstTime: isFirstTimeUser,
+                user: user
+              });
+              return <Dashboard {...authProps} />;
+            }}
+          </Route>
+          <Route path="/projections">
+            {() => {
+              // Get projection ID from URL query parameters
+              const params = new URLSearchParams(window.location.search);
+              const projectionId = params.get('id');
+              const timestamp = params.get('t') || Date.now().toString();
               
-              // Always create a completely new component instance on every render with a unique key
-              // This forces React to unmount and remount the component, clearing all state
+              // Log the projection ID detection during routing
+              if (projectionId) {
+                console.log("App.tsx: Creating new FinancialProjections with ID:", projectionId, "timestamp:", timestamp);
+                
+                // Always create a completely new component instance on every render with a unique key
+                // This forces React to unmount and remount the component, clearing all state
+                return <FinancialProjections 
+                  {...authProps} 
+                  key={`projection-${projectionId}-${timestamp}`}
+                  initialProjectionId={Number(projectionId)}
+                />;
+              }
+              
+              // For new projections without ID
+              console.log("App.tsx: Creating new blank FinancialProjections");
               return <FinancialProjections 
                 {...authProps} 
-                key={`projection-${projectionId}-${timestamp}`}
-                initialProjectionId={Number(projectionId)}
+                key={`new-projection-${timestamp}`}
+                initialProjectionId={undefined}
               />;
-            }
-            
-            // For new projections without ID
-            console.log("App.tsx: Creating new blank FinancialProjections");
-            return <FinancialProjections 
-              {...authProps} 
-              key={`new-projection-${timestamp}`}
-              initialProjectionId={undefined}
-            />;
-          }}
-        </Route>
-        <Route path="/careers">
-          {() => <CareerExploration {...authProps} />}
-        </Route>
-        <Route path="/career-builder">
-          {() => <CareerBuilder {...authProps} />}
-        </Route>
-        <Route path="/colleges">
-          {() => <CollegeDiscovery {...authProps} />}
-        </Route>
-        <Route path="/calculator">
-          {() => <NetPriceCalculator {...authProps} />}
-        </Route>
-        <Route path="/pathways">
-          {() => <Pathways {...authProps} />}
-        </Route>
-        <Route path="/coffee-calculator">
-          {() => <CoffeeCalculator {...authProps} />}
-        </Route>
-        <Route path="/profile">
-          {() => <Profile user={user} />}
-        </Route>
-        <Route path="/settings">
-          {() => <Settings {...authProps} />}
-        </Route>
-        <Route path="/explore">
-          {() => <Pathways {...authProps} />}
-        </Route>
-        
-        {/* Redirect /assumptions to /settings with assumptions tab */}
-        <Route path="/assumptions">
-          {() => {
-            window.location.href = "/settings#assumptions";
-            return null;
-          }}
-        </Route>
-        <Route>
-          {() => <NotFound />}
-        </Route>
-      </Switch>
-    </AppShell>
+            }}
+          </Route>
+          <Route path="/careers">
+            {() => <CareerExploration {...authProps} />}
+          </Route>
+          <Route path="/career-builder">
+            {() => <CareerBuilder {...authProps} />}
+          </Route>
+          <Route path="/colleges">
+            {() => <CollegeDiscovery {...authProps} />}
+          </Route>
+          <Route path="/calculator">
+            {() => <NetPriceCalculator {...authProps} />}
+          </Route>
+          <Route path="/pathways">
+            {() => <Pathways {...authProps} />}
+          </Route>
+          <Route path="/coffee-calculator">
+            {() => <CoffeeCalculator {...authProps} />}
+          </Route>
+          <Route path="/profile">
+            {() => <Profile user={user} />}
+          </Route>
+          <Route path="/settings">
+            {() => <Settings {...authProps} />}
+          </Route>
+          <Route path="/explore">
+            {() => <Pathways {...authProps} />}
+          </Route>
+          
+          {/* Redirect /assumptions to /settings with assumptions tab */}
+          <Route path="/assumptions">
+            {() => {
+              window.location.href = "/settings#assumptions";
+              return null;
+            }}
+          </Route>
+          <Route>
+            {() => <NotFound />}
+          </Route>
+        </Switch>
+      </AppShell>
+    </ApolloProvider>
   );
 }
 

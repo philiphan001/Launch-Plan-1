@@ -85,7 +85,14 @@ const QuickSpinWheel = ({ onComplete, resetKey = 0 }: QuickSpinWheelProps) => {
     <SpinWheel
       title="Quick Identity Spin"
       options={quickWheelOptions}
-      onComplete={onComplete}
+      onComplete={(results: Record<string, string[]>) => {
+        // Convert the results to the expected format
+        const formattedResults = Object.entries(results).reduce((acc, [key, responses]) => {
+          acc[key] = responses.join(' | ');
+          return acc;
+        }, {} as Record<string, string>);
+        onComplete(formattedResults);
+      }}
       resetKey={resetKey}
     />
   );
