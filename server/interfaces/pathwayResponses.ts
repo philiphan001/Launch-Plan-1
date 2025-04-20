@@ -1,15 +1,12 @@
 export interface PathwayResponse {
     id: number;
     userId: number;
-    category: string;
-    question: string;
-    response: string;
+    responseData: Record<string, any>;
     createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface InsertPathwayResponse {
     userId: number;
-    category: string;
-    question: string;
-    response: string;
+    responseData: Record<string, any>;
 } 

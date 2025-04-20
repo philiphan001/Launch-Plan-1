@@ -2,7 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcrypt";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -11,6 +10,7 @@ import { storage } from "./storage";
 import { db } from "./db";
 import { users } from "../shared/schema";
 import { eq, sql } from "drizzle-orm";
+import { sessionConfig } from "./session";
 
 // Use PostgreSQL storage if available
 export const activeStorage = process.env.DATABASE_URL ? pgStorage : storage;
@@ -27,31 +27,16 @@ app.use((req, res, next) => {
 });
 
 // Configure session
-const oneDay = 1000 * 60 * 60 * 24;
 if (process.env.DATABASE_URL) {
   // Use PostgreSQL for session storage in production
-  const PgSession = connectPgSimple(session);
-  app.use(session({
-    store: new PgSession({
-      conString: process.env.DATABASE_URL,
-      tableName: 'session',
-      createTableIfMissing: true
-    }),
-    secret: process.env.SESSION_SECRET || 'keyboard cat',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { 
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: oneDay
-    }
-  }));
+  app.use(session(sessionConfig));
 } else {
   // Use memory store for development
   app.use(session({
     secret: 'keyboard cat',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: oneDay }
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
   }));
 }
 

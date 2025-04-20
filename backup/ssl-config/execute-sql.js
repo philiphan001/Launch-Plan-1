@@ -6,8 +6,13 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-// Create a Postgres client with SSL
-const sql = postgres(process.env.DATABASE_URL, {
+// Create a modified connection string with SSL parameters
+const dbUrl = new URL(process.env.DATABASE_URL);
+dbUrl.searchParams.set('sslmode', 'verify-full');
+dbUrl.searchParams.set('sslrootcert', path.join(process.cwd(), 'certificates', 'rds-ca-2019-root.pem'));
+
+// Database connection with SSL
+const sql = postgres(dbUrl.toString(), {
   ssl: {
     rejectUnauthorized: true,
     ca: fs.readFileSync(path.join(process.cwd(), 'certificates', 'rds-ca-2019-root.pem')).toString(),
