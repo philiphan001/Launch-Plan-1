@@ -58,13 +58,62 @@ import {
 } from "@/components/ui/radio-group";
 import { 
   Career,
-  Milestone,
   InsertMilestone 
 } from "@shared/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Heart, Home, GraduationCap, Car, Users, BriefcaseBusiness, Search, Pencil, Trash2, AlertTriangle, Shield, UtensilsCrossed, ShoppingBag } from "lucide-react";
 
-type MilestoneType = "marriage" | "children" | "home" | "car" | "education";
+type MilestoneType = "marriage" | "children" | "home" | "car" | "education" | "roommate" | "insurance" | "dining" | "shopping";
+
+interface MilestoneDetails {
+  roommateCount?: number;
+  housingReduction?: number;
+  insuranceReduction?: number;
+  diningReduction?: number;
+  shoppingReduction?: number;
+}
+
+interface Milestone {
+  id: number;
+  userId: number;
+  type: MilestoneType;
+  title: string;
+  date: string;
+  yearsAway: number;
+  // Marriage specific fields
+  spouseOccupation?: string;
+  spouseIncome?: number;
+  spouseAssets?: number;
+  spouseLiabilities?: number;
+  // Home specific fields
+  homeValue?: number;
+  homeDownPayment?: number;
+  homeMonthlyPayment?: number;
+  // Car specific fields
+  carValue?: number;
+  carDownPayment?: number;
+  carMonthlyPayment?: number;
+  // Children specific fields
+  childrenCount?: number;
+  childrenExpensePerYear?: number;
+  // Education specific fields
+  educationCost?: number;
+  educationType?: string;
+  educationYears?: number;
+  educationAnnualCost?: number;
+  educationAnnualLoan?: number;
+  targetOccupation?: string;
+  workStatus?: string;
+  partTimeIncome?: number;
+  returnToSameProfession?: boolean;
+  // Expense reduction fields
+  roommateHousingReduction?: number;
+  insuranceReduction?: number;
+  diningReduction?: number;
+  shoppingReduction?: number;
+  // Additional fields
+  details?: MilestoneDetails;
+}
 
 interface MilestonesSectionProps {
   userId: number | null;
@@ -111,6 +160,14 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [workStatus, setWorkStatus] = useState("no"); // "no", "part-time", or "full-time"
   const [partTimeIncome, setPartTimeIncome] = useState(20000);
   const [returnToSameProfession, setReturnToSameProfession] = useState(true);
+  
+  // Roommate specific state
+  const [roommateHousingReduction, setRoommateHousingReduction] = useState(0.5); // Default to 50% reduction
+  
+  // Expense reduction milestones specific state
+  const [insuranceReduction, setInsuranceReduction] = useState(0.2);
+  const [diningReduction, setDiningReduction] = useState(0.3);
+  const [shoppingReduction, setShoppingReduction] = useState(0.25);
   
   const queryClient = useQueryClient();
   
@@ -349,6 +406,26 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setPartTimeIncome(milestoneToEdit.partTimeIncome || 20000);
         // Fix for handling the boolean value correctly - use null check instead of logical OR
         setReturnToSameProfession(milestoneToEdit.returnToSameProfession !== false);
+      } else if (type === "roommate") {
+        // Set roommate-specific fields
+        const savedReduction = milestoneToEdit.roommateHousingReduction;
+        if (savedReduction) {
+          setRoommateHousingReduction(savedReduction);
+        } else if (milestoneToEdit.details?.housingReduction) {
+          setRoommateHousingReduction(milestoneToEdit.details.housingReduction);
+        } else {
+          // Default to one roommate (50% reduction) if no value is saved
+          setRoommateHousingReduction(0.5);
+        }
+      } else if (type === "insurance") {
+        // Set insurance-specific fields
+        setInsuranceReduction(milestoneToEdit.insuranceReduction || 0.2);
+      } else if (type === "dining") {
+        // Set dining-specific fields
+        setDiningReduction(milestoneToEdit.diningReduction || 0.3);
+      } else if (type === "shopping") {
+        // Set shopping-specific fields
+        setShoppingReduction(milestoneToEdit.shoppingReduction || 0.25);
       }
     } else {
       // This is a new milestone
@@ -387,6 +464,14 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setWorkStatus("no");
         setPartTimeIncome(20000);
         setReturnToSameProfession(true);
+      } else if (type === "roommate") {
+        setRoommateHousingReduction(0.5); // Default to 50% reduction
+      } else if (type === "insurance") {
+        setInsuranceReduction(0.2);
+      } else if (type === "dining") {
+        setDiningReduction(0.3);
+      } else if (type === "shopping") {
+        setShoppingReduction(0.25);
       }
     }
   };
@@ -570,6 +655,107 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         // Create new milestone
         createMilestone.mutate(milestoneData);
       }
+    } else if (currentMilestone === "roommate") {
+      if (!title) title = "Get a Roommate";
+      type = "roommate";
+      
+      const milestoneData = {
+        userId: userId as number,
+        type,
+        title,
+        date,
+        yearsAway,
+        roommateHousingReduction,
+        details: {
+          roommateCount: roommateHousingReduction === 0.5 ? 1 : 
+                        roommateHousingReduction === 0.67 ? 2 : 
+                        roommateHousingReduction === 0.75 ? 3 : 1,
+          housingReduction: roommateHousingReduction
+        }
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        // Update existing milestone
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        // Create new milestone
+        createMilestone.mutate(milestoneData);
+      }
+    } else if (currentMilestone === "insurance") {
+      if (!title) title = "Switch Insurance";
+      type = "insurance";
+      
+      const milestoneData = {
+        userId: userId as number,
+        type,
+        title,
+        date,
+        yearsAway,
+        insuranceReduction,
+        details: {
+          insuranceReduction
+        }
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        createMilestone.mutate(milestoneData);
+      }
+    } else if (currentMilestone === "dining") {
+      if (!title) title = "Reduce Dining Out";
+      type = "dining";
+      
+      const milestoneData = {
+        userId: userId as number,
+        type,
+        title,
+        date,
+        yearsAway,
+        diningReduction,
+        details: {
+          diningReduction
+        }
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        createMilestone.mutate(milestoneData);
+      }
+    } else if (currentMilestone === "shopping") {
+      if (!title) title = "Reduce Shopping";
+      type = "shopping";
+      
+      const milestoneData = {
+        userId: userId as number,
+        type,
+        title,
+        date,
+        yearsAway,
+        shoppingReduction,
+        details: {
+          shoppingReduction
+        }
+      };
+      
+      if (isEditing && editingMilestoneId) {
+        updateMilestone.mutate({ 
+          id: editingMilestoneId, 
+          data: milestoneData
+        });
+      } else {
+        createMilestone.mutate(milestoneData);
+      }
     }
     
     setDialogOpen(false);
@@ -587,6 +773,14 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         return <Car className="h-6 w-6 text-orange-500" />;
       case "education":
         return <GraduationCap className="h-6 w-6 text-purple-500" />;
+      case "roommate":
+        return <Users className="h-6 w-6 text-gray-500" />;
+      case "insurance":
+        return <Shield className="h-6 w-6 text-teal-500" />;
+      case "dining":
+        return <UtensilsCrossed className="h-6 w-6 text-amber-500" />;
+      case "shopping":
+        return <ShoppingBag className="h-6 w-6 text-rose-500" />;
       default:
         return <BriefcaseBusiness className="h-6 w-6 text-gray-500" />;
     }
@@ -604,6 +798,14 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         return "bg-orange-100 border-orange-300";
       case "education":
         return "bg-purple-100 border-purple-300";
+      case "roommate":
+        return "bg-gray-100 border-gray-300";
+      case "insurance":
+        return "bg-teal-100 border-teal-300";
+      case "dining":
+        return "bg-amber-100 border-amber-300";
+      case "shopping":
+        return "bg-rose-100 border-rose-300";
       default:
         return "bg-gray-100 border-gray-300";
     }
@@ -618,7 +820,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
             Add major life events to see how they impact your financial projection.
           </p>
           
-          {/* Milestones grid */}
+          {/* Main Milestones grid */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
             <div 
               className="border border-gray-200 rounded-lg p-4 hover:border-pink-400 hover:bg-pink-50 cursor-pointer transition-colors text-center"
@@ -658,6 +860,42 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
             >
               <GraduationCap className="h-6 w-6 text-purple-500 mx-auto mb-2" />
               <h4 className="font-medium">Graduate School</h4>
+            </div>
+          </div>
+
+          {/* Expense Reduction Milestones */}
+          <h3 className="text-lg font-medium mt-8 mb-4">Expense Reduction Goals</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div 
+              className="border border-gray-200 rounded-lg p-4 hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition-colors text-center"
+              onClick={() => openMilestoneDialog("roommate")}
+            >
+              <Users className="h-6 w-6 text-gray-500 mx-auto mb-2" />
+              <h4 className="font-medium">Get a Roommate</h4>
+            </div>
+
+            <div 
+              className="border border-gray-200 rounded-lg p-4 hover:border-teal-400 hover:bg-teal-50 cursor-pointer transition-colors text-center"
+              onClick={() => openMilestoneDialog("insurance")}
+            >
+              <Shield className="h-6 w-6 text-teal-500 mx-auto mb-2" />
+              <h4 className="font-medium">Cheaper Insurance</h4>
+            </div>
+
+            <div 
+              className="border border-gray-200 rounded-lg p-4 hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-colors text-center"
+              onClick={() => openMilestoneDialog("dining")}
+            >
+              <UtensilsCrossed className="h-6 w-6 text-amber-500 mx-auto mb-2" />
+              <h4 className="font-medium">Less Dining Out</h4>
+            </div>
+
+            <div 
+              className="border border-gray-200 rounded-lg p-4 hover:border-rose-400 hover:bg-rose-50 cursor-pointer transition-colors text-center"
+              onClick={() => openMilestoneDialog("shopping")}
+            >
+              <ShoppingBag className="h-6 w-6 text-rose-500 mx-auto mb-2" />
+              <h4 className="font-medium">Stop Shopping</h4>
             </div>
           </div>
           
@@ -718,6 +956,10 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
               {currentMilestone === "home" && "Buy a Home"}
               {currentMilestone === "car" && "Buy a Car"}
               {currentMilestone === "education" && "Graduate School"}
+              {currentMilestone === "roommate" && "Get a Roommate"}
+              {currentMilestone === "insurance" && "Switch to Cheaper Insurance"}
+              {currentMilestone === "dining" && "Reduce Dining Out"}
+              {currentMilestone === "shopping" && "Reduce Shopping"}
             </DialogTitle>
           </DialogHeader>
           
@@ -733,7 +975,12 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                     currentMilestone === "children" ? "First Child" : 
                     currentMilestone === "home" ? "Dream Home" : 
                     currentMilestone === "car" ? "New Car" : 
-                    "Graduate Degree"
+                    currentMilestone === "education" ? "Graduate Degree" :
+                    currentMilestone === "roommate" ? "Roommate" :
+                    currentMilestone === "insurance" ? "Switch Insurance Providers" :
+                    currentMilestone === "dining" ? "Cook More at Home" :
+                    currentMilestone === "shopping" ? "Reduce Shopping Expenses" :
+                    "Milestone Name"
                   }
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
@@ -811,28 +1058,38 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                                   <CommandList className="max-h-[300px] overflow-auto">
                                     <CommandEmpty>No matching careers found</CommandEmpty>
                                     <CommandGroup>
-                                      {careers?.sort((a, b) => a.title.localeCompare(b.title)).map((career) => {
-                                        // Instead of using career in the onSelect directly, extract the values first
+                                      {careers?.sort((a, b) => {
+                                        // Add null checks for title property
+                                        const titleA = a.title || '';
+                                        const titleB = b.title || '';
+                                        return titleA.localeCompare(titleB);
+                                      }).map((career) => {
+                                        // Ensure we have valid values with fallbacks
                                         const title = career.title || "";
                                         const salary = career.salaryMedian || 50000;
                                         
                                         return (
                                           <CommandItem
-                                            key={career.id}
+                                            key={career.id || Math.random()}
                                             value={title}
                                             onSelect={() => {
-                                              // Simple implementation: just set the state directly
-                                              // Following exactly the same pattern as education milestone
-                                              setSpouseOccupation(title);
-                                              setSpouseIncome(salary);
-                                              console.log(`Set spouse occupation to: ${title} with income: ${salary}`);
+                                              try {
+                                                setSpouseOccupation(title);
+                                                setSpouseIncome(salary);
+                                                console.log(`Set spouse occupation to: ${title} with income: ${salary}`);
+                                              } catch (error) {
+                                                console.error('Error setting spouse career:', error);
+                                                // Set default values if there's an error
+                                                setSpouseOccupation(title || 'Unknown Occupation');
+                                                setSpouseIncome(50000);
+                                              }
                                             }}
                                             className="flex items-center"
                                           >
                                             <span>{title}</span>
-                                            {career.salaryMedian && 
+                                            {salary && 
                                               <span className="ml-auto text-xs text-green-600 font-semibold">
-                                                ${career.salaryMedian.toLocaleString()}
+                                                ${salary.toLocaleString()}
                                               </span>
                                             }
                                           </CommandItem>
@@ -1704,6 +1961,161 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Roommate specific fields */}
+              {currentMilestone === "roommate" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Living Arrangement</Label>
+                    <RadioGroup 
+                      value={String(Math.round(roommateHousingReduction * 100))}
+                      onValueChange={(value) => setRoommateHousingReduction(Number(value) / 100)}
+                      className="mt-2 space-y-3"
+                    >
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="50" id="one-roommate" />
+                        <Label htmlFor="one-roommate" className="flex-1">
+                          <div className="font-medium">One Roommate</div>
+                          <div className="text-sm text-gray-500">Split costs 50/50 - reduces your housing costs by 50%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="67" id="two-roommates" />
+                        <Label htmlFor="two-roommates" className="flex-1">
+                          <div className="font-medium">Two Roommates</div>
+                          <div className="text-sm text-gray-500">Split costs three ways - reduces your housing costs by 67%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="75" id="three-roommates" />
+                        <Label htmlFor="three-roommates" className="flex-1">
+                          <div className="font-medium">Three Roommates</div>
+                          <div className="text-sm text-gray-500">Split costs four ways - reduces your housing costs by 75%</div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                    <div className="text-sm text-gray-500 mt-3">
+                      Choose how many roommates you plan to live with. More roommates means lower housing costs, but consider your comfort and privacy preferences.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Insurance reduction fields */}
+              {currentMilestone === "insurance" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Insurance Cost Reduction</Label>
+                    <RadioGroup 
+                      value={String(Math.round((insuranceReduction || 0.2) * 100))}
+                      onValueChange={(value) => setInsuranceReduction(Number(value) / 100)}
+                      className="mt-2 space-y-3"
+                    >
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="20" id="basic-insurance" />
+                        <Label htmlFor="basic-insurance" className="flex-1">
+                          <div className="font-medium">Basic Coverage</div>
+                          <div className="text-sm text-gray-500">Switch to minimum required coverage - reduces insurance costs by 20%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="35" id="shop-insurance" />
+                        <Label htmlFor="shop-insurance" className="flex-1">
+                          <div className="font-medium">Shop Around</div>
+                          <div className="text-sm text-gray-500">Find a better insurance provider - reduces insurance costs by 35%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="50" id="bundle-insurance" />
+                        <Label htmlFor="bundle-insurance" className="flex-1">
+                          <div className="font-medium">Bundle Coverage</div>
+                          <div className="text-sm text-gray-500">Combine multiple insurance policies - reduces insurance costs by 50%</div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              )}
+
+              {/* Dining reduction fields */}
+              {currentMilestone === "dining" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Dining Out Reduction</Label>
+                    <RadioGroup 
+                      value={String(Math.round((diningReduction || 0.3) * 100))}
+                      onValueChange={(value) => setDiningReduction(Number(value) / 100)}
+                      className="mt-2 space-y-3"
+                    >
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="30" id="moderate-dining" />
+                        <Label htmlFor="moderate-dining" className="flex-1">
+                          <div className="font-medium">Moderate Reduction</div>
+                          <div className="text-sm text-gray-500">Cook at home more often - reduces dining expenses by 30%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="50" id="significant-dining" />
+                        <Label htmlFor="significant-dining" className="flex-1">
+                          <div className="font-medium">Significant Reduction</div>
+                          <div className="text-sm text-gray-500">Limit dining out to special occasions - reduces dining expenses by 50%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="75" id="minimal-dining" />
+                        <Label htmlFor="minimal-dining" className="flex-1">
+                          <div className="font-medium">Minimal Dining Out</div>
+                          <div className="text-sm text-gray-500">Cook almost all meals at home - reduces dining expenses by 75%</div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              )}
+
+              {/* Shopping reduction fields */}
+              {currentMilestone === "shopping" && (
+                <div className="space-y-4">
+                  <div>
+                    <Label>Shopping Reduction</Label>
+                    <RadioGroup 
+                      value={String(Math.round((shoppingReduction || 0.25) * 100))}
+                      onValueChange={(value) => setShoppingReduction(Number(value) / 100)}
+                      className="mt-2 space-y-3"
+                    >
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="25" id="moderate-shopping" />
+                        <Label htmlFor="moderate-shopping" className="flex-1">
+                          <div className="font-medium">Moderate Reduction</div>
+                          <div className="text-sm text-gray-500">Buy less non-essential items - reduces shopping expenses by 25%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="50" id="significant-shopping" />
+                        <Label htmlFor="significant-shopping" className="flex-1">
+                          <div className="font-medium">Significant Reduction</div>
+                          <div className="text-sm text-gray-500">Focus on essentials only - reduces shopping expenses by 50%</div>
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <RadioGroupItem value="75" id="minimal-shopping" />
+                        <Label htmlFor="minimal-shopping" className="flex-1">
+                          <div className="font-medium">Minimal Shopping</div>
+                          <div className="text-sm text-gray-500">Essential purchases only - reduces shopping expenses by 75%</div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </div>
               )}

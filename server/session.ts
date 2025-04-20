@@ -26,11 +26,12 @@ export const sessionConfig = {
   store: sessionStore,
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Set to false for development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax' as const
-  }
+  },
+  name: 'connect.sid'
 }; 

@@ -12,7 +12,8 @@
     "lint": "eslint . --ext .ts,.tsx --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "migrate:pathway": "tsx server/scripts/run-pathway-migration.ts"
+    "migrate:pathway": "tsx server/scripts/run-pathway-migration.ts",
+    "update-career-aliases": "node scripts/update-career-aliases.js"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",

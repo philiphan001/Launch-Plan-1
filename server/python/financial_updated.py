@@ -2919,6 +2919,111 @@ class FinancialCalculator:
                             # This redundant section has been removed to avoid double-counting cash flow contributions
                             # Both positive and negative cash flow are now consistently handled in a single location
                             pass
+
+                    elif milestone.get('type') == 'roommate':
+                        # Process roommate milestone
+                        # Get housing reduction factor from details or use default 50% reduction
+                        details = milestone.get('details', {})
+                        housing_reduction = details.get('housingReduction', 0.5)
+                        
+                        with open('healthcare_debug.log', 'a') as f:
+                            f.write(f"\nProcessing roommate milestone in year {milestone_year}:\n")
+                            f.write(f"- Housing reduction: {housing_reduction * 100}%\n")
+                            f.write(f"- Current housing expenses: {[housing_expenses_yearly[y] for y in range(milestone_year, min(milestone_year+3, self.years_to_project+1))]}\n")
+                        
+                        # Apply housing expense reduction for all future years
+                        for i in range(milestone_year, self.years_to_project + 1):
+                            # Find any housing expenses and apply the reduction
+                            for expenditure in self.expenditures:
+                                if (isinstance(expenditure, Housing) or 
+                                    expenditure.name.lower().find('housing') >= 0 or 
+                                    expenditure.name.lower().find('rent') >= 0):
+                                    # Get current value for this year
+                                    current_housing = expenditure.get_expense(i)
+                                    # Apply reduction
+                                    reduced_housing = current_housing * (1.0 - housing_reduction)
+                                    
+                                    # Update expense for this year in our tracking array
+                                    with open('healthcare_debug.log', 'a') as f:
+                                        if i == milestone_year:  # Only log the first year to avoid excessive logging
+                                            f.write(f"Reducing housing expense '{expenditure.name}' from ${current_housing} to ${reduced_housing}\n")
+                                            f.write(f"This reduction will apply for all future years while the roommate is present\n")
+                                    
+                                    # Update the housing expenses array
+                                    housing_expenses_yearly[i] = int(housing_expenses_yearly[i] * (1.0 - housing_reduction))
+                        
+                        # Recalculate total expenses and categories for this year since we've modified housing expenses
+                        year_expenses = 0
+                        
+                        # Base cost of living categories
+                        year_housing = 0
+                        year_transportation = 0
+                        year_food = 0
+                        year_healthcare = 0
+                        year_personal_insurance = 0
+                        year_apparel = 0
+                        year_services = 0
+                        year_entertainment = 0
+                        year_other = 0
+                        
+                        # Milestone-driven categories
+                        year_education = 0
+                        year_childcare = 0
+                        year_debt = 0
+                        year_discretionary = 0
+                        
+                        for expense in self.expenditures:
+                            expense_amount = int(expense.get_expense(i))
+                            year_expenses += expense_amount
+                            
+                            # Categorize expenses by type
+                            expense_name = expense.name.lower()
+                            
+                            if isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0:
+                                year_housing += expense_amount
+                            elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0:
+                                year_transportation += expense_amount
+                            elif expense_name.find('food') >= 0:
+                                year_food += expense_amount
+                            elif expense_name.find('health') >= 0 or expense_name.find('medical') >= 0:
+                                year_healthcare += expense_amount
+                            elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
+                                year_personal_insurance += expense_amount
+                            elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
+                                year_apparel += expense_amount
+                            elif expense_name.find('service') >= 0 or expense_name.find('utilities') >= 0:
+                                year_services += expense_amount
+                            elif expense_name.find('entertainment') >= 0 or expense_name.find('recreation') >= 0:
+                                year_entertainment += expense_amount
+                            elif expense_name.find('education') >= 0 or expense_name.find('college') >= 0 or expense_name.find('school') >= 0:
+                                year_education += expense_amount
+                            elif expense_name.find('child') >= 0 or expense_name.find('daycare') >= 0:
+                                year_childcare += expense_amount
+                            elif expense_name.find('debt') >= 0 or expense_name.find('loan') >= 0:
+                                year_debt += expense_amount
+                            else:
+                                year_discretionary += expense_amount
+                        
+                        expenses_yearly[i] = year_expenses
+                        
+                        # Base cost of living categories
+                        housing_expenses_yearly[i] = year_housing
+                        transportation_expenses_yearly[i] = year_transportation
+                        food_expenses_yearly[i] = year_food
+                        healthcare_expenses_yearly[i] = year_healthcare
+                        personal_insurance_expenses_yearly[i] = year_personal_insurance
+                        apparel_expenses_yearly[i] = year_apparel
+                        services_expenses_yearly[i] = year_services
+                        entertainment_expenses_yearly[i] = year_entertainment
+                        other_expenses_yearly[i] = year_other
+                        
+                        # Milestone-driven categories
+                        education_expenses_yearly[i] = year_education
+                        child_expenses_yearly[i] = year_childcare
+                        debt_expenses_yearly[i] = year_debt
+                        discretionary_expenses_yearly[i] = year_discretionary
+                        
+                        cash_flow_yearly[i] = income_yearly[i] - expenses_yearly[i]
         
         # CRITICAL FIX FOR MILESTONE SAVINGS TRACKING
         # After all milestones are processed, ensure that the savings values are properly synced

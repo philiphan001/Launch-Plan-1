@@ -34,4 +34,15 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
   },
+  optimizeDeps: {
+    include: ['@radix-ui/react-toast', 'class-variance-authority', 'lucide-react'],
+  },
+  server: {
+    watch: {
+      usePolling: true,
+    },
+    hmr: {
+      overlay: true,
+    },
+  },
 });

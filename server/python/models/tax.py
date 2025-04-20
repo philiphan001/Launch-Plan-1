@@ -8,37 +8,142 @@ class TaxCalculator:
         self.filing_status = filing_status
         self.zip_code = zip_code
         self.state = state
-        # State tax rates lookup table (simplified version)
-        self.state_tax_rates = {
-            'MA': 0.05,  # Massachusetts flat 5%
-            'CA': 0.0950,  # California highest marginal rate
-            'NY': 0.0685,  # New York highest marginal rate
-            'TX': 0.0,  # Texas no income tax
-            'FL': 0.0,  # Florida no income tax
-            'WA': 0.0,  # Washington no income tax
-            'NV': 0.0,  # Nevada no income tax
-            'AK': 0.0,  # Alaska no income tax
-            'WY': 0.0,  # Wyoming no income tax
-            'SD': 0.0,  # South Dakota no income tax
-            'NH': 0.05,  # New Hampshire (only on investment income, simplified)
-            'TN': 0.0,  # Tennessee no income tax
-            'IL': 0.0495,  # Illinois flat 4.95%
-            'PA': 0.0307,  # Pennsylvania flat 3.07%
-            'NJ': 0.1075,  # New Jersey highest marginal rate
-            'CO': 0.0455,  # Colorado flat 4.55%
-            'AZ': 0.045,  # Arizona highest marginal rate
-            'OR': 0.099,  # Oregon highest marginal rate
-            'MI': 0.0425,  # Michigan flat 4.25%
-            'OH': 0.03990,  # Ohio highest marginal rate
-            'GA': 0.0575,  # Georgia highest marginal rate
-            'NC': 0.0475,  # North Carolina flat 4.75%
-            'VA': 0.0575,  # Virginia highest marginal rate
-            'MD': 0.0575,  # Maryland highest marginal rate
-            'MO': 0.0495,  # Missouri highest marginal rate
-            'WI': 0.0765,  # Wisconsin highest marginal rate
-            'MN': 0.0985,  # Minnesota highest marginal rate
-            'IN': 0.0323,  # Indiana flat 3.23%
-            'KY': 0.045,   # Kentucky flat 4.5%
+        
+        # State tax brackets for 2024 (progressive states)
+        self.state_tax_brackets = {
+            'CA': {  # California
+                'single': [
+                    (0, 10099, 0.01),
+                    (10099, 23942, 0.02),
+                    (23942, 37788, 0.04),
+                    (37788, 52455, 0.06),
+                    (52455, 66295, 0.08),
+                    (66295, 338639, 0.093),
+                    (338639, 406364, 0.103),
+                    (406364, 677275, 0.113),
+                    (677275, float('inf'), 0.123)
+                ],
+                'married_joint': [
+                    (0, 20198, 0.01),
+                    (20198, 47884, 0.02),
+                    (47884, 75576, 0.04),
+                    (75576, 104910, 0.06),
+                    (104910, 132590, 0.08),
+                    (132590, 677278, 0.093),
+                    (677278, 812728, 0.103),
+                    (812728, 1354550, 0.113),
+                    (1354550, float('inf'), 0.123)
+                ]
+            },
+            'NY': {  # New York
+                'single': [
+                    (0, 8500, 0.04),
+                    (8500, 11700, 0.045),
+                    (11700, 13900, 0.0525),
+                    (13900, 80650, 0.055),
+                    (80650, 215400, 0.06),
+                    (215400, 1077550, 0.0685),
+                    (1077550, float('inf'), 0.0882)
+                ],
+                'married_joint': [
+                    (0, 17150, 0.04),
+                    (17150, 23600, 0.045),
+                    (23600, 27900, 0.0525),
+                    (27900, 161550, 0.055),
+                    (161550, 323200, 0.06),
+                    (323200, 2155350, 0.0685),
+                    (2155350, float('inf'), 0.0882)
+                ]
+            },
+            'NJ': {  # New Jersey
+                'single': [
+                    (0, 20000, 0.014),
+                    (20000, 35000, 0.0175),
+                    (35000, 40000, 0.035),
+                    (40000, 75000, 0.05525),
+                    (75000, 500000, 0.0637),
+                    (500000, 1000000, 0.0897),
+                    (1000000, float('inf'), 0.1075)
+                ],
+                'married_joint': [
+                    (0, 20000, 0.014),
+                    (20000, 50000, 0.0175),
+                    (50000, 70000, 0.0245),
+                    (70000, 80000, 0.035),
+                    (80000, 150000, 0.05525),
+                    (150000, 500000, 0.0637),
+                    (500000, 1000000, 0.0897),
+                    (1000000, float('inf'), 0.1075)
+                ]
+            },
+            'OR': {  # Oregon
+                'single': [
+                    (0, 4050, 0.0475),
+                    (4050, 10200, 0.0675),
+                    (10200, 125000, 0.0875),
+                    (125000, float('inf'), 0.099)
+                ],
+                'married_joint': [
+                    (0, 8100, 0.0475),
+                    (8100, 20400, 0.0675),
+                    (20400, 250000, 0.0875),
+                    (250000, float('inf'), 0.099)
+                ]
+            },
+            'MN': {  # Minnesota
+                'single': [
+                    (0, 31500, 0.0535),
+                    (31500, 103000, 0.068),
+                    (103000, 193000, 0.0785),
+                    (193000, float('inf'), 0.0985)
+                ],
+                'married_joint': [
+                    (0, 46000, 0.0535),
+                    (46000, 184000, 0.068),
+                    (184000, 304000, 0.0785),
+                    (304000, float('inf'), 0.0985)
+                ]
+            },
+            'WI': {  # Wisconsin
+                'single': [
+                    (0, 13810, 0.0354),
+                    (13810, 27630, 0.0465),
+                    (27630, 304170, 0.0627),
+                    (304170, float('inf'), 0.0765)
+                ],
+                'married_joint': [
+                    (0, 18410, 0.0354),
+                    (18410, 36830, 0.0465),
+                    (36830, 405550, 0.0627),
+                    (405550, float('inf'), 0.0765)
+                ]
+            }
+        }
+        
+        # Flat rate states
+        self.flat_rate_states = {
+            'MA': 0.05,  # Massachusetts
+            'IL': 0.0495,  # Illinois
+            'PA': 0.0307,  # Pennsylvania
+            'CO': 0.0455,  # Colorado
+            'MI': 0.0425,  # Michigan
+            'IN': 0.0323,  # Indiana
+            'KY': 0.045,  # Kentucky
+            'NC': 0.0475,  # North Carolina
+            'UT': 0.0485,  # Utah
+            'NH': 0.05  # New Hampshire (only on investment income)
+        }
+        
+        # No income tax states
+        self.no_tax_states = {
+            'TX': 0.0,  # Texas
+            'FL': 0.0,  # Florida
+            'WA': 0.0,  # Washington
+            'NV': 0.0,  # Nevada
+            'AK': 0.0,  # Alaska
+            'WY': 0.0,  # Wyoming
+            'SD': 0.0,  # South Dakota
+            'TN': 0.0  # Tennessee
         }
         
         # Federal tax brackets for 2024
@@ -154,13 +259,34 @@ class TaxCalculator:
             
         # Get state tax rate with a safe default if state is None
         state_key = self.state if self.state is not None else "MA"  # Default to MA if state is None
-        state_rate = self.state_tax_rates.get(state_key, 0.05)  # Default to 5% if state not found
         
-        # Apply a simplified calculation
-        # In a real implementation, we would have progressive brackets for each state
-        state_tax = self.income * state_rate
+        # Check if state has progressive tax brackets
+        if state_key in self.state_tax_brackets:
+            # Get the appropriate brackets for filing status
+            brackets = self.state_tax_brackets[state_key].get(self.filing_status, 
+                                                           self.state_tax_brackets[state_key]['single'])
+            tax = 0
+            
+            # Calculate tax using progressive brackets
+            for lower, upper, rate in brackets:
+                if self.income > lower:
+                    bracket_income = min(self.income, upper) - lower
+                    tax += bracket_income * rate
+                if self.income <= upper:
+                    break
+            
+            return round(tax, 2)
         
-        return round(state_tax, 2)
+        # Check if state has flat rate
+        elif state_key in self.flat_rate_states:
+            return round(self.income * self.flat_rate_states[state_key], 2)
+        
+        # Check if state has no income tax
+        elif state_key in self.no_tax_states:
+            return 0
+        
+        # Default to Massachusetts rate if state not found
+        return round(self.income * 0.05, 2)
         
     def _get_state_from_zip(self, zip_code):
         """Look up state from zip code based on common ranges"""

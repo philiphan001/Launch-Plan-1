@@ -19,10 +19,20 @@ const sslConfig = {
 // Create a Postgres client with the database connection string and SSL configuration
 const sqlClient = postgres(process.env.DATABASE_URL!, {
   ssl: sslConfig,
-  connect_timeout: 10, // 10 second connection timeout
-  idle_timeout: 20, // 20 second idle timeout
+  connect_timeout: 30, // 30 second connection timeout
+  idle_timeout: 60, // 60 second idle timeout
   max: 10, // Maximum number of connections
-  debug: process.env.NODE_ENV === 'development' ? console.log : undefined
+  max_lifetime: 60 * 30, // Connection lifetime of 30 minutes
+  debug: process.env.NODE_ENV === 'development' ? console.log : undefined,
+  connection: {
+    application_name: 'fp-react-app'
+  },
+  onnotice: (notice) => {
+    console.log('Database notice:', notice);
+  },
+  onparameter: (parameterStatus) => {
+    console.log('Database parameter status:', parameterStatus);
+  }
 });
 
 // Create a Drizzle instance with the Postgres client and schema

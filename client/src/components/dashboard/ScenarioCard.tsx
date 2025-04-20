@@ -234,36 +234,39 @@ const ScenarioCard = ({
       key={`scenario-${scenario.id}-${index}`}
       layout="position"
       layoutId={`scenario-${scenario.id}`}
-      initial={{ opacity: 0.8, scale: 0.98 }}
+      initial={{ opacity: 1 }}
       animate={{ 
-        opacity: 1, 
-        scale: 1,
+        opacity: 1,
         transition: {
-          type: "spring",
-          stiffness: 70,  // Reduced for smoother motion
-          damping: 20,
-          duration: 0.4   // Faster duration
+          duration: 0.3,
+          ease: "easeOut"
         }
       }}
       whileHover={{ 
-        scale: 1.01,     // Reduced scale effect
+        scale: 1.02,
         transition: { 
-          duration: 0.2,  // Faster hover transition
+          duration: 0.2,
           ease: "easeOut" 
         } 
       }}
       transition={{
-        layout: { 
-          type: "spring", 
-          bounce: 0.13,   // Reduced bounce
-          duration: 0.6,  // Consistent with parent timing
-          mass: 0.8,      // Reduced mass for lighter feel
-          damping: 20     // Consistent damping
+        layout: {
+          type: "tween",
+          duration: 0.3,
+          ease: "easeOut"
         }
+      }}
+      style={{
+        position: "relative",
+        transformOrigin: "center center",
+        willChange: "transform"
       }}
       className="h-full"
     >
-      <Card className={`overflow-hidden border ${colorClass} h-full transition-all duration-300 relative`}>
+      <Card 
+        id={`scenario-${scenario.id}`}
+        className={`overflow-hidden border ${colorClass} h-full transition-all duration-300 relative`}
+      >
         {ageSliderActive && (
           <div className="absolute top-0 right-0 bg-blue-600 text-white h-8 w-8 flex items-center justify-center rounded-bl-md z-10 font-bold shadow-md">
             #{index + 1}

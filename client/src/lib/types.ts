@@ -56,7 +56,20 @@ export interface ProjectionData {
 }
 
 // Milestone types
-export type MilestoneType = "marriage" | "children" | "home" | "car" | "education" | "school" | "work" | "other";
+export enum MilestoneType {
+  MARRIAGE = 'marriage',
+  HOME = 'home',
+  CAR = 'car',
+  CHILDREN = 'children',
+  EDUCATION = 'education',
+  ROOMMATE = 'roommate',
+  SCHOOL = 'school',
+  WORK = 'work',
+  INSURANCE = 'insurance',
+  DINING = 'dining',
+  SHOPPING = 'shopping',
+  OTHER = 'other'
+}
 
 export interface Milestone {
   id: string | number;
@@ -84,15 +97,28 @@ export interface Milestone {
   childrenExpensePerYear?: number;
   // Education-specific properties
   educationCost?: number;
-  educationType?: string; // Type of education (undergraduate, graduate, etc.)
-  educationYears?: number; // Duration of education in years
-  educationAnnualCost?: number; // Annual cost of education
-  educationAnnualLoan?: number; // Annual loan amount for education
-  targetOccupation?: string; // Target occupation after education
+  educationType?: string;
+  educationYears?: number;
+  educationAnnualCost?: number;
+  educationAnnualLoan?: number;
+  targetOccupation?: string;
+  // Roommate-specific properties
+  roommateHousingReduction?: number;
+  // Expense reduction properties
+  insuranceReduction?: number;
+  diningReduction?: number;
+  shoppingReduction?: number;
+  details?: {
+    roommateCount?: number;
+    housingReduction?: number;
+    insuranceReduction?: number;
+    diningReduction?: number;
+    shoppingReduction?: number;
+    [key: string]: any;
+  };
   // Status properties
   active?: boolean;
   completed?: boolean;
-  details?: Record<string, any>;
   createdAt?: string | null;
 }
 

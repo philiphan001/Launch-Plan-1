@@ -266,131 +266,151 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
   // Generate anime style avatar SVG based on selected attributes
   const renderAvatar = () => {
     return (
-      <div className="relative w-48 h-48 mx-auto bg-gray-100 rounded-full overflow-hidden shadow-lg">
-        {/* Base circle for the head */}
-        <div className="absolute w-36 h-36 bg-[#FFE0BD] rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 shadow-inner" />
+      <div className="relative w-64 h-64 mx-auto">
+        {/* Background circle with gradient */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-50 to-gray-100 shadow-lg" />
         
-        {/* Hair */}
-        <div className={`absolute ${getHairColorClass()}`}>
-          {getHairStyle()}
+        {/* Head */}
+        <div className="absolute w-48 h-48 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          {/* Face base with better skin tone and shading */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FFE0BD] to-[#FFD1A1]">
+            {/* Subtle face shading */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-t from-black/10 to-transparent" />
+          </div>
+
+          {/* Hair */}
+          <div className={`absolute inset-0 ${getHairColorClass()}`}>
+            {getHairStyle()}
+          </div>
+
+          {/* Face features */}
+          <div className="absolute inset-0">
+            {/* Eyes with better positioning and style */}
+            <div className="absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center space-x-8">
+              {getEyeStyle()}
+            </div>
+            
+            {/* Mouth with better positioning */}
+            <div className="absolute top-[65%] left-1/2 transform -translate-x-1/2">
+              {getMouthStyle()}
+            </div>
+          </div>
+
+          {/* Accessories (glasses, etc) with better positioning */}
+          {attributes.accessory !== 'none' && (
+            <div className="absolute inset-0">
+              {getAccessoryElement()}
+            </div>
+          )}
         </div>
 
-        {/* Face features container */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-36 h-36">
-          {/* Eyes */}
-          <div className="absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            {getEyeStyle()}
-          </div>
-          
-          {/* Mouth */}
-          <div className="absolute top-[65%] left-1/2 transform -translate-x-1/2">
-            {getMouthStyle()}
-          </div>
-        </div>
-
-        {/* Outfit */}
-        <div className="absolute bottom-0 left-0 right-0 h-28">
+        {/* Outfit/Clothing with better positioning and style */}
+        <div className="absolute bottom-0 left-0 right-0">
           {getOutfitSvg()}
         </div>
-
-        {/* Accessory */}
-        {attributes.accessory !== 'none' && (
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2">
-            {getAccessoryElement()}
-          </div>
-        )}
       </div>
     );
   };
 
   const getHairStyle = () => {
-    const baseClasses = `${getHairColorClass()} absolute left-1/2 transform -translate-x-1/2`;
+    const baseClasses = `absolute inset-0`;
     
     switch (attributes.hairStyle) {
       case 'short':
         return (
-          <div className={`${baseClasses} w-40 h-20 -top-2`}>
-            <div className="w-full h-full rounded-t-[2.5rem] shadow-lg" />
+          <div className={baseClasses}>
+            <div className="absolute -top-4 -left-4 -right-4 h-32 rounded-t-[3rem] shadow-lg" />
           </div>
         );
       case 'long':
         return (
-          <div className={`${baseClasses} w-40 h-48 -top-2`}>
-            <div className="w-full h-20 rounded-t-[2.5rem] shadow-lg" />
-            <div className="w-full h-32 mt-1">
-              <div className="w-full h-full flex">
-                <div className="w-1/2 h-full rounded-bl-3xl transform -skew-x-12" />
-                <div className="w-1/2 h-full rounded-br-3xl transform skew-x-12" />
+          <div className={baseClasses}>
+            <div className="absolute -top-4 -left-6 -right-6 h-64">
+              <div className="w-full h-32 rounded-t-[3rem] shadow-lg" />
+              <div className="relative h-32">
+                <div className="absolute inset-0 flex">
+                  <div className="w-1/2 h-full rounded-bl-3xl transform -skew-x-12 shadow-lg" />
+                  <div className="w-1/2 h-full rounded-br-3xl transform skew-x-12 shadow-lg" />
+                </div>
               </div>
             </div>
           </div>
         );
       case 'spiky':
         return (
-          <div className={`${baseClasses} w-40 h-24 -top-2`}>
-            <div className="w-full h-full flex justify-between">
-              {[...Array(9)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className="w-4 h-full transform rotate-12 rounded-t-lg shadow-lg"
-                  style={{
-                    height: `${80 + Math.sin(i * 0.7) * 20}%`,
-                    transform: `rotate(${-20 + i * 5}deg)`
-                  }}
-                />
-              ))}
+          <div className={baseClasses}>
+            <div className="absolute -top-6 -left-6 -right-6 h-32">
+              <div className="w-full h-full flex justify-between">
+                {[...Array(11)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="w-4 transform rounded-t-lg shadow-lg"
+                    style={{
+                      height: `${70 + Math.sin(i * 0.7) * 30}%`,
+                      transform: `rotate(${-25 + i * 5}deg)`,
+                      transformOrigin: 'bottom'
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         );
       case 'twintails':
         return (
-          <div className={`${baseClasses} w-48 h-48 -top-2`}>
-            <div className="w-full h-20 rounded-t-[2.5rem] shadow-lg" />
-            <div className="flex justify-between mt-1">
-              <div className="w-14 h-32">
-                <div className="w-full h-full rounded-b-full transform -rotate-12 shadow-lg" />
-              </div>
-              <div className="w-14 h-32">
-                <div className="w-full h-full rounded-b-full transform rotate-12 shadow-lg" />
+          <div className={baseClasses}>
+            <div className="absolute -top-4 -left-6 -right-6 h-64">
+              <div className="w-full h-32 rounded-t-[3rem] shadow-lg" />
+              <div className="relative h-32 flex justify-between -mt-4">
+                <div className="w-16 h-48 transform -rotate-12 -translate-x-6">
+                  <div className="w-full h-full rounded-b-full shadow-lg" />
+                </div>
+                <div className="w-16 h-48 transform rotate-12 translate-x-6">
+                  <div className="w-full h-full rounded-b-full shadow-lg" />
+                </div>
               </div>
             </div>
           </div>
         );
       default:
         return (
-          <div className={`${baseClasses} w-40 h-20 -top-2 rounded-t-[2.5rem] shadow-lg`} />
+          <div className={baseClasses}>
+            <div className="absolute -top-4 -left-4 -right-4 h-32 rounded-t-[3rem] shadow-lg" />
+          </div>
         );
     }
   };
 
   const getEyeStyle = () => {
-    const baseEyeClasses = "flex justify-center items-center space-x-6";
-    
     switch (attributes.personality) {
       case 'creative':
         return (
-          <div className={baseEyeClasses}>
-            <div className="w-5 h-5 bg-black rounded-full shadow-inner">
-              <div className="w-2 h-2 bg-white rounded-full m-1 shadow-sm" />
-              <div className="w-1 h-1 bg-white rounded-full ml-2" />
+          <>
+            <div className="w-8 h-8 rounded-full bg-black shadow-inner flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full bg-white shadow-sm relative">
+                <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full bg-white" />
+              </div>
             </div>
-            <div className="w-5 h-5 bg-black rounded-full shadow-inner">
-              <div className="w-2 h-2 bg-white rounded-full m-1 shadow-sm" />
-              <div className="w-1 h-1 bg-white rounded-full ml-2" />
+            <div className="w-8 h-8 rounded-full bg-black shadow-inner flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full bg-white shadow-sm relative">
+                <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full bg-white" />
+              </div>
             </div>
-          </div>
+          </>
         );
       case 'analytical':
         return (
-          <div className={`${baseEyeClasses} relative`}>
-            <div className="w-5 h-5 bg-black rounded-full shadow-inner">
-              <div className="w-2 h-2 bg-white rounded-full m-1" />
-            </div>
-            <div className="w-5 h-5 bg-black rounded-full shadow-inner">
-              <div className="w-2 h-2 bg-white rounded-full m-1" />
+          <div className="relative">
+            <div className="flex space-x-8">
+              <div className="w-8 h-8 rounded-full bg-black shadow-inner flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-white" />
+              </div>
+              <div className="w-8 h-8 rounded-full bg-black shadow-inner flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-white" />
+              </div>
             </div>
             {attributes.accessory === 'glasses' && (
-              <div className="absolute -inset-x-4 -inset-y-2">
+              <div className="absolute -inset-x-8 -inset-y-4">
                 <div className="w-full h-full border-2 border-gray-700 rounded-lg shadow-md" />
               </div>
             )}
@@ -398,40 +418,44 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
         );
       default:
         return (
-          <div className={baseEyeClasses}>
-            <div className="w-5 h-5 bg-black rounded-full shadow-inner">
-              <div className="w-2 h-2 bg-white rounded-full m-1" />
+          <>
+            <div className="w-8 h-8 rounded-full bg-black shadow-inner flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full bg-white" />
             </div>
-            <div className="w-5 h-5 bg-black rounded-full shadow-inner">
-              <div className="w-2 h-2 bg-white rounded-full m-1" />
+            <div className="w-8 h-8 rounded-full bg-black shadow-inner flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full bg-white" />
             </div>
-          </div>
+          </>
         );
     }
   };
 
   const getMouthStyle = () => {
+    const baseClasses = "relative flex justify-center";
+    
     switch (attributes.personality) {
       case 'creative':
         return (
-          <div className="w-10 h-3">
-            <div className="w-full h-full border-t-2 border-black rounded-t-full transform translate-y-1" />
+          <div className={`${baseClasses} w-16 h-6`}>
+            <div className="absolute inset-x-0 h-4 border-t-4 border-black rounded-t-full transform translate-y-1" />
           </div>
         );
       case 'analytical':
         return (
-          <div className="w-8 h-[2px] bg-black rounded-full" />
+          <div className={`${baseClasses} w-12`}>
+            <div className="h-1 w-full bg-black rounded-full" />
+          </div>
         );
       case 'social':
         return (
-          <div className="w-10 h-4">
-            <div className="w-full h-full border-t-2 border-black rounded-t-[100%]" />
+          <div className={`${baseClasses} w-16 h-6`}>
+            <div className="absolute inset-x-0 h-5 border-t-4 border-black rounded-t-[100%]" />
           </div>
         );
       default:
         return (
-          <div className="w-8 h-2">
-            <div className="w-full h-full border-t-2 border-black rounded-t-md" />
+          <div className={`${baseClasses} w-12 h-4`}>
+            <div className="absolute inset-x-0 h-3 border-t-4 border-black rounded-t-md" />
           </div>
         );
     }
@@ -445,54 +469,58 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
       case 'schoolUniform':
         return (
           <div className={`${baseClass} ${colorClass}`}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24">
-              <rect x="30" y="40" width="40" height="50" className="fill-current" />
-              <rect x="35" y="45" width="30" height="10" className="fill-white" />
+            <svg viewBox="0 0 100 100" className="w-64 h-48">
+              <path d="M20,40 L80,40 L80,100 L20,100 Z" className="fill-current" />
+              <path d="M30,45 L70,45 L70,55 L30,55 Z" className="fill-white" />
+              <path d="M35,40 C35,30 50,25 50,25 C50,25 65,30 65,40" className="fill-none stroke-white stroke-2" />
             </svg>
           </div>
         );
       case 'business':
         return (
           <div className={`${baseClass} ${colorClass}`}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24">
-              <rect x="30" y="40" width="40" height="50" className="fill-current" />
+            <svg viewBox="0 0 100 100" className="w-64 h-48">
+              <path d="M20,40 L80,40 L80,100 L20,100 Z" className="fill-current" />
               <path d="M30,40 L50,30 L70,40" className="fill-white" />
+              <path d="M45,50 L55,50 M45,60 L55,60" className="stroke-white stroke-2" />
             </svg>
           </div>
         );
       case 'casual':
         return (
           <div className={`${baseClass} ${colorClass}`}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24">
-              <rect x="30" y="40" width="40" height="50" className="fill-current" />
-              <circle cx="50" cy="45" r="5" className="fill-white" />
+            <svg viewBox="0 0 100 100" className="w-64 h-48">
+              <path d="M20,40 L80,40 L80,100 L20,100 Z" className="fill-current" />
+              <circle cx="50" cy="50" r="8" className="fill-white" />
+              <path d="M35,70 L65,70" className="stroke-white stroke-2" />
             </svg>
           </div>
         );
       case 'athletic':
         return (
           <div className={`${baseClass} ${colorClass}`}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24">
-              <rect x="30" y="40" width="40" height="50" className="fill-current" />
-              <path d="M35,45 L45,55 L55,45 L65,55" className="fill-white" />
+            <svg viewBox="0 0 100 100" className="w-64 h-48">
+              <path d="M20,40 L80,40 L80,100 L20,100 Z" className="fill-current" />
+              <path d="M30,45 L45,60 L55,45 L70,60" className="stroke-white stroke-3 fill-none" />
             </svg>
           </div>
         );
       case 'creative':
         return (
           <div className={`${baseClass} ${colorClass}`}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24">
-              <rect x="30" y="40" width="40" height="50" className="fill-current" />
-              <path d="M35,45 Q50,35 65,45" className="fill-white" />
+            <svg viewBox="0 0 100 100" className="w-64 h-48">
+              <path d="M20,40 L80,40 L80,100 L20,100 Z" className="fill-current" />
+              <path d="M30,45 Q50,35 70,45" className="fill-none stroke-white stroke-3" />
+              <path d="M35,60 Q50,50 65,60" className="fill-none stroke-white stroke-2" />
             </svg>
           </div>
         );
       default:
         return (
           <div className={`${baseClass} ${colorClass}`}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24">
-              <rect x="30" y="40" width="40" height="50" className="fill-current" />
-              <rect x="35" y="45" width="30" height="10" className="fill-white" />
+            <svg viewBox="0 0 100 100" className="w-64 h-48">
+              <path d="M20,40 L80,40 L80,100 L20,100 Z" className="fill-current" />
+              <path d="M30,45 L70,45 L70,55 L30,55 Z" className="fill-white" />
             </svg>
           </div>
         );
@@ -523,34 +551,36 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
   };
 
   const getAccessoryElement = () => {
-    const baseClass = "absolute top-0 left-1/2 transform -translate-x-1/2 transition-all duration-300";
+    const baseClass = "absolute inset-0 flex items-center justify-center";
     
     switch (attributes.accessory) {
       case 'headphones':
         return (
           <div className={baseClass}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24 text-gray-700">
-              <circle cx="30" cy="50" r="15" className="fill-current" />
-              <circle cx="70" cy="50" r="15" className="fill-current" />
-              <path d="M30,50 L70,50" className="stroke-current stroke-4" />
+            <svg viewBox="0 0 100 100" className="w-64 h-64 text-gray-700">
+              <path d="M20,50 C20,30 35,20 50,20 C65,20 80,30 80,50" className="fill-none stroke-current stroke-4" />
+              <circle cx="20" cy="50" r="8" className="fill-current" />
+              <circle cx="80" cy="50" r="8" className="fill-current" />
             </svg>
           </div>
         );
       case 'glasses':
         return (
           <div className={baseClass}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24 text-gray-700">
-              <circle cx="40" cy="50" r="10" className="fill-none stroke-current stroke-2" />
-              <circle cx="60" cy="50" r="10" className="fill-none stroke-current stroke-2" />
-              <path d="M40,50 L60,50" className="stroke-current stroke-2" />
+            <svg viewBox="0 0 100 100" className="w-64 h-64 text-gray-700">
+              <circle cx="35" cy="50" r="12" className="fill-none stroke-current stroke-2" />
+              <circle cx="65" cy="50" r="12" className="fill-none stroke-current stroke-2" />
+              <path d="M47,50 L53,50" className="stroke-current stroke-2" />
+              <path d="M15,50 L23,50" className="stroke-current stroke-2" />
+              <path d="M77,50 L85,50" className="stroke-current stroke-2" />
             </svg>
           </div>
         );
       case 'hat':
         return (
           <div className={baseClass}>
-            <svg viewBox="0 0 100 100" className="w-24 h-24 text-gray-700">
-              <path d="M30,40 Q50,20 70,40" className="fill-current" />
+            <svg viewBox="0 0 100 100" className="w-64 h-64 text-gray-700">
+              <path d="M20,45 Q50,20 80,45 L75,50 Q50,30 25,50 Z" className="fill-current" />
             </svg>
           </div>
         );
@@ -562,15 +592,23 @@ const AvatarCreator = ({ onComplete, resetKey = 0 }: AvatarCreatorProps) => {
   const getHairColorClass = () => {
     switch (attributes.hairColor) {
       case 'black':
-        return 'bg-black';
+        return 'bg-gray-900';
       case 'brown':
         return 'bg-amber-800';
       case 'blonde':
-        return 'bg-yellow-300';
+        return 'bg-amber-300';
       case 'red':
         return 'bg-red-600';
+      case 'gray':
+        return 'bg-gray-400';
+      case 'blue':
+        return 'bg-blue-500';
+      case 'pink':
+        return 'bg-pink-400';
+      case 'purple':
+        return 'bg-purple-500';
       default:
-        return 'bg-black';
+        return 'bg-gray-900';
     }
   };
 

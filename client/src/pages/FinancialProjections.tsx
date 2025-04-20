@@ -49,6 +49,7 @@ import {
   TabsTrigger
 } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,7 +61,6 @@ import {
   generatePythonCalculatorInput,
   FinancialProjectionData
 } from "@/lib/pythonCalculator";
-import { apiRequest } from "@/lib/api";
 import {
   Select,
   SelectContent,

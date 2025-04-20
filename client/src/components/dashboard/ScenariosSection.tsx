@@ -439,34 +439,35 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
           </div>
         </div>
       ) : (
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          layout
-          transition={{
-            layout: {
-              type: "spring",
-              bounce: 0.15,
-              duration: 0.6,
-              damping: 26,
-              stiffness: 100
-            },
-            opacity: { duration: 0.3 }
-          }}
-          animate={{ opacity: 1 }}
-          initial={{ opacity: 0.8 }}
-        >
-          {sortedScenarios.map((scenario, index) => (
-            <SafeScenarioCard
-              key={`${scenario.id}-${ageSliderValue}-${index}`}
-              scenario={scenario}
-              index={index}
-              onViewDetails={handleViewDetails}
-              onEdit={handleEditScenario}
-              ageSliderActive={useAgeSlider}
-              ageSliderValue={ageSliderValue}
-            />
-          ))}
-        </motion.div>
+        <div className="relative">
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            layout
+            transition={{
+              layout: {
+                type: "tween",
+                duration: 0.3,
+                ease: "easeOut"
+              }
+            }}
+            style={{
+              position: "relative",
+              width: "100%"
+            }}
+          >
+            {sortedScenarios.map((scenario, index) => (
+              <SafeScenarioCard
+                key={`${scenario.id}-${ageSliderValue}-${index}`}
+                scenario={scenario}
+                index={index}
+                onViewDetails={handleViewDetails}
+                onEdit={handleEditScenario}
+                ageSliderActive={useAgeSlider}
+                ageSliderValue={ageSliderValue}
+              />
+            ))}
+          </motion.div>
+        </div>
       )}
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
