@@ -11,7 +11,8 @@
     "db:push": "drizzle-kit push",
     "lint": "eslint . --ext .ts,.tsx --fix",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "migrate:pathway": "tsx server/scripts/run-pathway-migration.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.13.8",
