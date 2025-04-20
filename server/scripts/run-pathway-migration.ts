@@ -3,10 +3,6 @@ import postgres from 'postgres';
 import fs from 'fs';
 import path from 'path';
 
-// Read migration file
-const migrationPath = path.join(process.cwd(), 'migrations', '0003_add_pathway_responses.sql');
-const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-
 async function runMigration() {
   if (!process.env.DATABASE_URL) {
     console.error('Error: DATABASE_URL environment variable is not set');
@@ -28,24 +24,56 @@ async function runMigration() {
 
     // Execute migration
     console.log('Executing migration...');
-    await client.unsafe(migrationSQL);
+    
+    // Add version column
+    await client.unsafe(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 
+          FROM information_schema.columns 
+          WHERE table_name = 'pathway_responses' 
+          AND column_name = 'version'
+        ) THEN
+          ALTER TABLE pathway_responses ADD COLUMN version INTEGER NOT NULL DEFAULT 1;
+        END IF;
+      END $$;
+    `);
+    
+    // Add deleted_at column and index
+    await client.unsafe(`
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 
+          FROM information_schema.columns 
+          WHERE table_name = 'pathway_responses' 
+          AND column_name = 'deleted_at'
+        ) THEN
+          ALTER TABLE pathway_responses ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
+          CREATE INDEX IF NOT EXISTS pathway_responses_deleted_at_idx ON pathway_responses(deleted_at);
+        END IF;
+      END $$;
+    `);
+    
+    // Add comments
+    await client.unsafe(`
+      COMMENT ON TABLE pathway_responses IS 'Stores user responses to pathway questions';
+      COMMENT ON COLUMN pathway_responses.response_data IS 'JSON structure containing the user''s responses';
+      COMMENT ON COLUMN pathway_responses.version IS 'Schema version of the response data';
+      COMMENT ON COLUMN pathway_responses.deleted_at IS 'Timestamp of soft deletion, NULL if not deleted';
+    `);
     
     console.log('Migration completed successfully!');
     
-    // Verify table creation
-    const tables = await client.unsafe(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name = 'pathway_responses'
+    // Verify table structure
+    const columns = await client.unsafe(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'pathway_responses'
     `);
     
-    if (tables.length > 0) {
-      console.log('Table verification successful: pathway_responses exists');
-    } else {
-      console.error('Error: Table verification failed - pathway_responses not found');
-      process.exit(1);
-    }
+    console.log('Table structure:', columns);
 
     // Close connection
     await client.end();
