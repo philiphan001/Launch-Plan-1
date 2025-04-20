@@ -60,6 +60,15 @@ import {
   generatePythonCalculatorInput,
   FinancialProjectionData
 } from "@/lib/pythonCalculator";
+import { apiRequest } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ProjectionType = "netWorth" | "income" | "expenses" | "assets" | "liabilities" | "cashFlow";
 
@@ -4197,38 +4206,104 @@ interface UpdateLocationDialogProps {
 
 const UpdateLocationDialog = ({ userData }: UpdateLocationDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [newZipCode, setNewZipCode] = useState(userData?.zipCode || '');
-  const queryClient = useQueryClient(); // For cache invalidation
+  const [searchByZip, setSearchByZip] = useState(true);
+  const [newZipCode, setNewZipCode] = useState('');
+  const [citySearchQuery, setCitySearchQuery] = useState('');
+  const [selectedState, setSelectedState] = useState('CA');
+  const [fetchingLocation, setFetchingLocation] = useState(false);
+  const queryClient = useQueryClient();
+
+  const usStates = [
+    { name: "Alabama", code: "AL" },
+    { name: "Alaska", code: "AK" },
+    { name: "Arizona", code: "AZ" },
+    { name: "Arkansas", code: "AR" },
+    { name: "California", code: "CA" },
+    { name: "Colorado", code: "CO" },
+    { name: "Connecticut", code: "CT" },
+    { name: "Delaware", code: "DE" },
+    { name: "Florida", code: "FL" },
+    { name: "Georgia", code: "GA" },
+    { name: "Hawaii", code: "HI" },
+    { name: "Idaho", code: "ID" },
+    { name: "Illinois", code: "IL" },
+    { name: "Indiana", code: "IN" },
+    { name: "Iowa", code: "IA" },
+    { name: "Kansas", code: "KS" },
+    { name: "Kentucky", code: "KY" },
+    { name: "Louisiana", code: "LA" },
+    { name: "Maine", code: "ME" },
+    { name: "Maryland", code: "MD" },
+    { name: "Massachusetts", code: "MA" },
+    { name: "Michigan", code: "MI" },
+    { name: "Minnesota", code: "MN" },
+    { name: "Mississippi", code: "MS" },
+    { name: "Missouri", code: "MO" },
+    { name: "Montana", code: "MT" },
+    { name: "Nebraska", code: "NE" },
+    { name: "Nevada", code: "NV" },
+    { name: "New Hampshire", code: "NH" },
+    { name: "New Jersey", code: "NJ" },
+    { name: "New Mexico", code: "NM" },
+    { name: "New York", code: "NY" },
+    { name: "North Carolina", code: "NC" },
+    { name: "North Dakota", code: "ND" },
+    { name: "Ohio", code: "OH" },
+    { name: "Oklahoma", code: "OK" },
+    { name: "Oregon", code: "OR" },
+    { name: "Pennsylvania", code: "PA" },
+    { name: "Rhode Island", code: "RI" },
+    { name: "South Carolina", code: "SC" },
+    { name: "South Dakota", code: "SD" },
+    { name: "Tennessee", code: "TN" },
+    { name: "Texas", code: "TX" },
+    { name: "Utah", code: "UT" },
+    { name: "Vermont", code: "VT" },
+    { name: "Virginia", code: "VA" },
+    { name: "Washington", code: "WA" },
+    { name: "West Virginia", code: "WV" },
+    { name: "Wisconsin", code: "WI" },
+    { name: "Wyoming", code: "WY" },
+    { name: "District of Columbia", code: "DC" }
+  ];
 
   const updateZipCodeMutation = useMutation({
     mutationFn: async (zipCode: string) => {
-      const response = await fetch(`/api/users/${userData?.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          zipCode
-        }),
+      if (!userData?.id) throw new Error('No user ID available');
+      return apiRequest('/api/users/update-zip-code', {
+        method: 'POST',
+        body: JSON.stringify({ userId: userData.id, zipCode })
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update location');
-      }
-      
-      return response.json();
     },
     onSuccess: () => {
-      // Invalidate queries that depend on the user data or location data
-      queryClient.invalidateQueries({ queryKey: ['/api/users', userData?.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/location-cost-of-living/zip', newZipCode] });
       setOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
     }
   });
 
-  const handleUpdateLocation = () => {
-    if (newZipCode && newZipCode.length === 5 && /^\d+$/.test(newZipCode)) {
-      updateZipCodeMutation.mutate(newZipCode);
+  const handleUpdateLocation = async () => {
+    if (searchByZip) {
+      if (!newZipCode || newZipCode.length !== 5 || !/^\d+$/.test(newZipCode)) return;
+      await updateZipCodeMutation.mutateAsync(newZipCode);
+    } else {
+      if (!citySearchQuery || !selectedState) return;
+      setFetchingLocation(true);
+      try {
+        const response = await fetch(`/api/location-cost-of-living/city?city=${encodeURIComponent(citySearchQuery)}&state=${selectedState}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            const locationData = data[0];
+            if (locationData.zip_code) {
+              await updateZipCodeMutation.mutateAsync(locationData.zip_code);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching location by city/state:", error);
+      } finally {
+        setFetchingLocation(false);
+      }
     }
   };
 
@@ -4247,28 +4322,87 @@ const UpdateLocationDialog = ({ userData }: UpdateLocationDialogProps) => {
             This change will be applied across all parts of the application.
           </DialogDescription>
         </DialogHeader>
+        
         <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="zipCode">Zip Code</Label>
-            <Input
-              id="zipCode"
-              placeholder="Enter zip code"
-              value={newZipCode}
-              onChange={(e) => setNewZipCode(e.target.value)}
-              maxLength={5}
-              pattern="[0-9]{5}"
-            />
-            <p className="text-xs text-gray-500">
-              Enter a valid US 5-digit zip code. Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.
-            </p>
+          <div className="flex gap-2 mb-4">
+            <Button 
+              variant={searchByZip ? "default" : "outline"}
+              className={`flex-1 ${searchByZip ? "bg-primary" : ""}`}
+              onClick={() => setSearchByZip(true)}
+            >
+              <span className="flex items-center gap-1">
+                <span className="material-icons text-sm">pin_drop</span>
+                Search by Zip Code
+              </span>
+            </Button>
+            <Button 
+              variant={!searchByZip ? "default" : "outline"} 
+              className={`flex-1 ${!searchByZip ? "bg-primary" : ""}`}
+              onClick={() => setSearchByZip(false)}
+            >
+              <span className="flex items-center gap-1">
+                <span className="material-icons text-sm">location_city</span>
+                Search by City
+              </span>
+            </Button>
           </div>
+
+          {searchByZip ? (
+            <div className="space-y-2">
+              <Label htmlFor="zipCode">Zip Code</Label>
+              <Input
+                id="zipCode"
+                placeholder="Enter zip code"
+                value={newZipCode}
+                onChange={(e) => setNewZipCode(e.target.value)}
+                maxLength={5}
+                pattern="[0-9]{5}"
+              />
+              <p className="text-xs text-gray-500">
+                Enter a valid US 5-digit zip code. Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="cityState">City and State</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="citySearch"
+                  placeholder="Enter city name"
+                  className="flex-1"
+                  value={citySearchQuery}
+                  onChange={(e) => setCitySearchQuery(e.target.value)}
+                />
+                <Select value={selectedState} onValueChange={(value) => setSelectedState(value)}>
+                  <SelectTrigger className="w-[110px]">
+                    <SelectValue placeholder="State" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {usStates.map(state => (
+                        <SelectItem key={state.code} value={state.code}>{state.code}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-gray-500">
+                Try popular cities like "San Francisco, CA", "New York, NY", or "Chicago, IL"
+              </p>
+            </div>
+          )}
         </div>
+
         <DialogFooter>
           <Button 
             onClick={handleUpdateLocation}
-            disabled={updateZipCodeMutation.isPending || !newZipCode || newZipCode.length !== 5 || !/^\d+$/.test(newZipCode)}
+            disabled={
+              updateZipCodeMutation.isPending || 
+              fetchingLocation || 
+              (searchByZip ? (!newZipCode || newZipCode.length !== 5 || !/^\d+$/.test(newZipCode)) : (!citySearchQuery || !selectedState))
+            }
           >
-            {updateZipCodeMutation.isPending ? "Updating..." : "Update Location"}
+            {updateZipCodeMutation.isPending || fetchingLocation ? "Updating..." : "Update Location"}
           </Button>
         </DialogFooter>
       </DialogContent>
