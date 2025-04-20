@@ -805,13 +805,16 @@ export const pathwayResponses = pgTable("pathway_responses", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
   responseData: jsonb("response_data").notNull(),
+  version: integer("version").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const insertPathwayResponseSchema = createInsertSchema(pathwayResponses).pick({
   userId: true,
   responseData: true,
+  version: true,
 });
 
 export type PathwayResponse = typeof pathwayResponses.$inferSelect;
