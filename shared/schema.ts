@@ -9,7 +9,8 @@ import {
   real,
   uuid,
   varchar,
-  json
+  json,
+  primaryKey
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -29,17 +30,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  firstName: true,
-  lastName: true,
-  email: true,
-  location: true,
-  zipCode: true,
-  birthYear: true,
-  onboardingCompleted: true,
-});
+export const insertUserSchema = createInsertSchema(users);
 
 // Financial profiles table
 export const financialProfiles = pgTable("financial_profiles", {
@@ -139,24 +130,7 @@ export const careers = pgTable("careers", {
   salaryPct90: integer("salary_pct_90"),
 });
 
-export const insertCareerSchema = createInsertSchema(careers).pick({
-  title: true,
-  description: true,
-  salary: true,
-  growthRate: true,
-  education: true,
-  category: true,
-  alias1: true,
-  alias2: true,
-  alias3: true,
-  alias4: true,
-  alias5: true,
-  salaryPct10: true,
-  salaryPct25: true,
-  salaryMedian: true,
-  salaryPct75: true,
-  salaryPct90: true,
-});
+export const insertCareerSchema = createInsertSchema(careers);
 
 // Favorites tables
 export const favoriteColleges = pgTable("favorite_colleges", {
@@ -178,10 +152,7 @@ export const favoriteCareers = pgTable("favorite_careers", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertFavoriteCareerSchema = createInsertSchema(favoriteCareers).pick({
-  userId: true,
-  careerId: true,
-});
+export const insertFavoriteCareerSchema = createInsertSchema(favoriteCareers);
 
 // Favorite locations table
 export const favoriteLocations = pgTable("favorite_locations", {
@@ -349,7 +320,7 @@ export const insertMilestoneSchema = createInsertSchema(milestones).pick({
 
 // Export types
 export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUser = typeof users.$inferInsert;
 
 export type FinancialProfile = typeof financialProfiles.$inferSelect;
 export type InsertFinancialProfile = z.infer<typeof insertFinancialProfileSchema>;
@@ -358,13 +329,13 @@ export type College = typeof colleges.$inferSelect;
 export type InsertCollege = z.infer<typeof insertCollegeSchema>;
 
 export type Career = typeof careers.$inferSelect;
-export type InsertCareer = z.infer<typeof insertCareerSchema>;
+export type InsertCareer = typeof careers.$inferInsert;
 
 export type FavoriteCollege = typeof favoriteColleges.$inferSelect;
 export type InsertFavoriteCollege = z.infer<typeof insertFavoriteCollegeSchema>;
 
 export type FavoriteCareer = typeof favoriteCareers.$inferSelect;
-export type InsertFavoriteCareer = z.infer<typeof insertFavoriteCareerSchema>;
+export type InsertFavoriteCareer = typeof favoriteCareers.$inferInsert;
 
 export type FavoriteLocation = typeof favoriteLocations.$inferSelect;
 export type InsertFavoriteLocation = z.infer<typeof insertFavoriteLocationSchema>;
@@ -803,50 +774,45 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
   }
 ];
 
-export const pathwaySwipeResponses = pgTable('pathway_swipe_responses', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id),
-  sessionId: uuid('session_id').notNull(),
-  cardId: varchar('card_id', { length: 50 }).notNull(),
-  cardTitle: text('card_title').notNull(),
-  cardCategory: varchar('card_category', { length: 50 }).notNull(),
-  response: boolean('response').notNull(),  // true for like, false for dislike
-  createdAt: timestamp('created_at').defaultNow()
+export const pathwaySwipeResponses = pgTable("pathway_swipe_responses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  sessionId: uuid("session_id").notNull(),
+  cardId: varchar("card_id", { length: 50 }).notNull(),
+  cardTitle: text("card_title").notNull(),
+  cardCategory: varchar("card_category", { length: 50 }).notNull(),
+  response: boolean("response").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Add to existing relations
+export const insertPathwaySwipeResponseSchema = createInsertSchema(pathwaySwipeResponses);
+
+// Session table (for express-session)
+export const session = pgTable("session", {
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire").notNull(),
+});
+
 export type PathwaySwipeResponse = typeof pathwaySwipeResponses.$inferSelect;
 export type InsertPathwaySwipeResponse = typeof pathwaySwipeResponses.$inferInsert;
 
-export const insertPathwayResponseSchema = z.object({
-  userId: z.number(),
-  questionId: z.string(),
-  response: z.string(),
-});
+export type Session = typeof session.$inferSelect;
+export type InsertSession = typeof session.$inferInsert;
 
+// Pathway responses table
 export const pathwayResponses = pgTable("pathway_responses", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  questionId: text("question_id").notNull(),
-  response: text("response").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
+  userId: integer("user_id").references(() => users.id).notNull(),
+  responseData: jsonb("response_data").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPathwayResponseSchema = createInsertSchema(pathwayResponses).pick({
+  userId: true,
+  responseData: true,
 });
 
 export type PathwayResponse = typeof pathwayResponses.$inferSelect;
-export type InsertPathwayResponse = typeof pathwayResponses.$inferInsert;
-
-export const quickSpinResponses = pgTable('quick_spin_responses', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id),
-  superpower: text('superpower').notNull(),
-  ideal_day: text('ideal_day').notNull(),
-  values: text('values').notNull(),
-  activities: text('activities').notNull(),
-  preferences: json('preferences').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull()
-});
-
-export type QuickSpinResponse = typeof quickSpinResponses.$inferSelect;
-export type InsertQuickSpinResponse = typeof quickSpinResponses.$inferInsert;
+export type InsertPathwayResponse = z.infer<typeof insertPathwayResponseSchema>;

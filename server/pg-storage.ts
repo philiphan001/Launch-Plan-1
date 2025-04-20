@@ -16,8 +16,7 @@ import {
   collegeCalculations, type CollegeCalculation as DrizzleCollegeCalculation, type InsertCollegeCalculation,
   careerCalculations, type CareerCalculation, type InsertCareerCalculation,
   assumptions, type Assumption, type InsertAssumption, defaultAssumptions,
-  InsertPathwayResponse, PathwayResponse, pathwayResponses,
-  InsertQuickSpinResponse, QuickSpinResponse
+  explorationResults, type ExplorationResult, type InsertExplorationResult
 } from "@shared/schema";
 
 // Extended type for college calculations with college data
@@ -739,10 +738,7 @@ export class PgStorage implements IStorage {
 
   async getAssumptionsByCategory(userId: number, category: string): Promise<Assumption[]> {
     return await db.select().from(assumptions)
-      .where(and(
-        eq(assumptions.userId, userId),
-        eq(assumptions.category, category)
-      ));
+      .where(and(eq(assumptions.userId, userId), eq(assumptions.category, category)));
   }
   
   async createAssumption(assumption: InsertAssumption): Promise<Assumption> {
@@ -760,190 +756,44 @@ export class PgStorage implements IStorage {
   }
 
   async initializeDefaultAssumptions(userId: number): Promise<Assumption[]> {
-    // Transform defaults by adding userId
     const userAssumptions = defaultAssumptions.map(assumption => ({
       ...assumption,
       userId
     }));
     
-    // Insert all defaults in one batch
     const result = await db.insert(assumptions).values(userAssumptions).returning();
     return result;
   }
 
-  async getPathwayResponse(id: number): Promise<PathwayResponse | undefined> {
-    const [result] = await db.select().from(pathwayResponses).where(eq(pathwayResponses.id, id));
-    return result;
-  }
-
-  async createPathwayResponse(response: InsertPathwayResponse): Promise<PathwayResponse> {
-    const [result] = await db.insert(pathwayResponses).values(response).returning();
-    return result;
-  }
-
-  async getPathwayResponsesByUserId(userId: number): Promise<PathwayResponse[]> {
-    return await db.select().from(pathwayResponses).where(eq(pathwayResponses.userId, userId));
-  }
-
-  async updatePathwayResponse(id: number, response: string): Promise<PathwayResponse> {
-    const [result] = await db
-      .update(pathwayResponses)
-      .set({ response, updatedAt: new Date() })
-      .where(eq(pathwayResponses.id, id))
-      .returning();
-    return result;
-  }
-
-  async deletePathwayResponse(id: number): Promise<void> {
-    await db.delete(pathwayResponses).where(eq(pathwayResponses.id, id));
-  }
-
-  // Quick Spin Response methods
-  async createQuickSpinResponse(response: InsertQuickSpinResponse): Promise<QuickSpinResponse> {
-    const result = await this.pool.query(
-      `INSERT INTO quick_spin_responses (
-        user_id,
-        superpower,
-        ideal_day,
-        values,
-        activities,
-        preferences
-      ) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [
-        response.userId,
-        response.superpower,
-        response.ideal_day,
-        response.values,
-        response.activities,
-        JSON.stringify(response.preferences)
-      ]
-    );
-    return this.mapQuickSpinResponse(result.rows[0]);
-  }
-
-  async getQuickSpinResponsesByUserId(userId: number): Promise<QuickSpinResponse[]> {
-    const result = await this.pool.query(
-      'SELECT * FROM quick_spin_responses WHERE user_id = $1',
-      [userId]
-    );
-    return result.rows.map(row => this.mapQuickSpinResponse(row));
-  }
-
-  async getQuickSpinResponse(id: number): Promise<QuickSpinResponse | undefined> {
-    const result = await this.pool.query(
-      'SELECT * FROM quick_spin_responses WHERE id = $1',
-      [id]
-    );
-    return result.rows.length ? this.mapQuickSpinResponse(result.rows[0]) : undefined;
-  }
-
-  async updateQuickSpinResponse(id: number, data: Partial<InsertQuickSpinResponse>): Promise<QuickSpinResponse | undefined> {
-    const updates: string[] = [];
-    const values: any[] = [];
-    let paramCount = 1;
-
-    if (data.superpower !== undefined) {
-      updates.push(`superpower = $${paramCount}`);
-      values.push(data.superpower);
-      paramCount++;
-    }
-    if (data.ideal_day !== undefined) {
-      updates.push(`ideal_day = $${paramCount}`);
-      values.push(data.ideal_day);
-      paramCount++;
-    }
-    if (data.values !== undefined) {
-      updates.push(`values = $${paramCount}`);
-      values.push(data.values);
-      paramCount++;
-    }
-    if (data.activities !== undefined) {
-      updates.push(`activities = $${paramCount}`);
-      values.push(data.activities);
-      paramCount++;
-    }
-    if (data.preferences !== undefined) {
-      updates.push(`preferences = $${paramCount}`);
-      values.push(JSON.stringify(data.preferences));
-      paramCount++;
-    }
-
-    if (updates.length === 0) return this.getQuickSpinResponse(id);
-
-    values.push(id);
-    const result = await this.pool.query(
-      `UPDATE quick_spin_responses SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
-      values
-    );
-    return result.rows.length ? this.mapQuickSpinResponse(result.rows[0]) : undefined;
-  }
-
-  async deleteQuickSpinResponse(id: number): Promise<void> {
-    await db.delete(quickSpinResponses).where(eq(quickSpinResponses.id, id));
-  }
-
-  private mapQuickSpinResponse(row: any): QuickSpinResponse {
-    return {
-      id: row.id,
-      userId: row.user_id,
-      superpower: row.superpower,
-      ideal_day: row.ideal_day,
-      values: row.values,
-      activities: row.activities,
-      preferences: row.preferences,
-      createdAt: row.created_at
-    };
-  }
-
-  // Exploration results methods
+  // Exploration results
   async saveExplorationResult(result: {
     userId: number;
     method: string;
     results: any;
     createdAt: Date;
-  }): Promise<{
-    id: number;
-    userId: number;
-    method: string;
-    results: any;
-    createdAt: Date;
-  }> {
-    const [savedResult] = await db.execute(sql`
-      INSERT INTO exploration_results (user_id, method, results, created_at)
-      VALUES (${result.userId}, ${result.method}, ${JSON.stringify(result.results)}, ${result.createdAt})
-      RETURNING id, user_id as "userId", method, results, created_at as "createdAt"
-    `);
+  }): Promise<ExplorationResult> {
+    const [savedResult] = await db.insert(explorationResults)
+      .values({
+        userId: result.userId,
+        method: result.method,
+        results: result.results,
+        createdAt: result.createdAt
+      })
+      .returning();
     return savedResult;
   }
 
-  async getExplorationResultsByUserId(userId: number): Promise<Array<{
-    id: number;
-    userId: number;
-    method: string;
-    results: any;
-    createdAt: Date;
-  }>> {
-    const results = await db.execute(sql`
-      SELECT id, user_id as "userId", method, results, created_at as "createdAt"
-      FROM exploration_results
-      WHERE user_id = ${userId}
-      ORDER BY created_at DESC
-    `);
-    return results;
+  async getExplorationResultsByUserId(userId: number): Promise<ExplorationResult[]> {
+    return await db.select()
+      .from(explorationResults)
+      .where(eq(explorationResults.userId, userId))
+      .orderBy(explorationResults.createdAt);
   }
 
-  async getExplorationResult(id: number): Promise<{
-    id: number;
-    userId: number;
-    method: string;
-    results: any;
-    createdAt: Date;
-  } | null> {
-    const [result] = await db.execute(sql`
-      SELECT id, user_id as "userId", method, results, created_at as "createdAt"
-      FROM exploration_results
-      WHERE id = ${id}
-    `);
+  async getExplorationResult(id: number): Promise<ExplorationResult | null> {
+    const [result] = await db.select()
+      .from(explorationResults)
+      .where(eq(explorationResults.id, id));
     return result || null;
   }
 }
