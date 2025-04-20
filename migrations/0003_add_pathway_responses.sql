@@ -32,4 +32,38 @@ CREATE TRIGGER update_pathway_responses_updated_at
 COMMENT ON TABLE pathway_responses IS 'Stores user responses to pathway questions';
 COMMENT ON COLUMN pathway_responses.response_data IS 'JSON structure containing the user''s responses';
 COMMENT ON COLUMN pathway_responses.version IS 'Schema version of the response data';
-COMMENT ON COLUMN pathway_responses.deleted_at IS 'Timestamp of soft deletion, NULL if not deleted'; 
+COMMENT ON COLUMN pathway_responses.deleted_at IS 'Timestamp of soft deletion, NULL if not deleted';
+
+-- Add version and deleted_at columns if they don't exist
+DO $$ 
+BEGIN
+    -- Add version column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'pathway_responses' 
+        AND column_name = 'version'
+    ) THEN
+        ALTER TABLE pathway_responses ADD COLUMN version INTEGER NOT NULL DEFAULT 1;
+    END IF;
+
+    -- Add deleted_at column if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'pathway_responses' 
+        AND column_name = 'deleted_at'
+    ) THEN
+        ALTER TABLE pathway_responses ADD COLUMN deleted_at TIMESTAMP WITH TIME ZONE;
+    END IF;
+
+    -- Add deleted_at index if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM pg_indexes 
+        WHERE tablename = 'pathway_responses' 
+        AND indexname = 'pathway_responses_deleted_at_idx'
+    ) THEN
+        CREATE INDEX pathway_responses_deleted_at_idx ON pathway_responses(deleted_at);
+    END IF;
+END $$; 
