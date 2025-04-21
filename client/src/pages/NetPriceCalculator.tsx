@@ -1,3 +1,17 @@
+/*
+ * CHECKPOINT - April 21, 2024
+ * Current State:
+ * - Net price calculator with full cost breakdown and payment visualization
+ * - Automatic zip code-based income estimation
+ * - In-state/out-of-state tuition handling
+ * - Housing toggle (on/off campus)
+ * - Payment breakdown with adjustable sliders for family contribution and work-study
+ * - Cost visualization with annual vs total program cost toggle
+ * - Rounding to nearest 100 for cleaner numbers
+ * - Support for transfer students with remaining years calculation
+ * - Save calculation functionality with custom naming
+ */
+
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -115,6 +129,9 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [localZipCodeData, setLocalZipCodeData] = useState<ZipCodeIncome | null>(null);
   const [showZipCodeEditor, setShowZipCodeEditor] = useState(false);
+  const [showTotalCost, setShowTotalCost] = useState(false);
+  const [isTransferStudent, setIsTransferStudent] = useState(false);
+  const [yearsCompleted, setYearsCompleted] = useState(0);
   
   // Get user ID from auth props
   const userId = props.user?.id;
@@ -510,6 +527,15 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     return Math.round(Math.max(0, netPrice - efc - workStudy));
   };
   
+  // Helper function to calculate remaining years
+  const calculateRemainingYears = () => {
+    if (isTransferStudent) {
+      return yearsCompleted; // yearsCompleted now represents years TO completion
+    }
+    // For non-transfer students, use default program length
+    return selectedCollege?.type.toLowerCase().includes('community') ? 2 : 4;
+  };
+  
   const handleCalculate = () => {
     // If we have a zip code but no income data, try to fetch it automatically
     if (zipCode && zipCode.length === 5 && !estimatedIncome) {
@@ -640,32 +666,36 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     if (!userId || !selectedCollege || !netPrice) return;
     
     // Calculate financial aid amount based on sticker price minus net price
-    // This represents scholarships and grants that don't need to be repaid
     const stickerPrice = selectedCollege.type.includes("Public") && !isInState
       ? (selectedCollege.tuition * 3) + selectedCollege.roomAndBoard
       : selectedCollege.tuition + selectedCollege.roomAndBoard;
     
     const financialAid = Math.max(0, stickerPrice - netPrice);
     
-    // Create the calculation data object
+    // Get the multiplier based on remaining years
+    const programMultiplier = calculateRemainingYears();
+    
+    // Create the calculation data object - always save total remaining program costs
     const calculationData: CollegeCalculation = {
-      userId: userId as number, // We've checked for userId earlier in saveToProfile
+      userId: userId as number,
       collegeId: selectedCollege.id,
-      netPrice,
+      netPrice: netPrice * programMultiplier,
       inState: isInState,
-      familyContribution: calculateEFC(),
-      workStudy: calculateWorkStudy(),
-      studentLoanAmount: calculateStudentLoan(),
-      financialAid,
+      familyContribution: calculateEFC() * programMultiplier,
+      workStudy: calculateWorkStudy() * programMultiplier,
+      studentLoanAmount: calculateStudentLoan() * programMultiplier,
+      financialAid: financialAid * programMultiplier,
       householdIncome: parseInt(householdIncome, 10) || 0,
       householdSize: parseInt(householdSize, 10) || 0,
       zip: zipCode,
-      tuitionUsed: selectedCollege.tuition,
+      tuitionUsed: selectedCollege.tuition * (selectedCollege.type.includes("Public") && !isInState ? 3 : 1),
       roomAndBoardUsed: selectedCollege.roomAndBoard,
       onCampusHousing,
-      totalCost: stickerPrice,
-      notes: calculationName || `${selectedCollege.name} cost calculation with ${efcPercentage}% family contribution and ${workStudyPercentage}% work-study.`,
-      includedInProjection: false // By default, new calculations are not included in projections
+      totalCost: stickerPrice * programMultiplier,
+      notes: `${calculationName || selectedCollege.name} - ${isTransferStudent ? 
+        `${yearsCompleted} Year Program (Transfer Student)` : 
+        `${selectedCollege.type.toLowerCase().includes('community') ? '2' : '4'} Year Total Cost`}`,
+      includedInProjection: false
     };
     
     // Close the dialog
@@ -1202,10 +1232,10 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                     <div className="flex flex-col items-center">
                       <div className="bg-primary/10 px-6 py-4 rounded-lg">
                         <p className="text-3xl font-mono font-bold text-primary">
-                          ${netPrice.toLocaleString()}
+                          ${(Math.round((netPrice * 0.95) / 100) * 100).toLocaleString()} - ${(Math.round((netPrice * 1.05) / 100) * 100).toLocaleString()}
                         </p>
                       </div>
-                      <p className="text-sm text-gray-500 mt-3">Estimated annual cost after financial aid</p>
+                      <p className="text-sm text-gray-500 mt-3">Estimated annual cost after financial aid (±5%)</p>
                     </div>
                   </div>
                   
@@ -1310,16 +1340,44 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                           </span>
                         </div>
                         <div className="flex justify-between text-primary font-semibold pt-2 border-t border-gray-300">
-                          <span>Your Net Cost</span>
-                          <span className="font-mono">${netPrice.toLocaleString()}</span>
+                          <span>Year 1 Net Cost</span>
+                          <span className="font-mono">
+                            ${(Math.round((netPrice * 0.95) / 100) * 100).toLocaleString()} - ${(Math.round((netPrice * 1.05) / 100) * 100).toLocaleString()}
+                          </span>
                         </div>
+                        
+                        {/* Add trended total cost */}
+                        <div className="flex justify-between text-primary font-semibold pt-2">
+                          <span>
+                            {isTransferStudent ? 
+                              `${calculateRemainingYears()} Year Total Cost*` : 
+                              'Total Cost*'
+                            }
+                          </span>
+                          <span className="font-mono">
+                            ${(Math.round((netPrice * calculateRemainingYears() * 0.95) / 100) * 100).toLocaleString()} - ${(Math.round((netPrice * calculateRemainingYears() * 1.05) / 100) * 100).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">*Trended cost over full program length</p>
                       </div>
                     </div>
                     
                     {/* Payment visualization */}
                     <div className="bg-gray-100 p-4 rounded-lg">
-                      <h5 className="font-medium text-gray-700 mb-3">Payment Breakdown</h5>
-                      
+                      <div className="flex justify-between items-center mb-3">
+                        <h5 className="font-medium text-gray-700">Payment Breakdown</h5>
+                        <div className="flex items-center space-x-2">
+                          <span className={`text-xs ${!showTotalCost ? 'text-primary' : 'text-muted-foreground'}`}>1 Year</span>
+                          <Switch
+                            checked={showTotalCost}
+                            onCheckedChange={setShowTotalCost}
+                          />
+                          <span className={`text-xs ${showTotalCost ? 'text-primary' : 'text-muted-foreground'}`}>
+                            {isTransferStudent ? `Remaining ${calculateRemainingYears()} Years` : 'Total Cost'}
+                          </span>
+                        </div>
+                      </div>
+
                       {/* Payment breakdown chart - VERTICAL VERSION */}
                       <div className="mb-4 flex justify-between items-end h-60 border-b border-gray-300 relative">
                         {/* Horizontal guide lines */}
@@ -1344,7 +1402,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                   }}
                                 >
                                   <span className="text-sm text-white font-medium py-1">
-                                    ${calculateEFC().toLocaleString()}
+                                    ${(showTotalCost ? calculateEFC() * calculateRemainingYears() : calculateEFC()).toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
@@ -1370,7 +1428,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                   }}
                                 >
                                   <span className="text-sm text-white font-medium py-1">
-                                    ${calculateWorkStudy().toLocaleString()}
+                                    ${(showTotalCost ? calculateWorkStudy() * calculateRemainingYears() : calculateWorkStudy()).toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
@@ -1396,7 +1454,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                   }}
                                 >
                                   <span className="text-sm text-white font-medium py-1">
-                                    ${calculateStudentLoan().toLocaleString()}
+                                    ${(showTotalCost ? calculateStudentLoan() * calculateRemainingYears() : calculateStudentLoan()).toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="text-center">
@@ -1439,7 +1497,6 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                           step={5}
                           onValueChange={(values: number[]) => {
                             setEfcPercentage(values[0]);
-                            // If EFC increased and now the sum exceeds 100%, adjust work-study down
                             if (values[0] + workStudyPercentage > 100) {
                               setWorkStudyPercentage(Math.max(0, 100 - values[0]));
                             }
@@ -1451,7 +1508,9 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                           <span>Pay Everything (100%)</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Percentage of total college costs your family will contribute directly ({efcPercentage}% = ${calculateEFC().toLocaleString()})
+                          Percentage of {showTotalCost ? 'total program' : 'annual'} costs your family will contribute directly ({efcPercentage}% = ${(showTotalCost ? 
+                            calculateEFC() * calculateRemainingYears() : 
+                            calculateEFC()).toLocaleString()})
                         </p>
                       </div>
                       
@@ -1470,7 +1529,6 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                           max={Math.max(0, 100 - efcPercentage)}
                           step={5}
                           onValueChange={(values: number[]) => {
-                            // Ensure we don't exceed the maximum allowed work-study percentage
                             const maxAllowed = Math.max(0, 100 - efcPercentage);
                             const newValue = Math.min(values[0], maxAllowed);
                             setWorkStudyPercentage(newValue);
@@ -1482,7 +1540,9 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                           <span>Max ({Math.max(0, 100 - efcPercentage)}%)</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Working part-time on campus to cover {workStudyPercentage}% of your total college costs
+                          Working part-time on campus to cover {workStudyPercentage}% of your {showTotalCost ? 'total program' : 'annual'} costs (${(showTotalCost ? 
+                            calculateWorkStudy() * calculateRemainingYears() : 
+                            calculateWorkStudy()).toLocaleString()})
                         </p>
                         <p className="text-xs text-muted-foreground">
                           (EFC + Work-Study cannot exceed 100%)
@@ -1490,9 +1550,11 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                       </div>
                       
                       <div className="text-sm border-t border-gray-200 pt-3 mt-3">
-                        <p className="font-medium">Student Loans: ${calculateStudentLoan().toLocaleString()}</p>
+                        <p className="font-medium">Student Loans: ${(showTotalCost ? 
+                          calculateStudentLoan() * calculateRemainingYears() : 
+                          calculateStudentLoan()).toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground">
-                          After EFC and work-study, the remaining costs are covered by student loans
+                          After EFC and work-study, the remaining {showTotalCost ? 'total program' : 'annual'} costs are covered by student loans
                         </p>
                       </div>
                     </div>
@@ -1504,25 +1566,38 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                   
                   {/* Add price charts for visualization */}
                   <div className="mt-8">
-                    <h4 className="text-lg font-medium mb-4">Cost Visualizations</h4>
+                    <h4 className="text-lg font-medium mb-4">
+                      Cost Visualizations
+                      <span className="text-sm font-normal text-muted-foreground ml-2">
+                        ({showTotalCost ? 
+                          `${selectedCollege.type.toLowerCase().includes('community') ? '2-Year' : '4-Year'} Total` : 
+                          'Annual'} Costs)
+                      </span>
+                    </h4>
                     <PriceCharts 
                       collegeName={selectedCollege.name}
                       priceData={{
                         // Adjust sticker price for out-of-state tuition for public colleges
-                        stickerPrice: selectedCollege.type.includes("Public") && !isInState
+                        stickerPrice: (selectedCollege.type.includes("Public") && !isInState
                           ? (selectedCollege.tuition * 3) + selectedCollege.roomAndBoard
-                          : selectedCollege.tuition + selectedCollege.roomAndBoard,
+                          : selectedCollege.tuition + selectedCollege.roomAndBoard) * 
+                          (showTotalCost ? (selectedCollege.type.toLowerCase().includes('community') ? 2 : 4) : 1),
                         // Calculate average price from fees by income brackets
                         averagePrice: selectedCollege.feesByIncome ? 
-                          calculateAverageFees(selectedCollege.feesByIncome) : null,
-                        myPrice: netPrice,
+                          calculateAverageFees(selectedCollege.feesByIncome) * 
+                          (showTotalCost ? (selectedCollege.type.toLowerCase().includes('community') ? 2 : 4) : 1) : 
+                          null,
+                        myPrice: netPrice * 
+                          (showTotalCost ? (selectedCollege.type.toLowerCase().includes('community') ? 2 : 4) : 1),
                         // Show actual tuition being used based on in-state/out-of-state status
-                        tuition: selectedCollege.type.includes("Public") && !isInState
+                        tuition: (selectedCollege.type.includes("Public") && !isInState
                           ? selectedCollege.tuition * 3  // Out-of-state tuition
-                          : selectedCollege.tuition,     // In-state or private tuition
-                        roomAndBoard: selectedCollege.roomAndBoard,
-                        fees: 1200, // Example value for fees
-                        books: 1000, // Example value for books and supplies
+                          : selectedCollege.tuition) *    // In-state or private tuition
+                          (showTotalCost ? (selectedCollege.type.toLowerCase().includes('community') ? 2 : 4) : 1),
+                        roomAndBoard: selectedCollege.roomAndBoard * 
+                          (showTotalCost ? (selectedCollege.type.toLowerCase().includes('community') ? 2 : 4) : 1),
+                        fees: 1200 * (showTotalCost ? (selectedCollege.type.toLowerCase().includes('community') ? 2 : 4) : 1), // Example value for fees
+                        books: 1000 * (showTotalCost ? (selectedCollege.type.toLowerCase().includes('community') ? 2 : 4) : 1), // Example value for books and supplies
                       }}
                     />
                   </div>

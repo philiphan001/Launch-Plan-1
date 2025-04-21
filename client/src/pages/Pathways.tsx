@@ -105,12 +105,25 @@ const Pathways = ({
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: 0
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
+  };
+  
+  // Get friendly time description for subtitle
+  const getTimeDescription = () => {
+    switch(gapYearLength) {
+      case '3month': return '3-month';
+      case '6month': return '6-month';
+      case '9month': return '9-month';
+      case '12month': return 'full-year';
+      default: return '';
+    }
   };
   
   const [, navigate] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
+  const [showRecommendations, setShowRecommendations] = useState(false);
   const [selectedPath, setSelectedPath] = useState<PathChoice | null>(null);
   const [showLoadingScreen, setShowLoadingScreen] = useState<boolean>(false);
   
@@ -684,24 +697,58 @@ const Pathways = ({
     }
     
     setFetchingLocation(true);
+    console.log("Fetching location for zip code:", zipCode);
     
     try {
       const response = await fetch(`/api/location-cost-of-living/zip/${zipCode}`);
+      console.log("Response status:", response.status);
+      
       if (response.ok) {
         const locationData = await response.json();
-        // Create a proper LocationData object with all properties
-        setSelectedLocation(locationData);
+        console.log("Location data received:", locationData);
         
-        // Update the narrative to include location
-        const updatedNarrative = `${userJourney} and live in ${locationData.city}, ${locationData.state}.`;
-        setUserJourney(updatedNarrative);
+        // Validate the location data has required fields
+        if (locationData && locationData.city && locationData.state && locationData.zip_code) {
+          console.log("Setting location data:", locationData);
+          setSelectedLocation(locationData);
+          setSelectedZipCode(locationData.zip_code);
+          
+          // Update user's zip code in the database
+          if (user?.id) {
+            try {
+              const updateResponse = await fetch('/api/users/update-zip-code', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  userId: user.id,
+                  zipCode: locationData.zip_code
+                }),
+              });
+              console.log("Zip code update response:", updateResponse.status);
+            } catch (error) {
+              console.error("Error updating user's zip code:", error);
+            }
+          }
+          
+          // Update the narrative to include location
+          const updatedNarrative = `${userJourney} and live in ${locationData.city}, ${locationData.state}.`;
+          setUserJourney(updatedNarrative);
+        } else {
+          console.error("Invalid location data received:", locationData);
+          setSelectedLocation(null);
+          setSelectedZipCode('');
+        }
       } else {
-        // If location not found, clear the location
+        console.error("Location not found:", response.status);
         setSelectedLocation(null);
+        setSelectedZipCode('');
       }
     } catch (error) {
       console.error("Error fetching location data:", error);
       setSelectedLocation(null);
+      setSelectedZipCode('');
     } finally {
       setFetchingLocation(false);
     }
@@ -714,41 +761,72 @@ const Pathways = ({
     }
     
     setFetchingLocation(true);
+    console.log("Fetching location for city and state:", city, state);
     
     try {
       // Query the API for location by city and state
       const response = await fetch(`/api/location-cost-of-living/city?city=${encodeURIComponent(city)}&state=${state}`);
+      console.log("Response status:", response.status);
       
       if (response.ok) {
         const data = await response.json();
+        console.log("Location data received:", data);
         
-        // Check if we got results back
-        if (data && data.length > 0) {
-          // Use the first result
+        // Check if we got results back and validate the first result
+        if (data && Array.isArray(data) && data.length > 0) {
           const locationData = data[0];
+          console.log("First location result:", locationData);
           
-          // Use the complete LocationData object
-          setSelectedLocation(locationData);
-          
-          // If there's a zip code in the result, store it
-          if (locationData.zip_code) {
+          // Validate the location data has required fields
+          if (locationData && locationData.city && locationData.state && locationData.zip_code) {
+            console.log("Setting location data:", locationData);
+            // Use the complete LocationData object
+            setSelectedLocation(locationData);
             setSelectedZipCode(locationData.zip_code);
+            
+            // Update user's zip code in the database
+            if (user?.id) {
+              try {
+                const updateResponse = await fetch('/api/users/update-zip-code', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    userId: user.id,
+                    zipCode: locationData.zip_code
+                  }),
+                });
+                console.log("Zip code update response:", updateResponse.status);
+              } catch (error) {
+                console.error("Error updating user's zip code:", error);
+              }
+            }
+            
+            // Update the narrative to include location
+            const updatedNarrative = `${userJourney} and live in ${locationData.city}, ${locationData.state}.`;
+            setUserJourney(updatedNarrative);
+          } else {
+            console.error("Invalid location data received:", locationData);
+            setSelectedLocation(null);
+            setSelectedZipCode('');
           }
-          
-          // Update the narrative to include location
-          const updatedNarrative = `${userJourney} and live in ${locationData.city}, ${locationData.state}.`;
-          setUserJourney(updatedNarrative);
         } else {
-          // No locations found
+          // No valid locations found
+          console.error("No valid locations found in response:", data);
           setSelectedLocation(null);
+          setSelectedZipCode('');
         }
       } else {
         // API error
+        console.error("API error:", response.status, response.statusText);
         setSelectedLocation(null);
+        setSelectedZipCode('');
       }
     } catch (error) {
       console.error("Error fetching location data by city/state:", error);
       setSelectedLocation(null);
+      setSelectedZipCode('');
     } finally {
       setFetchingLocation(false);
     }
@@ -1873,7 +1951,12 @@ const Pathways = ({
                       <span className="material-icons text-sm mr-1">sports_esports</span>
                       Play Game Again
                     </Button>
-                    <Button onClick={handleNext}>Continue to Pathways</Button>
+                    <Button 
+                      className="bg-green-500 hover:bg-green-600"
+                      onClick={handleNext}
+                    >
+                      Next: Where do you want to live?
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -2156,9 +2239,12 @@ const Pathways = ({
                         {/* Location search type toggle */}
                         <div className="flex gap-2 mb-4">
                           <Button 
-                            variant={searchByZip ? "default" : "outline"}
-                            className={`flex-1 ${searchByZip ? "bg-primary" : ""}`}
-                            onClick={() => setSearchByZip(true)}
+                            variant={searchByZip && !showRecommendations ? "default" : "outline"}
+                            className={`flex-1 ${searchByZip && !showRecommendations ? "bg-primary" : ""}`}
+                            onClick={() => {
+                              setSearchByZip(true);
+                              setShowRecommendations(false);
+                            }}
                           >
                             <span className="flex items-center gap-1">
                               <span className="material-icons text-sm">pin_drop</span>
@@ -2166,18 +2252,134 @@ const Pathways = ({
                             </span>
                           </Button>
                           <Button 
-                            variant={!searchByZip ? "default" : "outline"} 
-                            className={`flex-1 ${!searchByZip ? "bg-primary" : ""}`}
-                            onClick={() => setSearchByZip(false)}
+                            variant={!searchByZip && !showRecommendations ? "default" : "outline"} 
+                            className={`flex-1 ${!searchByZip && !showRecommendations ? "bg-primary" : ""}`}
+                            onClick={() => {
+                              setSearchByZip(false);
+                              setShowRecommendations(false);
+                            }}
                           >
                             <span className="flex items-center gap-1">
                               <span className="material-icons text-sm">location_city</span>
                               Search by City
                             </span>
                           </Button>
+                          <Button 
+                            variant={showRecommendations ? "default" : "outline"}
+                            className={`flex-1 ${showRecommendations ? "bg-primary" : ""}`}
+                            onClick={() => {
+                              setShowRecommendations(true);
+                            }}
+                          >
+                            <span className="flex items-center gap-1">
+                              <span className="material-icons text-sm">lightbulb</span>
+                              Help me with ideas
+                            </span>
+                          </Button>
                         </div>
                         
-                        {searchByZip ? (
+                        {showRecommendations ? (
+                          <div className="mb-6">
+                            <h4 className="text-lg font-medium mb-4">Popular Location Categories</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Tech Hubs */}
+                              <Button
+                                variant="outline"
+                                className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                              >
+                                <div className="w-full">
+                                  <span className="flex items-center gap-2 mb-3 font-medium">
+                                    <span className="material-icons">computer</span>
+                                    <span className="text-base">Tech Hubs</span>
+                                  </span>
+                                  <p className="text-sm text-gray-600 line-clamp-3">
+                                    Cities with thriving tech scenes like San Francisco, Seattle, and Austin
+                                  </p>
+                                </div>
+                              </Button>
+                              
+                              {/* Urban Culture */}
+                              <Button
+                                variant="outline"
+                                className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                              >
+                                <div className="w-full">
+                                  <span className="flex items-center gap-2 mb-3 font-medium">
+                                    <span className="material-icons">diversity_3</span>
+                                    <span className="text-base">Urban Culture & Arts</span>
+                                  </span>
+                                  <p className="text-sm text-gray-600 line-clamp-3">
+                                    Cities known for arts, music, and diverse culture like New York, LA, and Chicago
+                                  </p>
+                                </div>
+                              </Button>
+                              
+                              {/* Foodie Paradise */}
+                              <Button
+                                variant="outline"
+                                className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                              >
+                                <div className="w-full">
+                                  <span className="flex items-center gap-2 mb-3 font-medium">
+                                    <span className="material-icons">restaurant</span>
+                                    <span className="text-base">Foodie Paradise</span>
+                                  </span>
+                                  <p className="text-sm text-gray-600 line-clamp-3">
+                                    Cities famous for cuisine like New Orleans, Portland, and Charleston
+                                  </p>
+                                </div>
+                              </Button>
+                              
+                              {/* Outdoor Adventure */}
+                              <Button
+                                variant="outline"
+                                className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                              >
+                                <div className="w-full">
+                                  <span className="flex items-center gap-2 mb-3 font-medium">
+                                    <span className="material-icons">landscape</span>
+                                    <span className="text-base">Outdoor Adventure</span>
+                                  </span>
+                                  <p className="text-sm text-gray-600 line-clamp-3">
+                                    Cities near nature like Denver, Portland, and Salt Lake City
+                                  </p>
+                                </div>
+                              </Button>
+                              
+                              {/* Career Growth */}
+                              <Button
+                                variant="outline"
+                                className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                              >
+                                <div className="w-full">
+                                  <span className="flex items-center gap-2 mb-3 font-medium">
+                                    <span className="material-icons">trending_up</span>
+                                    <span className="text-base">Career Growth</span>
+                                  </span>
+                                  <p className="text-sm text-gray-600 line-clamp-3">
+                                    Cities with strong job markets and career opportunities
+                                  </p>
+                                </div>
+                              </Button>
+                              
+                              {/* College Towns */}
+                              <Button
+                                variant="outline"
+                                className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                              >
+                                <div className="w-full">
+                                  <span className="flex items-center gap-2 mb-3 font-medium">
+                                    <span className="material-icons">school</span>
+                                    <span className="text-base">College Towns</span>
+                                  </span>
+                                  <p className="text-sm text-gray-600 line-clamp-3">
+                                    Cities with great university culture like Boston, Ann Arbor, and Berkeley
+                                  </p>
+                                </div>
+                              </Button>
+                            </div>
+                          </div>
+                        ) : searchByZip ? (
                           <div className="mb-3">
                             <label htmlFor="location-zip-job" className="block text-sm font-medium mb-2">Zip Code</label>
                             <div className="flex gap-2">
@@ -4358,7 +4560,7 @@ const Pathways = ({
                       </div>
                       
                       <h4 className="text-md font-medium mb-4">
-                        {careerSearchQuery.length > 2 ? 'Search Results:' : 'Available Career Options:'}
+                        {careerSearchQuery.length > 2 ? 'Search Results:' : 'Suggested Career Options:'}
                       </h4>
                       
                       {/* CAREER SEARCH SECTION - This is where we need to match the Go To Work pathway exactly */}
@@ -4528,57 +4730,16 @@ const Pathways = ({
                       
                       {/* Save to Profile section */}
                       {selectedProfession && (
-                        <div className="mb-6 p-4 border border-green-100 bg-green-50 rounded-lg">
-                          <div className="flex items-start gap-3">
-                            <div className="mt-1 text-green-600">
-                              <span className="material-icons">bookmark</span>
-                            </div>
-                            <div>
-                              <h4 className="text-md font-medium text-green-700 mb-1">Save Your Pathway</h4>
-                              <p className="text-sm text-green-600 mb-3">
-                                Save this pathway to your profile for future reference and easy comparison.
-                              </p>
-                              <div className="flex gap-2">
-                                <Button 
-                                  className="bg-green-600 hover:bg-green-700"
-                                  onClick={() => {
-                                    // In a real implementation, this would call an API to save to user profile
-                                    // For now, we'll just show a success message using localStorage
-                                    localStorage.setItem('savedPathway', JSON.stringify({
-                                      educationType,
-                                      school: specificSchool || null,
-                                      transferOption: educationType === '2year' ? transferOption : null,
-                                      transferCollege: (educationType === '2year' && transferOption === 'yes') ? transferCollege : null,
-                                      fieldOfStudy: selectedFieldOfStudy,
-                                      transferFieldOfStudy: (educationType === '2year' && transferOption === 'yes') ? transferFieldOfStudy : null,
-                                      profession: selectedProfession,
-                                      narrative: userJourney
-                                    }));
-                                    
-                                    // Update UI to show it was saved
-                                    alert("Your pathway has been saved to your profile!");
-                                  }}
-                                >
-                                  <span className="material-icons text-sm mr-1">bookmark_add</span>
-                                  Save to Profile
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="flex justify-between mt-6">
-                        <Button variant="outline" onClick={handleBack}>Back</Button>
-                        {selectedProfession && (
+                        <div className="flex justify-between mt-6">
+                          <Button variant="outline" onClick={handleBack}>Back</Button>
                           <Button 
                             className="bg-green-500 hover:bg-green-600"
                             onClick={handleNext}
                           >
-                            Next: Choose Location
+                            Next: Where do you want to live?
                           </Button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </CardContent>
@@ -4614,9 +4775,12 @@ const Pathways = ({
                     
                     <div className="flex gap-2 mb-4">
                       <Button 
-                        variant={searchByZip ? "default" : "outline"}
-                        className={`flex-1 ${searchByZip ? "bg-primary" : ""}`}
-                        onClick={() => setSearchByZip(true)}
+                        variant={searchByZip && !showRecommendations ? "default" : "outline"}
+                        className={`flex-1 ${searchByZip && !showRecommendations ? "bg-primary" : ""}`}
+                        onClick={() => {
+                          setSearchByZip(true);
+                          setShowRecommendations(false);
+                        }}
                       >
                         <span className="flex items-center gap-1">
                           <span className="material-icons text-sm">pin_drop</span>
@@ -4624,19 +4788,135 @@ const Pathways = ({
                         </span>
                       </Button>
                       <Button 
-                        variant={!searchByZip ? "default" : "outline"} 
-                        className={`flex-1 ${!searchByZip ? "bg-primary" : ""}`}
-                        onClick={() => setSearchByZip(false)}
+                        variant={!searchByZip && !showRecommendations ? "default" : "outline"} 
+                        className={`flex-1 ${!searchByZip && !showRecommendations ? "bg-primary" : ""}`}
+                        onClick={() => {
+                          setSearchByZip(false);
+                          setShowRecommendations(false);
+                        }}
                       >
                         <span className="flex items-center gap-1">
                           <span className="material-icons text-sm">location_city</span>
                           Search by City
                         </span>
                       </Button>
+                      <Button 
+                        variant={showRecommendations ? "default" : "outline"}
+                        className={`flex-1 ${showRecommendations ? "bg-primary" : ""}`}
+                        onClick={() => {
+                          setShowRecommendations(true);
+                        }}
+                      >
+                        <span className="flex items-center gap-1">
+                          <span className="material-icons text-sm">lightbulb</span>
+                          Help me with ideas
+                        </span>
+                      </Button>
                     </div>
                     
-                    {searchByZip ? (
+                    {showRecommendations ? (
                       <div className="mb-6">
+                        <h4 className="text-lg font-medium mb-4">Popular Location Categories</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Tech Hubs */}
+                          <Button
+                            variant="outline"
+                            className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                          >
+                            <div className="w-full">
+                              <span className="flex items-center gap-2 mb-3 font-medium">
+                                <span className="material-icons">computer</span>
+                                <span className="text-base">Tech Hubs</span>
+                              </span>
+                              <p className="text-sm text-gray-600 line-clamp-3">
+                                Cities with thriving tech scenes like San Francisco, Seattle, and Austin
+                              </p>
+                            </div>
+                          </Button>
+                          
+                          {/* Urban Culture */}
+                          <Button
+                            variant="outline"
+                            className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                          >
+                            <div className="w-full">
+                              <span className="flex items-center gap-2 mb-3 font-medium">
+                                <span className="material-icons">diversity_3</span>
+                                <span className="text-base">Urban Culture & Arts</span>
+                              </span>
+                              <p className="text-sm text-gray-600 line-clamp-3">
+                                Cities known for arts, music, and diverse culture like New York, LA, and Chicago
+                              </p>
+                            </div>
+                          </Button>
+                          
+                          {/* Foodie Paradise */}
+                          <Button
+                            variant="outline"
+                            className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                          >
+                            <div className="w-full">
+                              <span className="flex items-center gap-2 mb-3 font-medium">
+                                <span className="material-icons">restaurant</span>
+                                <span className="text-base">Foodie Paradise</span>
+                              </span>
+                              <p className="text-sm text-gray-600 line-clamp-3">
+                                Cities famous for cuisine like New Orleans, Portland, and Charleston
+                              </p>
+                            </div>
+                          </Button>
+                          
+                          {/* Outdoor Adventure */}
+                          <Button
+                            variant="outline"
+                            className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                          >
+                            <div className="w-full">
+                              <span className="flex items-center gap-2 mb-3 font-medium">
+                                <span className="material-icons">landscape</span>
+                                <span className="text-base">Outdoor Adventure</span>
+                              </span>
+                              <p className="text-sm text-gray-600 line-clamp-3">
+                                Cities near nature like Denver, Portland, and Salt Lake City
+                              </p>
+                            </div>
+                          </Button>
+                          
+                          {/* Career Growth */}
+                          <Button
+                            variant="outline"
+                            className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                          >
+                            <div className="w-full">
+                              <span className="flex items-center gap-2 mb-3 font-medium">
+                                <span className="material-icons">trending_up</span>
+                                <span className="text-base">Career Growth</span>
+                              </span>
+                              <p className="text-sm text-gray-600 line-clamp-3">
+                                Cities with strong job markets and career opportunities
+                              </p>
+                            </div>
+                          </Button>
+                          
+                          {/* College Towns */}
+                          <Button
+                            variant="outline"
+                            className="h-auto min-h-[120px] p-5 w-full flex flex-col items-start text-left hover:bg-gray-50"
+                          >
+                            <div className="w-full">
+                              <span className="flex items-center gap-2 mb-3 font-medium">
+                                <span className="material-icons">school</span>
+                                <span className="text-base">College Towns</span>
+                              </span>
+                              <p className="text-sm text-gray-600 line-clamp-3">
+                                Cities with great university culture like Boston, Ann Arbor, and Berkeley
+                              </p>
+                            </div>
+                          </Button>
+                        </div>
+                      </div>
+                    ) : searchByZip ? (
+                      <div className="mb-3">
                         <label htmlFor="location-zip" className="block text-sm font-medium mb-2">Zip Code</label>
                         <div className="flex gap-2">
                           <Input
@@ -4672,7 +4952,7 @@ const Pathways = ({
                         </p>
                       </div>
                     ) : (
-                      <div className="mb-6">
+                      <div className="mb-3">
                         <label htmlFor="location-city" className="block text-sm font-medium mb-2">City and State</label>
                         <div className="flex gap-2">
                           <Input

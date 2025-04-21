@@ -443,11 +443,20 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
             layout
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: 1,
+              transition: {
+                duration: 0.5,
+                ease: [0.4, 0, 0.2, 1]
+              }
+            }}
             transition={{
               layout: {
-                type: "tween",
-                duration: 0.3,
-                ease: "easeOut"
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+                staggerChildren: 0.1
               }
             }}
             style={{
@@ -456,15 +465,38 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             }}
           >
             {sortedScenarios.map((scenario, index) => (
-              <SafeScenarioCard
+              <motion.div
                 key={`${scenario.id}-${ageSliderValue}-${index}`}
-                scenario={scenario}
-                index={index}
-                onViewDetails={handleViewDetails}
-                onEdit={handleEditScenario}
-                ageSliderActive={useAgeSlider}
-                ageSliderValue={ageSliderValue}
-              />
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  opacity: 1,
+                  transition: {
+                    duration: 0.5,
+                    delay: index * 0.1,
+                    ease: [0.4, 0, 0.2, 1]
+                  }
+                }}
+                exit={{ 
+                  opacity: 0,
+                  transition: {
+                    duration: 0.3,
+                    ease: [0.4, 0, 0.2, 1]
+                  }
+                }}
+                style={{
+                  position: "relative"
+                }}
+              >
+                <SafeScenarioCard
+                  scenario={scenario}
+                  index={index}
+                  onViewDetails={handleViewDetails}
+                  onEdit={handleEditScenario}
+                  ageSliderActive={useAgeSlider}
+                  ageSliderValue={ageSliderValue}
+                />
+              </motion.div>
             ))}
           </motion.div>
         </div>

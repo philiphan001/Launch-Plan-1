@@ -232,29 +232,42 @@ const ScenarioCard = ({
   return (
     <motion.div
       key={`scenario-${scenario.id}-${index}`}
-      layout="position"
-      layoutId={`scenario-${scenario.id}`}
-      initial={{ opacity: 1 }}
+      layout
+      initial={{ 
+        opacity: 0,
+        scale: 0.9,
+        rotate: -180
+      }}
       animate={{ 
         opacity: 1,
+        scale: 1,
+        rotate: 0,
         transition: {
-          duration: 0.3,
-          ease: "easeOut"
+          duration: 0.6,
+          ease: [0.4, 0, 0.2, 1],
+          rotate: {
+            type: "spring",
+            stiffness: 200,
+            damping: 15
+          }
+        }
+      }}
+      exit={{ 
+        opacity: 0,
+        scale: 0.9,
+        rotate: 180,
+        transition: {
+          duration: 0.4,
+          ease: [0.4, 0, 0.2, 1]
         }
       }}
       whileHover={{ 
         scale: 1.02,
+        rotate: 2,
         transition: { 
           duration: 0.2,
           ease: "easeOut" 
         } 
-      }}
-      transition={{
-        layout: {
-          type: "tween",
-          duration: 0.3,
-          ease: "easeOut"
-        }
       }}
       style={{
         position: "relative",
@@ -268,9 +281,22 @@ const ScenarioCard = ({
         className={`overflow-hidden border ${colorClass} h-full transition-all duration-300 relative`}
       >
         {ageSliderActive && (
-          <div className="absolute top-0 right-0 bg-blue-600 text-white h-8 w-8 flex items-center justify-center rounded-bl-md z-10 font-bold shadow-md">
+          <motion.div 
+            className="absolute top-0 right-0 bg-blue-600 text-white h-8 w-8 flex items-center justify-center rounded-bl-md z-10 font-bold shadow-md"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ 
+              scale: 1, 
+              rotate: 0,
+              transition: {
+                type: "spring",
+                stiffness: 400,
+                damping: 20,
+                delay: 0.2
+              }
+            }}
+          >
             #{index + 1}
-          </div>
+          </motion.div>
         )}
         <CardHeader className="bg-white pb-2">
           <div className="flex justify-between items-start">
