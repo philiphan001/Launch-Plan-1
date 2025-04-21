@@ -82,6 +82,7 @@ interface Milestone {
   yearsAway: number;
   // Marriage specific fields
   spouseOccupation?: string;
+  spouseBaseIncome?: number;
   spouseIncome?: number;
   spouseAssets?: number;
   spouseLiabilities?: number;
@@ -357,6 +358,17 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
     },
   });
 
+  // Add location cost data query
+  const { data: locationCostData } = useQuery({
+    queryKey: ['/api/location-cost-of-living/current'],
+    queryFn: async () => {
+      const response = await fetch('/api/location-cost-of-living/current');
+      if (!response.ok) throw new Error('Failed to fetch location data');
+      return response.json();
+    },
+    enabled: !!userId
+  });
+
   const openMilestoneDialog = (type: MilestoneType, milestoneToEdit?: Milestone) => {
     setCurrentMilestone(type);
     setDialogOpen(true);
@@ -502,53 +514,52 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
       if (!title) title = "Get Married";
       type = "marriage";
       
-      // Use a more defensive approach to ensure spouse income is a valid number
-      // This protects against any potential type issues
-      let spouseIncomeValue;
+      let baseIncome = 50000;  // Default value
+      let adjustedIncome = 50000;  // Default value
       
       try {
-        // First try a direct type check
-        if (typeof spouseIncome === 'number' && !isNaN(spouseIncome)) {
-          spouseIncomeValue = spouseIncome;
-        } 
-        // Then try to convert from string
-        else if (typeof spouseIncome === 'string') {
-          spouseIncomeValue = parseInt(spouseIncome);
-          if (isNaN(spouseIncomeValue)) spouseIncomeValue = 50000;
-        }
-        // Fallback to default
-        else {
-          spouseIncomeValue = 50000;
-        }
+        // Ensure we have a valid number for base income
+        baseIncome = typeof spouseIncome === 'number' && !isNaN(spouseIncome) ? spouseIncome : 50000;
         
-        console.log("Final spouse income value being sent:", spouseIncomeValue);
+        // Get location adjustment factor with fallback
+        const locationFactor = locationCostData?.income_adjustment_factor || 1.0;
+        
+        // Calculate adjusted income
+        adjustedIncome = Math.round(baseIncome * locationFactor);
+        
+        console.log({
+          baseIncome,
+          locationFactor,
+          adjustedIncome,
+          locationData: locationCostData
+        });
+        
       } catch (error) {
         console.error("Error processing spouse income:", error);
-        spouseIncomeValue = 50000; // Safe fallback
+        baseIncome = 50000;
+        adjustedIncome = 50000;
       }
-      
-      // Create milestone data with guaranteed number types for numeric values
-      const milestoneData = {
-        userId: userId as number, // Type assertion based on early null check
+
+      const milestone = {
+        userId,
         type,
         title,
-        date,
+        date: String(new Date().getFullYear() + yearsAway),
         yearsAway,
-        spouseOccupation: spouseOccupation || "", // Empty string instead of null
-        spouseIncome: Number(spouseIncomeValue), // Force a number type
-        spouseAssets: Number(spouseAssets || 10000),
-        spouseLiabilities: Number(spouseLiabilities || 5000),
+        spouseOccupation,
+        spouseBaseIncome: baseIncome,  // Store original unadjusted income
+        spouseIncome: adjustedIncome,  // Store location-adjusted income
+        spouseAssets: Number(spouseAssets) || 10000,
+        spouseLiabilities: Number(spouseLiabilities) || 5000,
       };
-      
+
       if (isEditing && editingMilestoneId) {
-        // Update existing milestone
         updateMilestone.mutate({ 
           id: editingMilestoneId, 
-          data: milestoneData
+          data: milestone
         });
       } else {
-        // Create new milestone
-        createMilestone.mutate(milestoneData);
+        createMilestone.mutate(milestone);
       }
     } else if (currentMilestone === "home") {
       if (!title) title = "Buy a Home";
@@ -1230,9 +1241,13 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
                             <Input
                               type="number"
                               id="spouse-income"
-                              value={spouseIncome}
-                              onChange={(e) => setSpouseIncome(Number(e.target.value))}
+                              value={spouseIncome || 50000}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setSpouseIncome(value === '' ? 50000 : Number(value));
+                              }}
                               className="border-green-200 focus:ring-green-500"
+                              min="0"
                             />
                           </div>
                           <div className="text-xs text-gray-500 mt-1 italic">

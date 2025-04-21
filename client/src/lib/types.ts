@@ -233,3 +233,16 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+export interface LocationData {
+  zipCode: string;
+  city: string;
+  state: string;
+  costOfLivingIndex?: number;
+  incomeAdjustmentFactor?: number;
+}
+
+export interface UserLocations {
+  homeLocation: LocationData;
+  targetLocation: LocationData | null;  // null means same as homeLocation
+}

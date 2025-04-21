@@ -1185,6 +1185,44 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                       <p className="text-sm text-gray-600 font-medium pt-2 border-t border-gray-200 mt-2">
                         <span>Total Cost:</span> ${(selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}
                       </p>
+
+                      {/* Transfer Student Options */}
+                      <div className="space-y-4 mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label htmlFor="transfer-student">Transfer Student</Label>
+                            <p className="text-xs text-muted-foreground">Are you transferring from another institution?</p>
+                          </div>
+                          <Switch
+                            id="transfer-student"
+                            checked={isTransferStudent}
+                            onCheckedChange={setIsTransferStudent}
+                          />
+                        </div>
+
+                        {/* Years Completed Selector (only shown if transfer student) */}
+                        {isTransferStudent && (
+                          <div className="space-y-2">
+                            <Label htmlFor="years-completed">Years to Complete Degree</Label>
+                            <Select
+                              value={yearsCompleted.toString()}
+                              onValueChange={(value) => setYearsCompleted(parseInt(value))}
+                            >
+                              <SelectTrigger id="years-completed">
+                                <SelectValue placeholder="Select years needed" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1 Year</SelectItem>
+                                <SelectItem value="2">2 Years</SelectItem>
+                                <SelectItem value="3">3 Years</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">
+                              Select how many years you need to complete your degree
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

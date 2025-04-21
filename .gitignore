@@ -25,3 +25,7 @@ cookies.txt
 .vscode/
 *.swp
 *.swo
+
+# Python
+venv/
+*.pyc

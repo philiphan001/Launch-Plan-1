@@ -253,27 +253,26 @@ class FinancialCalculator:
         self.milestones.append(milestone)
     
     def calculate_projection(self) -> Dict[str, Any]:
-        """
-        Calculate financial projections.
-        
-        Returns:
-            Dictionary with projection results
-        """
-        # Arrays to store yearly values
-        ages = [self.start_age + i for i in range(self.years_to_project + 1)]
-        
-        # Main financial metrics
+        """Calculate the full financial projection based on all inputs."""
+        # Initialize yearly arrays
+        years = range(self.years_to_project + 1)  # +1 to include the starting year
+        ages = [self.start_age + year for year in years]
         net_worth = [0] * (self.years_to_project + 1)
+        income_yearly = [0] * (self.years_to_project + 1)
+        spouse_income_yearly = [0] * (self.years_to_project + 1)  # Add array for spouse income
+        expenses_yearly = [0] * (self.years_to_project + 1)
         assets_yearly = [0] * (self.years_to_project + 1)
         liabilities_yearly = [0] * (self.years_to_project + 1)
-        # Initialize an array to track all personal loans across years
-        all_personal_loans = [0] * (self.years_to_project + 1)
+        cash_flow_yearly = [0] * (self.years_to_project + 1)
+        savings_value_yearly = [0] * (self.years_to_project + 1)  # Initialize savings array
+        
+        # Initialize asset breakdown arrays
+        car_value_yearly = [0] * (self.years_to_project + 1)
+        home_value_yearly = [0] * (self.years_to_project + 1)
         
         # Debug helper - output to healthcare log file
         with open('healthcare_debug.log', 'a') as f:
             f.write(f"\nStarting calculate_projection method\n")
-        income_yearly = [0] * (self.years_to_project + 1)
-        spouse_income_yearly = [0] * (self.years_to_project + 1)  # Track spouse income separately
         total_income_yearly = [0] * (self.years_to_project + 1)  # Total income (personal + spouse)
         expenses_yearly = [0] * (self.years_to_project + 1)
         cash_flow_yearly = [0] * (self.years_to_project + 1)
@@ -1093,474 +1092,98 @@ class FinancialCalculator:
                             f.write(f"\nUpdating tax filing status to 'married' in year {milestone_year}\n")
                             f.write(f"This will affect tax calculations for this year and all future years\n")
                         
+                        # Initialize default values
+                        spouse_income = 50000
+                        spouse_assets = 10000
+                        spouse_liabilities = 5000
+                        wedding_cost = 10000
+                        
+                        # Ensure milestone_year is within bounds
+                        if milestone_year < 0:
+                            milestone_year = 0
+                        elif milestone_year >= len(savings_value_yearly):
+                            milestone_year = len(savings_value_yearly) - 1
+                        
+                        # Get current savings before any modifications
+                        current_savings = savings_value_yearly[milestone_year]
+                        
                         # Use safer conversion with better error handling for spouse data
                         try:
-                            # Get spouse income with extremely conservative handling
-                            # Simply use a hard-coded default value of 50000 for now
-                            # This is a temporary fix to get the system working
-                            spouse_income = 50000  # Safe default value
+                            # Get location adjustment factor with proper fallback
+                            location_factor = float(self.input_data.get('costOfLivingFactor', 1.0))
+                            if location_factor <= 0:
+                                location_factor = 1.0  # Ensure positive factor
                             
-                            # Log that we're using the safe default value
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"\nUSING SAFE DEFAULT SPOUSE INCOME: {spouse_income}\n")
-                                f.write(f"Original milestone data: {milestone}\n")
+                            # First try to get the base income and adjust it with current location factor
+                            spouse_base_income = milestone.get('spouseBaseIncome', milestone.get('spouse_base_income'))
+                            spouse_income = 0  # Default value
                             
-                            # Now try to use the value from the milestone, but wrap in
-                            # a completely separate try-except that won't affect execution flow
-                            try:
-                                # Extract value from either key name
-                                raw_value = milestone.get('spouse_income', milestone.get('spouseIncome'))
-                                
-                                # Log the raw value
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"Raw spouse income value: {raw_value}, type: {type(raw_value)}\n")
-                                
-                                # If we have a number, use it
-                                if isinstance(raw_value, (int, float)) and not isinstance(raw_value, bool):
-                                    spouse_income = int(raw_value)
-                                # If we have a string that could be a number
-                                elif isinstance(raw_value, str):
-                                    # Try to convert to a float first, then to an int
-                                    if raw_value.strip():
-                                        try:
-                                            spouse_income = int(float(raw_value))
-                                        except:
-                                            # Keep the default if conversion fails
-                                            pass
-                                
-                                # Log the final value we're using
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"Final spouse income value: {spouse_income}\n")
-                            except Exception as e:
-                                # Any error here doesn't affect the main code flow
-                                # as we already set a safe default
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"ERROR in spouse income processing: {str(e)}\n")
-                                    f.write(f"Using default spouse income: {spouse_income}\n")
-                            
-                            spouse_assets_value = milestone.get('spouse_assets', milestone.get('spouseAssets', 0)) 
-                            # Enhanced type conversion
-                            try:
-                                spouse_assets = int(float(spouse_assets_value)) if spouse_assets_value is not None else 0
-                            except (ValueError, TypeError):
-                                spouse_assets = 10000  # Default fallback
-                            
-                            spouse_liabilities_value = milestone.get('spouse_liabilities', milestone.get('spouseLiabilities', 0))
-                            # Enhanced type conversion
-                            try:
-                                spouse_liabilities = int(float(spouse_liabilities_value)) if spouse_liabilities_value is not None else 0
-                            except (ValueError, TypeError):
-                                spouse_liabilities = 5000  # Default fallback
-                            
-                            wedding_cost_value = milestone.get('wedding_cost', milestone.get('weddingCost', 10000))
-                            # Enhanced type conversion
-                            try:
-                                wedding_cost = int(float(wedding_cost_value)) if wedding_cost_value is not None else 10000
-                            except (ValueError, TypeError):
-                                wedding_cost = 10000  # Default fallback
-                            
-                            # Log spouse occupation data if present (for debugging only)
-                            spouse_occupation = milestone.get('spouse_occupation', milestone.get('spouseOccupation', ''))
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"\nSpouse milestone data - Income: ${spouse_income}, Assets: ${spouse_assets}, Liabilities: ${spouse_liabilities}\n")
-                                if spouse_occupation:
-                                    f.write(f"Spouse occupation: {spouse_occupation}\n")
-                        except (ValueError, TypeError) as e:
-                            # Log the error and use default values
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"\nERROR processing spouse data in marriage milestone: {str(e)}\n")
-                                f.write(f"Using default values instead\n")
-                            spouse_income = 50000  # Default fallback
-                            spouse_assets = 10000  # Default fallback
-                            spouse_liabilities = 5000  # Default fallback
-                            wedding_cost = 10000  # Default fallback
-                        
-                        # Apply the one-time expense (wedding cost) to the milestone year
-                        # This is consistent with our handling of down payments for home and car
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"\nApplying one-time wedding cost of ${wedding_cost} in year {milestone_year}\n")
-                            f.write(f"Assets before wedding cost: ${assets_yearly[milestone_year]}\n")
-                        
-                        # Reduce assets by the wedding cost (for milestone year only)
-                        assets_yearly[milestone_year] -= wedding_cost
-                        
-                        # CRITICAL FIX: Rather than just reducing savings for the milestone year,
-                        # allow the savings value to go negative to properly track the impact
-                        current_savings = savings_value_yearly[milestone_year]
-                        savings_value_yearly[milestone_year] = current_savings - wedding_cost
-                        
-                        # Also reduce cash flow by the wedding cost for this year
-                        cash_flow_yearly[milestone_year] -= wedding_cost
-                        
-                        # IMPORTANT FIX: Ensure tax expenses are properly included in cash flow for all years
-                        # This ensures that years before the marriage milestone have correct cash flow
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"\nFixing pre-marriage years' cash flow calculations to include taxes:\n")
-                        
-                        for pre_year in range(1, milestone_year):
-                            # CRITICAL FIX: Update the expenses array to include taxes for pre-marriage years
-                            # This ensures that tax expenses are properly included in the total expenses for cash flow calculations
-                            old_expenses = expenses_yearly[pre_year]
-                            
-                            # Make sure taxes are included in the expenses calculation
-                            # This mirrors the expenses calculation logic used elsewhere in the code
-                            expenses_yearly[pre_year] = (
-                                housing_expenses_yearly[pre_year] +
-                                transportation_expenses_yearly[pre_year] +
-                                food_expenses_yearly[pre_year] +
-                                healthcare_expenses_yearly[pre_year] +
-                                personal_insurance_expenses_yearly[pre_year] +
-                                apparel_expenses_yearly[pre_year] +
-                                services_expenses_yearly[pre_year] +
-                                entertainment_expenses_yearly[pre_year] +
-                                other_expenses_yearly[pre_year] +
-                                education_expenses_yearly[pre_year] +
-                                child_expenses_yearly[pre_year] +
-                                debt_expenses_yearly[pre_year] +
-                                discretionary_expenses_yearly[pre_year] +
-                                tax_expenses_yearly[pre_year] +
-                                retirement_contribution_yearly[pre_year]
-                            )
-                            
-                            # Recalculate cash flow with updated expenses that include taxes
-                            old_cash_flow = cash_flow_yearly[pre_year]
-                            cash_flow_yearly[pre_year] = total_income_yearly[pre_year] - expenses_yearly[pre_year]
-                            
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Year {pre_year}: Cash flow updated from ${old_cash_flow} to ${cash_flow_yearly[pre_year]}\n")
-                                f.write(f"  Income: ${total_income_yearly[pre_year]}, Expenses updated from ${old_expenses} to ${expenses_yearly[pre_year]}, Taxes: ${tax_expenses_yearly[pre_year]}\n")
-                        
-                        # CRITICAL FIX: Update the investment asset value in our asset collection
-                        # This ensures the reduction in savings persists to future years
-                        savings_asset = None
-                        
-                        # Find the first investment asset (savings)
-                        for asset in self.assets:
-                            if isinstance(asset, Investment) and 'savings' in asset.name.lower():
-                                savings_asset = asset
-                                break
-                        
-                        # If we found a savings asset, permanently reduce its value
-                        if savings_asset:
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Found savings asset: {savings_asset.name}\n")
-                                f.write(f"Original value at year {milestone_year}: ${savings_asset.get_value(milestone_year)}\n")
-                                
-                                # Debug - show current projected values for all years
-                                f.write("\nSavings values before wedding expense:\n")
-                                f.write("Savings_value_yearly array values:\n")
-                                for yr in range(milestone_year, self.years_to_project + 1):
-                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
-                                
-                                f.write("\nSavings asset's calculated values:\n")
-                                for yr in range(milestone_year, self.years_to_project + 1):
-                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
-                            
-                            # Get current value and reduce by wedding cost
-                            current_value = savings_asset.get_value(milestone_year)
-                            new_value = max(0, current_value - wedding_cost)
-                            
-                            # Update the value for this year and all future years will be based on this reduced amount
-                            savings_asset.update_value(milestone_year, new_value)
-                            
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Updated savings asset value: ${new_value}\n")
-                                f.write(f"New value verification: ${savings_asset.get_value(milestone_year)}\n")
-                                
-                                # Debug - show updated projected values for all years
-                                f.write("\nSavings values after wedding expense:\n")
-                                f.write("Updated savings_value_yearly array values:\n")
-                                for yr in range(milestone_year, self.years_to_project + 1):
-                                    f.write(f"Year {yr}: ${savings_value_yearly[yr]}\n")
-                                
-                                f.write("\nUpdated savings asset's calculated values:\n")
-                                for yr in range(milestone_year, self.years_to_project + 1):
-                                    f.write(f"Year {yr}: ${savings_asset.get_value(yr)}\n")
-                        else:
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"WARNING: Could not find a savings asset to update for wedding cost!\n")
-                        
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"Assets after wedding cost: ${assets_yearly[milestone_year]}\n")
-                            f.write(f"Cash flow reduced by wedding cost: ${cash_flow_yearly[milestone_year]}\n")
-                        
-                        # Add spouse income to our income projection but store separately
-                        # Enhanced debugging for spouse income issue
-                        with open('healthcare_debug.log', 'a') as f:
-                            f.write(f"\n==== SPOUSE INCOME PROCESSING ====\n")
-                            f.write(f"Milestone year: {milestone_year}\n")
-                            f.write(f"Raw spouse income value: {spouse_income}\n")
-                            f.write(f"Type of spouse income: {type(spouse_income)}\n")
-                            
-                        # Use more defensive coding to prevent array access errors
-                        # Ensure milestone_year is within array bounds
-                        if milestone_year < 0 or milestone_year > self.years_to_project:
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"ERROR: Milestone year {milestone_year} is out of bounds (0-{self.years_to_project})\n")
-                                f.write(f"Adjusting milestone year to be within bounds\n")
-                            milestone_year = max(0, min(milestone_year, self.years_to_project))
-                        
-                        # Better safe than sorry: convert spouse_income to int again just before using it
-                        try:
-                            # Ensure spouse_income is a valid number before calculations
-                            spouse_income_safe = int(float(spouse_income)) if spouse_income is not None else 0
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Safe spouse income after conversion: {spouse_income_safe}\n")
-                        except (ValueError, TypeError) as e:
-                            # Log error and use default
-                            with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"Error converting spouse income for yearly calculation: {e}\n")
-                                f.write(f"Using default value of 50000\n")
-                            spouse_income_safe = 50000  # Default fallback
-                        
-                        for i in range(milestone_year, self.years_to_project + 1):
-                            try:
-                                # Apply annual growth to spouse income (using same rate as primary income)
-                                growth_factor = 1.03 ** (i - milestone_year)
-                                spouse_income_for_year = int(spouse_income_safe * growth_factor)
-                                
-                                # Store spouse income separately for visualization with defensive checks
+                            if spouse_base_income is not None:
                                 try:
-                                    spouse_income_yearly[i] = spouse_income_for_year
-                                    
-                                    # Log for debugging
-                                    with open('healthcare_debug.log', 'a') as log_file:
-                                        log_file.write(f"Setting spouse_income_yearly[{i}] = {spouse_income_for_year}\n")
-                                        
-                                except Exception as e:
-                                    with open('healthcare_debug.log', 'a') as log_file:
-                                        log_file.write(f"Error setting spouse_income_yearly[{i}]: {str(e)}\n")
-                                
-                                # To keep cash flow and net worth calculations accurate, update total income
-                                # This is separate from the visualization data
-                                try:
-                                    # Get both incomes with fallbacks
-                                    primary_income = income_yearly[i] if i < len(income_yearly) else 0
-                                    secondary_income = spouse_income_yearly[i] if i < len(spouse_income_yearly) else 0
-                                    
-                                    # Calculate the total income
-                                    total = primary_income + secondary_income
-                                    
-                                    # Update the array with bounds checking
-                                    if i < len(total_income_yearly):
-                                        old_total = total_income_yearly[i]
-                                        total_income_yearly[i] = total
-                                        
-                                        with open('healthcare_debug.log', 'a') as log_file:
-                                            log_file.write(f"Year {i}: Updated total_income_yearly from {old_total} to {total} " +
-                                                        f"(primary: {primary_income} + spouse: {secondary_income})\n")
-                                    else:
-                                        with open('healthcare_debug.log', 'a') as log_file:
-                                            log_file.write(f"Warning: Index {i} out of range for total_income_yearly (length: {len(total_income_yearly)})\n")
-                                except Exception as e:
-                                    with open('healthcare_debug.log', 'a') as log_file:
-                                        log_file.write(f"Error updating total_income_yearly[{i}]: {str(e)}\n")
-                                        log_file.write(f"Using fallback method for total_income calculation\n")
-                                    
-                                    # Fallback calculation if anything goes wrong
-                                    if i < len(total_income_yearly) and i < len(income_yearly):
-                                        total_income_yearly[i] = income_yearly[i] + spouse_income_for_year
-                                
-                                # Log the income split for debugging
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"Year {i} personal income: ${income_yearly[i]}, spouse income: ${spouse_income_yearly[i]}, total: ${total_income_yearly[i]}\n")
-                            except Exception as e:
-                                # Catch any other unexpected errors in this loop
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"ERROR processing spouse income for year {i}: {str(e)}\n")
-                                    f.write(f"Setting safe default values and continuing\n")
-                                # Set safe defaults and continue
-                                spouse_income_yearly[i] = 50000
-                                total_income_yearly[i] = income_yearly[i] + spouse_income_yearly[i]
-                            
-                            # Recalculate taxes using the combined income and married filing status
-                            # This ensures that taxes are calculated correctly after marriage
-                            if i >= milestone_year:
-                                combined_taxes = self._calculate_taxes(total_income_yearly[i], i, "married")
-                                
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"Recalculating taxes for year {i} with marriage milestone effects\n")
-                                    f.write(f"  Using combined income: ${total_income_yearly[i]}\n")
-                                    f.write(f"  Using filing status: married\n")
-                                    f.write(f"  Previous tax amounts: FICA=${payroll_tax_expenses_yearly[i]}, Federal=${federal_tax_expenses_yearly[i]}, State=${state_tax_expenses_yearly[i]}\n")
-                                
-                                # Update the tax amounts with the recalculated values
-                                payroll_tax_expenses_yearly[i] = int(combined_taxes["fica_tax"])
-                                federal_tax_expenses_yearly[i] = int(combined_taxes["federal_tax"])
-                                state_tax_expenses_yearly[i] = int(combined_taxes["state_tax"])
-                                
-                                # Update the combined tax amount for visualization
-                                total_recalculated_taxes = (payroll_tax_expenses_yearly[i] + 
-                                                           federal_tax_expenses_yearly[i] + 
-                                                           state_tax_expenses_yearly[i])
-                                tax_expenses_yearly[i] = total_recalculated_taxes
-                                
-                                # Update the tax rates for visualization
-                                effective_tax_rate_yearly[i] = float(combined_taxes["effective_tax_rate"])
-                                marginal_tax_rate_yearly[i] = float(combined_taxes["federal_marginal_rate"])
-                                
-                                with open('healthcare_debug.log', 'a') as f:
-                                    f.write(f"  Updated tax amounts: FICA=${payroll_tax_expenses_yearly[i]}, Federal=${federal_tax_expenses_yearly[i]}, State=${state_tax_expenses_yearly[i]}\n")
-                                    f.write(f"  Updated effective tax rate: {effective_tax_rate_yearly[i] * 100:.2f}%\n")
-                                    f.write(f"  Updated marginal tax rate: {marginal_tax_rate_yearly[i] * 100:.2f}%\n")
-                        
-                        # Add spouse assets and liabilities to net worth
-                        for i in range(milestone_year, self.years_to_project + 1):
-                            # Add spouse assets safely
-                            assets_yearly[i] += int(spouse_assets)
-                            
-                            # Add spouse liabilities with safety checks to avoid calculation errors
-                            reduced_liability = 0  # Default to zero in case of errors
-                            
-                            # Only calculate reduction if spouse has liabilities
-                            if spouse_liabilities > 0:
-                                try:
-                                    # Calculate liability reduction factor (0.1 = 10% reduction per year)
-                                    reduction_factor = max(0, 1 - (i - milestone_year) * 0.1)
-                                    reduced_liability = int(spouse_liabilities * reduction_factor)
-                                    
-                                    # Debug logging
+                                    if isinstance(spouse_base_income, (int, float)) and not isinstance(spouse_base_income, bool):
+                                        spouse_income = int(spouse_base_income * location_factor)
+                                    elif isinstance(spouse_base_income, str) and spouse_base_income.strip():
+                                        spouse_income = int(float(spouse_base_income) * location_factor)
+                                except (ValueError, TypeError) as e:
                                     with open('healthcare_debug.log', 'a') as f:
-                                        f.write(f"Year {i} spouse liability: ${spouse_liabilities} * {reduction_factor} = ${reduced_liability}\n")
-                                        
-                                except Exception as e:
-                                    # Log any errors that occur during calculation
+                                        f.write(f"Error converting base income: {str(e)}\n")
+                                        f.write(f"Using default spouse income: ${spouse_income}\n")
+                            else:
+                                spouse_income_raw = milestone.get('spouseIncome', milestone.get('spouse_income'))
+                                try:
+                                    if isinstance(spouse_income_raw, (int, float)) and not isinstance(spouse_income_raw, bool):
+                                        spouse_income = int(spouse_income_raw)
+                                    elif isinstance(spouse_income_raw, str) and spouse_income_raw.strip():
+                                        spouse_income = int(float(spouse_income_raw))
+                                except (ValueError, TypeError) as e:
                                     with open('healthcare_debug.log', 'a') as f:
-                                        f.write(f"ERROR calculating spouse liability for year {i}: {str(e)}\n")
-                                        f.write(f"Using zero instead of calculated value\n")
+                                        f.write(f"Error converting adjusted income: {str(e)}\n")
+                                        f.write(f"Using default spouse income: ${spouse_income}\n")
                             
-                            # Safely add the reduced liability to the yearly total
-                            liabilities_yearly[i] += reduced_liability
+                            # Update spouse income array for all future years
+                            for i in range(milestone_year, len(spouse_income_yearly)):
+                                spouse_income_yearly[i] = int(spouse_income * (1.03 ** (i - milestone_year)))
                             
-                            # Calculate net worth with updated assets and liabilities
-                            # FIXED: We don't need to add all_personal_loans[i] since they're already in liabilities_yearly
-                            # This was causing double-counting of personal loans
-                            net_worth[i] = assets_yearly[i] - liabilities_yearly[i]
-                            
-                            # Add extra debug to help understand net worth calculation
+                            # Log the income calculation process
                             with open('healthcare_debug.log', 'a') as f:
-                                f.write(f"\n[MILESTONE NET WORTH CALCULATION] Year {i}:\n")
-                                f.write(f"  Assets: ${assets_yearly[i]}\n")
-                                f.write(f"  Liabilities: ${liabilities_yearly[i]}\n")
-                                f.write(f"  Personal Loans tracked: ${all_personal_loans[i]}\n")
-                                f.write(f"  Net Worth: ${net_worth[i]}\n")
+                                f.write(f"\nSpouse income calculation:\n")
+                                f.write(f"Base income: {spouse_base_income}\n")
+                                f.write(f"Location factor: {location_factor}\n")
+                                f.write(f"Final spouse income: {spouse_income}\n")
+                                f.write(f"Spouse income array values: {spouse_income_yearly[milestone_year:milestone_year+3]}\n")
                             
-                            # Increase general expenses due to marriage
-                            # Apply to expenses starting from the marriage year to align with income changes
-                            # This ensures both income and expense changes happen simultaneously
-                            if i >= milestone_year:
-                                # Find non-housing, non-transportation expenses and increase them by specified percentage
-                                for expense in self.expenditures:
-                                    if not isinstance(expense, Housing) and not isinstance(expense, Transportation):
-                                        # Increase general expenses according to marriage assumption
-                                        expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 + MARRIAGE_EXPENSE_INCREASE)
+                            # Apply wedding cost to milestone year
+                            if milestone_year < len(cash_flow_yearly):
+                                cash_flow_yearly[milestone_year] -= wedding_cost
                                 
-                                # Update the expense amounts for each expense but don't recategorize
-                                # Expense categorization is already done outside of the milestone processing
-                                for expense in self.expenditures:
-                                    if not isinstance(expense, Housing) and not isinstance(expense, Transportation):
-                                        # Increase general expenses according to marriage assumption
-                                        expense.expense_history[i] = expense.expense_history.get(i, expense.annual_amount) * (1 + MARRIAGE_EXPENSE_INCREASE)
-                                
-                                # Reset all expense category totals for this year (to avoid double counting)
-                                year_expenses = 0
-                                year_housing = 0
-                                year_transportation = 0
-                                year_food = 0
-                                year_healthcare = 0
-                                year_personal_insurance = 0
-                                year_apparel = 0
-                                year_services = 0
-                                year_entertainment = 0
-                                year_other = 0
-                                year_education = 0
-                                year_childcare = 0
-                                year_debt = 0
-                                year_discretionary = 0
-                                
-                                # Recategorize all expenses with the updated values
-                                for expense in self.expenditures:
-                                    expense_amount = int(expense.get_expense(i))
-                                    year_expenses += expense_amount
+                                # Update savings for wedding cost
+                                if current_savings >= wedding_cost:
+                                    savings_value_yearly[milestone_year] = current_savings - wedding_cost
+                                else:
+                                    # If not enough savings, create a personal loan for the remainder
+                                    shortfall = wedding_cost - current_savings
+                                    savings_value_yearly[milestone_year] = 0
                                     
-                                    # Categorize expenses by type
-                                    expense_name = expense.name.lower()
-                                    
-                                    # First check if it's a healthcare expense - check before other categories
-                                    is_healthcare = 'health' in expense_name or 'medical' in expense_name
-                                    
-                                    # Base cost of living categories
-                                    if is_healthcare:
-                                        # Healthcare expenses must be identified first to avoid double counting
-                                        with open('healthcare_debug.log', 'a') as f:
-                                            f.write(f"[FIXED-MARRIAGE] Found healthcare expense: {expense.name}, amount: {expense_amount}\n")
-                                        year_healthcare += expense_amount
-                                    elif isinstance(expense, Housing) or expense_name.find('housing') >= 0 or expense_name.find('rent') >= 0 or expense_name.find('mortgage') >= 0:
-                                        year_housing += expense_amount
-                                    elif isinstance(expense, Transportation) or expense_name.find('transport') >= 0 or expense_name.find('car') >= 0:
-                                        year_transportation += expense_amount
-                                    elif expense_name.find('food') >= 0:
-                                        year_food += expense_amount
-                                    elif expense_name.find('insurance') >= 0 and (expense_name.find('personal') >= 0 or expense_name.find('life') >= 0):
-                                        year_personal_insurance += expense_amount
-                                    elif expense_name.find('apparel') >= 0 or expense_name.find('clothing') >= 0:
-                                        year_apparel += expense_amount
-                                    elif expense_name.find('service') >= 0 or expense_name.find('utilities') >= 0:
-                                        year_services += expense_amount
-                                    elif expense_name.find('entertainment') >= 0 or expense_name.find('recreation') >= 0:
-                                        year_entertainment += expense_amount
-                                    
-                                    # Milestone-driven categories
-                                    elif expense_name.find('education') >= 0 or expense_name.find('college') >= 0 or expense_name.find('school') >= 0:
-                                        year_education += expense_amount
-                                    elif expense_name.find('child') >= 0 or expense_name.find('daycare') >= 0:
-                                        year_childcare += expense_amount
-                                    elif expense_name.find('debt') >= 0 or expense_name.find('loan') >= 0:
-                                        year_debt += expense_amount
-                                    elif expense_name.find('discretionary') >= 0 or expense_name.find('leisure') >= 0:
-                                        year_discretionary += expense_amount
-                                    else:
-                                        # Default to other expenses for anything not specifically categorized
-                                        year_other += expense_amount
+                                    # Add personal loan for shortfall
+                                    personal_loan = PersonalLoan(
+                                        name="Wedding Expenses Loan",
+                                        principal=shortfall,
+                                        interest_rate=DEFAULT_PERSONAL_LOAN_INTEREST_RATE,
+                                        term_years=DEFAULT_PERSONAL_LOAN_TERM_YEARS
+                                    )
+                                    self.liabilities.append(personal_loan)
                                 
-                                # Update expenses with recalculated values including taxes and retirement
-                                expenses_yearly[i] = (
-                                    year_housing +
-                                    year_transportation +
-                                    year_food +
-                                    year_healthcare +
-                                    year_personal_insurance +
-                                    year_apparel +
-                                    year_services +
-                                    year_entertainment +
-                                    year_other +
-                                    year_education +
-                                    year_childcare +
-                                    year_debt +
-                                    year_discretionary +
-                                    tax_expenses_yearly[i] +
-                                    retirement_contribution_yearly[i]
-                                )
-                                
-                                # Update all expense category tracking arrays
-                                housing_expenses_yearly[i] = int(year_housing)
-                                transportation_expenses_yearly[i] = int(year_transportation)
-                                food_expenses_yearly[i] = int(year_food)
-                                healthcare_expenses_yearly[i] = int(year_healthcare)
-                                personal_insurance_expenses_yearly[i] = int(year_personal_insurance)
-                                apparel_expenses_yearly[i] = int(year_apparel)
-                                services_expenses_yearly[i] = int(year_services)
-                                entertainment_expenses_yearly[i] = int(year_entertainment)
-                                other_expenses_yearly[i] = int(year_other)
-                                education_expenses_yearly[i] = int(year_education)
-                                child_expenses_yearly[i] = int(year_childcare)
-                                # IMPORTANT: Add to existing debt_expenses_yearly instead of overwriting
-                                # to preserve loan payments that were already added
-                                debt_expenses_yearly[i] += int(year_debt)
-                                discretionary_expenses_yearly[i] = int(year_discretionary)
-                                
-                                # Use total income (personal + spouse) for cash flow calculation
-                                cash_flow_yearly[i] = total_income_yearly[i] - expenses_yearly[i]
+                                # Log final state after wedding costs
+                                with open('healthcare_debug.log', 'a') as f:
+                                    f.write(f"\nFinal state after wedding:\n")
+                                    f.write(f"Cash flow: ${cash_flow_yearly[milestone_year]}\n")
+                                    f.write(f"Savings: ${savings_value_yearly[milestone_year]}\n")
+                                    f.write(f"Wedding cost: ${wedding_cost}\n")
+                        except Exception as e:
+                            # Log any unexpected errors
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\nERROR in marriage milestone processing: {str(e)}\n")
+                                f.write(f"Using default values for spouse financial data\n")
                 
                     elif milestone.get('type') == 'housing' or milestone.get('type') == 'home':
                         # Process home purchase milestone
@@ -1571,13 +1194,13 @@ class FinancialCalculator:
                         home_annual_payment = home_monthly_payment * 12
                         
                         # Get home purchase rent reduction factor from imported assumptions
-                        home_rent_reduction = HOME_PURCHASE_RENT_REDUCTION
+                        home_rent_reduction = 1.0  # Complete elimination of rent when buying a home
                         
                         # No need to create artificial rent expense - we'll work with whatever housing expenses already exist
                         # Simply log the current housing expenses for debugging
                         with open('healthcare_debug.log', 'a') as f:
                             f.write(f"\nCurrent housing expenses before home purchase:\n")
-                            for i in range(1, self.years_to_project + 1):
+                            for i in range(milestone_year, self.years_to_project + 1):
                                 f.write(f"Year {i}: ${housing_expenses_yearly[i]}\n")
                         
                         with open('healthcare_debug.log', 'a') as f:
@@ -1587,7 +1210,36 @@ class FinancialCalculator:
                             f.write(f"- Mortgage loan: ${home_loan_principal}\n")
                             f.write(f"- Annual payment: ${home_annual_payment}\n")
                             f.write(f"- Current housing expenses: {[housing_expenses_yearly[y] for y in range(milestone_year, min(milestone_year+3, self.years_to_project+1))]}\n")
-                            f.write(f"- Rent reduction factor: {home_rent_reduction*100}%\n")
+                        
+                        # Process housing expenses for all future years after home purchase
+                        for i in range(milestone_year, self.years_to_project + 1):
+                            # Store old housing expense for logging
+                            old_housing_expense = housing_expenses_yearly[i]
+                            
+                            # 1. Zero out the old housing expense (rent)
+                            housing_expenses_yearly[i] = 0
+                            
+                            # 2. Add property tax, insurance, and maintenance to housing expenses
+                            # These are typically 2-3% of home value annually
+                            property_tax = home_value * 0.015  # 1.5% property tax
+                            insurance = home_value * 0.005     # 0.5% insurance
+                            maintenance = home_value * 0.01     # 1% maintenance
+                            
+                            # Add these ongoing housing costs to housing expenses
+                            housing_expenses_yearly[i] = int(property_tax + insurance + maintenance)
+                            
+                            # 3. Add mortgage payment to debt expenses category
+                            # This ensures it's tracked separately and doesn't double-count
+                            debt_expenses_yearly[i] += home_annual_payment
+                            
+                            with open('healthcare_debug.log', 'a') as f:
+                                f.write(f"\n[FIXED HOME PURCHASE - NO DOUBLE COUNTING] Home purchase impact for year {i}:\n")
+                                f.write(f"  Original housing expense (rent): ${old_housing_expense}\n")
+                                f.write(f"  Property tax: ${property_tax}\n")
+                                f.write(f"  Insurance: ${insurance}\n")
+                                f.write(f"  Maintenance: ${maintenance}\n")
+                                f.write(f"  New housing expenses: ${housing_expenses_yearly[i]}\n")
+                                f.write(f"  Mortgage payment (added to debt category): ${home_annual_payment}\n")
                         
                         # Add home as an asset (appreciating at 3% annually)
                         # And add mortgage as a liability
