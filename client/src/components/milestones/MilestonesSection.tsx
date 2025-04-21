@@ -147,7 +147,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
   const [carMonthlyPayment, setCarMonthlyPayment] = useState(350);
   
   // Children milestone specific state
-  const [childrenCount, setChildrenCount] = useState(2);
+  const [childrenCount, setChildrenCount] = useState(1);
   const [childrenExpensePerYear, setChildrenExpensePerYear] = useState(12000);
 
   // Education milestone specific state
@@ -391,8 +391,8 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setCarDownPayment(milestoneToEdit.carDownPayment || 5000);
         setCarMonthlyPayment(milestoneToEdit.carMonthlyPayment || 350);
       } else if (type === "children") {
-        // Set children-specific fields
-        setChildrenCount(milestoneToEdit.childrenCount || 2);
+        // Set children-specific fields - always set to 1 child per milestone
+        setChildrenCount(1);
         setChildrenExpensePerYear(milestoneToEdit.childrenExpensePerYear || 12000);
       } else if (type === "education") {
         // Set education-specific fields
@@ -452,7 +452,7 @@ const MilestonesSection = ({ userId, onMilestoneChange }: MilestonesSectionProps
         setCarDownPayment(5000);
         setCarMonthlyPayment(350);
       } else if (type === "children") {
-        setChildrenCount(2);
+        setChildrenCount(1);  // Always set to 1 child per milestone
         setChildrenExpensePerYear(12000);
       } else if (type === "education") {
         setEducationCost(30000);

@@ -382,11 +382,19 @@ export class PgStorage implements IStorage {
   }
   
   async createMilestone(milestone: InsertMilestone): Promise<Milestone> {
+    // For child milestones, enforce one child per milestone
+    if (milestone.type === 'children') {
+      milestone.childrenCount = 1;
+    }
     const result = await db.insert(milestones).values(milestone).returning();
     return result[0];
   }
   
   async updateMilestone(id: number, data: Partial<InsertMilestone>): Promise<Milestone | undefined> {
+    // For child milestones, enforce one child per milestone
+    if (data.type === 'children') {
+      data.childrenCount = 1;
+    }
     const result = await db.update(milestones).set(data).where(eq(milestones.id, id)).returning();
     return result[0];
   }
