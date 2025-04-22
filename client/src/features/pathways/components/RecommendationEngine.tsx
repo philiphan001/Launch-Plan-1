@@ -7,6 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useQuery } from '@apollo/client';
 import { GET_USER_PROFILE, GET_FAVORITE_COLLEGES, GET_FAVORITE_CAREERS } from '../../graphql/queries';
+import { useRecommendations } from '@/hooks/useRecommendations';
+import { AISummary } from './recommendation/AISummary';
+import { PreferencesSummary } from './recommendation/PreferencesSummary';
+import { PathwayTabs } from './recommendation/PathwayTabs';
+import { PathType } from '@/types/recommendation';
 
 interface GameResults {
   quickSpin?: {
@@ -29,7 +34,7 @@ interface GameResults {
 
 export interface RecommendationEngineProps {
   preferences: Record<string, boolean>;
-  onSelectPath: (pathType: 'education' | 'career' | 'lifestyle', id: string) => void;
+  onSelectPath: (pathType: PathType, id: string) => void;
 }
 
 // Map card IDs to their display names and categories
@@ -344,29 +349,7 @@ const mapGameResponsesToPreferences = (gameResults: GameResults): Record<string,
 };
 
 export default function RecommendationEngine({ preferences, onSelectPath }: RecommendationEngineProps) {
-  const [activeTab, setActiveTab] = useState('education');
-  const [isLoading, setIsLoading] = useState(true);
-  const [recommendations, setRecommendations] = useState<any>(null);
-  
-  useEffect(() => {
-    setIsLoading(true);
-    const results = analyzePreferences(preferences);
-    setRecommendations(results);
-    setIsLoading(false);
-  }, [preferences]);
-
-  // Group preferences by category and split into liked and not interested
-  const groupedPreferences = Object.entries(preferences).reduce((acc, [key, liked]) => {
-    if (cardDetails[key]) {
-      const { category } = cardDetails[key];
-      if (!acc[category]) {
-        acc[category] = { liked: [], notInterested: [] };
-      }
-      const target = liked ? acc[category].liked : acc[category].notInterested;
-      target.push({ ...cardDetails[key], liked });
-    }
-    return acc;
-  }, {} as Record<string, { liked: Array<{ title: string; emoji: string; liked: boolean }>, notInterested: Array<{ title: string; emoji: string; liked: boolean }> }>);
+  const { recommendations, groupedPreferences, isLoading, aiSummary } = useRecommendations({ preferences });
 
   if (isLoading) {
     return (
@@ -391,187 +374,16 @@ export default function RecommendationEngine({ preferences, onSelectPath }: Reco
       </div>
     );
   }
-  
-  const aiSummary = generateAISummary(
-    preferences,
-    recommendations?.userProfile,
-    recommendations?.favoriteColleges || [],
-    recommendations?.favoriteCareers || [],
-    recommendations
-  );
+
+  if (!recommendations) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
-      {/* AI Summary Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span>AI-Generated Insights</span>
-            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-              Beta
-            </Badge>
-          </CardTitle>
-          <CardDescription>Personalized analysis based on your profile and preferences</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="prose prose-sm max-w-none">
-            {aiSummary.split('\n\n').map((paragraph, index) => (
-              <p key={index} className={index === 0 ? '' : 'mt-4'}>
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Summary Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Preferences</CardTitle>
-          <CardDescription>Here's a summary of your responses</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {Object.entries(groupedPreferences).map(([category, items]) => (
-              <div key={category} className="space-y-2">
-                <h3 className="font-medium text-lg">{category}</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Liked Column */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-green-600">Liked</h4>
-                    <div className="space-y-2">
-                      {items.liked.map((item) => (
-                        <div
-                          key={item.title}
-                          className="flex items-center p-2 rounded-lg bg-green-50 border border-green-200"
-                        >
-                          <span className="text-2xl mr-2">{item.emoji}</span>
-                          <span className="flex-1">{item.title}</span>
-                        </div>
-                      ))}
-                      {items.liked.length === 0 && (
-                        <div className="text-sm text-gray-500 italic">No items liked in this category</div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Not Interested Column */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-600">Not Interested</h4>
-                    <div className="space-y-2">
-                      {items.notInterested.map((item) => (
-                        <div
-                          key={item.title}
-                          className="flex items-center p-2 rounded-lg bg-gray-50 border border-gray-200"
-                        >
-                          <span className="text-2xl mr-2">{item.emoji}</span>
-                          <span className="flex-1">{item.title}</span>
-                        </div>
-                      ))}
-                      {items.notInterested.length === 0 && (
-                        <div className="text-sm text-gray-500 italic">No items marked as not interested in this category</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <Separator className="my-4" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="education">Education</TabsTrigger>
-          <TabsTrigger value="career">Career</TabsTrigger>
-          <TabsTrigger value="lifestyle">Lifestyle</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="education" className="space-y-4">
-          {recommendations?.education.map((rec: any) => (
-            <Card key={rec.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <CardTitle className="text-lg">{rec.title}</CardTitle>
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      {rec.match.startsWith('High') ? '90%+ Match' : '75% Match'}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-gray-600 mb-3">
-                    {rec.description}
-                  </CardDescription>
-                  <p className="text-sm text-gray-500 italic mb-3">{rec.match}</p>
-                  
-                  <Button 
-                    onClick={() => onSelectPath('education', rec.id)}
-                    className="w-full"
-                  >
-                    Explore This Path
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-        
-        <TabsContent value="career" className="space-y-4">
-          {recommendations?.career.map((rec: any) => (
-            <Card key={rec.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <CardTitle className="text-lg">{rec.title}</CardTitle>
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      {rec.match.startsWith('High') ? '90%+ Match' : '75% Match'}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-gray-600 mb-3">
-                    {rec.description}
-                  </CardDescription>
-                  <p className="text-sm text-gray-500 italic mb-3">{rec.match}</p>
-                  
-                  <Button 
-                    onClick={() => onSelectPath('career', rec.id)}
-                    className="w-full"
-                  >
-                    Explore This Path
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-        
-        <TabsContent value="lifestyle" className="space-y-4">
-          {recommendations?.lifestyle.map((rec: any) => (
-            <Card key={rec.id} className="overflow-hidden">
-              <CardContent className="p-0">
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <CardTitle className="text-lg">{rec.title}</CardTitle>
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                      {rec.match.startsWith('High') ? '90%+ Match' : '75% Match'}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-gray-600 mb-3">
-                    {rec.description}
-                  </CardDescription>
-                  <p className="text-sm text-gray-500 italic mb-3">{rec.match}</p>
-                  
-                  <Button 
-                    onClick={() => onSelectPath('lifestyle', rec.id)}
-                    className="w-full"
-                  >
-                    Explore This Path
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-      </Tabs>
+      <AISummary summary={aiSummary} />
+      <PreferencesSummary groupedPreferences={groupedPreferences} />
+      <PathwayTabs recommendations={recommendations} onSelectPath={onSelectPath} />
     </div>
   );
 }

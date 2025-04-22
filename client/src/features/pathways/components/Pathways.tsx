@@ -17,7 +17,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Step } from "@/components/pathways/Step";  // Import the new Step component
+import { Step } from "@/components/pathways/Step";
+import { useLocation } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
+import RecommendationEngine from "@/components/pathways/RecommendationEngine";
+import IdentityWheel from "@/components/pathways/IdentityWheel";
+import AdvancedWheel from "@/components/pathways/AdvancedWheel";
+import AvatarCreator from "@/components/pathways/AvatarCreator";
+import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
+import QuickSpinSummary from "@/components/pathways/QuickSpinSummary";
+import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
+import { GapYearPathway } from "@/components/pathways/GapYearPathways";
+import { PathwayRecommendations } from "@/components/pathways/PathwayRecommendations";
+import { MilitaryPathSection } from "@/components/pathways/MilitaryPathSection";
+import PathSelectionStep from '@/components/pathways/PathSelectionStep';
+import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
+import CareerSearch from '@/components/pathways/CareerSearch';
+import { User, AuthProps } from "@/interfaces/auth";
 
 // Add type declaration for our global variable to prevent TypeScript errors
 declare global {
@@ -25,24 +43,23 @@ declare global {
     _lastAddedCareerId?: number;
   }
 }
-import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
-import RecommendationEngine from "@/components/pathways/RecommendationEngine";
-import IdentityWheel from "@/components/pathways/IdentityWheel";
-import AdvancedWheel from "@/components/pathways/AdvancedWheel";
-import AvatarCreator from "@/components/pathways/AvatarCreator";
-import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
-import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
-import { GapYearPathway } from "@/components/pathways/GapYearPathways";
-import { useLocation } from "wouter";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import QuickSpinSummary from "@/components/pathways/QuickSpinSummary";
-import { PathwayRecommendations } from "@/components/pathways/PathwayRecommendations";
-import { MilitaryPathSection } from "@/components/pathways/MilitaryPathSection";
-import PathSelectionStep from '@/components/pathways/PathSelectionStep';
-import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
-import CareerSearch from '@/components/pathways/CareerSearch';
-import CollegeSearch from "../components/pathways/CollegeSearch";
+
+// Add types for game component results
+interface SwipeResults {
+  [key: string]: any;
+}
+
+interface WheelResults {
+  [key: string]: any;
+}
+
+interface QuickSpinResults {
+  [key: string]: any;
+}
+
+interface AvatarResults {
+  [key: string]: any;
+}
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -73,20 +90,7 @@ interface CareerPath {
   option_rank: number;
 }
 
-import { User, AuthProps } from "@/interfaces/auth";
-
-interface PathwaysProps extends AuthProps {
-  allColleges?: Array<{
-    id: number;
-    name: string;
-    city: string;
-    state: string;
-    rank?: number;
-    type?: string;
-    degreePredominant?: number;
-    location?: string;
-  }>;
-}
+interface PathwaysProps extends AuthProps {}
 
 const Pathways = ({
   user,
@@ -95,8 +99,7 @@ const Pathways = ({
   login,
   signup,
   logout,
-  completeOnboarding,
-  allColleges: propAllColleges
+  completeOnboarding
 }: PathwaysProps) => {
   const { toast } = useToast();
   
@@ -184,7 +187,7 @@ const Pathways = ({
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
-  
+
   // Function to search careers with a given term - directly matching Go To Work pathway
   const searchCareers = (searchTerm: string, showWarnings = false) => {
     if (!searchTerm.trim()) {
@@ -342,11 +345,9 @@ const Pathways = ({
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
   
   // Education requirement warning state
-  
-  // Education requirement warning state
-  const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
   const [selectedCareerEducation, setSelectedCareerEducation] = useState<string | null>(null);
   const [educationWarningMessage, setEducationWarningMessage] = useState<string>('');
+  const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
   
   // Add location to favorites mutation
   const addLocationToFavorites = useMutation({
@@ -472,15 +473,9 @@ const Pathways = ({
   const [hasShownQuickSpinSummary, setHasShownQuickSpinSummary] = useState(false);
   
   // Fetch all career paths for the field selection dropdown
-  const { data: allCareerPaths = [], isLoading: isLoadingCareerPaths } = useQuery<CareerPath[]>({
+  const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
     queryKey: ['/api/career-paths'],
-    queryFn: async () => {
-      const response = await fetch('/api/career-paths');
-      if (!response.ok) {
-        throw new Error('Failed to fetch career paths');
-      }
-      return response.json();
-    }
+    enabled: currentStep === 5 || currentStep === 6 // Enable when on field of study step (5) or profession step (6)
   });
   
   // Get unique fields of study from the career paths
@@ -546,21 +541,18 @@ const Pathways = ({
     enabled: currentStep === 8 && (educationType === '2year' || educationType === 'vocational')
   });
   
-  // Use propAllColleges if provided, otherwise use fetched colleges
-  const availableColleges = propAllColleges || allColleges;
-  
   // School search query - search from API for 4-year colleges, filter locally for 2-year/vocational
   const { data: searchResults, isLoading: isLoadingSearch } = useQuery<any[]>({
-    queryKey: ['/api/colleges/search', searchQuery, educationType, availableColleges],
+    queryKey: ['/api/colleges/search', searchQuery, educationType, allColleges],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) return [];
       
       // For 2-year colleges and vocational schools, filter from the fetched colleges locally
-      if ((educationType === '2year' || educationType === 'vocational') && availableColleges.length > 0) {
-        console.log(`Local search for ${searchQuery} in ${educationType} colleges from ${availableColleges.length} total colleges`);
+      if ((educationType === '2year' || educationType === 'vocational') && allColleges.length > 0) {
+        console.log(`Local search for ${searchQuery} in ${educationType} colleges from ${allColleges.length} total colleges`);
         
         // First, filter by education type
-        let filteredColleges = availableColleges.filter(college => {
+        let filteredColleges = allColleges.filter(college => {
           if (!college.type) return false;
           
           const collegeType = college.type.toLowerCase();
@@ -663,17 +655,7 @@ const Pathways = ({
   const handleNext = () => {
     // Special handling for gap year pathway - add a step for post-gap year navigation
     if (selectedPath === 'gap' && gapYearActivity && currentStep === 4) {
-      setCurrentStep(5); // Go to post-gap year options step
-    } else if (selectedPath === 'education' && currentStep === 4) {
-      // After college selection, go to field of study selection
-      setCurrentStep(5);
-    } else if (selectedPath === 'education' && currentStep === 5) {
-      // After field of study selection, go to career selection
-      setCurrentStep(6);
-    } else if (selectedPath === 'gap' && currentStep === 5) {
-      // After selecting education in gap year, go to college selection
-      setSelectedPath('education');
-      setCurrentStep(4);
+      setCurrentStep(4.5); // Use a decimal step to insert a new step between 4 and 5
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -972,7 +954,7 @@ const Pathways = ({
                   }}
                   onNext={handleNext}
                   onReset={() => {
-                    setResetCounter(prev => prev + 1);
+                      setResetCounter(prev => prev + 1);
                   }}
                 />
               </Step>
@@ -2533,7 +2515,7 @@ const Pathways = ({
                   const career = allCareers?.find(c => c.id === careerId);
                   if (career) {
                     setSelectedProfession(career.title);
-                    handleNext();
+                      handleNext();
                   }
                 }}
                 selectedPath="job"
@@ -2546,17 +2528,157 @@ const Pathways = ({
               title={userJourney} 
               subtitle={`Finding the right ${educationType === '4year' ? '4-year college' : educationType === '2year' ? '2-year college' : 'vocational school'} for you`}
             >
-              <CollegeSearch
-                onCollegeSelect={(collegeId: number) => {
-                  setSelectedSchoolId(collegeId);
-                  const college = availableColleges.find(c => c.id === collegeId);
-                  if (college) {
-                    setSpecificSchool(college.name);
-                    handleNext();
-                  }
-                }}
-                educationType={educationType}
-              />
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="mb-4">
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg mb-6">
+                      <h4 className="text-sm font-semibold mb-2 flex items-center">
+                        <span className="material-icons mr-1 text-blue-500 text-sm">school</span>
+                        School Search
+                      </h4>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <span className="material-icons text-sm">search</span>
+                          </span>
+                          <Input 
+                            type="text" 
+                            placeholder="Search for your school..." 
+                            value={searchQuery}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              setSearchQuery(e.target.value);
+                              setHasSpecificSchool(true);
+                            }}
+                            className="pl-9 flex-1 w-full"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Search for your preferred school. You can type the name of any college or university.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {searchQuery.length > 2 && (
+                    <>
+                      <h4 className="text-md font-medium mb-4">
+                        {isLoadingSearch ? 'Searching...' : 'School Search Results:'}
+                      </h4>
+                      
+                      {isLoadingSearch ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-4 text-gray-600">Searching schools...</p>
+                        </div>
+                      ) : searchResults && Array.isArray(searchResults) && searchResults.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                          {searchResults.map((school: any) => (
+                            <Card 
+                              key={school.id} 
+                              className={`border cursor-pointer transition-all hover:shadow-md hover:scale-105 ${specificSchool === school.name ? 'border-primary bg-blue-50' : 'border-gray-200'}`}
+                              onClick={() => {
+                                setSpecificSchool(school.name);
+                                setSelectedSchoolId(school.id);
+                                
+                                // Update the narrative to include the selected school
+                                const schoolType = educationType === '4year' ? 'attending' : 
+                                                  educationType === '2year' ? 'attending' : 
+                                                  'attending';
+                                setUserJourney(`After high school, I am interested in ${schoolType} ${school.name} where I am interested in studying...`);
+                                
+                                // Automatically proceed to field of study step
+                                handleNext();
+                              }}
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex items-center">
+                                  <div className={`rounded-full ${specificSchool === school.name ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${specificSchool === school.name ? 'text-white' : 'text-gray-600'} mr-3 flex-shrink-0`}>
+                                    <span className="material-icons text-sm">school</span>
+                                  </div>
+                                  <div>
+                                    <h5 className={`font-medium ${specificSchool === school.name ? 'text-primary' : ''}`}>{school.name}</h5>
+                                    <p className="text-sm text-gray-600">{school.city}, {school.state}</p>
+                                    {(school.rank && school.rank > 0) && (
+                                      <Badge variant="outline" className="mt-1">Rank: {school.rank}</Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 border rounded-lg mb-6">
+                          <p className="text-gray-500">
+                            {searchQuery.length > 0 ? 'No schools found matching your search.' : 'Type to search for schools'}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Clear Search button */}
+                      <div className="flex justify-center mb-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSearchQuery('');
+                          }}
+                        >
+                          <span className="material-icons text-sm mr-1">clear</span>
+                          Clear Search
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  
+                  {specificSchool && (
+                    <div className="mb-6 p-4 border border-green-100 bg-green-50 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1 text-green-600">
+                          <span className="material-icons">school</span>
+                        </div>
+                        <div>
+                          <h4 className="text-md font-medium text-green-700 mb-1">Selected School</h4>
+                          <p className="text-sm text-green-600 mb-3">
+                            {specificSchool}
+                          </p>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSpecificSchool('');
+                                setSearchQuery('');
+                              }}
+                            >
+                              <span className="material-icons text-sm mr-1">edit</span>
+                              Change
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-6">
+                    <Button 
+                      className="bg-green-500 hover:bg-green-600 text-white w-full"
+                      onClick={() => {
+                        handleNext(); // Continue to the field of study selection
+                      }}
+                    >
+                      Next
+                    </Button>
+                    <p className="text-gray-500 text-sm text-center mt-2">
+                      {specificSchool ? 'Continue to choose your field of study' : 'Otherwise, click Next to continue'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between mt-6">
+                  <Button variant="outline" onClick={handleBack}>Back</Button>
+                </div>
+              </div>
             </Step>
           );
         } else if (selectedPath === 'military') {
@@ -2579,9 +2701,24 @@ const Pathways = ({
             </Step>
           );
         } else if (selectedPath === 'gap') {
-          // Skip career search for gap year and go directly to post-gap year options
-          setCurrentStep(4.5);
-          return null;
+          return (
+            <Step 
+              title="Choose Your Post-Gap Year Career" 
+              subtitle="Select a career you'd like to pursue after your gap year"
+            >
+              <CareerSearch
+                onCareerSelect={(careerId) => {
+                  setSelectedCareerId(careerId);
+                  const career = allCareers?.find(c => c.id === careerId);
+                  if (career) {
+                    setSelectedProfession(career.title);
+                    handleNext();
+                  }
+                }}
+                selectedPath="gap"
+              />
+            </Step>
+          );
         }
         break;
       
@@ -2600,9 +2737,7 @@ const Pathways = ({
                   onClick={() => {
                     setSelectedPath('education');
                     setEducationType('4year'); // Default to 4-year college
-                    setCurrentStep(4); // Go to college search step first
-                    // Update the user journey to include the gap year
-                    setUserJourney(`After high school, I am interested in taking a gap year for ${gapYearActivity} and then pursuing a 4-year college education.`);
+                    setCurrentStep(4); // Go to education path
                   }}
                 >
                   <div className="rounded-full bg-blue-100 w-16 h-16 flex items-center justify-center mb-4 mx-auto">
@@ -2620,15 +2755,13 @@ const Pathways = ({
                     setSelectedPath('job');
                     setJobType('fulltime'); // Default to full-time job
                     setCurrentStep(3); // Go to job type selection
-                    // Update the user journey to include the gap year
-                    setUserJourney(`After high school, I am interested in taking a gap year for ${gapYearActivity} and then finding a full-time job.`);
                   }}
                 >
                   <div className="rounded-full bg-green-100 w-16 h-16 flex items-center justify-center mb-4 mx-auto">
                     <span className="material-icons text-green-600 text-2xl">work</span>
                   </div>
                   <h3 className="text-lg font-medium text-center mb-2">Get a Job</h3>
-                  <p className="text-gray-600 text-center text-sm flex-grow">Enter the workforce and start earning</p>
+                  <p className="text-gray-600 text-center text-sm flex-grow">Enter the workforce with a full-time or part-time position</p>
                   <Button className="w-full mt-4" variant="outline">Select</Button>
                 </div>
                 
@@ -2639,17 +2772,22 @@ const Pathways = ({
                     setSelectedPath('military');
                     setMilitaryBranch('army'); // Default to Army
                     setCurrentStep(3); // Go to military branch selection
-                    // Update the user journey to include the gap year
-                    setUserJourney(`After high school, I am interested in taking a gap year for ${gapYearActivity} and then joining the military.`);
                   }}
                 >
                   <div className="rounded-full bg-red-100 w-16 h-16 flex items-center justify-center mb-4 mx-auto">
                     <span className="material-icons text-red-600 text-2xl">military_tech</span>
                   </div>
-                  <h3 className="text-lg font-medium text-center mb-2">Join Military</h3>
-                  <p className="text-gray-600 text-center text-sm flex-grow">Serve your country while gaining skills and benefits</p>
+                  <h3 className="text-lg font-medium text-center mb-2">Join the Military</h3>
+                  <p className="text-gray-600 text-center text-sm flex-grow">Serve your country in one of the military branches</p>
                   <Button className="w-full mt-4" variant="outline">Select</Button>
                 </div>
+              </div>
+              
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={handleBack}>
+                  <span className="material-icons mr-2">arrow_back</span>
+                  Back
+                </Button>
               </div>
             </Step>
           );
@@ -2820,7 +2958,7 @@ const Pathways = ({
             <Step title={userJourney} subtitle="Choose a field of study that interests you">
               <Card>
                 <CardContent className="p-6">
-                  {isLoadingCareerPaths ? (
+                  {isLoadingAllPaths ? (
                     <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                       <p className="mt-4 text-gray-600">Loading fields of study...</p>
@@ -4337,12 +4475,22 @@ const Pathways = ({
   // Update the handleSelectPath function
   const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
     // Find the career path
-    const careerPath = allCareerPaths.find((path: CareerPath) => path.id === parseInt(id));
+    const careerPath = (allCareerPaths as CareerPath[] | undefined)?.find((path: CareerPath) => path.id === parseInt(id));
     
     if (careerPath) {
       // Set the career search query
       setCareerSearchQuery(careerPath.career_title);
-      handleNext();
+      
+      // Find matching career in allCareers
+      const matchingCareer = allCareers?.find(
+        c => c.title.toLowerCase() === careerPath.career_title.toLowerCase()
+      );
+      
+      if (matchingCareer) {
+        setSelectedCareerId(matchingCareer.id);
+        setSelectedProfession(matchingCareer.title);
+        checkCareerEducationRequirement(matchingCareer.id);
+      }
     }
   };
   
