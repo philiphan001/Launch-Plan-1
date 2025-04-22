@@ -17,7 +17,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Step } from "@/components/pathways/Step";  // Import the new Step component
+import { Step } from "@/components/pathways/Step";
+import { useLocation } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
+import RecommendationEngine from "@/components/pathways/RecommendationEngine";
+import IdentityWheel from "@/components/pathways/IdentityWheel";
+import AdvancedWheel from "@/components/pathways/AdvancedWheel";
+import AvatarCreator from "@/components/pathways/AvatarCreator";
+import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
+import QuickSpinSummary from "@/components/pathways/QuickSpinSummary";
+import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
+import { GapYearPathway } from "@/components/pathways/GapYearPathways";
+import { PathwayRecommendations } from "@/components/pathways/PathwayRecommendations";
+import { MilitaryPathSection } from "@/components/pathways/MilitaryPathSection";
+import PathSelectionStep from '@/components/pathways/PathSelectionStep';
+import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
+import CareerSearch from '@/components/pathways/CareerSearch';
+import { User, AuthProps } from "@/interfaces/auth";
 
 // Add type declaration for our global variable to prevent TypeScript errors
 declare global {
@@ -25,23 +43,23 @@ declare global {
     _lastAddedCareerId?: number;
   }
 }
-import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
-import RecommendationEngine from "@/components/pathways/RecommendationEngine";
-import IdentityWheel from "@/components/pathways/IdentityWheel";
-import AdvancedWheel from "@/components/pathways/AdvancedWheel";
-import AvatarCreator from "@/components/pathways/AvatarCreator";
-import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
-import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
-import { GapYearPathway } from "@/components/pathways/GapYearPathways";
-import { useLocation } from "wouter";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import QuickSpinSummary from "@/components/pathways/QuickSpinSummary";
-import { PathwayRecommendations } from "@/components/pathways/PathwayRecommendations";
-import { MilitaryPathSection } from "@/components/pathways/MilitaryPathSection";
-import PathSelectionStep from '@/components/pathways/PathSelectionStep';
-import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
-import CareerSearch from '@/components/pathways/CareerSearch';
+
+// Add types for game component results
+interface SwipeResults {
+  [key: string]: any;
+}
+
+interface WheelResults {
+  [key: string]: any;
+}
+
+interface QuickSpinResults {
+  [key: string]: any;
+}
+
+interface AvatarResults {
+  [key: string]: any;
+}
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -71,8 +89,6 @@ interface CareerPath {
   career_title: string;
   option_rank: number;
 }
-
-import { User, AuthProps } from "@/interfaces/auth";
 
 interface PathwaysProps extends AuthProps {}
 
@@ -171,7 +187,7 @@ const Pathways = ({
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
-  
+
   // Function to search careers with a given term - directly matching Go To Work pathway
   const searchCareers = (searchTerm: string, showWarnings = false) => {
     if (!searchTerm.trim()) {
@@ -329,11 +345,9 @@ const Pathways = ({
   const [fetchingLocation, setFetchingLocation] = useState<boolean>(false);
   
   // Education requirement warning state
-  
-  // Education requirement warning state
-  const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
   const [selectedCareerEducation, setSelectedCareerEducation] = useState<string | null>(null);
   const [educationWarningMessage, setEducationWarningMessage] = useState<string>('');
+  const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
   
   // Add location to favorites mutation
   const addLocationToFavorites = useMutation({
@@ -940,7 +954,7 @@ const Pathways = ({
                   }}
                   onNext={handleNext}
                   onReset={() => {
-                    setResetCounter(prev => prev + 1);
+                      setResetCounter(prev => prev + 1);
                   }}
                 />
               </Step>
@@ -2501,7 +2515,7 @@ const Pathways = ({
                   const career = allCareers?.find(c => c.id === careerId);
                   if (career) {
                     setSelectedProfession(career.title);
-                    handleNext();
+                      handleNext();
                   }
                 }}
                 selectedPath="job"
@@ -4461,7 +4475,7 @@ const Pathways = ({
   // Update the handleSelectPath function
   const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
     // Find the career path
-    const careerPath = allCareerPaths?.find(path => path.id === parseInt(id));
+    const careerPath = (allCareerPaths as CareerPath[] | undefined)?.find((path: CareerPath) => path.id === parseInt(id));
     
     if (careerPath) {
       // Set the career search query
