@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Step } from "@/components/pathways/Step";  // Import the new Step component
 
 // Add type declaration for our global variable to prevent TypeScript errors
 declare global {
@@ -36,6 +37,11 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import QuickSpinSummary from "@/components/pathways/QuickSpinSummary";
+import { PathwayRecommendations } from "@/components/pathways/PathwayRecommendations";
+import { MilitaryPathSection } from "@/components/pathways/MilitaryPathSection";
+import PathSelectionStep from '@/components/pathways/PathSelectionStep';
+import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
+import CareerSearch from '@/components/pathways/CareerSearch';
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -65,16 +71,6 @@ interface CareerPath {
   career_title: string;
   option_rank: number;
 }
-
-const Step = ({ children, title, subtitle }: StepProps) => (
-  <div className="mb-8 animate-fadeIn">
-    <h3 className="text-2xl font-display font-bold text-primary mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">{title}</h3>
-    {subtitle && <p className="text-base text-gray-600 mb-4 max-w-2xl">{subtitle}</p>}
-    <div className="bg-white/50 backdrop-blur-sm rounded-xl p-6 border border-gray-100 shadow-sm">
-      {children}
-    </div>
-  </div>
-);
 
 import { User, AuthProps } from "@/interfaces/auth";
 
@@ -176,40 +172,6 @@ const Pathways = ({
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
   
-  // Function to check if a career requires higher education
-  const checkCareerEducationRequirement = (careerId: number) => {
-    if (!allCareers || !Array.isArray(allCareers)) return;
-    
-    const career = allCareers.find(c => c.id === careerId);
-    if (!career) return;
-    
-    // Check education field for degree requirements
-    const educationReq = career.education;
-    
-    if (educationReq && (
-        educationReq.toLowerCase().includes("bachelor") || 
-        educationReq.toLowerCase().includes("degree") ||
-        educationReq.toLowerCase().includes("master") ||
-        educationReq.toLowerCase().includes("phd") ||
-        educationReq.toLowerCase().includes("doctorate")
-    )) {
-      console.log(`Career "${career.title}" requires higher education: ${educationReq}`);
-      setSelectedCareerEducation(educationReq);
-      
-      // Show the warning dialog if the user is in job, 2-year college without transfer, or vocational pathway
-      if (selectedPath === 'job' || 
-          (selectedPath === 'education' && 
-           ((educationType === '2year' && transferOption !== 'yes') || 
-            educationType === 'vocational'))) {
-        setShowEducationWarning(true);
-      }
-    } else {
-      console.log(`Career "${career.title}" doesn't require higher education or requirement not specified`);
-      setSelectedCareerEducation(null);
-      setShowEducationWarning(false);
-    }
-  };
-
   // Function to search careers with a given term - directly matching Go To Work pathway
   const searchCareers = (searchTerm: string, showWarnings = false) => {
     if (!searchTerm.trim()) {
@@ -371,6 +333,7 @@ const Pathways = ({
   // Education requirement warning state
   const [showEducationWarning, setShowEducationWarning] = useState<boolean>(false);
   const [selectedCareerEducation, setSelectedCareerEducation] = useState<string | null>(null);
+  const [educationWarningMessage, setEducationWarningMessage] = useState<string>('');
   
   // Add location to favorites mutation
   const addLocationToFavorites = useMutation({
@@ -945,146 +908,15 @@ const Pathways = ({
       case 1:
         return (
           <Step 
-            title="How would you like to plan your future?" 
-            subtitle="Your journey to an empowered future begins with understanding your current direction"
+            title="Choose Your Path" 
+            subtitle="Select how you'd like to proceed with your journey"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
-              <div 
-                className={`group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative ${needsGuidance === false ? 'ring-4 ring-green-400 ring-opacity-50' : ''}`}
-                onClick={() => {
-                  setNeedsGuidance(false);
-                  handleNext(); // Automatically proceed to next step
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-green-400/90 to-blue-500/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
-                <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] group-hover:backdrop-blur-[0px] transition-all duration-300"></div>
-                <div className="relative p-8 text-center text-white z-10">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-5 shadow-glow transform transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
-                    <span className="material-icons text-3xl">map</span>
-                  </div>
-                  <h3 className="text-2xl font-display font-bold mb-3 text-white">I know what I want to do</h3>
-                  <p className="text-white/80 mb-4">I have a clear path in mind after high school and want to see where it leads</p>
-                  
-                  {/* Storyboard path visualization */}
-                  <div className="relative my-4 py-2 px-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      {/* Education icon */}
-                      <div className="relative">
-                        <div className="bg-blue-400/30 rounded-full h-12 w-12 flex items-center justify-center">
-                          <span className="material-icons text-white text-xl">school</span>
-                        </div>
-                        <div className="text-xs text-white/80 mt-1">Education</div>
-                      </div>
-                      
-                      {/* Arrow */}
-                      <div className="flex-grow h-0.5 mx-1 bg-white/20 relative">
-                        <div className="absolute -top-1 animate-ping-slow w-1.5 h-1.5 bg-white rounded-full" style={{ left: '20%' }}></div>
-                        <div className="absolute -top-1 animate-ping-slow animation-delay-1000 w-1.5 h-1.5 bg-white rounded-full" style={{ left: '50%' }}></div>
-                        <div className="absolute -top-1 animate-ping-slow animation-delay-2000 w-1.5 h-1.5 bg-white rounded-full" style={{ left: '80%' }}></div>
-                      </div>
-                      
-                      {/* Career icon */}
-                      <div className="relative">
-                        <div className="bg-green-400/30 rounded-full h-12 w-12 flex items-center justify-center">
-                          <span className="material-icons text-white text-xl">work</span>
-                        </div>
-                        <div className="text-xs text-white/80 mt-1">Career</div>
-                      </div>
-                      
-                      {/* Arrow */}
-                      <div className="flex-grow h-0.5 mx-1 bg-white/20 relative">
-                        <div className="absolute -top-1 animate-ping-slow w-1.5 h-1.5 bg-white rounded-full" style={{ left: '30%' }}></div>
-                        <div className="absolute -top-1 animate-ping-slow animation-delay-1500 w-1.5 h-1.5 bg-white rounded-full" style={{ left: '70%' }}></div>
-                      </div>
-                      
-                      {/* Success icon */}
-                      <div className="relative">
-                        <div className="bg-yellow-400/30 rounded-full h-12 w-12 flex items-center justify-center">
-                          <span className="material-icons text-white text-xl">emoji_events</span>
-                        </div>
-                        <div className="text-xs text-white/80 mt-1">Success</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="py-1 px-4 bg-white/20 rounded-full w-fit mx-auto backdrop-blur-sm text-sm font-medium">
-                    Direct Path
-                  </div>
-                  
-                  <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <span className="material-icons text-xl">arrow_forward</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div 
-                className={`group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative ${needsGuidance === true ? 'ring-4 ring-green-400 ring-opacity-50' : ''}`}
-                onClick={() => {
-                  setNeedsGuidance(true);
-                  handleNext(); // Automatically proceed to next step
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/90 to-purple-600/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
-                <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] group-hover:backdrop-blur-[0px] transition-all duration-300"></div>
-                <div className="relative p-8 text-center text-white z-10">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-5 shadow-glow transform transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
-                    <span className="material-icons text-3xl">explore</span>
-                  </div>
-                  <h3 className="text-2xl font-display font-bold mb-3 text-white">Help me explore options</h3>
-                  <p className="text-white/80 mb-4">I'm open to discovering possibilities that align with my interests and values</p>
-                  
-                  {/* Games and exploration interactive visualization */}
-                  <div className="relative my-4 py-2 px-2 bg-white/10 rounded-lg backdrop-blur-sm">
-                    <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
-                      {/* Spinning wheel visualization */}
-                      <div className="relative h-20 w-20">
-                        <div className="absolute inset-0 rounded-full border-4 border-dashed border-purple-400/60 animate-spin-slow"></div>
-                        {/* Wheel segments */}
-                        <div className="absolute inset-0 rounded-full overflow-hidden">
-                          <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-blue-400/30 origin-bottom-right rotate-0"></div>
-                          <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-green-400/30 origin-bottom-left rotate-0"></div>
-                          <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-yellow-400/30 origin-top-left rotate-0"></div>
-                          <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-pink-400/30 origin-top-right rotate-0"></div>
-                          <div className="absolute inset-0 rounded-full border-2 border-white/20"></div>
-                        </div>
-                        {/* Spinner needle */}
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-glow z-10"></div>
-                        <div className="absolute text-xs text-white/80 mt-1 w-full text-center top-full">Spin</div>
-                      </div>
-                      
-                      {/* Swipe cards visualization */}
-                      <div className="relative h-20 w-20 mx-2">
-                        <div className="absolute top-2 left-2 w-12 h-16 bg-green-400/20 rounded-md border border-green-400/40 transform -rotate-6 shadow-md"></div>
-                        <div className="absolute top-1 left-4 w-12 h-16 bg-blue-400/20 rounded-md border border-blue-400/40 transform rotate-3 shadow-md"></div>
-                        <div className="absolute top-0 left-6 w-12 h-16 bg-purple-400/20 rounded-md border border-purple-400/40 shadow-md">
-                          <div className="h-full flex flex-col justify-center items-center">
-                            <span className="material-icons text-white text-sm">thumb_up</span>
-                          </div>
-                        </div>
-                        <div className="absolute text-xs text-white/80 mt-1 w-full text-center top-full">Swipe</div>
-                      </div>
-                      
-                      {/* Avatar visualization */}
-                      <div className="relative h-20 w-20">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-orange-400/20 rounded-full border border-orange-400/40 flex items-center justify-center">
-                          <span className="material-icons text-white text-sm">face</span>
-                        </div>
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-blue-400/20 rounded-lg border border-blue-400/40"></div>
-                        <div className="absolute text-xs text-white/80 mt-1 w-full text-center top-full">Create</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="py-1 px-4 bg-white/20 rounded-full w-fit mx-auto backdrop-blur-sm text-sm font-medium">
-                    Guided Discovery
-                  </div>
-                  
-                  <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
-                    <span className="material-icons text-xl">arrow_forward</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PathSelectionStep
+              onPathSelect={(needsGuidance) => {
+                setNeedsGuidance(needsGuidance);
+              }}
+              onNext={handleNext}
+            />
           </Step>
         );
       
@@ -1096,161 +928,27 @@ const Pathways = ({
                 title="Choose Your Exploration Method" 
                 subtitle="Select a fun activity to help discover your interests and values"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
-                  <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
-                    onClick={() => {
-                      setExplorationMethod('swipe');
-                      // Clear previous results
+                <ExplorationMethodStep
+                  onMethodSelect={(method) => {
+                    setExplorationMethod(method);
+                    // Clear previous results based on method
+                    if (method === 'swipe') {
                       setSwipeResults({});
-                      // Increment reset counter to ensure component remounts with fresh state
-                      setResetCounter(prev => prev + 1);
-                      handleNext(); // Automatically proceed to next step
-                    }}
-                  >
-                    <div className="bg-gradient-to-r from-blue-400 to-cyan-500 py-5">
-                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
-                        <span className="material-icons text-2xl text-blue-500">swipe</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-6 text-center">
-                      <h3 className="text-lg font-bold mb-2 text-gray-800">Swipe Cards</h3>
-                      <p className="text-sm text-gray-600">Swipe left or right on different interests, values and lifestyle options</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
-                    onClick={() => {
-                      setExplorationMethod('wheel');
-                      // Clear previous results
+                    } else if (method === 'wheel' || method === 'advancedWheel') {
                       setWheelResults({});
-                      // Increment reset counter to ensure component remounts with fresh state
-                      setResetCounter(prev => prev + 1);
-                      handleNext(); // Automatically proceed to next step
-                    }}
-                  >
-                    <div className="bg-gradient-to-r from-purple-500 to-blue-500 py-5">
-                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
-                        <span className="material-icons text-2xl text-purple-500">casino</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-6 text-center">
-                      <h3 className="text-lg font-bold mb-2 text-gray-800">Identity Wheel</h3>
-                      <p className="text-sm text-gray-600">Spin a wheel to discover prompts about your values, talents, fears and wishes</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
-                    onClick={() => {
-                      setExplorationMethod('advancedWheel');
-                      // Clear previous results
-                      setWheelResults({});
-                      // Increment reset counter to ensure component remounts with fresh state
-                      setResetCounter(prev => prev + 1);
-                      handleNext(); // Automatically proceed to next step
-                    }}
-                  >
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 py-5">
-                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
-                        <span className="material-icons text-2xl text-indigo-500">psychology</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-6 text-center">
-                      <h3 className="text-lg font-bold mb-2 text-gray-800">Advanced Identity Wheel</h3>
-                      <p className="text-sm text-gray-600">Explore deeper aspects of your identity with fun prompts and mini-games</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
-                    onClick={() => {
-                      setExplorationMethod('avatar');
-                      // Clear previous results
-                      setAvatarResults({});
-                      // Increment reset counter to ensure component remounts with fresh state
-                      setResetCounter(prev => prev + 1);
-                      handleNext(); // Automatically proceed to next step
-                    }}
-                  >
-                    <div className="bg-gradient-to-r from-green-500 to-teal-500 py-5">
-                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
-                        <span className="material-icons text-2xl text-green-500">face</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-6 text-center">
-                      <h3 className="text-lg font-bold mb-2 text-gray-800">Future Self Avatar</h3>
-                      <p className="text-sm text-gray-600">Create a personalized avatar that represents your future self</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card 
-                    className="cursor-pointer transition-all hover:shadow-md hover:scale-105 hover:border-primary overflow-hidden"
-                    onClick={() => {
-                      setExplorationMethod('quickSpin');
-                      // Clear previous results
-                      setQuickSpinResults({
-                        superpower: '',
-                        ideal_day: '',
-                        values: '',
-                        activities: '',
-                        feelings: '',
-                        location: '',
-                        team_role: '',
-                        wildcard: ''
-                      });
-                      // Reset the summary shown state
-                      setHasShownQuickSpinSummary(false);
-                      // Increment reset counter to ensure component remounts with fresh state
-                      setResetCounter(prev => prev + 1);
-                    }}
-                  >
-                    <div className="bg-gradient-to-r from-amber-400 to-yellow-500 py-5">
-                      <div className="rounded-full bg-white h-16 w-16 flex items-center justify-center mx-auto mb-2 shadow-lg">
-                        <span className="material-icons text-2xl text-amber-500">toys</span>
-                      </div>
-                    </div>
-                    <CardContent className="p-6 text-center">
-                      <h3 className="text-lg font-bold mb-2 text-gray-800">Quick Spin Game</h3>
-                      <p className="text-sm text-gray-600">Play a quick spinning wheel game to explore your future identity</p>
-                    </CardContent>
-                  </Card>
-                </div>
+                    }
+                  }}
+                  onNext={handleNext}
+                  onReset={() => {
+                    setResetCounter(prev => prev + 1);
+                  }}
+                />
               </Step>
             );
-          } else if (explorationMethod === 'swipe') {
-            return (
-              <Step 
-                title="Find Your Perfect Path" 
-                subtitle="Swipe through cards to tell us what you like and don't like"
-              >
-                <Card>
-                  <CardContent className="p-6">
-                    <SwipeableScenarios 
-                      key={`swipe-${resetCounter}`}
-                      resetKey={resetCounter}
-                      onComplete={(results) => {
-                        setSwipeResults(results);
-                        handleNext();
-                      }} 
-                    />
-                    <div className="flex justify-center mt-6">
-                      <Button variant="outline" onClick={handleRestartExploration}>
-                        <span className="material-icons text-sm mr-1">sports_esports</span>
-                        Play Game Again
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Step>
-            );
-          // The wheel case is now handled with the conditional rendering check below
-          // The advancedWheel case is now handled with the conditional rendering check below
-          // The avatar case is now handled with the conditional rendering check below
-          // The quickSpin case is now handled with the conditional rendering check above
           }
+          // ... rest of the cases remain unchanged ...
         } else {
+          // Direct path selection (I know what I want to do)
           return (
             <Step 
               title="What would you like to do after high school?" 
@@ -1349,8 +1047,6 @@ const Pathways = ({
                   </div>
                 </div>
               </div>
-              
-              {/* Next button removed as cards now auto-progress */}
             </Step>
           );
         }
@@ -1708,10 +1404,15 @@ const Pathways = ({
                       resetKey={resetCounter}
                       onComplete={(results) => {
                         setSwipeResults(results);
-                        // Don't automatically move to the next step
-                        // Let this same case 3 handle it with the swipe results
+                        handleNext();
                       }} 
                     />
+                    <div className="flex justify-center mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </Step>
@@ -2584,130 +2285,24 @@ const Pathways = ({
             </Step>
           );
         } else if (selectedPath === 'military') {
-          // First step: choose military branch
           return (
-            <Step title="Which military branch are you interested in?">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div 
-                  className={`border ${militaryBranch === 'army' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setMilitaryBranch('army');
-                    setUserJourney("After high school, I am interested in joining the Army...");
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${militaryBranch === 'army' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'army' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">shield</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${militaryBranch === 'army' ? 'text-primary' : ''}`}>Army</h5>
-                      <p className="text-sm text-gray-600">Land-based operations</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border ${militaryBranch === 'navy' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setMilitaryBranch('navy');
-                    setUserJourney("After high school, I am interested in joining the Navy...");
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${militaryBranch === 'navy' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'navy' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">sailing</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${militaryBranch === 'navy' ? 'text-primary' : ''}`}>Navy</h5>
-                      <p className="text-sm text-gray-600">Sea-based operations</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border ${militaryBranch === 'airforce' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setMilitaryBranch('airforce');
-                    setUserJourney("After high school, I am interested in joining the Air Force...");
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${militaryBranch === 'airforce' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'airforce' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">flight</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${militaryBranch === 'airforce' ? 'text-primary' : ''}`}>Air Force</h5>
-                      <p className="text-sm text-gray-600">Air-based operations</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border ${militaryBranch === 'marines' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setMilitaryBranch('marines');
-                    setUserJourney("After high school, I am interested in joining the Marines...");
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${militaryBranch === 'marines' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'marines' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">security</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${militaryBranch === 'marines' ? 'text-primary' : ''}`}>Marines</h5>
-                      <p className="text-sm text-gray-600">Amphibious operations</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border ${militaryBranch === 'coastguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setMilitaryBranch('coastguard');
-                    setUserJourney("After high school, I am interested in joining the Coast Guard...");
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${militaryBranch === 'coastguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'coastguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">water</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${militaryBranch === 'coastguard' ? 'text-primary' : ''}`}>Coast Guard</h5>
-                      <p className="text-sm text-gray-600">Maritime safety & security</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div 
-                  className={`border ${militaryBranch === 'spaceguard' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-4 cursor-pointer transition-colors`}
-                  onClick={() => {
-                    setMilitaryBranch('spaceguard');
-                    setUserJourney("After high school, I am interested in joining the Space Force...");
-                  }}
-                >
-                  <div className="flex items-center">
-                    <div className={`rounded-full ${militaryBranch === 'spaceguard' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${militaryBranch === 'spaceguard' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">rocket</span>
-                    </div>
-                    <div>
-                      <h5 className={`font-medium ${militaryBranch === 'spaceguard' ? 'text-primary' : ''}`}>Space Force</h5>
-                      <p className="text-sm text-gray-600">Space operations</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {militaryBranch && (
-                <div className="flex justify-between mt-6">
-                  <Button variant="outline" onClick={handleBack}>Back</Button>
-                  <Button 
-                    onClick={handleNext}
-                    className="bg-green-500 hover:bg-green-600 text-white"
-                  >
-                    Next Step
-                  </Button>
-                </div>
-              )}
+            <Step 
+              title="Military Service Details" 
+              subtitle={`How long do you plan to serve in the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)}?`}
+            >
+              <MilitaryPathSection
+                militaryBranch={militaryBranch}
+                serviceLength={serviceLength}
+                postMilitaryPath={postMilitaryPath}
+                militaryToEducation={militaryToEducation}
+                militaryToJob={militaryToJob}
+                militaryBenefits={militaryBenefits}
+                onBranchChange={setMilitaryBranch}
+                onServiceLengthChange={setServiceLength}
+                onPostMilitaryPathChange={setPostMilitaryPath}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
             </Step>
           );
         } else if (selectedPath === 'gap') {
@@ -2894,484 +2489,29 @@ const Pathways = ({
         return null;
       
       case 4:
-        // Military service length selection
-        if (selectedPath === 'military' && militaryBranch) {
+        if (selectedPath === 'job') {
           return (
             <Step 
-              title={userJourney} 
-              subtitle={`How long do you plan to serve in the ${militaryBranch?.charAt(0).toUpperCase()}${militaryBranch?.slice(1)}?`}
+              title="Choose Your Career" 
+              subtitle="Search and select a career that interests you"
             >
-              {/* Dynamically show appropriate service length options based on branch */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Different branches have different typical service lengths */}
-                {militaryBranch === 'army' && (
-                  <>
-                    <div 
-                      className={`border ${serviceLength === '3year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('3year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 60, // 60% for 3 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(21); // 18 + 3 years service
-                        setUserJourney(userJourney + " for a 3-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '3year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '3year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '3year' ? 'text-primary' : ''}`}>3-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Standard Army initial term</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Partial GI Bill (60%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Housing stipend available</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
-                          <span>No retirement eligibility</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div 
-                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('4year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 100, // 100% for 4 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(22); // 18 + 4 years service
-                        setUserJourney(userJourney + " for a 4-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Extended commitment with full benefits</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Full GI Bill (100%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Housing stipend available</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Potential enlistment bonus</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {militaryBranch === 'navy' && (
-                  <>
-                    <div 
-                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('4year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 80, // 80% for 4 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(22); // 18 + 4 years service
-                        setUserJourney(userJourney + " for a 4-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Standard Navy contract</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Partial GI Bill (80%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Housing stipend available</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
-                          <span>No retirement eligibility</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div 
-                      className={`border ${serviceLength === '5year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('5year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 100, // 100% for 5 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(23); // 18 + 5 years service
-                        setUserJourney(userJourney + " for a 5-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '5year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '5year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '5year' ? 'text-primary' : ''}`}>5-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Extended Navy commitment</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Full GI Bill (100%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Enhanced housing stipend</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Technical training opportunities</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {militaryBranch === 'airforce' && (
-                  <>
-                    <div 
-                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('4year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 80, // 80% for 4 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(22); // 18 + 4 years service
-                        setUserJourney(userJourney + " for a 4-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Minimum Air Force term</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Partial GI Bill (80%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Housing allowance</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Technical training</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div 
-                      className={`border ${serviceLength === '6year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('6year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 100, // 100% for 6 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(24); // 18 + 6 years service
-                        setUserJourney(userJourney + " for a 6-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '6year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '6year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '6year' ? 'text-primary' : ''}`}>6-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Extended Air Force commitment</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Full GI Bill (100%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Enhanced enlistment bonus</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Advanced training options</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {(militaryBranch === 'marines' || militaryBranch === 'coastguard' || militaryBranch === 'spaceguard') && (
-                  <>
-                    <div 
-                      className={`border ${serviceLength === '4year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('4year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 80, // 80% for 4 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(22); // 18 + 4 years service
-                        setUserJourney(userJourney + " for a 4-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '4year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '4year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '4year' ? 'text-primary' : ''}`}>4-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Standard commitment</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Partial GI Bill (80%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Housing stipend available</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-red-500 mr-2 text-sm">cancel</span>
-                          <span>No retirement eligibility</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div 
-                      className={`border ${serviceLength === '5year' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors`}
-                      onClick={() => {
-                        setServiceLength('5year');
-                        // Update benefits
-                        setMilitaryBenefits({
-                          giBillEligible: true,
-                          giBillPercentage: 100, // 100% for 5 years
-                          housingAllowance: true,
-                          veteransPreference: true,
-                          retirementEligible: false
-                        });
-                        setAdjustedStartingAge(23); // 18 + 5 years service
-                        setUserJourney(userJourney + " for a 5-year enlistment");
-                      }}
-                    >
-                      <div className="flex items-center mb-4">
-                        <div className={`rounded-full ${serviceLength === '5year' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === '5year' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                          <span className="material-icons text-sm">timer</span>
-                        </div>
-                        <h5 className={`font-medium ${serviceLength === '5year' ? 'text-primary' : ''}`}>5-Year Enlistment</h5>
-                      </div>
-                      <p className="text-sm text-gray-600">Extended commitment with full benefits</p>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Full GI Bill (100%)</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Enhanced housing stipend</span>
-                        </div>
-                        <div className="flex items-center text-sm">
-                          <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                          <span>Specialized training opportunities</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Career option available for all branches */}
-                <div 
-                  className={`border ${serviceLength === 'career' ? 'border-primary bg-blue-50' : 'border-gray-200 hover:border-primary hover:bg-blue-50'} rounded-lg p-6 cursor-pointer transition-colors col-span-1 md:col-span-2`}
-                  onClick={() => {
-                    setServiceLength('career');
-                    // Update benefits
-                    setMilitaryBenefits({
-                      giBillEligible: true,
-                      giBillPercentage: 100, // 100% for career
-                      housingAllowance: true,
-                      veteransPreference: true,
-                      retirementEligible: true
-                    });
-                    setAdjustedStartingAge(38); // 18 + 20 years service (retirement eligible)
-                    setUserJourney(userJourney + " as a career service member");
-                  }}
-                >
-                  <div className="flex items-center mb-4">
-                    <div className={`rounded-full ${serviceLength === 'career' ? 'bg-primary' : 'bg-gray-200'} h-10 w-10 flex items-center justify-center ${serviceLength === 'career' ? 'text-white' : 'text-gray-600'} mr-3`}>
-                      <span className="material-icons text-sm">military_tech</span>
-                    </div>
-                    <h5 className={`font-medium ${serviceLength === 'career' ? 'text-primary' : ''}`}>Career Service (20+ years)</h5>
-                  </div>
-                  <p className="text-sm text-gray-600">Full career with retirement benefits</p>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm">
-                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                        <span>Full GI Bill (100%)</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                        <span>Full housing benefits</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm">
-                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                        <span>Military pension (50%+ of base pay)</span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <span className="material-icons text-green-500 mr-2 text-sm">check_circle</span>
-                        <span>Lifetime healthcare (Tricare)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between mt-6">
-                <Button
-                  variant="outline"
-                  onClick={handleBack}
-                >
-                  <span className="material-icons mr-2">arrow_back</span>
-                  Back
-                </Button>
-
-                <Button
-                  onClick={() => {
-                    if (serviceLength !== 'career') {
-                      // For non-career, go to post-military path selection
-                      handleNext();
-                    } else {
-                      // For career, go to location selection (skip post-military)
-                      setCurrentStep(6);
-                    }
-                  }}
-                  disabled={!serviceLength}
-                >
-                  Continue
-                  <span className="material-icons ml-2">arrow_forward</span>
-                </Button>
-              </div>
-            </Step>
-          );
-        }
-        // Job pathway - Don't do anything special here, let it continue to the regular flow
-        else if (selectedPath === 'job' && jobType) {
-          // Simply continue with the regular flow from handleNext
-          // This will allow proper job search -> location selection -> create plan
-          return renderCurrentStep();
-        }
-        // Gap year pathway diagram
-        else if (selectedPath === 'gap' && gapYearActivity) {
-          // Get friendly time description for subtitle
-          const getTimeDescription = () => {
-            switch(gapYearLength) {
-              case '3month': return '3-month';
-              case '6month': return '6-month';
-              case '9month': return '9-month';
-              case '12month': return 'full-year';
-              default: return '';
-            }
-          };
-          
-          return (
-            <Step 
-              title={userJourney} 
-              subtitle={`${getTimeDescription()} gap year for ${gapYearActivity.charAt(0).toUpperCase()}${gapYearActivity.slice(1)} activities | Budget: ${formatCurrency(gapYearBudget)}`}
-            >
-              <GapYearPathway 
-                activity={gapYearActivity}
-                length={gapYearLength}
-                budget={gapYearBudget}
-                handleBack={handleBack}
-                handleNext={handleNext}
-                handleSelectPathway={(pathway: string) => {
-                  // This function will handle transitioning to a new pathway after gap year
-                  if (pathway === 'education') {
-                    setSelectedPath('education');
-                    setEducationType('4year'); // Default to 4-year college
-                    setCurrentStep(4); // Go to education path
-                  } else if (pathway === 'job') {
-                    setSelectedPath('job');
-                    setJobType('fulltime'); // Default to full-time job
-                    setCurrentStep(3); // Go to job type selection
-                  } else if (pathway === 'military') {
-                    setSelectedPath('military');
-                    setMilitaryBranch('army'); // Default to Army
-                    setCurrentStep(3); // Go to military branch selection
+              <CareerSearch
+                onCareerSelect={(careerId) => {
+                  setSelectedCareerId(careerId);
+                  const career = allCareers?.find(c => c.id === careerId);
+                  if (career) {
+                    setSelectedProfession(career.title);
+                    handleNext();
                   }
                 }}
+                selectedPath="job"
               />
             </Step>
           );
-        }
-        // Do you have a specific school in mind?
-        else if (isEducationPath(selectedPath) && educationType) {
-          // Set a different title based on whether we came from guided or direct path
-          const stepTitle = guidedPathComplete 
-            ? userJourney
-            : `After high school, I am interested in attending a ${educationType === '4year' 
-                ? '4-year college or university' 
-                : educationType === '2year' 
-                ? '2-year community college' 
-                : 'vocational/trade school'} where...`;
+        } else if (selectedPath === 'education') {
           return (
             <Step 
-              title={stepTitle}
+              title={userJourney} 
               subtitle={`Finding the right ${educationType === '4year' ? '4-year college' : educationType === '2year' ? '2-year college' : 'vocational school'} for you`}
             >
               <div className="space-y-6">
@@ -3527,7 +2667,46 @@ const Pathways = ({
               </div>
             </Step>
           );
+        } else if (selectedPath === 'military') {
+          return (
+            <Step 
+              title="Choose Your Post-Military Career" 
+              subtitle="Select a career you'd like to pursue after military service"
+            >
+              <CareerSearch
+                onCareerSelect={(careerId) => {
+                  setSelectedCareerId(careerId);
+                  const career = allCareers?.find(c => c.id === careerId);
+                  if (career) {
+                    setSelectedProfession(career.title);
+                    handleNext();
+                  }
+                }}
+                selectedPath="military"
+              />
+            </Step>
+          );
+        } else if (selectedPath === 'gap') {
+          return (
+            <Step 
+              title="Choose Your Post-Gap Year Career" 
+              subtitle="Select a career you'd like to pursue after your gap year"
+            >
+              <CareerSearch
+                onCareerSelect={(careerId) => {
+                  setSelectedCareerId(careerId);
+                  const career = allCareers?.find(c => c.id === careerId);
+                  if (career) {
+                    setSelectedProfession(career.title);
+                    handleNext();
+                  }
+                }}
+                selectedPath="gap"
+              />
+            </Step>
+          );
         }
+        break;
       
       case 4.5:
         // Post-gap year navigation - what to do next
@@ -3895,120 +3074,6 @@ const Pathways = ({
                       </div>
                     </>
                   )}
-                </CardContent>
-              </Card>
-            </Step>
-          );
-        } else {
-          return (
-            <Step title="Next Steps" subtitle="Here's what you need to know">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="text-center mb-6">
-                    <div className="rounded-full bg-green-100 text-green-800 h-16 w-16 flex items-center justify-center mx-auto mb-4">
-                      <span className="material-icons text-2xl">check_circle</span>
-                    </div>
-                    <h3 className="text-xl font-medium mb-2">You've chosen your path!</h3>
-                    <p className="text-gray-600">
-                      {isEducationPath(selectedPath) && educationType === '4year' && 'Pursuing a 4-year college degree can open up many career opportunities and provide a well-rounded education.'}
-                      {isEducationPath(selectedPath) && educationType === '2year' && 'Pursuing a 2-year college degree can be a great way to enter the workforce quickly or transfer to a 4-year program later.'}
-                      {isEducationPath(selectedPath) && educationType === 'vocational' && 'Vocational training provides specialized skills that are in high demand in many industries.'}
-                      {selectedPath === 'job' && 'Entering the workforce directly can provide valuable experience and help you save money.'}
-                      {selectedPath === 'military' && 'Military service offers training, education benefits, and the opportunity to serve your country.'}
-                      {selectedPath === 'gap' && 'A gap year can provide time for personal growth and clarity about your future goals.'}
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-4 mb-6">
-                    <h4 className="font-medium">Resources to explore:</h4>
-                    <ul className="space-y-2 text-sm">
-                      {isEducationPath(selectedPath) && educationType === '4year' && (
-                        <>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>College Search: Find the right university for you</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Financial Aid Resources: Learn about scholarships and grants</span>
-                          </li>
-                        </>
-                      )}
-                      
-                      {isEducationPath(selectedPath) && educationType === '2year' && (
-                        <>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Community College Finder: Find colleges in your area</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Financial Aid Information: Learn about grants and scholarships</span>
-                          </li>
-                        </>
-                      )}
-                      
-                      {isEducationPath(selectedPath) && educationType === 'vocational' && (
-                        <>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Trade School Directory: Find vocational schools by program</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Industry Certifications: Credentials that boost your resume</span>
-                          </li>
-                        </>
-                      )}
-                      
-                      {selectedPath === 'job' && (
-                        <>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Resume Builder: Create a professional resume</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Job Search Platforms: Find opportunities in your area</span>
-                          </li>
-                        </>
-                      )}
-                      
-                      {selectedPath === 'military' && (
-                        <>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Military Recruiter Locator: Connect with a recruiter</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>ASVAB Practice Tests: Prepare for the entrance exam</span>
-                          </li>
-                        </>
-                      )}
-                      
-                      {selectedPath === 'gap' && (
-                        <>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Gap Year Programs: Structured experiences with travel, service, or work</span>
-                          </li>
-                          <li className="flex items-start">
-                            <span className="material-icons text-primary mr-2 text-sm">arrow_right</span>
-                            <span>Volunteer Opportunities: Make a difference while gaining experience</span>
-                          </li>
-                        </>
-                      )}
-                    </ul>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={handleBack}>Back</Button>
-                    <Button onClick={handleRestartExploration}>
-                      <span className="material-icons text-sm mr-1">sports_esports</span>
-                      Play Game Again
-                    </Button>
-                  </div>
                 </CardContent>
               </Card>
             </Step>
@@ -5320,8 +4385,98 @@ const Pathways = ({
           );
         }
       
+      case 8:
+        if (showRecommendations) {
+          return (
+            <Step title="Your Pathway Recommendations" subtitle="Based on your preferences, we've identified these potential pathways for you.">
+              <PathwayRecommendations
+                recommendations={[
+                  {
+                    id: "1",
+                    title: "4-Year College Path",
+                    description: "Pursue a bachelor's degree at a university that matches your interests and goals.",
+                    type: "education",
+                    confidence: 0.85
+                  },
+                  {
+                    id: "2",
+                    title: "Career-Focused Path",
+                    description: "Enter the workforce directly with opportunities for growth and advancement.",
+                    type: "career",
+                    confidence: 0.75
+                  },
+                  {
+                    id: "3",
+                    title: "Military Service Path",
+                    description: "Serve in the military with benefits for education and career development.",
+                    type: "lifestyle",
+                    confidence: 0.65
+                  }
+                ]}
+                onSelectPath={handleSelectPath}
+                onStartOver={handleStartOver}
+              />
+            </Step>
+          );
+        }
+      
       default:
         return null;
+    }
+  };
+  
+  // Add this function near the other utility functions
+  const checkCareerEducationRequirement = (careerId: number) => {
+    // Find the career in allCareers
+    const career = allCareers?.find(c => c.id === careerId);
+    
+    if (!career) return;
+
+    // Check if the career's education requirement matches the selected path
+    const careerEducation = career.education?.toLowerCase();
+    const isEducationPath = selectedPath === 'education';
+    const is4YearPath = educationType === '4year';
+    
+    // Show warning if career requires bachelor's but user not on 4-year path
+    if (careerEducation?.includes('bachelor') && isEducationPath && !is4YearPath) {
+      setShowEducationWarning(true);
+      setEducationWarningMessage(
+        `This career typically requires a bachelor's degree. You may want to consider a 4-year college path.`
+      );
+    }
+    // Show warning if career requires advanced degree
+    else if (careerEducation?.includes('master') || careerEducation?.includes('doctor')) {
+      setShowEducationWarning(true);
+      setEducationWarningMessage(
+        `This career typically requires an advanced degree (${careerEducation}). You may need additional education after your bachelor's degree.`
+      );
+    }
+    // Clear any existing warnings if no issues
+    else {
+      setShowEducationWarning(false);
+      setEducationWarningMessage('');
+    }
+  };
+  
+  // Update the handleSelectPath function
+  const handleSelectPath = (pathType: 'education' | 'career' | 'lifestyle', id: string) => {
+    // Find the career path
+    const careerPath = allCareerPaths?.find(path => path.id === parseInt(id));
+    
+    if (careerPath) {
+      // Set the career search query
+      setCareerSearchQuery(careerPath.career_title);
+      
+      // Find matching career in allCareers
+      const matchingCareer = allCareers?.find(
+        c => c.title.toLowerCase() === careerPath.career_title.toLowerCase()
+      );
+      
+      if (matchingCareer) {
+        setSelectedCareerId(matchingCareer.id);
+        setSelectedProfession(matchingCareer.title);
+        checkCareerEducationRequirement(matchingCareer.id);
+      }
     }
   };
   
