@@ -32,11 +32,23 @@ const sqlClient = postgres(process.env.DATABASE_URL!, {
   },
   onparameter: (parameterStatus) => {
     console.log('Database parameter status:', parameterStatus);
+  },
+  onerror: (err) => {
+    console.error('Database connection error:', err);
+    if (err.message.includes('SSL')) {
+      console.error('SSL configuration error. Please check your certificates and SSL settings.');
+    }
   }
 });
 
 // Create a Drizzle instance with the Postgres client and schema
 export const db = drizzle(sqlClient, { schema });
+
+// Export the SSL configuration for use in other parts of the application
+export const getSSLConfig = () => ({
+  ...sslConfig,
+  sslmode: 'verify-full'
+});
 
 export async function executeSQLFile(filename: string) {
   const filePath = path.join(process.cwd(), 'server', 'migrations', filename);
