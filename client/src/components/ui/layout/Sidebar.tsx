@@ -79,6 +79,53 @@ const Sidebar = ({ user }: SidebarProps) => {
               <span className="hidden md:inline">Coffee Calculator</span>
             </Link>
           </li>
+
+          {/* Separator and Test Tools section */}
+          <li className="my-4">
+            <div className="border-t border-gray-200 mx-4"></div>
+          </li>
+          <li className="px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Test Tools
+          </li>
+          <li className="mb-1">
+            <Link 
+              href="/test/parallel-search"
+              className={`flex items-center px-4 py-3 ${
+                location === "/test/parallel-search"
+                  ? "text-primary bg-blue-50 border-l-4 border-primary"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-primary"
+              }`}
+            >
+              <span className="material-icons md:mr-3">search</span>
+              <span className="hidden md:inline">Parallel Search</span>
+            </Link>
+          </li>
+          <li className="mb-1">
+            <Link 
+              href="/test/four-year-path"
+              className={`flex items-center px-4 py-3 ${
+                location === "/test/four-year-path"
+                  ? "text-primary bg-blue-50 border-l-4 border-primary"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-primary"
+              }`}
+            >
+              <span className="material-icons md:mr-3">school</span>
+              <span className="hidden md:inline">Four Year Path</span>
+            </Link>
+          </li>
+          <li className="mb-1">
+            <Link 
+              href="/test/two-year-path"
+              className={`flex items-center px-4 py-3 ${
+                location === "/test/two-year-path"
+                  ? "text-primary bg-blue-50 border-l-4 border-primary"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-primary"
+              }`}
+            >
+              <span className="material-icons md:mr-3">school</span>
+              <span className="hidden md:inline">Two Year Path</span>
+            </Link>
+          </li>
         </ul>
       </nav>
     </aside>

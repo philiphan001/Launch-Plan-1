@@ -42,7 +42,7 @@ import { MilitaryPathSection } from "@/components/pathways/MilitaryPathSection";
 import PathSelectionStep from '@/components/pathways/PathSelectionStep';
 import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
 import CareerSearch from '@/components/pathways/CareerSearch';
-import CollegeSearch from "../components/pathways/CollegeSearch";
+import CollegeSearch from '../components/pathways/CollegeSearch';
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -543,7 +543,7 @@ const Pathways = ({
       return response.json();
     },
     // Only fetch when on college selection step and for 2-year/vocational education types
-    enabled: currentStep === 8 && (educationType === '2year' || educationType === 'vocational')
+    enabled: currentStep === 4 || (currentStep === 8 && (educationType === '2year' || educationType === 'vocational'))
   });
   
   // Use propAllColleges if provided, otherwise use fetched colleges
