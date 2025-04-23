@@ -15,18 +15,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface CareerPath {
-  field_of_study: string;
-  career_title: string;
-  option_rank: number;
-}
-
 interface Location {
   zip_code: string;
   city: string;
   state: string;
   cost_of_living_index: number;
   income_adjustment_factor: number;
+}
+
+interface CareerPath {
+  field_of_study: string;
+  career_title: string;
+  option_rank: number;
 }
 
 interface FourYearCollegePathProps {
@@ -44,7 +44,7 @@ export const FourYearCollegePath: React.FC<FourYearCollegePathProps> = ({
   onBack,
 }) => {
   // Step management
-  const [currentStep, setCurrentStep] = useState<'college' | 'field' | 'career' | 'location'>('college');
+  const [currentStep, setCurrentStep] = useState<'college' | 'field' | 'career' | 'location' | 'review'>('college');
   
   // College selection state
   const [collegeQuery, setCollegeQuery] = useState('');
@@ -137,7 +137,7 @@ export const FourYearCollegePath: React.FC<FourYearCollegePathProps> = ({
     setIsLoadingLocations(true);
     try {
       const results = await parallelSearchService.searchLocations(locationQuery);
-      setLocationResults(results);
+      setLocationResults(results as Location[]);
     } catch (err) {
       setError('Error searching locations: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
@@ -153,10 +153,12 @@ export const FourYearCollegePath: React.FC<FourYearCollegePathProps> = ({
     } else if (currentStep === 'career' && selectedCareer) {
       setCurrentStep('location');
     } else if (currentStep === 'location' && selectedLocation) {
+      setCurrentStep('review');
+    } else if (currentStep === 'review' && selectedCollege && selectedCareer && selectedLocation) {
       onComplete?.({
-        college: selectedCollege!,
+        college: selectedCollege,
         fieldOfStudy,
-        career: selectedCareer!,
+        career: selectedCareer,
         location: selectedLocation,
       });
     }
@@ -203,7 +205,10 @@ export const FourYearCollegePath: React.FC<FourYearCollegePathProps> = ({
               className={`hover:shadow-md transition-shadow cursor-pointer ${
                 selectedCollege?.id === college.id ? 'border-primary' : ''
               }`}
-              onClick={() => setSelectedCollege(college)}
+              onClick={() => {
+                setSelectedCollege(college);
+                setCollegeQuery(college.name);
+              }}
             >
               <CardContent className="p-4">
                 <h4 className="font-semibold">{college.name}</h4>
@@ -320,96 +325,67 @@ export const FourYearCollegePath: React.FC<FourYearCollegePathProps> = ({
 
   const renderLocationSelection = () => (
     <Step
-      title="Where Do You Want to Live?"
-      subtitle="Search by ZIP code (e.g. 90210) or city and state (e.g. San Francisco, CA)"
+      title="Location Details"
+      subtitle="Enter your location information for cost of living calculations."
     >
       <div className="space-y-4">
-        {selectedLocation ? (
-          <div className="bg-green-50 border border-green-100 p-4 rounded-lg">
-            <div className="flex items-start gap-2">
-              <div className="text-green-500 mt-0.5">
-                <span className="material-icons">check_circle</span>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-md font-medium text-green-700 mb-1">Location Selected</h4>
-                <p className="text-sm text-green-600 mb-4">
-                  {selectedLocation.city}, {selectedLocation.state} ({selectedLocation.zip_code})
-                </p>
-                <div className="flex justify-end gap-4">
-                  <Button variant="outline" onClick={() => setSelectedLocation(null)}>
-                    Change Location
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      onComplete?.({
-                        college: selectedCollege!,
-                        fieldOfStudy,
-                        career: selectedCareer!,
-                        location: selectedLocation,
-                      });
-                    }}
-                  >
-                    Create Financial Plan
-                  </Button>
-                </div>
-              </div>
-            </div>
+        <div className="mb-6">
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              placeholder="Enter ZIP code or city, state..."
+              value={locationQuery}
+              onChange={(e) => setLocationQuery(e.target.value)}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handleLocationSearch}
+              disabled={isLoadingLocations || locationQuery.length < 2}
+            >
+              {isLoadingLocations ? 'Searching...' : 'Search'}
+            </Button>
           </div>
-        ) : (
-          <>
-            <div className="mb-6">
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  placeholder="Enter ZIP code or city, state..."
-                  value={locationQuery}
-                  onChange={(e) => setLocationQuery(e.target.value)}
-                  className="flex-1"
-                />
-                <Button 
-                  onClick={handleLocationSearch}
-                  disabled={isLoadingLocations || locationQuery.length < 2}
-                >
-                  {isLoadingLocations ? 'Searching...' : 'Search'}
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Examples: "90210" or "San Francisco, CA"
-              </p>
-            </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Examples: "90210" or "San Francisco, CA"
+          </p>
+        </div>
 
-            <div className="space-y-2">
-              {locationResults.map((location) => (
-                <Card 
-                  key={location.zip_code} 
-                  className={`hover:shadow-md transition-shadow cursor-pointer ${
-                    selectedLocation?.zip_code === location.zip_code ? 'border-primary' : ''
-                  }`}
-                  onClick={() => setSelectedLocation(location)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold">{location.city}, {location.state}</h4>
-                        <p className="text-sm text-gray-600">ZIP: {location.zip_code}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600">Cost of Living Index: {location.cost_of_living_index}</p>
-                        <p className="text-sm text-gray-500">
-                          Income Adjustment: {(location.income_adjustment_factor * 100).toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </>
-        )}
+        <div className="space-y-2">
+          {locationResults.map((location) => (
+            <Card 
+              key={location.zip_code} 
+              className={`hover:shadow-md transition-shadow cursor-pointer ${
+                selectedLocation?.zip_code === location.zip_code ? 'border-primary' : ''
+              }`}
+              onClick={() => setSelectedLocation(location)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-semibold">{location.city}, {location.state}</h4>
+                    <p className="text-sm text-gray-600">ZIP: {location.zip_code}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">Cost of Living Index: {location.cost_of_living_index}</p>
+                    <p className="text-sm text-gray-500">
+                      Income Adjustment: {(location.income_adjustment_factor * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
         <div className="flex justify-between mt-6">
           <Button variant="outline" onClick={handleBack}>
             Back
+          </Button>
+          <Button 
+            onClick={handleNext}
+            disabled={!selectedLocation}
+          >
+            Next: Review
           </Button>
         </div>
       </div>
@@ -509,8 +485,104 @@ export const FourYearCollegePath: React.FC<FourYearCollegePathProps> = ({
     </Step>
   );
 
+  const renderReview = () => (
+    <Step
+      title="Review Your Pathway"
+      subtitle="Review your selections before creating your financial plan."
+    >
+      <Card className="p-6 space-y-4">
+        <div>
+          <h3 className="font-semibold">4-Year College</h3>
+          <p>{selectedCollege?.name}</p>
+          <p className="text-sm text-gray-500">{selectedCollege?.city}, {selectedCollege?.state}</p>
+        </div>
+
+        <div>
+          <h3 className="font-semibold">Field of Study</h3>
+          <p>{fieldOfStudy}</p>
+        </div>
+
+        {selectedCareer && (
+          <div>
+            <h3 className="font-semibold">Career Path</h3>
+            <p>{selectedCareer.title}</p>
+            <p className="text-sm text-gray-600">{selectedCareer.description}</p>
+            {selectedCareer.salary && (
+              <p className="text-sm text-gray-500">
+                Estimated Salary: ${selectedCareer.salary.toLocaleString()}
+              </p>
+            )}
+          </div>
+        )}
+
+        {selectedLocation && (
+          <div>
+            <h3 className="font-semibold">Location</h3>
+            <p>{selectedLocation.city}, {selectedLocation.state}</p>
+            <p className="text-sm text-gray-600">ZIP: {selectedLocation.zip_code}</p>
+            <p className="text-sm text-gray-500">
+              Cost of Living Index: {selectedLocation.cost_of_living_index}
+            </p>
+          </div>
+        )}
+      </Card>
+
+      <div className="flex justify-between mt-6">
+        <Button variant="outline" onClick={handleBack}>
+          Back
+        </Button>
+        <Button
+          onClick={handleNext}
+          disabled={!selectedCollege || !fieldOfStudy || !selectedCareer || !selectedLocation}
+        >
+          Create Financial Plan
+        </Button>
+      </div>
+    </Step>
+  );
+
   return (
     <div className="space-y-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold mb-2">4-Year College Pathway</h1>
+        <p className="text-gray-600">
+          Plan your journey to a 4-year college degree
+        </p>
+      </div>
+
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <div
+              key={step}
+              className={`flex-1 h-2 mx-1 rounded-full ${
+                (step === 1 && currentStep === 'college') ||
+                (step === 2 && currentStep === 'field') ||
+                (step === 3 && currentStep === 'career') ||
+                (step === 4 && currentStep === 'location') ||
+                (step === 5 && currentStep === 'review') ||
+                ((step === 1 && currentStep === 'field') ||
+                 (step === 1 && currentStep === 'career') ||
+                 (step === 1 && currentStep === 'location')) ||
+                ((step === 2 && currentStep === 'career') ||
+                 (step === 2 && currentStep === 'location')) ||
+                (step === 3 && currentStep === 'location') ||
+                (step === 4 && currentStep === 'review')
+                  ? 'bg-primary'
+                  : 'bg-gray-200'
+              }`}
+            />
+          ))}
+        </div>
+        <div className="flex justify-between text-sm text-gray-600">
+          <span>College</span>
+          <span>Field of Study</span>
+          <span>Career</span>
+          <span>Location</span>
+          <span>Review</span>
+        </div>
+      </div>
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
@@ -521,6 +593,7 @@ export const FourYearCollegePath: React.FC<FourYearCollegePathProps> = ({
       {currentStep === 'field' && renderFieldOfStudy()}
       {currentStep === 'career' && renderCareerSelection()}
       {currentStep === 'location' && renderLocationSelection()}
+      {currentStep === 'review' && renderReview()}
     </div>
   );
 }; 

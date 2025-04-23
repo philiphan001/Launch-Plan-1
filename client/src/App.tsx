@@ -22,6 +22,7 @@ import FourYearPathTestPage from "@/pages/test/four-year-path";
 import TwoYearPathTestPage from "@/pages/test/two-year-path";
 import { FourYearCollegePath } from './components/pathways/FourYearCollegePath';
 import TwoYearCollegePath from './components/pathways/TwoYearCollegePath';
+import VocationalPathPage from "@/pages/test/vocational-path";
 
 import { User, AuthProps, RegisterCredentials } from "@/interfaces/auth";
 
@@ -362,7 +363,7 @@ function App() {
   
   // Special case for semi-public routes - add AppShell but don't require authentication
   // This allows non-authenticated users to access these routes with proper navigation
-  if (!isAuthenticated && ["/coffee-calculator", "/test/parallel-search", "/test/four-year-path"].includes(location)) {
+  if (!isAuthenticated && ["/coffee-calculator", "/test/parallel-search", "/test/four-year-path", "/test/two-year-path", "/test/vocational-path"].includes(location)) {
     return (
       <AppShell 
         logout={logout} 
@@ -382,6 +383,12 @@ function App() {
           </Route>
           <Route path="/test/four-year-path">
             {() => <FourYearPathTestPage />}
+          </Route>
+          <Route path="/test/two-year-path">
+            {() => <TwoYearPathTestPage />}
+          </Route>
+          <Route path="/test/vocational-path">
+            {() => <VocationalPathPage />}
           </Route>
         </Switch>
       </AppShell>
@@ -475,6 +482,9 @@ function App() {
           </Route>
           <Route path="/test/two-year-path">
             {() => <TwoYearPathTestPage />}
+          </Route>
+          <Route path="/test/vocational-path">
+            {() => <VocationalPathPage />}
           </Route>
           
           {/* Redirect /assumptions to /settings with assumptions tab */}
