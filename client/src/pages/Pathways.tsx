@@ -25,14 +25,14 @@ declare global {
     _lastAddedCareerId?: number;
   }
 }
-import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
-import RecommendationEngine from "@/components/pathways/RecommendationEngine";
-import IdentityWheel from "@/components/pathways/IdentityWheel";
-import AdvancedWheel from "@/components/pathways/AdvancedWheel";
-import AvatarCreator from "@/components/pathways/AvatarCreator";
-import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
-import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
-import { GapYearPathway } from "@/components/pathways/GapYearPathways";
+import SwipeableScenarios from "@/features/pathways/components/SwipeableScenarios";
+import RecommendationEngine from "@/features/pathways/components/RecommendationEngine";
+import IdentityWheel from "@/features/pathways/components/IdentityWheel";
+import AdvancedWheel from "@/features/pathways/components/AdvancedWheel";
+import AvatarCreator from "@/features/pathways/components/AvatarCreator";
+import QuickSpinWheel from "@/features/pathways/components/QuickSpinWheel";
+import { MilitaryPathway } from "@/features/pathways/components/MilitaryPathways";
+import { GapYearPathway } from "@/features/pathways/components/GapYearPathways";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";

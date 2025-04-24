@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
-import { FourYearCollegePath } from '../pathways/FourYearCollegePath';
-import { Card } from '@/components/ui/card';
+import { useLocation } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 import { College } from '@/types/college';
 import { Career } from '@/types/career';
-import { useLocation } from 'wouter';
-import { toast } from '@/hooks/use-toast';
+import { Location } from '@/types/location';
+import { Card } from '@/components/ui/card';
+import TwoYearCollegePath from '@/components/pathways/TwoYearCollegePath';
 
-interface Location {
-  zip_code: string;
-}
-
-interface FourYearCollegePathTestProps {
+interface TwoYearCollegePathTestProps {
   isAuthenticated?: boolean;
   user?: {
     id: number;
   };
 }
 
-export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = ({
+export const TwoYearCollegePathTest: React.FC<TwoYearCollegePathTestProps> = ({
   isAuthenticated = false,
   user
 }) => {
   const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleComplete = async (data: {
     college: College;
@@ -39,7 +37,7 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
     if (!isAuthenticated) {
       // Store the data in localStorage for later use
       const pathwayData = {
-        educationType: '4year',
+        educationType: '2year',
         selectedFieldOfStudy: data.fieldOfStudy,
         specificSchool: data.college.name,
         selectedProfession: data.career.title,
@@ -48,7 +46,7 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
           city: data.college.city,
           state: data.college.state
         },
-        userJourney: `Pursuing a 4-year degree in ${data.fieldOfStudy} at ${data.college.name}`,
+        userJourney: `Pursuing a 2-year degree in ${data.fieldOfStudy} at ${data.college.name}`,
         zipCode: data.location.zip_code,
         selectedCareer: data.career.id
       };
@@ -94,6 +92,7 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
 
       // 4. Create college calculation
       const collegeCalc = await axios.post('/api/college-calculations', {
+        userId: user?.id,
         collegeId: data.college.id,
         inState: true,
         householdIncome: householdIncome,
@@ -109,32 +108,31 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
         financialAid: financialAid,
         totalCost: totalCost,
         tuitionUsed: tuition,
-        roomAndBoardUsed: roomAndBoard,
-        userId: user?.id // Add the user ID here
+        roomAndBoardUsed: roomAndBoard
       });
 
       // 5. Create career calculation
       const careerCalc = await axios.post('/api/career-calculations', {
+        userId: user?.id,
         careerId: data.career.id,
         projectedSalary: data.career.salary || 40000, // Default salary if none provided
         education: data.fieldOfStudy,
         locationZip: data.location.zip_code,
         adjustedForLocation: true,
         includedInProjection: true,
-        notes: `Auto-generated from Pathways for ${data.career.title}`,
-        userId: user?.id // Add the user ID here
+        notes: `Auto-generated from Pathways for ${data.career.title}`
       });
 
       // 6. Auto-favorite the college
       await axios.post('/api/favorites/colleges', {
-        collegeId: data.college.id,
-        userId: user?.id // Add the user ID here
+        userId: user?.id,
+        collegeId: data.college.id
       });
 
       // 7. Auto-favorite the career
       await axios.post('/api/favorites/careers', {
-        careerId: data.career.id,
-        userId: user?.id // Add the user ID here
+        userId: user?.id,
+        careerId: data.career.id
       });
 
       // 8. Create financial projection using the calculation IDs
@@ -142,18 +140,18 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
         userId: user?.id,
         name: `${data.college.name} - ${data.fieldOfStudy} - ${data.career.title}`,
         projectionData: {
-          ages: [20, 21, 22, 23, 24], // Default 4-year projection
-          netWorth: [-studentLoanAmount, -studentLoanAmount, -studentLoanAmount, -studentLoanAmount, data.career.salary - studentLoanAmount],
-          income: [0, 0, 0, 0, data.career.salary],
-          expenses: [totalCost/4, totalCost/4, totalCost/4, totalCost/4, totalCost * 0.1] // Divide total cost over 4 years
+          ages: [20, 21, 22], // Default 2-year projection
+          netWorth: [-studentLoanAmount, -studentLoanAmount, data.career.salary - studentLoanAmount],
+          income: [0, 0, data.career.salary],
+          expenses: [totalCost/2, totalCost/2, totalCost * 0.1] // Divide total cost over 2 years
         },
         collegeCalculationId: collegeCalc.data.id,
         careerCalculationId: careerCalc.data.id,
-        timeframe: 5,
+        timeframe: 3,
         startingAge: 20,
         startingSavings: 0,
         income: data.career.salary,
-        expenses: totalCost/4,
+        expenses: totalCost/2,
         studentLoanDebt: studentLoanAmount,
         includesCollegeCalculation: true,
         includesCareerCalculation: true,
@@ -171,7 +169,7 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
 
       // 9. Store pathway data in localStorage for the projections page
       const pathwayData = {
-        educationType: '4year',
+        educationType: '2year',
         selectedFieldOfStudy: data.fieldOfStudy,
         specificSchool: data.college.name,
         selectedProfession: data.career.title,
@@ -180,7 +178,7 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
           city: data.college.city,
           state: data.college.state
         },
-        userJourney: `Pursuing a 4-year degree in ${data.fieldOfStudy} at ${data.college.name}`,
+        userJourney: `Pursuing a 2-year degree in ${data.fieldOfStudy} at ${data.college.name}`,
         zipCode: data.location.zip_code,
         selectedCareer: data.career.id
       };
@@ -209,18 +207,19 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">
-          4-Year College Pathway
+          2-Year College Pathway
         </h1>
         <p className="text-gray-600">
-          Plan your journey to a 4-year college degree
+          Plan your journey to a 2-year college degree
         </p>
       </div>
 
       <Card className="bg-white/50 backdrop-blur-sm border-gray-100 shadow-sm">
         <div className="p-6">
-          <FourYearCollegePath
+          <TwoYearCollegePath
             onComplete={handleComplete}
             onBack={() => console.log('Back button clicked')}
+            isAuthenticated={isAuthenticated}
           />
         </div>
       </Card>

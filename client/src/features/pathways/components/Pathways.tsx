@@ -21,13 +21,13 @@ import { Step } from "@/components/pathways/Step";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import SwipeableScenarios from "@/components/pathways/SwipeableScenarios";
-import RecommendationEngine from "@/components/pathways/RecommendationEngine";
-import IdentityWheel from "@/components/pathways/IdentityWheel";
-import AdvancedWheel from "@/components/pathways/AdvancedWheel";
-import AvatarCreator from "@/components/pathways/AvatarCreator";
-import QuickSpinWheel from "@/components/pathways/QuickSpinWheel";
-import QuickSpinSummary from "@/components/pathways/QuickSpinSummary";
+import SwipeableScenarios from "@/features/pathways/components/SwipeableScenarios";
+import RecommendationEngine from "@/features/pathways/components/RecommendationEngine";
+import IdentityWheel from "@/features/pathways/components/IdentityWheel";
+import AdvancedWheel from "@/features/pathways/components/AdvancedWheel";
+import AvatarCreator from "@/features/pathways/components/AvatarCreator";
+import QuickSpinWheel from "@/features/pathways/components/QuickSpinWheel";
+import QuickSpinSummary from "@/features/pathways/components/QuickSpinSummary";
 import { MilitaryPathway } from "@/components/pathways/MilitaryPathways";
 import { GapYearPathway } from "@/components/pathways/GapYearPathways";
 import { PathwayRecommendations } from "@/components/pathways/PathwayRecommendations";
@@ -36,6 +36,8 @@ import PathSelectionStep from '@/components/pathways/PathSelectionStep';
 import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
 import CareerSearch from '@/components/pathways/CareerSearch';
 import { User, AuthProps } from "@/interfaces/auth";
+import { AISummary } from "@/features/pathways/components/recommendation/AISummary";
+import { useRecommendations } from "@/hooks/useRecommendations";
 
 // Add type declaration for our global variable to prevent TypeScript errors
 declare global {
@@ -187,6 +189,8 @@ const Pathways = ({
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [filteredCareerPaths, setFilteredCareerPaths] = useState<CareerPath[] | null>(null);
   const [globalCareerSearch, setGlobalCareerSearch] = useState<boolean>(false);
+  const [hasShownQuickSpinSummary, setHasShownQuickSpinSummary] = useState(false);
+  const [hasShownSwipeSummary, setHasShownSwipeSummary] = useState(false);
 
   // Function to search careers with a given term - directly matching Go To Work pathway
   const searchCareers = (searchTerm: string, showWarnings = false) => {
@@ -470,7 +474,6 @@ const Pathways = ({
     team_role: '',
     wildcard: ''
   });
-  const [hasShownQuickSpinSummary, setHasShownQuickSpinSummary] = useState(false);
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths, isLoading: isLoadingAllPaths } = useQuery({
@@ -1404,12 +1407,11 @@ const Pathways = ({
           };
           
           // If the exploration method is 'swipe', we need to check if we have swipe results
-          // If no swipe results yet, show the swipe cards component first
-          if (explorationMethod === 'swipe' && Object.keys(swipeResults).length === 0) {
+          if (explorationMethod === 'swipe' && (!swipeResults || Object.keys(swipeResults).length === 0)) {
             return (
               <Step 
-                title="Find Your Perfect Path" 
-                subtitle="Swipe through cards to tell us what you like and don't like"
+                title="Swipe Through Scenarios" 
+                subtitle="Swipe right on scenarios that interest you, left on those that don't"
               >
                 <Card>
                   <CardContent className="p-6">
@@ -1418,7 +1420,7 @@ const Pathways = ({
                       resetKey={resetCounter}
                       onComplete={(results) => {
                         setSwipeResults(results);
-                        handleNext();
+                        setHasShownSwipeSummary(true);
                       }} 
                     />
                     <div className="flex justify-center mt-6">
@@ -1429,6 +1431,24 @@ const Pathways = ({
                     </div>
                   </CardContent>
                 </Card>
+              </Step>
+            );
+          }
+          
+          // If we have swipe results, show the summary and recommendations
+          if (explorationMethod === 'swipe' && swipeResults && Object.keys(swipeResults).length > 0 && hasShownSwipeSummary) {
+            return (
+              <Step 
+                title="Your Personalized Recommendations" 
+                subtitle="Based on your swipe card results, here are paths that might be the best fit for you"
+              >
+                <div className="space-y-6">
+                  <AISummary summary={useRecommendations({ preferences: swipeResults }).aiSummary} />
+                  <RecommendationEngine
+                    preferences={swipeResults}
+                    onSelectPath={handleSelectPath}
+                  />
+                </div>
               </Step>
             );
           }

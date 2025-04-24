@@ -31,7 +31,7 @@ interface CareerPath {
 }
 
 interface TwoYearCollegePathProps {
-  onComplete?: (data: { college: College; fieldOfStudy: string; career: Career }) => void;
+  onComplete?: (data: { college: College; fieldOfStudy: string; career: Career; location: Location }) => void;
   onBack?: () => void;
   isAuthenticated?: boolean;
 }
@@ -264,7 +264,7 @@ export default function TwoYearCollegePath({ onComplete, onBack, isAuthenticated
       return;
     }
 
-    if (!selectedCollege || !selectedCareer || !selectedField) {
+    if (!selectedCollege || !selectedCareer || !selectedField || !selectedLocation) {
       toast({
         title: "Missing Information",
         description: "Please complete all steps before submitting.",
@@ -276,7 +276,8 @@ export default function TwoYearCollegePath({ onComplete, onBack, isAuthenticated
     onComplete?.({
       college: selectedCollege,
       fieldOfStudy: selectedField,
-      career: selectedCareer
+      career: selectedCareer,
+      location: selectedLocation
     });
   };
 
