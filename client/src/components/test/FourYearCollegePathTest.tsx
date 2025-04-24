@@ -142,29 +142,47 @@ export const FourYearCollegePathTest: React.FC<FourYearCollegePathTestProps> = (
         userId: user?.id,
         name: `${data.college.name} - ${data.fieldOfStudy} - ${data.career.title}`,
         projectionData: {
-          ages: [20, 21, 22, 23, 24], // Default 4-year projection
-          netWorth: [-studentLoanAmount, -studentLoanAmount, -studentLoanAmount, -studentLoanAmount, data.career.salary - studentLoanAmount],
-          income: [0, 0, 0, 0, data.career.salary],
-          expenses: [totalCost/4, totalCost/4, totalCost/4, totalCost/4, totalCost * 0.1] // Divide total cost over 4 years
+          ages: [20, 21, 22, 23, 24], // 5 years total: 4 years of school + 1 year post-graduation
+          netWorth: [
+            -studentLoanAmount,
+            -(studentLoanAmount * 1.25), // Accumulating debt
+            -(studentLoanAmount * 1.5),
+            -(studentLoanAmount * 1.75),
+            (data.career.salary * 0.8) - (studentLoanAmount * 2) // First year salary minus accumulated debt
+          ],
+          income: [
+            5000, // Part-time work during school
+            5000,
+            7500,
+            7500,
+            data.career.salary // Full salary after graduation
+          ],
+          expenses: [
+            totalCost/4 + 12000, // College costs + living expenses
+            totalCost/4 + 12000,
+            totalCost/4 + 12000,
+            totalCost/4 + 12000,
+            (totalCost * 0.1) + 24000 // Loan payments + higher living expenses post-graduation
+          ]
         },
         collegeCalculationId: collegeCalc.data.id,
         careerCalculationId: careerCalc.data.id,
-        timeframe: 5,
+        timeframe: 5, // 5 years total
         startingAge: 20,
         startingSavings: 0,
         income: data.career.salary,
-        expenses: totalCost/4,
-        studentLoanDebt: studentLoanAmount,
+        expenses: totalCost/4 + 12000, // Annual college costs + living expenses
+        studentLoanDebt: studentLoanAmount * 2, // Total accumulated debt
         includesCollegeCalculation: true,
         includesCareerCalculation: true,
         locationAdjusted: true,
         locationZipCode: data.location.zip_code,
         costOfLivingIndex: locationData.data.income_adjustment_factor || 1.0,
         incomeAdjustmentFactor: locationData.data.income_adjustment_factor || 1.0,
-        emergencyFundAmount: 10000, // Default emergency fund
-        personalLoanTermYears: 5, // Default loan term
-        personalLoanInterestRate: 8.0, // Default interest rate
-        incomeGrowth: 0.03 // Default 3% annual income growth
+        emergencyFundAmount: 15000, // Higher emergency fund for 4-year path
+        personalLoanTermYears: 10, // Longer loan term for higher debt
+        personalLoanInterestRate: 6.8, // Standard federal student loan rate
+        incomeGrowth: 0.04 // Slightly higher income growth for 4-year degree
       };
 
       const projection = await axios.post('/api/financial-projections', financialData);

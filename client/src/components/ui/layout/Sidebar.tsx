@@ -139,6 +139,19 @@ const Sidebar = ({ user }: SidebarProps) => {
               <span className="hidden md:inline">Vocational Path</span>
             </Link>
           </li>
+          <li className="mb-1">
+            <Link 
+              href="/test/swipe-cards"
+              className={`flex items-center px-4 py-3 ${
+                location === "/test/swipe-cards"
+                  ? "text-primary bg-blue-50 border-l-4 border-primary"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-primary"
+              }`}
+            >
+              <span className="material-icons md:mr-3">swipe</span>
+              <span className="hidden md:inline">Swipe Cards Game</span>
+            </Link>
+          </li>
         </ul>
       </nav>
     </aside>

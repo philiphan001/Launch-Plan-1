@@ -38,6 +38,7 @@ import CareerSearch from '@/components/pathways/CareerSearch';
 import { User, AuthProps } from "@/interfaces/auth";
 import { AISummary } from "@/features/pathways/components/recommendation/AISummary";
 import { useRecommendations } from "@/hooks/useRecommendations";
+import SwipeSummary from "@/features/pathways/components/SwipeSummary";
 
 // Add type declaration for our global variable to prevent TypeScript errors
 declare global {
@@ -895,6 +896,7 @@ const Pathways = ({
     // Also reset the results state variables for extra safety
     if (currentMethod === 'swipe') {
       setSwipeResults({});
+      setHasShownSwipeSummary(false);
     } else if (currentMethod === 'wheel' || currentMethod === 'advancedWheel') {
       setWheelResults({});
     } else if (currentMethod === 'avatar') {
@@ -910,6 +912,7 @@ const Pathways = ({
         team_role: '',
         wildcard: ''
       });
+      setHasShownQuickSpinSummary(false);
     }
     
     // Force a rerender after a short delay to ensure state changes are processed
@@ -1420,7 +1423,6 @@ const Pathways = ({
                       resetKey={resetCounter}
                       onComplete={(results) => {
                         setSwipeResults(results);
-                        setHasShownSwipeSummary(true);
                       }} 
                     />
                     <div className="flex justify-center mt-6">
@@ -1435,12 +1437,40 @@ const Pathways = ({
             );
           }
           
-          // If we have swipe results, show the summary and recommendations
-          if (explorationMethod === 'swipe' && swipeResults && Object.keys(swipeResults).length > 0 && hasShownSwipeSummary) {
+          // If we have swipe results but haven't shown the summary yet, show it first
+          if (explorationMethod === 'swipe' && swipeResults && Object.keys(swipeResults).length > 0 && !hasShownSwipeSummary) {
+            return (
+              <Step 
+                title="Your Preferences Summary" 
+                subtitle="Here's what we learned about your interests and preferences"
+              >
+                <Card>
+                  <CardContent className="p-6">
+                    <SwipeSummary 
+                      results={swipeResults} 
+                      onContinue={() => setHasShownSwipeSummary(true)}
+                    />
+                    <div className="flex justify-between mt-6">
+                      <Button variant="outline" onClick={handleRestartExploration}>
+                        <span className="material-icons text-sm mr-1">sports_esports</span>
+                        Play Game Again
+                      </Button>
+                      <Button onClick={() => setHasShownSwipeSummary(true)}>
+                        Continue to Recommendations
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Step>
+            );
+          }
+          
+          // If we have shown the summary, show recommendations
+          if (explorationMethod === 'swipe' && hasShownSwipeSummary) {
             return (
               <Step 
                 title="Your Personalized Recommendations" 
-                subtitle="Based on your swipe card results, here are paths that might be the best fit for you"
+                subtitle="Based on your preferences, here are paths that might be the best fit for you"
               >
                 <div className="space-y-6">
                   <AISummary summary={useRecommendations({ preferences: swipeResults }).aiSummary} />
