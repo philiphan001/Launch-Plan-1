@@ -1,10 +1,11 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useSwipeableCard } from '@/hooks/useSwipeableCard';
 import { scenarios, getCategoryGradient } from '@/data/swipeableScenarios';
+import confetti from 'canvas-confetti';
 
 interface SwipeableScenariosProps {
   onComplete: (results: Record<string, boolean>) => void;
@@ -28,22 +29,53 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   });
   
   if (currentIndex >= scenarios.length) {
-    // All cards have been swiped - show a more exciting completion screen
+    // Trigger confetti effect
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+
     return (
-      <div className="text-center space-y-6">
-        <div className="animate-bounce inline-block mb-4">
-          <span className="text-5xl">🎉</span>
+      <motion.div 
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", duration: 0.8 }}
+        className="text-center space-y-6"
+      >
+        <div className="relative">
+          <motion.div 
+            animate={{ 
+              y: [0, -20, 0],
+              rotate: [0, -10, 10, 0]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
+            className="inline-block mb-4"
+          >
+            <span className="text-6xl filter drop-shadow-lg">🎉</span>
+          </motion.div>
         </div>
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
-          Awesome Job!
+        <h3 className="text-3xl font-bold bg-gradient-to-r from-violet-600 via-pink-500 to-orange-500 text-transparent bg-clip-text animate-gradient">
+          You're Amazing! 
         </h3>
-        <p className="text-gray-600 text-lg">
-          We're finding your perfect matches...
+        <p className="text-gray-600 text-lg font-medium">
+          Get ready to discover your perfect path! 
         </p>
-        <div className="flex justify-center mt-4">
-          <div className="animate-spin h-12 w-12 border-4 border-primary border-t-transparent rounded-full shadow-md"></div>
+        <div className="flex justify-center mt-4 gap-4">
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, 360]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="h-12 w-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg"
+          />
         </div>
-      </div>
+      </motion.div>
     );
   }
   
@@ -53,35 +85,40 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   return (
     <div className="flex flex-col items-center">
       <div className="w-full mb-6">
-        <div className="flex justify-between text-sm text-gray-500 mb-1">
-          <span>Card {currentIndex + 1} of {scenarios.length}</span>
-          <span>{Math.round(progressPercent)}% complete</span>
+        <div className="flex justify-between text-sm font-medium mb-1">
+          <span className="text-primary">Card {currentIndex + 1} of {scenarios.length}</span>
+          <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 text-transparent bg-clip-text">
+            {Math.round(progressPercent)}% complete
+          </span>
         </div>
-        <Progress value={progressPercent} />
+        <Progress 
+          value={progressPercent} 
+          className="h-2 bg-gray-100"
+        />
       </div>
       
-      <div className="relative w-full max-w-md h-72 mb-8">
+      <div className="relative w-full max-w-md h-[400px] mb-8">
         {/* Like/Dislike Indicators */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-between px-4 z-10">
-          {/* Dislike indicator */}
-          <div 
-            className={cn(
-              "bg-red-500 text-white rounded-full px-4 py-2 font-bold transform rotate-[-20deg] transition-opacity shadow-lg",
-              dragOffset < -50 ? "opacity-100" : "opacity-0" 
-            )}
+          <motion.div 
+            animate={{ 
+              opacity: dragOffset < -50 ? 1 : 0,
+              scale: dragOffset < -50 ? 1.1 : 0.8,
+            }}
+            className="bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full px-6 py-3 font-bold transform -rotate-12 shadow-lg backdrop-blur-sm"
           >
-            Nope
-          </div>
+            Not for me
+          </motion.div>
           
-          {/* Like indicator */}
-          <div 
-            className={cn(
-              "bg-green-500 text-white rounded-full px-4 py-2 font-bold transform rotate-[20deg] transition-opacity shadow-lg",
-              dragOffset > 50 ? "opacity-100" : "opacity-0" 
-            )}
+          <motion.div 
+            animate={{ 
+              opacity: dragOffset > 50 ? 1 : 0,
+              scale: dragOffset > 50 ? 1.1 : 0.8,
+            }}
+            className="bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full px-6 py-3 font-bold transform rotate-12 shadow-lg backdrop-blur-sm"
           >
-            Like
-          </div>
+            Love it!
+          </motion.div>
         </div>
         
         {/* Swipeable Card */}
@@ -92,19 +129,35 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
           onDrag={handleDrag}
           onDragEnd={handleDragEnd}
           animate={cardControls}
+          whileDrag={{ scale: 1.02 }}
           className="absolute inset-0"
         >
-          <Card className="h-full w-full">
-            <CardContent className="p-6 h-full flex flex-col">
-              <div className="flex-1">
-                <div className="text-4xl mb-4">{currentScenario.emoji}</div>
-                <h3 className="text-xl font-bold mb-2">{currentScenario.title}</h3>
-                <p className="text-gray-600">{currentScenario.description}</p>
-              </div>
+          <Card className="h-full w-full overflow-hidden bg-gradient-to-br from-white to-gray-50">
+            <CardContent className="p-8 h-full flex flex-col relative">
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1"
+              >
+                <div className="text-6xl mb-6 transform hover:scale-110 transition-transform">
+                  {currentScenario.emoji}
+                </div>
+                <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 text-transparent bg-clip-text">
+                  {currentScenario.title}
+                </h3>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  {currentScenario.description}
+                </p>
+              </motion.div>
               
-              <div className="mt-4">
-                <div className="text-sm text-gray-500 mb-1">Category</div>
-                <div className={`text-sm font-medium bg-gradient-to-r ${getCategoryGradient(currentScenario.category)} text-transparent bg-clip-text`}>
+              <div className="mt-6">
+                <div className="text-sm font-medium text-gray-500 mb-2">Category</div>
+                <div className={cn(
+                  "text-sm font-bold py-2 px-4 rounded-full inline-block",
+                  `bg-gradient-to-r ${getCategoryGradient(currentScenario.category)}`,
+                  "text-white shadow-md"
+                )}>
                   {currentScenario.category}
                 </div>
               </div>
@@ -117,9 +170,9 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
         <Button
           variant="outline"
           onClick={handleSkip}
-          className="px-8"
+          className="px-8 py-6 text-lg font-medium hover:scale-105 transition-transform"
         >
-          Skip
+          Skip This One
         </Button>
       </div>
     </div>
