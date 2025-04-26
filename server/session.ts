@@ -8,25 +8,21 @@ import { getSSLConfig } from './db';
 // Load environment variables
 dotenv.config();
 
-// Construct the database URL from DB_* environment variables
-const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_PASSWORD;
-const dbHost = process.env.DB_HOST;
-const dbPort = process.env.DB_PORT || '5432';
-const dbName = process.env.DB_NAME;
-const dbSSLMode = 'require';
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
 
-const dbUrl = new URL(`postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`);
+const dbUrl = new URL(process.env.DATABASE_URL);
 const sslConfig = getSSLConfig();
 dbUrl.searchParams.set('sslmode', sslConfig.sslmode);
-dbUrl.searchParams.set('sslrootcert', path.join(process.cwd(), 'certificates', 'rds-ca-2019-root.pem'));
+dbUrl.searchParams.set('sslrootcert', path.join(process.cwd(), 'rds-ca-2019-root.pem'));
 
 const PgSession = connectPgSimple(session);
 
 export const sessionStore = new PgSession({
   conString: dbUrl.toString(),
   tableName: 'session',
-  createTableIfMissing: true,
+  createTableIfMissing: false,
   ttl: 24 * 60 * 60, // 24 hours
   pruneSessionInterval: 60 * 60, // 1 hour
 });

@@ -9,21 +9,18 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// Construct the database URL from DB_* environment variables
-const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_PASSWORD;
-const dbHost = process.env.DB_HOST;
-const dbPort = process.env.DB_PORT || '5432';
-const dbName = process.env.DB_NAME;
-const dbSSLMode = 'require';
+// Use DATABASE_URL from environment variables
+const databaseUrl = process.env.DATABASE_URL;
 
-const databaseUrl = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?sslmode=${dbSSLMode}`;
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
 
 // AWS RDS SSL Configuration
 const sslConfig = {
   rejectUnauthorized: true,
-  ca: fs.readFileSync(path.join(process.cwd(), 'certificates', 'rds-ca-2019-root.pem')).toString(),
-  servername: dbHost
+  ca: fs.readFileSync(path.join(process.cwd(), 'rds-ca-2019-root.pem')).toString(),
+  servername: new URL(databaseUrl).hostname
 };
 
 // Create a Postgres client with the database connection string and SSL configuration

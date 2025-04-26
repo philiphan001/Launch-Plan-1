@@ -154,31 +154,45 @@ app.use((err: any, req: any, res: any, next: any) => {
 
 // Add this right after creating the app instance, before setting up routes
 // Create necessary tables on startup
+/*
 (async () => {
   try {
-    await db.execute(sql.raw(`
-      CREATE TABLE IF NOT EXISTS pathway_swipe_responses (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL REFERENCES users(id),
-        session_id UUID NOT NULL,
-        card_id VARCHAR(50) NOT NULL,
-        card_title TEXT NOT NULL,
-        card_category VARCHAR(50) NOT NULL,
-        response BOOLEAN NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    // Check if table exists first
+    const tableExists = await db.execute(sql.raw(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'pathway_swipe_responses'
       );
-
-      CREATE INDEX IF NOT EXISTS idx_pathway_swipe_responses_user_id 
-      ON pathway_swipe_responses(user_id);
-
-      CREATE INDEX IF NOT EXISTS idx_pathway_swipe_responses_session_id 
-      ON pathway_swipe_responses(session_id);
     `));
-    console.log('Pathway responses table created or verified successfully');
+    
+    if (!tableExists[0].exists) {
+      await db.execute(sql.raw(`
+        CREATE TABLE pathway_swipe_responses (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          session_id UUID NOT NULL,
+          card_id VARCHAR(50) NOT NULL,
+          card_title TEXT NOT NULL,
+          card_category VARCHAR(50) NOT NULL,
+          response BOOLEAN NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX idx_pathway_swipe_responses_user_id 
+        ON pathway_swipe_responses(user_id);
+
+        CREATE INDEX idx_pathway_swipe_responses_session_id 
+        ON pathway_swipe_responses(session_id);
+      `));
+      console.log('Pathway responses table created successfully');
+    } else {
+      console.log('Pathway responses table already exists');
+    }
   } catch (error) {
     console.error('Error setting up pathway responses table:', error);
   }
 })();
+*/
 
 (async () => {
   const server = await registerRoutes(app);
@@ -249,7 +263,7 @@ app.use((err: any, req: any, res: any, next: any) => {
 
   server.listen(PORT, host, () => {
     console.log('----------------------------------------');
-    console.log(`Server is running at:`);
+    console.log('Server is running at:');
     console.log(`- Local: http://localhost:${PORT}`);
     console.log(`- Network: http://${host}:${PORT}`);
     console.log('----------------------------------------');
