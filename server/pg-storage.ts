@@ -179,7 +179,7 @@ export class PgStorage implements IStorage {
     // Search by name or location, and filter by education type if provided
     const result = await db.select().from(colleges)
       .where(and(...conditions))
-      .limit(10);
+      .limit(100);
     
     console.log(`Found ${result.length} colleges matching query "${query}" ${educationType ? `with education type "${educationType}"` : ''}`);
     return result;

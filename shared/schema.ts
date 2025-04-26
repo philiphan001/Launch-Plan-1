@@ -10,7 +10,8 @@ import {
   uuid,
   varchar,
   json,
-  primaryKey
+  primaryKey,
+  numeric
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -821,3 +822,37 @@ export const insertPathwayResponseSchema = createInsertSchema(pathwayResponses).
 
 export type PathwayResponse = typeof pathwayResponses.$inferSelect;
 export type InsertPathwayResponse = z.infer<typeof insertPathwayResponseSchema>;
+
+// Cost of living data table
+export const costOfLiving = pgTable("cost_of_living", {
+  id: serial("id").primaryKey(),
+  zipCode: text("zip_code").notNull().unique(),
+  housingCost: numeric("housing_cost"),
+  utilitiesCost: numeric("utilities_cost"),
+  transportationCost: numeric("transportation_cost"),
+  groceriesCost: numeric("groceries_cost"),
+  healthcareCost: numeric("healthcare_cost"),
+  miscCost: numeric("misc_cost"),
+  totalCost: numeric("total_cost"),
+  costIndex: numeric("cost_index"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type CostOfLivingData = typeof costOfLiving.$inferSelect;
+export type InsertCostOfLivingData = typeof costOfLiving.$inferInsert;
+
+// Wealth data table
+export const wealthData = pgTable("wealth_data", {
+  id: serial("id").primaryKey(),
+  zipCode: text("zip_code").notNull().unique(),
+  medianHouseholdIncome: numeric("median_household_income"),
+  medianHomeValue: numeric("median_home_value"),
+  medianNetWorth: numeric("median_net_worth"),
+  percentHighIncome: numeric("percent_high_income"),
+  percentHomeowners: numeric("percent_homeowners"),
+  wealthIndex: numeric("wealth_index"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type WealthData = typeof wealthData.$inferSelect;
+export type InsertWealthData = typeof wealthData.$inferInsert;

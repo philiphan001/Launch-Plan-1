@@ -9,15 +9,25 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Construct the database URL from DB_* environment variables
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbHost = process.env.DB_HOST;
+const dbPort = process.env.DB_PORT || '5432';
+const dbName = process.env.DB_NAME;
+const dbSSLMode = 'require';
+
+const databaseUrl = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?sslmode=${dbSSLMode}`;
+
 // AWS RDS SSL Configuration
 const sslConfig = {
   rejectUnauthorized: true,
   ca: fs.readFileSync(path.join(process.cwd(), 'certificates', 'rds-ca-2019-root.pem')).toString(),
-  servername: new URL(process.env.DATABASE_URL!).hostname
+  servername: dbHost
 };
 
 // Create a Postgres client with the database connection string and SSL configuration
-const sqlClient = postgres(process.env.DATABASE_URL!, {
+const sqlClient = postgres(databaseUrl, {
   ssl: sslConfig,
   connect_timeout: 30, // 30 second connection timeout
   idle_timeout: 60, // 60 second idle timeout
@@ -32,12 +42,6 @@ const sqlClient = postgres(process.env.DATABASE_URL!, {
   },
   onparameter: (parameterStatus) => {
     console.log('Database parameter status:', parameterStatus);
-  },
-  onerror: (err) => {
-    console.error('Database connection error:', err);
-    if (err.message.includes('SSL')) {
-      console.error('SSL configuration error. Please check your certificates and SSL settings.');
-    }
   }
 });
 

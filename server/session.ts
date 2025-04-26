@@ -8,8 +8,15 @@ import { getSSLConfig } from './db';
 // Load environment variables
 dotenv.config();
 
-// Create a modified connection string with SSL parameters
-const dbUrl = new URL(process.env.DATABASE_URL!);
+// Construct the database URL from DB_* environment variables
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbHost = process.env.DB_HOST;
+const dbPort = process.env.DB_PORT || '5432';
+const dbName = process.env.DB_NAME;
+const dbSSLMode = 'require';
+
+const dbUrl = new URL(`postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbName}`);
 const sslConfig = getSSLConfig();
 dbUrl.searchParams.set('sslmode', sslConfig.sslmode);
 dbUrl.searchParams.set('sslrootcert', path.join(process.cwd(), 'certificates', 'rds-ca-2019-root.pem'));
@@ -22,12 +29,6 @@ export const sessionStore = new PgSession({
   createTableIfMissing: true,
   ttl: 24 * 60 * 60, // 24 hours
   pruneSessionInterval: 60 * 60, // 1 hour
-  errorCallback: (err: Error) => {
-    console.error('Session store error:', err);
-    if (err.message.includes('SSL')) {
-      console.error('SSL configuration error in session store. Please check your certificates and SSL settings.');
-    }
-  }
 });
 
 export const sessionConfig = {
