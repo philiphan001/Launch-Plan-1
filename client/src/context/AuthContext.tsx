@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as authService from '../services/firebase-auth';
 
 // User interface that matches what the backend returns
 interface User {
@@ -42,34 +43,110 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const [firebaseLoading, setFirebaseLoading] = useState(true);
+  const [firebaseUser, setFirebaseUser] = useState<any>(null);
+
+  // Listen to Firebase auth state changes directly
+  useEffect(() => {
+    const unsubscribe = authService.onAuthStateChange((currentUser) => {
+      setFirebaseUser(currentUser);
+      setFirebaseLoading(false);
+    });
+
+    // Clean up subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   // On component mount, check if user is authenticated with the server
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setIsAuthenticated(true);
-          setIsFirstTimeUser(!!userData.isFirstTimeUser);
-        } else {
-          // Clear any stale state if not authenticated
-          setUser(null);
-          setIsAuthenticated(false);
-          setIsFirstTimeUser(false);
+        // If there's a token in localStorage, use it
+        const storedToken = localStorage.getItem('authToken');
+        if (storedToken) {
+          setToken(storedToken);
+          
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${storedToken}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            setIsAuthenticated(true);
+            setIsFirstTimeUser(!!userData.isFirstTimeUser);
+            return;
+          } else {
+            // Token is invalid, clear it
+            localStorage.removeItem('authToken');
+            setToken(null);
+          }
         }
+        
+        // No valid token, default to not authenticated
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsFirstTimeUser(false);
       } catch (error) {
         console.error('Failed to check authentication status:', error);
         // If there's an error, ensure user is logged out
         setUser(null);
         setIsAuthenticated(false);
         setIsFirstTimeUser(false);
+        localStorage.removeItem('authToken');
+        setToken(null);
       }
     };
     
     checkAuth();
   }, []);
+  
+  // When Firebase auth state changes, connect it to our backend
+  useEffect(() => {
+    const syncFirebaseAuth = async () => {
+      if (firebaseLoading) return;
+      
+      // If Firebase has a user but we don't have a session, create one
+      if (firebaseUser && !isAuthenticated) {
+        try {
+          // Get ID token from Firebase
+          const idToken = await firebaseUser.getIdToken();
+          
+          // Send to our backend to create/validate session
+          const response = await fetch('/api/auth/session', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${idToken}`,
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+              setUser(data.user);
+              setIsAuthenticated(true);
+              setIsFirstTimeUser(!!data.user.isFirstTimeUser);
+              
+              // Store token for future requests
+              localStorage.setItem('authToken', data.token);
+              setToken(data.token);
+            }
+          } else {
+            console.error('Failed to create session with Firebase token');
+          }
+        } catch (error) {
+          console.error('Error syncing Firebase auth with backend:', error);
+        }
+      }
+    };
+    
+    syncFirebaseAuth();
+  }, [firebaseUser, firebaseLoading, isAuthenticated]);
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -87,10 +164,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(errorData.message || 'Login failed');
       }
       
-      const userData = await response.json();
-      setUser(userData);
+      const data = await response.json();
+      setUser(data.user);
       setIsAuthenticated(true);
-      setIsFirstTimeUser(!!userData.isFirstTimeUser);
+      setIsFirstTimeUser(!!data.user.isFirstTimeUser);
+      
+      // Store token
+      if (data.token) {
+        localStorage.setItem('authToken', data.token);
+        setToken(data.token);
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -119,9 +202,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Use the successful response data
-      setUser(responseData);
+      setUser(responseData.user);
       setIsAuthenticated(true);
       setIsFirstTimeUser(true); // New users are always first-time users
+      
+      // Store token
+      if (responseData.token) {
+        localStorage.setItem('authToken', responseData.token);
+        setToken(responseData.token);
+      }
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
@@ -141,14 +230,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setIsAuthenticated(false);
       setIsFirstTimeUser(false);
+      localStorage.removeItem('authToken');
+      setToken(null);
     }
   };
   
   const completeOnboarding = async () => {
     try {
       if (user) {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         const response = await fetch('/api/users/complete-onboarding', {
           method: 'POST',
+          headers,
           credentials: 'include',
         });
         
@@ -170,7 +270,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error updating onboarding status:', error);
-      // No longer doing fallback local update - we want to ensure server state is consistent
       throw error;
     }
   };
