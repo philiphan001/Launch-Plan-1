@@ -7,7 +7,6 @@ import {
   createHttpLink,
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { FirebaseAuthProvider } from "./context/FirebaseAuthContext";
 import Dashboard from "@/pages/Dashboard";
 import FinancialProjections from "@/pages/FinancialProjections";
 import CareerExploration from "@/pages/CareerExploration";
@@ -40,7 +39,7 @@ const httpLink = createHttpLink({
 
 const authLink = setContext((_, { headers }) => {
   // Get the authentication token from local storage if it exists
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem("token");
   // Return the headers to the context so httpLink can read them
   return {
     headers: {
@@ -65,17 +64,54 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        console.log("Checking authentication status...");
-        const authToken = localStorage.getItem("authToken");
-
-        const headers: Record<string, string> = {};
-        if (authToken) {
-          headers["Authorization"] = `Bearer ${authToken}`;
+        console.log("[AUTH CHECK] Checking authentication status...");
+        
+        // Check if we just completed a successful login via Google
+        const justLoggedIn = sessionStorage.getItem('justLoggedIn') === 'true';
+        if (justLoggedIn) {
+          console.log("[AUTH CHECK] Just logged in flag detected, setting authenticated state");
+          sessionStorage.removeItem('justLoggedIn'); // Clear the flag after using it
+          setIsAuthenticated(true);
+          
+          // We'll still fetch user data in the background
+          // But we won't wait for it to complete before allowing navigation
+          fetch("/api/auth/me", {
+            credentials: "include",
+            headers: {
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache",
+              "Expires": "0"
+            }
+          })
+          .then(response => {
+            if (response.ok) return response.json();
+            throw new Error("Failed to fetch user data");
+          })
+          .then(userData => {
+            console.log("[AUTH CHECK] User data fetched after login:", userData);
+            setUser(userData);
+            setIsFirstTimeUser(!!userData.isFirstTimeUser);
+          })
+          .catch(error => {
+            console.warn("[AUTH CHECK] Error fetching user data after login:", error);
+            // Don't clear auth state here - we already know user is logged in
+          });
+          
+          return; // Exit early with authenticated state
         }
-
-        const response = await fetch("/api/auth/me", { headers });
+        
+        // Normal authentication check
+        const response = await fetch("/api/auth/me", {
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+          }
+        });
+        
         if (!response.ok) {
-          console.log("Not authenticated, status:", response.status);
+          console.log("[AUTH CHECK] Not authenticated, status:", response.status);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -84,12 +120,12 @@ function App() {
           throw new Error("Invalid user data received");
         }
 
-        console.log("Authentication successful, user:", userData);
+        console.log("[AUTH CHECK] Authentication successful, user:", userData);
         setUser(userData);
         setIsAuthenticated(true);
         setIsFirstTimeUser(!!userData.isFirstTimeUser);
       } catch (error) {
-        console.error("Failed to check authentication status:", error);
+        console.error("[AUTH CHECK] Failed to check authentication status:", error);
         // If there's an error, ensure user is logged out
         setUser(null);
         setIsAuthenticated(false);
@@ -452,111 +488,109 @@ function App() {
 
   // Routes that should be displayed within the AppShell layout
   return (
-    <FirebaseAuthProvider>
-      <ApolloProvider client={client}>
-        <AppShell
-          logout={logout}
-          user={user}
-          isAuthenticated={isAuthenticated}
-          isFirstTimeUser={isFirstTimeUser}
-          login={login}
-          signup={signup}
-          completeOnboarding={completeOnboarding}
-        >
-          <Switch>
-            <Route path="/dashboard">
-              {() => {
-                console.log("Dashboard route rendering", {
-                  auth: isAuthenticated,
-                  firstTime: isFirstTimeUser,
-                  user: user,
-                });
-                return <Dashboard {...authProps} />;
-              }}
-            </Route>
-            <Route path="/projections">
-              {() => {
-                // Get projection ID from URL query parameters
-                const params = new URLSearchParams(window.location.search);
-                const projectionId = params.get("id");
-                const timestamp = params.get("t") || Date.now().toString();
+    <ApolloProvider client={client}>
+      <AppShell
+        logout={logout}
+        user={user}
+        isAuthenticated={isAuthenticated}
+        isFirstTimeUser={isFirstTimeUser}
+        login={login}
+        signup={signup}
+        completeOnboarding={completeOnboarding}
+      >
+        <Switch>
+          <Route path="/dashboard">
+            {() => {
+              console.log("Dashboard route rendering", {
+                auth: isAuthenticated,
+                firstTime: isFirstTimeUser,
+                user: user,
+              });
+              return <Dashboard {...authProps} />;
+            }}
+          </Route>
+          <Route path="/projections">
+            {() => {
+              // Get projection ID from URL query parameters
+              const params = new URLSearchParams(window.location.search);
+              const projectionId = params.get("id");
+              const timestamp = params.get("t") || Date.now().toString();
 
-                // Log the projection ID detection during routing
-                if (projectionId) {
-                  console.log(
-                    "App.tsx: Creating new FinancialProjections with ID:",
-                    projectionId,
-                    "timestamp:",
-                    timestamp
-                  );
+              // Log the projection ID detection during routing
+              if (projectionId) {
+                console.log(
+                  "App.tsx: Creating new FinancialProjections with ID:",
+                  projectionId,
+                  "timestamp:",
+                  timestamp
+                );
 
-                  // Always create a completely new component instance on every render with a unique key
-                  // This forces React to unmount and remount the component, clearing all state
-                  return (
-                    <FinancialProjections
-                      {...authProps}
-                      key={`projection-${projectionId}-${timestamp}`}
-                      initialProjectionId={Number(projectionId)}
-                    />
-                  );
-                }
-
-                // For new projections without ID
-                console.log("App.tsx: Creating new blank FinancialProjections");
+                // Always create a completely new component instance on every render with a unique key
+                // This forces React to unmount and remount the component, clearing all state
                 return (
                   <FinancialProjections
                     {...authProps}
-                    key={`new-projection-${timestamp}`}
-                    initialProjectionId={undefined}
+                    key={`projection-${projectionId}-${timestamp}`}
+                    initialProjectionId={Number(projectionId)}
                   />
                 );
-              }}
-            </Route>
-            <Route path="/careers">
-              {() => <CareerExploration {...authProps} />}
-            </Route>
-            <Route path="/career-builder">
-              {() => <CareerBuilder {...authProps} />}
-            </Route>
-            <Route path="/colleges">
-              {() => <CollegeDiscovery {...authProps} />}
-            </Route>
-            <Route path="/calculator">
-              {() => <NetPriceCalculator {...authProps} />}
-            </Route>
-            <Route path="/pathways">{() => <Pathways {...authProps} />}</Route>
-            <Route path="/coffee-calculator">
-              {() => <CoffeeCalculator {...authProps} />}
-            </Route>
-            <Route path="/profile">{() => <Profile user={user} />}</Route>
-            <Route path="/settings">{() => <Settings {...authProps} />}</Route>
-            <Route path="/explore">{() => <Pathways {...authProps} />}</Route>
-            <Route path="/test/parallel-search">
-              {() => <ParallelSearchTestPage />}
-            </Route>
-            <Route path="/test/four-year-path">
-              {() => <FourYearPathTestPage />}
-            </Route>
-            <Route path="/test/two-year-path">
-              {() => <TwoYearPathTestPage />}
-            </Route>
-            <Route path="/test/vocational-path">
-              {() => <VocationalPathPage />}
-            </Route>
-            <Route path="/test/swipe-cards">{() => <SwipeCardsTest />}</Route>
+              }
 
-            {/* Redirect /assumptions to /settings with assumptions tab */}
-            <Route path="/assumptions">
-              {() => {
-                window.location.href = "/settings#assumptions";
-                return null;
-              }}
-            </Route>
-            <Route>{() => <NotFound />}</Route>
-          </Switch>
-        </AppShell>
-      </ApolloProvider>
-    </FirebaseAuthProvider>
+              // For new projections without ID
+              console.log("App.tsx: Creating new blank FinancialProjections");
+              return (
+                <FinancialProjections
+                  {...authProps}
+                  key={`new-projection-${timestamp}`}
+                  initialProjectionId={undefined}
+                />
+              );
+            }}
+          </Route>
+          <Route path="/careers">
+            {() => <CareerExploration {...authProps} />}
+          </Route>
+          <Route path="/career-builder">
+            {() => <CareerBuilder {...authProps} />}
+          </Route>
+          <Route path="/colleges">
+            {() => <CollegeDiscovery {...authProps} />}
+          </Route>
+          <Route path="/calculator">
+            {() => <NetPriceCalculator {...authProps} />}
+          </Route>
+          <Route path="/pathways">{() => <Pathways {...authProps} />}</Route>
+          <Route path="/coffee-calculator">
+            {() => <CoffeeCalculator {...authProps} />}
+          </Route>
+          <Route path="/profile">{() => <Profile user={user} />}</Route>
+          <Route path="/settings">{() => <Settings {...authProps} />}</Route>
+          <Route path="/explore">{() => <Pathways {...authProps} />}</Route>
+          <Route path="/test/parallel-search">
+            {() => <ParallelSearchTestPage />}
+          </Route>
+          <Route path="/test/four-year-path">
+            {() => <FourYearPathTestPage />}
+          </Route>
+          <Route path="/test/two-year-path">
+            {() => <TwoYearPathTestPage />}
+          </Route>
+          <Route path="/test/vocational-path">
+            {() => <VocationalPathPage />}
+          </Route>
+          <Route path="/test/swipe-cards">{() => <SwipeCardsTest />}</Route>
+
+          {/* Redirect /assumptions to /settings with assumptions tab */}
+          <Route path="/assumptions">
+            {() => {
+              window.location.href = "/settings#assumptions";
+              return null;
+            }}
+          </Route>
+          <Route>{() => <NotFound />}</Route>
+        </Switch>
+      </AppShell>
+    </ApolloProvider>
   );
 }
 
