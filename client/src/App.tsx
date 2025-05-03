@@ -65,54 +65,71 @@ function App() {
     const checkAuth = async () => {
       try {
         console.log("[AUTH CHECK] Checking authentication status...");
-        
-        // Check if we just completed a successful login via Google
-        const justLoggedIn = sessionStorage.getItem('justLoggedIn') === 'true';
-        if (justLoggedIn) {
-          console.log("[AUTH CHECK] Just logged in flag detected, setting authenticated state");
-          sessionStorage.removeItem('justLoggedIn'); // Clear the flag after using it
-          setIsAuthenticated(true);
-          
-          // We'll still fetch user data in the background
-          // But we won't wait for it to complete before allowing navigation
-          fetch("/api/auth/me", {
-            credentials: "include",
-            headers: {
-              "Cache-Control": "no-cache, no-store, must-revalidate",
-              "Pragma": "no-cache",
-              "Expires": "0"
-            }
-          })
-          .then(response => {
-            if (response.ok) return response.json();
-            throw new Error("Failed to fetch user data");
-          })
-          .then(userData => {
-            console.log("[AUTH CHECK] User data fetched after login:", userData);
+
+        // First check if we have user data and token in localStorage
+        const storedUser = localStorage.getItem("currentUser");
+        const isAuthenticatedInStorage =
+          localStorage.getItem("isAuthenticated") === "true";
+        const authToken = localStorage.getItem("authToken");
+
+        if (isAuthenticatedInStorage && storedUser) {
+          console.log("[AUTH CHECK] Found authenticated user in localStorage");
+          try {
+            const userData = JSON.parse(storedUser);
             setUser(userData);
+            setIsAuthenticated(true);
             setIsFirstTimeUser(!!userData.isFirstTimeUser);
-          })
-          .catch(error => {
-            console.warn("[AUTH CHECK] Error fetching user data after login:", error);
-            // Don't clear auth state here - we already know user is logged in
-          });
-          
-          return; // Exit early with authenticated state
+
+            // We still verify with the backend using the JWT token if available
+            if (authToken) {
+              fetchAuthStatusWithToken(authToken);
+            } else {
+              fetchAuthStatus();
+            }
+            return;
+          } catch (parseError) {
+            console.error(
+              "[AUTH CHECK] Error parsing stored user data:",
+              parseError
+            );
+            // Continue with normal authentication if storage data is invalid
+          }
         }
-        
-        // Normal authentication check
+
+        // Standard API authentication check
+        fetchAuthStatus();
+      } catch (error) {
+        console.error(
+          "[AUTH CHECK] Failed to check authentication status:",
+          error
+        );
+        // If there's an error, ensure user is logged out
+        clearAuthState();
+      }
+    };
+
+    // Function to fetch authentication status from the server using JWT token
+    const fetchAuthStatusWithToken = async (token: string) => {
+      try {
         const response = await fetch("/api/auth/me", {
           credentials: "include",
           headers: {
             "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Pragma": "no-cache",
-            "Expires": "0"
-          }
+            Pragma: "no-cache",
+            Expires: "0",
+            Authorization: `Bearer ${token}`, // Use JWT token for authentication
+          },
         });
-        
+
         if (!response.ok) {
-          console.log("[AUTH CHECK] Not authenticated, status:", response.status);
-          throw new Error(`HTTP error! status: ${response.status}`);
+          console.log(
+            "[AUTH CHECK] Not authenticated with token, status:",
+            response.status
+          );
+          // Don't clear auth state immediately - we're already using localStorage data
+          // Instead, try a fetch without the token as fallback
+          fetchAuthStatus();
+          return;
         }
 
         const userData = await response.json();
@@ -120,17 +137,73 @@ function App() {
           throw new Error("Invalid user data received");
         }
 
+        console.log(
+          "[AUTH CHECK] Authentication with token successful, user:",
+          userData
+        );
+        setUser(userData);
+        setIsAuthenticated(true);
+        setIsFirstTimeUser(!!userData.isFirstTimeUser);
+
+        // Update localStorage with fresh data
+        localStorage.setItem("currentUser", JSON.stringify(userData));
+        localStorage.setItem("isAuthenticated", "true");
+      } catch (error) {
+        console.error("[AUTH CHECK] API auth check with token failed:", error);
+        // Don't clear auth state - we're already using localStorage data
+      }
+    };
+
+    // Function to fetch authentication status from the server without token
+    const fetchAuthStatus = async () => {
+      try {
+        const response = await fetch("/api/auth/me", {
+          credentials: "include",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        });
+
+        if (!response.ok) {
+          console.log(
+            "[AUTH CHECK] Not authenticated, status:",
+            response.status
+          );
+          clearAuthState();
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const userData = await response.json();
+        if (!userData || typeof userData !== "object") {
+          clearAuthState();
+          throw new Error("Invalid user data received");
+        }
+
         console.log("[AUTH CHECK] Authentication successful, user:", userData);
         setUser(userData);
         setIsAuthenticated(true);
         setIsFirstTimeUser(!!userData.isFirstTimeUser);
+
+        // Update localStorage with fresh data
+        localStorage.setItem("currentUser", JSON.stringify(userData));
+        localStorage.setItem("isAuthenticated", "true");
       } catch (error) {
-        console.error("[AUTH CHECK] Failed to check authentication status:", error);
-        // If there's an error, ensure user is logged out
-        setUser(null);
-        setIsAuthenticated(false);
-        setIsFirstTimeUser(false);
+        console.error("[AUTH CHECK] API auth check failed:", error);
+        clearAuthState();
       }
+    };
+
+    // Function to clear authentication state
+    const clearAuthState = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsFirstTimeUser(false);
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("isFirstTimeUser");
+      localStorage.removeItem("authToken");
     };
 
     checkAuth();
@@ -262,6 +335,11 @@ function App() {
       setUser(null);
       setIsAuthenticated(false);
       setIsFirstTimeUser(false);
+      // Clear local storage data
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("isFirstTimeUser");
+      localStorage.removeItem("authToken");
       setLocation("/");
     }
   };

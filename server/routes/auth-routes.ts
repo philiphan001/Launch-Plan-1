@@ -1,15 +1,14 @@
 import express from "express";
-import admin from "firebase-admin"; // Changed from import * as admin
-import { db } from "../db";
+import { db } from "../db.js"; // Add .js extension for ESM
 import { eq } from "drizzle-orm";
-import { users } from "../../shared/schema";
+import { users } from "../../shared/schema.js"; // Add .js extension for ESM
 import {
   firebaseAuth,
   initializeFirebaseAdmin,
-} from "../middleware/firebase-auth";
-import { generateToken, verifyToken, jwtAuth } from "../utils/jwt";
+} from "../middleware/firebase-auth.js"; // Add .js extension for ESM
+import { generateToken, verifyToken, jwtAuth } from "../utils/jwt.js"; // Add .js extension for ESM
 
-// Initialize Firebase Admin and get the instance
+// Initialize Firebase Admin and get the instance - this will handle any errors properly
 const firebaseAdmin = initializeFirebaseAdmin();
 
 const router = express.Router();
@@ -32,7 +31,6 @@ router.post("/session", async (req, res) => {
     try {
       // Verify the Firebase token
       console.log("📌 Verifying Firebase ID token...");
-      // Use firebaseAdmin instance instead of the imported admin
       const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
 
       if (!decodedToken) {
@@ -96,7 +94,7 @@ router.post("/session", async (req, res) => {
               lastName,
               passwordHash: "FIREBASE_AUTH_USER", // Add a placeholder for Firebase-authenticated users
               createdAt: new Date(),
-              lastLoginAt: new Date(),
+              lastLogin: new Date(), // Changed from lastLoginAt to lastLogin
             })
             .returning();
 
@@ -110,7 +108,7 @@ router.post("/session", async (req, res) => {
           await db
             .update(users)
             .set({
-              lastLoginAt: new Date(),
+              lastLogin: new Date(), // Changed from lastLoginAt to lastLogin
             })
             .where(eq(users.id, user.id));
 
@@ -137,7 +135,7 @@ router.post("/session", async (req, res) => {
           lastName: user.lastName,
           firebaseUid: user.firebaseUid,
           createdAt: user.createdAt,
-          lastLoginAt: user.lastLoginAt,
+          lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
         };
 
         // Generate a JWT token as well
@@ -202,7 +200,7 @@ router.post("/session", async (req, res) => {
         await db
           .update(users)
           .set({
-            lastLoginAt: new Date(),
+            lastLogin: new Date(), // Changed from lastLoginAt to lastLogin
           })
           .where(eq(users.id, user.id));
 
@@ -228,7 +226,7 @@ router.post("/session", async (req, res) => {
           lastName: user.lastName,
           firebaseUid: user.firebaseUid,
           createdAt: user.createdAt,
-          lastLoginAt: user.lastLoginAt,
+          lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
         };
 
         // Generate a fresh JWT token
@@ -307,7 +305,7 @@ router.post("/login", async (req, res) => {
     await db
       .update(users)
       .set({
-        lastLoginAt: new Date(),
+        lastLogin: new Date(), // Changed from lastLoginAt to lastLogin
       })
       .where(eq(users.id, user.id));
 
@@ -328,7 +326,7 @@ router.post("/login", async (req, res) => {
       lastName: user.lastName,
       firebaseUid: user.firebaseUid,
       createdAt: user.createdAt,
-      lastLoginAt: user.lastLoginAt,
+      lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
     };
 
     // Generate a JWT token
@@ -355,32 +353,80 @@ router.post("/login", async (req, res) => {
 });
 
 // Get current authenticated user
-router.get("/me", (req, res) => {
-  // Try session-based authentication first
-  if (req.isAuthenticated && req.isAuthenticated() && req.user) {
-    return res.status(200).json(req.user);
+router.get("/me", async (req, res) => {
+  // Add debugging information
+  console.log("📌 /api/auth/me request received");
+  console.log("📌 Session data:", req.session);
+  console.log("📌 isAuthenticated function exists:", !!req.isAuthenticated);
+  console.log("📌 User in request:", req.user);
+  
+  try {
+    // Check if session has userId - this is our primary session check
+    if (req.session && req.session.userId) {
+      console.log("📌 Found userId in session:", req.session.userId);
+      
+      // Fetch user data from database based on session userId
+      const existingUsers = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, req.session.userId))
+        .limit(1);
+      
+      if (existingUsers.length > 0) {
+        const user = existingUsers[0];
+        console.log("📌 User found in database:", user.id);
+        
+        // Don't expose sensitive data
+        const safeUser = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          firebaseUid: user.firebaseUid,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin
+        };
+        
+        return res.status(200).json(safeUser);
+      }
+    }
+    
+    // If session auth fails, try JWT from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("📌 No Authorization header provided, not authenticated");
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const token = authHeader.split("Bearer ")[1];
+    console.log("📌 Attempting JWT verification");
+    
+    try {
+      const decoded = verifyToken(token);
+      
+      if (!decoded || !decoded.userId) {
+        console.log("📌 JWT verification failed");
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      console.log("📌 JWT verification successful, user ID:", decoded.userId);
+      
+      // Return user info from token
+      return res.status(200).json({
+        id: decoded.userId,
+        username: decoded.username,
+        email: decoded.email,
+        firebaseUid: decoded.firebaseUid,
+      });
+    } catch (error) {
+      console.log("📌 JWT verification error:", error);
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+  } catch (error) {
+    console.error("📌 Error in /api/auth/me:", error);
+    return res.status(500).json({ message: "Server error" });
   }
-
-  // If session auth fails, try JWT from Authorization header
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-
-  const token = authHeader.split("Bearer ")[1];
-  const decoded = verifyToken(token);
-
-  if (!decoded || !decoded.userId) {
-    return res.status(401).json({ message: "Not authenticated" });
-  }
-
-  // Return user info from token
-  return res.status(200).json({
-    id: decoded.userId,
-    username: decoded.username,
-    email: decoded.email,
-    firebaseUid: decoded.firebaseUid,
-  });
 });
 
 // Logout

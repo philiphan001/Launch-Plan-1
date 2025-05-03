@@ -109,33 +109,43 @@ export default function LoginPage(props: LoginPageProps) {
     }
   };
 
-  // Updated Google login handler with session storage flag
+  // Updated Google login handler with JWT token handling
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
       console.log("Starting Google login process...");
-      
+
       // Step 1: Login with Firebase Google Auth
-      const user = await firebaseAuthService.loginWithGoogle();
-      console.log("Firebase authentication successful:", user.displayName);
+      const result = await firebaseAuthService.loginWithGoogle();
+      const { user: firebaseUser, serverData } = result;
       
-      // Set the flag that we just logged in successfully
-      // App.tsx will check for this flag and use it to skip the initial auth check
-      sessionStorage.setItem('justLoggedIn', 'true');
+      console.log("Firebase authentication successful:", firebaseUser.displayName);
+      
+      // Store user data and JWT token in localStorage
+      if (serverData && serverData.user) {
+        localStorage.setItem('currentUser', JSON.stringify(serverData.user));
+        localStorage.setItem('isAuthenticated', 'true');
+      }
+      
+      // Store the JWT token for authenticated API requests
+      if (serverData && serverData.token) {
+        localStorage.setItem('authToken', serverData.token);
+        console.log("JWT token stored successfully");
+      }
       
       toast({
         title: "Login successful!",
         description: "Welcome to Launch Plan.",
       });
-      
-      // Force reload to dashboard
+
+      // Now we can safely navigate to the dashboard
       window.location.href = "/dashboard";
-      
     } catch (error: any) {
       console.error("Google login error details:", error);
       toast({
         title: "Google login failed",
-        description: error.message || "Unable to sign in with Google. Please try again.",
+        description:
+          error.message || "Unable to sign in with Google. Please try again.",
         variant: "destructive",
       });
     } finally {
