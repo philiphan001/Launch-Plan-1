@@ -23,7 +23,7 @@ interface FinancialProjection {
 }
 
 const navItems: NavItem[] = [
-  { path: "/", label: "Dashboard", icon: "dashboard" },
+  { path: "/dashboard", label: "Dashboard", icon: "dashboard" },
   { path: "/pathways", label: "Pathways", icon: "alt_route" },
   { path: "/projections", label: "Financial Projections", icon: "trending_up" },
   { path: "/careers", label: "Career Exploration", icon: "work" },

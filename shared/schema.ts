@@ -1,17 +1,17 @@
-import { 
-  pgTable, 
-  text, 
-  serial, 
-  integer, 
-  boolean, 
-  jsonb, 
-  timestamp, 
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  jsonb,
+  timestamp,
   real,
   uuid,
   varchar,
   json,
   primaryKey,
-  numeric
+  numeric,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -20,7 +20,7 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  passwordHash: text("password_hash").notNull(),
   firstName: text("first_name"),
   lastName: text("last_name"),
   email: text("email"),
@@ -28,7 +28,9 @@ export const users = pgTable("users", {
   zipCode: text("zip_code"),
   birthYear: integer("birth_year"),
   onboardingCompleted: boolean("onboarding_completed").default(false),
+  firebaseUid: text("firebase_uid"), // Add Firebase UID column
   createdAt: timestamp("created_at").defaultNow(),
+  lastLogin: timestamp("last_login"), // Changed from last_login_at to match existing column name
 });
 
 export const insertUserSchema = createInsertSchema(users);
@@ -36,7 +38,9 @@ export const insertUserSchema = createInsertSchema(users);
 // Financial profiles table
 export const financialProfiles = pgTable("financial_profiles", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   householdIncome: integer("household_income"),
   householdSize: integer("household_size"),
   savingsAmount: integer("savings_amount"),
@@ -45,7 +49,9 @@ export const financialProfiles = pgTable("financial_profiles", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertFinancialProfileSchema = createInsertSchema(financialProfiles).pick({
+export const insertFinancialProfileSchema = createInsertSchema(
+  financialProfiles
+).pick({
   userId: true,
   householdIncome: true,
   householdSize: true,
@@ -136,20 +142,30 @@ export const insertCareerSchema = createInsertSchema(careers);
 // Favorites tables
 export const favoriteColleges = pgTable("favorite_colleges", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  collegeId: integer("college_id").references(() => colleges.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
+  collegeId: integer("college_id")
+    .references(() => colleges.id)
+    .notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertFavoriteCollegeSchema = createInsertSchema(favoriteColleges).pick({
+export const insertFavoriteCollegeSchema = createInsertSchema(
+  favoriteColleges
+).pick({
   userId: true,
   collegeId: true,
 });
 
 export const favoriteCareers = pgTable("favorite_careers", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  careerId: integer("career_id").references(() => careers.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
+  careerId: integer("career_id")
+    .references(() => careers.id)
+    .notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -158,14 +174,18 @@ export const insertFavoriteCareerSchema = createInsertSchema(favoriteCareers);
 // Favorite locations table
 export const favoriteLocations = pgTable("favorite_locations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   zipCode: text("zip_code").notNull(),
   city: text("city"),
   state: text("state"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertFavoriteLocationSchema = createInsertSchema(favoriteLocations).pick({
+export const insertFavoriteLocationSchema = createInsertSchema(
+  favoriteLocations
+).pick({
   userId: true,
   zipCode: true,
   city: true,
@@ -175,7 +195,9 @@ export const insertFavoriteLocationSchema = createInsertSchema(favoriteLocations
 // Financial projections table
 export const financialProjections = pgTable("financial_projections", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   name: text("name").notNull(),
   projectionData: jsonb("projection_data").notNull(),
   timeframe: integer("timeframe"),
@@ -199,7 +221,9 @@ export const financialProjections = pgTable("financial_projections", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertFinancialProjectionSchema = createInsertSchema(financialProjections).pick({
+export const insertFinancialProjectionSchema = createInsertSchema(
+  financialProjections
+).pick({
   userId: true,
   name: true,
   projectionData: true,
@@ -226,7 +250,9 @@ export const insertFinancialProjectionSchema = createInsertSchema(financialProje
 // Notification preferences table
 export const notificationPreferences = pgTable("notification_preferences", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   emailNotifications: boolean("email_notifications").default(true),
   financialAlerts: boolean("financial_alerts").default(true),
   careerUpdates: boolean("career_updates").default(true),
@@ -236,7 +262,9 @@ export const notificationPreferences = pgTable("notification_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).pick({
+export const insertNotificationPreferencesSchema = createInsertSchema(
+  notificationPreferences
+).pick({
   userId: true,
   emailNotifications: true,
   financialAlerts: true,
@@ -249,7 +277,9 @@ export const insertNotificationPreferencesSchema = createInsertSchema(notificati
 // Milestones table
 export const milestones = pgTable("milestones", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   type: text("type").notNull(),
   title: text("title").notNull(),
   date: text("date"),
@@ -311,7 +341,7 @@ export const insertMilestoneSchema = createInsertSchema(milestones).pick({
   targetOccupation: true,
   educationField: true,
   targetCareer: true,
-  workStatus: true, 
+  workStatus: true,
   partTimeIncome: true,
   returnToSameProfession: true,
   childrenCount: true,
@@ -326,7 +356,9 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 export type FinancialProfile = typeof financialProfiles.$inferSelect;
-export type InsertFinancialProfile = z.infer<typeof insertFinancialProfileSchema>;
+export type InsertFinancialProfile = z.infer<
+  typeof insertFinancialProfileSchema
+>;
 
 export type College = typeof colleges.$inferSelect;
 export type InsertCollege = z.infer<typeof insertCollegeSchema>;
@@ -341,13 +373,20 @@ export type FavoriteCareer = typeof favoriteCareers.$inferSelect;
 export type InsertFavoriteCareer = typeof favoriteCareers.$inferInsert;
 
 export type FavoriteLocation = typeof favoriteLocations.$inferSelect;
-export type InsertFavoriteLocation = z.infer<typeof insertFavoriteLocationSchema>;
+export type InsertFavoriteLocation = z.infer<
+  typeof insertFavoriteLocationSchema
+>;
 
 export type FinancialProjection = typeof financialProjections.$inferSelect;
-export type InsertFinancialProjection = z.infer<typeof insertFinancialProjectionSchema>;
+export type InsertFinancialProjection = z.infer<
+  typeof insertFinancialProjectionSchema
+>;
 
-export type NotificationPreference = typeof notificationPreferences.$inferSelect;
-export type InsertNotificationPreference = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreference =
+  typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = z.infer<
+  typeof insertNotificationPreferencesSchema
+>;
 
 export type Milestone = typeof milestones.$inferSelect;
 export type InsertMilestone = z.infer<typeof insertMilestoneSchema>;
@@ -388,7 +427,9 @@ export const locationCostOfLiving = pgTable("location_cost_of_living", {
   income_adjustment_factor: real("income_adjustment_factor"), // Income adjustment factor based on cost of living
 });
 
-export const insertLocationCostOfLivingSchema = createInsertSchema(locationCostOfLiving).pick({
+export const insertLocationCostOfLivingSchema = createInsertSchema(
+  locationCostOfLiving
+).pick({
   zip_code: true,
   city: true,
   state: true,
@@ -406,7 +447,9 @@ export const insertLocationCostOfLivingSchema = createInsertSchema(locationCostO
 });
 
 export type LocationCostOfLiving = typeof locationCostOfLiving.$inferSelect;
-export type InsertLocationCostOfLiving = z.infer<typeof insertLocationCostOfLivingSchema>;
+export type InsertLocationCostOfLiving = z.infer<
+  typeof insertLocationCostOfLivingSchema
+>;
 
 // Zip Code Income table
 export const zipCodeIncome = pgTable("zip_code_income", {
@@ -418,13 +461,15 @@ export const zipCodeIncome = pgTable("zip_code_income", {
   home_value: integer("home_value"), // Average home value in the zip code
 });
 
-export const insertZipCodeIncomeSchema = createInsertSchema(zipCodeIncome).pick({
-  state: true,
-  zip_code: true,
-  mean_income: true,
-  estimated_investments: true,
-  home_value: true,
-});
+export const insertZipCodeIncomeSchema = createInsertSchema(zipCodeIncome).pick(
+  {
+    state: true,
+    zip_code: true,
+    mean_income: true,
+    estimated_investments: true,
+    home_value: true,
+  }
+);
 
 export type ZipCodeIncome = typeof zipCodeIncome.$inferSelect;
 export type InsertZipCodeIncome = z.infer<typeof insertZipCodeIncomeSchema>;
@@ -432,26 +477,36 @@ export type InsertZipCodeIncome = z.infer<typeof insertZipCodeIncomeSchema>;
 // Exploration results table
 export const explorationResults = pgTable("exploration_results", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   method: text("method").notNull(),
   results: jsonb("results").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertExplorationResultSchema = createInsertSchema(explorationResults).pick({
+export const insertExplorationResultSchema = createInsertSchema(
+  explorationResults
+).pick({
   userId: true,
   method: true,
   results: true,
 });
 
 export type ExplorationResult = typeof explorationResults.$inferSelect;
-export type InsertExplorationResult = z.infer<typeof insertExplorationResultSchema>;
+export type InsertExplorationResult = z.infer<
+  typeof insertExplorationResultSchema
+>;
 
 // College net price calculation results table
 export const collegeCalculations = pgTable("college_calculations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  collegeId: integer("college_id").references(() => colleges.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
+  collegeId: integer("college_id")
+    .references(() => colleges.id)
+    .notNull(),
   netPrice: integer("net_price").notNull(),
   inState: boolean("in_state").default(true),
   familyContribution: integer("family_contribution"),
@@ -471,7 +526,9 @@ export const collegeCalculations = pgTable("college_calculations", {
 });
 
 // Make the college calculation schema more permissive to handle possible null values
-export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculations)
+export const insertCollegeCalculationSchema = createInsertSchema(
+  collegeCalculations
+)
   .pick({
     userId: true,
     collegeId: true,
@@ -494,21 +551,27 @@ export const insertCollegeCalculationSchema = createInsertSchema(collegeCalculat
   .transform((data) => ({
     ...data,
     // Ensure these string fields are never null
-    zip: data.zip || '00000',
-    notes: data.notes || '',
+    zip: data.zip || "00000",
+    notes: data.notes || "",
     // Ensure required numeric fields have defaults
     familyContribution: data.familyContribution ?? 0,
-    workStudy: data.workStudy ?? 0
+    workStudy: data.workStudy ?? 0,
   }));
 
 export type CollegeCalculation = typeof collegeCalculations.$inferSelect;
-export type InsertCollegeCalculation = z.infer<typeof insertCollegeCalculationSchema>;
+export type InsertCollegeCalculation = z.infer<
+  typeof insertCollegeCalculationSchema
+>;
 
 // Career calculations table for financial projections
 export const careerCalculations = pgTable("career_calculations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  careerId: integer("career_id").references(() => careers.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
+  careerId: integer("career_id")
+    .references(() => careers.id)
+    .notNull(),
   projectedSalary: integer("projected_salary").notNull(),
   startYear: integer("start_year"),
   education: text("education"),
@@ -522,7 +585,9 @@ export const careerCalculations = pgTable("career_calculations", {
   adjustedForLocation: boolean("adjusted_for_location").default(false),
 });
 
-export const insertCareerCalculationSchema = createInsertSchema(careerCalculations).pick({
+export const insertCareerCalculationSchema = createInsertSchema(
+  careerCalculations
+).pick({
   userId: true,
   careerId: true,
   projectedSalary: true,
@@ -538,7 +603,9 @@ export const insertCareerCalculationSchema = createInsertSchema(careerCalculatio
 });
 
 export type CareerCalculation = typeof careerCalculations.$inferSelect;
-export type InsertCareerCalculation = z.infer<typeof insertCareerCalculationSchema>;
+export type InsertCareerCalculation = z.infer<
+  typeof insertCareerCalculationSchema
+>;
 
 // Define categories for assumptions
 export const assumptionCategoryEnum = z.enum([
@@ -584,14 +651,15 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     category: "general",
     key: "personal-loan-term",
     label: "Personal Loan Term",
-    description: "Length of personal loans created when milestone expenses exceed available savings",
+    description:
+      "Length of personal loans created when milestone expenses exceed available savings",
     value: 5,
     defaultValue: 5,
     minValue: 1,
     maxValue: 10,
     stepValue: 1,
     unit: "years",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "general",
@@ -604,7 +672,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 15.0,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "general",
@@ -617,20 +685,21 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 12.0,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "general",
     key: "retirement-contribution-rate",
     label: "Retirement Contribution Rate",
-    description: "Percentage of income contributed to retirement accounts annually",
+    description:
+      "Percentage of income contributed to retirement accounts annually",
     value: 10.0,
     defaultValue: 10.0,
     minValue: 0.0,
     maxValue: 25.0,
     stepValue: 0.5,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "marriage",
@@ -643,7 +712,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 30,
     stepValue: 1,
     unit: "years",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "marriage",
@@ -656,7 +725,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 15,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "marriage",
@@ -669,7 +738,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 10,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "housing",
@@ -682,7 +751,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 10,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "housing",
@@ -695,7 +764,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 10,
     stepValue: 0.125,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "car",
@@ -708,7 +777,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 30,
     stepValue: 1,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "car",
@@ -721,7 +790,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 15,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "education",
@@ -734,7 +803,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 12,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "education",
@@ -747,7 +816,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 30,
     stepValue: 1,
     unit: "years",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "student-loans",
@@ -760,7 +829,7 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 12,
     stepValue: 0.25,
     unit: "%",
-    isEnabled: true
+    isEnabled: true,
   },
   {
     category: "student-loans",
@@ -773,13 +842,15 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 30,
     stepValue: 1,
     unit: "years",
-    isEnabled: true
-  }
+    isEnabled: true,
+  },
 ];
 
 export const pathwaySwipeResponses = pgTable("pathway_swipe_responses", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
   sessionId: uuid("session_id").notNull(),
   cardId: varchar("card_id", { length: 50 }).notNull(),
   cardTitle: text("card_title").notNull(),
@@ -788,7 +859,9 @@ export const pathwaySwipeResponses = pgTable("pathway_swipe_responses", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertPathwaySwipeResponseSchema = createInsertSchema(pathwaySwipeResponses);
+export const insertPathwaySwipeResponseSchema = createInsertSchema(
+  pathwaySwipeResponses
+);
 
 // Session table (for express-session)
 export const session = pgTable("session", {
@@ -798,7 +871,8 @@ export const session = pgTable("session", {
 });
 
 export type PathwaySwipeResponse = typeof pathwaySwipeResponses.$inferSelect;
-export type InsertPathwaySwipeResponse = typeof pathwaySwipeResponses.$inferInsert;
+export type InsertPathwaySwipeResponse =
+  typeof pathwaySwipeResponses.$inferInsert;
 
 export type Session = typeof session.$inferSelect;
 export type InsertSession = typeof session.$inferInsert;
@@ -806,7 +880,9 @@ export type InsertSession = typeof session.$inferInsert;
 // Pathway responses table
 export const pathwayResponses = pgTable("pathway_responses", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   responseData: jsonb("response_data").notNull(),
   version: integer("version").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow(),
@@ -814,7 +890,9 @@ export const pathwayResponses = pgTable("pathway_responses", {
   deletedAt: timestamp("deleted_at"),
 });
 
-export const insertPathwayResponseSchema = createInsertSchema(pathwayResponses).pick({
+export const insertPathwayResponseSchema = createInsertSchema(
+  pathwayResponses
+).pick({
   userId: true,
   responseData: true,
   version: true,

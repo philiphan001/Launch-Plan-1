@@ -9,13 +9,18 @@ async function throwIfResNotOk(res: Response) {
 
 export async function apiRequest(
   url: string,
-  options?: RequestInit,
+  options?: RequestInit
 ): Promise<Response> {
+  // Get the auth token from localStorage if available
+  const authToken = localStorage.getItem("authToken");
+
   const res = await fetch(url, {
     ...options,
     headers: {
       ...options?.headers,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
+      // Add the Authorization header if we have a token
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     },
     credentials: "include",
   });
@@ -30,8 +35,15 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Get the auth token from localStorage if available
+    const authToken = localStorage.getItem("authToken");
+
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers: {
+        // Add the Authorization header if we have a token
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

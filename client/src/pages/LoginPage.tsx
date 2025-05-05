@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { AuthProps } from "@/interfaces/auth";
-// Import the Firebase auth service directly instead of the hook
+// Import just what we need directly from firebase-auth.ts
 import * as firebaseAuthService from "@/services/firebase-auth";
 
 interface LoginPageProps extends Partial<AuthProps> {}
@@ -26,6 +26,38 @@ export default function LoginPage(props: LoginPageProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isCheckingRedirect, setIsCheckingRedirect] = useState(true);
+
+  // Check for Google redirect result on component mount
+  useEffect(() => {
+    async function checkRedirectResult() {
+      try {
+        console.log("[DEBUG] Checking for Google redirect result");
+        const result = await firebaseAuthService.handleGoogleRedirect();
+
+        if (result && result.user) {
+          console.log("[DEBUG] Successfully signed in via redirect");
+          toast({
+            title: "Login successful!",
+            description: "Welcome to Launch Plan.",
+          });
+          setLocation("/dashboard");
+        }
+      } catch (error) {
+        console.error("[DEBUG] Error handling redirect:", error);
+        toast({
+          title: "Google login failed",
+          description: "Unable to sign in with Google. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsCheckingRedirect(false);
+      }
+    }
+
+    checkRedirectResult();
+    setIsCheckingRedirect(false); // Ensure we don't get stuck on redirect check
+  }, [toast, setLocation]);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -58,47 +90,46 @@ export default function LoginPage(props: LoginPageProps) {
     setIsLoading(true);
 
     try {
-      // Check if login is provided via props
+      console.log("[DEBUG] Attempting login with email/password");
+
+      // Use direct service call instead of hook
+      await firebaseAuthService.loginWithEmail(
+        formData.username,
+        formData.password
+      );
+
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to Launch Plan.",
+      });
+
+      // Navigate to dashboard after successful login
+      setLocation("/dashboard");
+    } catch (error) {
+      console.error("[DEBUG] Firebase login failed:", error);
+
+      // Try using the prop-based login as fallback
       if (login) {
-        await login({
-          username: formData.username,
-          password: formData.password,
-        });
-
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to Launch Plan.",
-        });
-
-        // Returning users go to dashboard
-        setLocation("/dashboard");
-      } else {
-        // Fallback - direct API call if login function not provided
-        const response = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        try {
+          console.log("[DEBUG] Attempting login with props.login");
+          await login({
             username: formData.username,
             password: formData.password,
-          }),
-          credentials: "include",
-        });
+          });
 
-        if (!response.ok) {
-          throw new Error("Login failed");
+          toast({
+            title: "Login successful!",
+            description: "Welcome back to Launch Plan.",
+          });
+
+          setLocation("/dashboard");
+          return;
+        } catch (loginError) {
+          console.error("[DEBUG] Props login failed:", loginError);
         }
-
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to Launch Plan.",
-        });
-
-        // Refresh the page to trigger auth check
-        window.location.href = "/dashboard";
       }
-    } catch (error) {
+
+      // Both methods failed
       toast({
         title: "Login failed",
         description: "Invalid username or password. Please try again.",
@@ -109,49 +140,53 @@ export default function LoginPage(props: LoginPageProps) {
     }
   };
 
-  // Updated Google login handler with JWT token handling
+  // Use the direct firebase service for Google login
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
-      console.log("Starting Google login process...");
+      console.log("[DEBUG] Starting Google login process...");
 
-      // Step 1: Login with Firebase Google Auth
+      // Call the service directly instead of using hooks
       const result = await firebaseAuthService.loginWithGoogle();
-      const { user: firebaseUser, serverData } = result;
-      
-      console.log("Firebase authentication successful:", firebaseUser.displayName);
-      
-      // Store user data and JWT token in localStorage
-      if (serverData && serverData.user) {
-        localStorage.setItem('currentUser', JSON.stringify(serverData.user));
-        localStorage.setItem('isAuthenticated', 'true');
-      }
-      
-      // Store the JWT token for authenticated API requests
-      if (serverData && serverData.token) {
-        localStorage.setItem('authToken', serverData.token);
-        console.log("JWT token stored successfully");
-      }
-      
-      toast({
-        title: "Login successful!",
-        description: "Welcome to Launch Plan.",
-      });
 
-      // Now we can safely navigate to the dashboard
-      window.location.href = "/dashboard";
+      console.log(
+        "[DEBUG] Google sign-in result:",
+        result && result.user ? "Success" : "Failed"
+      );
+
+      if (result && result.user) {
+        toast({
+          title: "Login successful!",
+          description: "Welcome to Launch Plan.",
+        });
+
+        // Navigate to dashboard after successful login
+        setLocation("/dashboard");
+      }
     } catch (error: any) {
-      console.error("Google login error details:", error);
-      toast({
-        title: "Google login failed",
-        description:
-          error.message || "Unable to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
+      // Only show an error if it's not a redirect (redirects aren't errors)
+      if (!sessionStorage.getItem("usingGoogleRedirect")) {
+        console.error("[DEBUG] Google login error:", error);
+        toast({
+          title: "Google login failed",
+          description:
+            error.message || "Unable to sign in with Google. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsGoogleLoading(false);
     }
   };
+
+  // Show loading state while checking for redirect
+  if (isCheckingRedirect) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
+        <div className="text-white">Checking authentication status...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">

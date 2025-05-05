@@ -3,7 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -12,46 +18,23 @@ import SavedCalculationsSection from "@/components/profile/SavedCalculationsSect
 import { AuthProps } from "@/interfaces/auth";
 import CollegeList from "@/components/profile/CollegeList";
 import { LoadingScreen } from "@/components/ui/loading-screen";
-
-// Types for the favorites
-type FavoriteCollege = {
-  id: number;
-  userId: number;
-  collegeId: number;
-  college: {
-    id: number;
-    name: string;
-    location: string | null;
-    state: string | null;
-    type: string | null;
-    // Other college properties...
-  };
-};
-
-type FavoriteCareer = {
-  id: number;
-  userId: number;
-  careerId: number;
-  createdAt?: string;
-  career?: {
-    id: number;
-    title: string;
-    description?: string;
-    salary?: number;
-  };
-};
+import {
+  FavoritesService,
+  FavoriteCollege,
+  FavoriteCareer,
+} from "@/services/favoritesService";
 
 interface ProfileProps {
-  user?: AuthProps['user'];
+  user?: AuthProps["user"];
 }
 
 const Profile = ({ user }: ProfileProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Use the authenticated user's ID from props
   const userId = user?.id;
-  
+
   // User info state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -59,24 +42,24 @@ const Profile = ({ user }: ProfileProps) => {
   const [currentLocation, setCurrentLocation] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [birthYear, setBirthYear] = useState(0);
-  
+
   // Financial profile state
   const [householdIncome, setHouseholdIncome] = useState("");
   const [householdSize, setHouseholdSize] = useState("");
   const [savingsAmount, setSavingsAmount] = useState("");
   const [studentLoanAmount, setStudentLoanAmount] = useState("");
   const [otherDebtAmount, setOtherDebtAmount] = useState("");
-  
+
   // Fetch user data
   const { data: userData, isLoading: isLoadingUser } = useQuery({
-    queryKey: ['/api/users', userId],
+    queryKey: ["/api/users", userId],
     queryFn: async () => {
       if (!userId) return null;
       const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch user data');
+      if (!response.ok) throw new Error("Failed to fetch user data");
       return response.json();
     },
-    enabled: !!userId
+    enabled: !!userId,
   });
 
   // Update local state when user data is loaded
@@ -91,43 +74,38 @@ const Profile = ({ user }: ProfileProps) => {
     }
   }, [userData]);
 
-  // Fetch favorite colleges
-  const { data: favoriteColleges = [], isLoading: isLoadingColleges } = useQuery({
-    queryKey: ['/api/favorites/colleges', userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      const response = await fetch(`/api/favorites/colleges/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch favorite colleges');
-      const data = await response.json();
-      return data;
-    },
-    enabled: !!userId
-  });
-  
-  // Fetch favorite careers
+  // Fetch favorite colleges using FavoritesService
+  const { data: favoriteColleges = [], isLoading: isLoadingColleges } =
+    useQuery({
+      queryKey: ["/api/favorites/colleges", userId],
+      queryFn: async () => {
+        if (!userId) return [];
+        return await FavoritesService.getFavoriteColleges(userId);
+      },
+      enabled: !!userId,
+    });
+
+  // Fetch favorite careers using FavoritesService
   const { data: favoriteCareers = [], isLoading: isLoadingCareers } = useQuery({
-    queryKey: ['/api/favorites/careers', userId],
+    queryKey: ["/api/favorites/careers", userId],
     queryFn: async () => {
       if (!userId) return [];
-      const response = await fetch(`/api/favorites/careers/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch favorite careers');
-      const data = await response.json();
-      return data;
+      return await FavoritesService.getFavoriteCareers(userId);
     },
-    enabled: !!userId
+    enabled: !!userId,
   });
-  
+
   // Update user profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async () => {
       if (!userId) {
-        throw new Error('User not authenticated');
+        throw new Error("User not authenticated");
       }
-      
+
       const response = await fetch(`/api/users/${userId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           firstName,
@@ -138,16 +116,16 @@ const Profile = ({ user }: ProfileProps) => {
           birthYear,
         }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error("Failed to update profile");
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {
       // Invalidate the user data cache to refresh the profile
-      queryClient.invalidateQueries({ queryKey: ['/api/users', userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users", userId] });
       toast({
         title: "Profile updated",
         description: "Your profile information has been saved.",
@@ -160,20 +138,24 @@ const Profile = ({ user }: ProfileProps) => {
         description: "There was a problem updating your profile information.",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleSaveProfile = () => {
     updateProfileMutation.mutate();
   };
-  
+
   // Update financial profile mutation
   const updateFinancialMutation = useMutation({
     mutationFn: async () => {
       // First check if financial profile exists for this user
-      const checkResponse = await fetch(`/api/financial-profiles/user/${userId}`);
-      const existingProfile = checkResponse.ok ? await checkResponse.json() : null;
-      
+      const checkResponse = await fetch(
+        `/api/financial-profiles/user/${userId}`
+      );
+      const existingProfile = checkResponse.ok
+        ? await checkResponse.json()
+        : null;
+
       const financialData = {
         userId: userId,
         householdIncome: parseInt(householdIncome) || 0,
@@ -182,33 +164,36 @@ const Profile = ({ user }: ProfileProps) => {
         studentLoanAmount: parseInt(studentLoanAmount) || 0,
         otherDebtAmount: parseInt(otherDebtAmount) || 0,
       };
-      
+
       let response;
-      
+
       if (existingProfile) {
         // Update existing profile
-        response = await fetch(`/api/financial-profiles/${existingProfile.id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(financialData),
-        });
+        response = await fetch(
+          `/api/financial-profiles/${existingProfile.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(financialData),
+          }
+        );
       } else {
         // Create new profile
-        response = await fetch('/api/financial-profiles', {
-          method: 'POST',
+        response = await fetch("/api/financial-profiles", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(financialData),
         });
       }
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update financial profile');
+        throw new Error("Failed to update financial profile");
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {
@@ -224,26 +209,22 @@ const Profile = ({ user }: ProfileProps) => {
         description: "There was a problem updating your financial information.",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleSaveFinancial = () => {
     updateFinancialMutation.mutate();
   };
 
-  // Remove favorite college mutation
+  // Remove favorite college mutation using FavoritesService
   const removeFavoriteMutation = useMutation({
     mutationFn: async (favoriteId: number) => {
-      const response = await fetch(`/api/favorites/colleges/${favoriteId}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to remove favorite college');
-      }
+      return await FavoritesService.removeCollegeFromFavorites(favoriteId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', userId] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/favorites/colleges", userId],
+      });
       toast({
         title: "College removed",
         description: "College has been removed from your favorites.",
@@ -253,29 +234,26 @@ const Profile = ({ user }: ProfileProps) => {
       console.error("Error removing favorite college:", error);
       toast({
         title: "Error removing college",
-        description: "There was a problem removing this college from your favorites.",
+        description:
+          "There was a problem removing this college from your favorites.",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const removeFavoriteCollege = (id: number) => {
     removeFavoriteMutation.mutate(id);
   };
-  
-  // Remove favorite career mutation
+
+  // Remove favorite career mutation using FavoritesService
   const removeFavoriteCareerMutation = useMutation({
     mutationFn: async (favoriteId: number) => {
-      const response = await fetch(`/api/favorites/careers/${favoriteId}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to remove favorite career');
-      }
+      return await FavoritesService.removeCareerFromFavorites(favoriteId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites/careers', userId] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/favorites/careers", userId],
+      });
       toast({
         title: "Career removed",
         description: "Career has been removed from your favorites.",
@@ -285,10 +263,11 @@ const Profile = ({ user }: ProfileProps) => {
       console.error("Error removing favorite career:", error);
       toast({
         title: "Error removing career",
-        description: "There was a problem removing this career from your favorites.",
+        description:
+          "There was a problem removing this career from your favorites.",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const removeFavoriteCareer = (id: number) => {
@@ -297,8 +276,10 @@ const Profile = ({ user }: ProfileProps) => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">User Profile</h1>
-      
+      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">
+        User Profile
+      </h1>
+
       <Tabs defaultValue="profile">
         <TabsList className="mb-6">
           <TabsTrigger value="profile">Personal Info</TabsTrigger>
@@ -306,113 +287,118 @@ const Profile = ({ user }: ProfileProps) => {
           <TabsTrigger value="favorites">My Favorites</TabsTrigger>
           <TabsTrigger value="calculations">Saved Calculations</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="profile">
           <Card>
             <CardContent className="pt-6">
               <h3 className="text-lg font-medium mb-4">Personal Information</h3>
-              
+
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input 
-                      id="firstName" 
-                      value={firstName} 
-                      onChange={(e) => setFirstName(e.target.value)} 
+                    <Input
+                      id="firstName"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input 
-                      id="lastName" 
-                      value={lastName} 
-                      onChange={(e) => setLastName(e.target.value)} 
+                    <Input
+                      id="lastName"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                       className="mt-1"
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="email">Email Address</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="mt-1"
                   />
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="location">Current Location</Label>
-                    <Input 
-                      id="location" 
-                      value={currentLocation} 
-                      onChange={(e) => setCurrentLocation(e.target.value)} 
+                    <Input
+                      id="location"
+                      value={currentLocation}
+                      onChange={(e) => setCurrentLocation(e.target.value)}
                       className="mt-1"
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="zipCode">Zip Code</Label>
-                    <Input 
-                      id="zipCode" 
-                      value={zipCode} 
-                      onChange={(e) => setZipCode(e.target.value)} 
+                    <Input
+                      id="zipCode"
+                      value={zipCode}
+                      onChange={(e) => setZipCode(e.target.value)}
                       className="mt-1"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) for example data.
+                      Try 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San
+                      Francisco), or 30328 (Atlanta) for example data.
                     </p>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="birthYear">Birth Year</Label>
-                  <Input 
-                    id="birthYear" 
-                    type="number" 
-                    value={birthYear} 
-                    onChange={(e) => setBirthYear(parseInt(e.target.value))} 
+                  <Input
+                    id="birthYear"
+                    type="number"
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(parseInt(e.target.value))}
                     className="mt-1"
                     min="1900"
                     max={new Date().getFullYear()}
                   />
                 </div>
               </div>
-              
-              <Button className="mt-6" onClick={handleSaveProfile}>Save Changes</Button>
+
+              <Button className="mt-6" onClick={handleSaveProfile}>
+                Save Changes
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="financial">
           <Card>
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Financial Information</h3>
-              
+              <h3 className="text-lg font-medium mb-4">
+                Financial Information
+              </h3>
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="income">Annual Household Income</Label>
                   <div className="flex items-center mt-1">
                     <span className="mr-2">$</span>
-                    <Input 
-                      id="income" 
-                      type="number" 
-                      value={householdIncome} 
-                      onChange={(e) => setHouseholdIncome(e.target.value)} 
+                    <Input
+                      id="income"
+                      type="number"
+                      value={householdIncome}
+                      onChange={(e) => setHouseholdIncome(e.target.value)}
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="householdSize">Household Size</Label>
-                  <Select 
-                    value={householdSize} 
+                  <Select
+                    value={householdSize}
                     onValueChange={setHouseholdSize}
                   >
                     <SelectTrigger className="mt-1">
@@ -428,52 +414,54 @@ const Profile = ({ user }: ProfileProps) => {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="savings">Current Savings</Label>
                   <div className="flex items-center mt-1">
                     <span className="mr-2">$</span>
-                    <Input 
-                      id="savings" 
-                      type="number" 
-                      value={savingsAmount} 
-                      onChange={(e) => setSavingsAmount(e.target.value)} 
+                    <Input
+                      id="savings"
+                      type="number"
+                      value={savingsAmount}
+                      onChange={(e) => setSavingsAmount(e.target.value)}
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="studentLoans">Student Loan Debt</Label>
                   <div className="flex items-center mt-1">
                     <span className="mr-2">$</span>
-                    <Input 
-                      id="studentLoans" 
-                      type="number" 
-                      value={studentLoanAmount} 
-                      onChange={(e) => setStudentLoanAmount(e.target.value)} 
+                    <Input
+                      id="studentLoans"
+                      type="number"
+                      value={studentLoanAmount}
+                      onChange={(e) => setStudentLoanAmount(e.target.value)}
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="otherDebt">Other Debt</Label>
                   <div className="flex items-center mt-1">
                     <span className="mr-2">$</span>
-                    <Input 
-                      id="otherDebt" 
-                      type="number" 
-                      value={otherDebtAmount} 
-                      onChange={(e) => setOtherDebtAmount(e.target.value)} 
+                    <Input
+                      id="otherDebt"
+                      type="number"
+                      value={otherDebtAmount}
+                      onChange={(e) => setOtherDebtAmount(e.target.value)}
                     />
                   </div>
                 </div>
               </div>
-              
-              <Button className="mt-6" onClick={handleSaveFinancial}>Save Financial Information</Button>
+
+              <Button className="mt-6" onClick={handleSaveFinancial}>
+                Save Financial Information
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="favorites">
           <div className="grid grid-cols-1 gap-6">
             <Card>
@@ -490,20 +478,26 @@ const Profile = ({ user }: ProfileProps) => {
                     {favoriteCareers && favoriteCareers.length > 0 ? (
                       <div className="space-y-3">
                         {favoriteCareers.map((favorite: FavoriteCareer) => (
-                          <div 
-                            key={favorite.id} 
+                          <div
+                            key={favorite.id}
                             className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
                           >
                             <div className="flex items-center">
-                              <span className="font-bold text-primary mr-2">💼</span>
-                              <span>{favorite.career?.title || "Unknown Career"}</span>
+                              <span className="font-bold text-primary mr-2">
+                                💼
+                              </span>
+                              <span>
+                                {favorite.career?.title || "Unknown Career"}
+                              </span>
                             </div>
                             <div className="flex space-x-1">
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0 text-destructive"
-                                onClick={() => removeFavoriteCareer(favorite.id)}
+                                onClick={() =>
+                                  removeFavoriteCareer(favorite.id)
+                                }
                               >
                                 ✕
                               </Button>
@@ -522,7 +516,7 @@ const Profile = ({ user }: ProfileProps) => {
             </Card>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="calculations">
           <SavedCalculationsSection user={user} />
         </TabsContent>

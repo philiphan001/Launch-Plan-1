@@ -3,13 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { College } from "@/lib/types";
-
-type FavoriteCollege = {
-  id: number;
-  userId: number;
-  collegeId: number;
-  college: College;
-};
+import { FavoritesService, FavoriteCollege } from "@/services/favoritesService";
 
 interface CollegeListProps {
   userId: number;
@@ -19,26 +13,26 @@ const CollegeList = ({ userId }: CollegeListProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch favorite colleges
-  const { data: favoriteColleges = [], isLoading } = useQuery<FavoriteCollege[]>({
-    queryKey: ['/api/favorites/colleges', userId],
+  // Fetch favorite colleges using FavoritesService
+  const { data: favoriteColleges = [], isLoading } = useQuery<
+    FavoriteCollege[]
+  >({
+    queryKey: ["/api/favorites/colleges", userId],
     queryFn: async () => {
-      const response = await fetch(`/api/favorites/colleges/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch favorite colleges');
-      return response.json();
-    }
+      return await FavoritesService.getFavoriteColleges(userId);
+    },
+    enabled: !!userId,
   });
 
-  // Remove favorite college mutation
+  // Remove favorite college mutation using FavoritesService
   const removeFavoriteMutation = useMutation({
     mutationFn: async (favoriteId: number) => {
-      const response = await fetch(`/api/favorites/colleges/${favoriteId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to remove favorite college');
+      return await FavoritesService.removeCollegeFromFavorites(favoriteId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/favorites/colleges', userId] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/favorites/colleges", userId],
+      });
       toast({
         title: "College removed",
         description: "College has been removed from your favorites.",
@@ -48,10 +42,11 @@ const CollegeList = ({ userId }: CollegeListProps) => {
       console.error("Error removing favorite college:", error);
       toast({
         title: "Error removing college",
-        description: "There was a problem removing this college from your favorites.",
+        description:
+          "There was a problem removing this college from your favorites.",
         variant: "destructive",
       });
-    }
+    },
   });
 
   // Categorize colleges based on degreePredominant and type
@@ -62,44 +57,37 @@ const CollegeList = ({ userId }: CollegeListProps) => {
     graduate: [] as FavoriteCollege[],
   };
 
-  favoriteColleges.forEach(favorite => {
+  favoriteColleges.forEach((favorite) => {
     const college = favorite.college;
-    
+
     // Primary categorization based on degreePredominant
     // 1 = Certificate/vocational
     // 2 = Associate's degree (community college)
     // 3 = Bachelor's degree (4-year)
     // 4 = Graduate degree
-    
+
     if (college.degreesAwardedPredominant === 1) {
       categorizedColleges.vocational.push(favorite);
-    }
-    else if (college.degreesAwardedPredominant === 2) {
+    } else if (college.degreesAwardedPredominant === 2) {
       categorizedColleges.community.push(favorite);
-    }
-    else if (college.degreesAwardedPredominant === 4) {
+    } else if (college.degreesAwardedPredominant === 4) {
       categorizedColleges.graduate.push(favorite);
-    }
-    else if (college.degreesAwardedPredominant === 3) {
+    } else if (college.degreesAwardedPredominant === 3) {
       categorizedColleges.fourYear.push(favorite);
     }
     // Fallback to type field only if degreePredominant is missing or invalid
     else if (college.type) {
       if (/vocational|technical|trade/i.test(college.type)) {
         categorizedColleges.vocational.push(favorite);
-      }
-      else if (/community|junior/i.test(college.type)) {
+      } else if (/community|junior/i.test(college.type)) {
         categorizedColleges.community.push(favorite);
-      }
-      else if (/graduate|professional/i.test(college.type)) {
+      } else if (/graduate|professional/i.test(college.type)) {
         categorizedColleges.graduate.push(favorite);
-      }
-      else {
+      } else {
         // Default to 4-year if type doesn't match other categories
         categorizedColleges.fourYear.push(favorite);
       }
-    }
-    else {
+    } else {
       // Default to 4-year if no categorization information is available
       categorizedColleges.fourYear.push(favorite);
     }
@@ -111,14 +99,16 @@ const CollegeList = ({ userId }: CollegeListProps) => {
       {colleges.length > 0 ? (
         <div className="space-y-2">
           {colleges.map((favorite) => (
-            <div 
+            <div
               key={favorite.id}
               className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <div>
                 <div className="font-medium">{favorite.college.name}</div>
                 {favorite.college.location && (
-                  <div className="text-sm text-gray-600">{favorite.college.location}</div>
+                  <div className="text-sm text-gray-600">
+                    {favorite.college.location}
+                  </div>
                 )}
               </div>
               <Button
@@ -133,7 +123,9 @@ const CollegeList = ({ userId }: CollegeListProps) => {
           ))}
         </div>
       ) : (
-        <div className="text-sm text-gray-500 italic">No colleges in this category</div>
+        <div className="text-sm text-gray-500 italic">
+          No colleges in this category
+        </div>
       )}
     </div>
   );
@@ -149,7 +141,10 @@ const CollegeList = ({ userId }: CollegeListProps) => {
           <div className="text-center py-8">
             <span className="text-gray-400 text-3xl">📚</span>
             <p className="text-gray-500 mt-2">No favorite colleges added yet</p>
-            <Button className="mt-4" onClick={() => window.location.href = "/colleges"}>
+            <Button
+              className="mt-4"
+              onClick={() => (window.location.href = "/colleges")}
+            >
               Explore Colleges
             </Button>
           </div>
@@ -162,14 +157,26 @@ const CollegeList = ({ userId }: CollegeListProps) => {
     <Card>
       <CardContent className="pt-6">
         <h3 className="text-lg font-medium mb-6">Favorite Colleges</h3>
-        
-        {renderCollegeSection("Vocational & Technical Schools", categorizedColleges.vocational)}
-        {renderCollegeSection("Community Colleges", categorizedColleges.community)}
-        {renderCollegeSection("4-Year Colleges & Universities", categorizedColleges.fourYear)}
-        {renderCollegeSection("Graduate & Professional Schools", categorizedColleges.graduate)}
+
+        {renderCollegeSection(
+          "Vocational & Technical Schools",
+          categorizedColleges.vocational
+        )}
+        {renderCollegeSection(
+          "Community Colleges",
+          categorizedColleges.community
+        )}
+        {renderCollegeSection(
+          "4-Year Colleges & Universities",
+          categorizedColleges.fourYear
+        )}
+        {renderCollegeSection(
+          "Graduate & Professional Schools",
+          categorizedColleges.graduate
+        )}
       </CardContent>
     </Card>
   );
 };
 
-export default CollegeList; 
+export default CollegeList;

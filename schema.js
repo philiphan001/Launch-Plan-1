@@ -1,23 +1,8 @@
 // schema.js
-import { pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+// Re-export the shared schema to maintain compatibility across the application
 
-// Users table that works with Firebase Authentication
-export const users = pgTable('users', {
-  // Use Firebase UID as the primary key
-  id: varchar('id', { length: 128 }).primaryKey(),
-  
-  // User information from Firebase
-  email: varchar('email', { length: 255 }).notNull(),
-  displayName: varchar('display_name', { length: 255 }),
-  photoURL: text('photo_url'),
-  
-  // Additional user metadata
-  createdAt: timestamp('created_at').defaultNow(),
-  lastLogin: timestamp('last_login'),
-  
-  // Add any other user fields you need
-  // role: varchar('role', { length: 50 }).default('user'),
-  // isActive: boolean('is_active').default(true),
-});
+// Import and re-export everything from the main schema file
+export * from "./shared/schema.js";
 
-// Export other tables from your schema...
+// This ensures that any imports from ./schema.js will get the proper schema
+// from the shared/schema.js file, avoiding schema conflicts and SQL errors.

@@ -144,28 +144,34 @@ export default function SignupPage({
       // Get Firebase user from Google login
       const result = await firebaseAuthService.loginWithGoogle();
       const { user: firebaseUser, serverData } = result;
-      
-      console.log("Firebase authentication successful:", firebaseUser.displayName);
-      
+
+      console.log(
+        "Firebase authentication successful:",
+        firebaseUser.displayName
+      );
+
       // Store user data and JWT token in localStorage
       if (serverData && serverData.user) {
-        localStorage.setItem('currentUser', JSON.stringify(serverData.user));
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('isFirstTimeUser', String(!!serverData.user.isFirstTimeUser));
+        localStorage.setItem("currentUser", JSON.stringify(serverData.user));
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem(
+          "isFirstTimeUser",
+          String(!!serverData.user.isFirstTimeUser)
+        );
       }
-      
+
       // Store the JWT token for authenticated API requests
       if (serverData && serverData.token) {
-        localStorage.setItem('authToken', serverData.token);
+        localStorage.setItem("authToken", serverData.token);
         console.log("JWT token stored successfully");
       }
-      
+
       toast({
         title: "Account created!",
         description:
           "Welcome to Launch Plan. Your account has been created with Google.",
       });
-      
+
       // Now we can safely navigate to the pathways page
       window.location.href = "/pathways";
     } catch (error) {

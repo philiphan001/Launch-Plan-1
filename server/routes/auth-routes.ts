@@ -3,7 +3,7 @@ import { db } from "../db.js"; // Add .js extension for ESM
 import { eq } from "drizzle-orm";
 import { users } from "../../shared/schema.js"; // Add .js extension for ESM
 import {
-  firebaseAuth,
+  verifyFirebaseToken,
   initializeFirebaseAdmin,
 } from "../middleware/firebase-auth.js"; // Add .js extension for ESM
 import { generateToken, verifyToken, jwtAuth } from "../utils/jwt.js"; // Add .js extension for ESM
@@ -359,23 +359,23 @@ router.get("/me", async (req, res) => {
   console.log("📌 Session data:", req.session);
   console.log("📌 isAuthenticated function exists:", !!req.isAuthenticated);
   console.log("📌 User in request:", req.user);
-  
+
   try {
     // Check if session has userId - this is our primary session check
     if (req.session && req.session.userId) {
       console.log("📌 Found userId in session:", req.session.userId);
-      
+
       // Fetch user data from database based on session userId
       const existingUsers = await db
         .select()
         .from(users)
         .where(eq(users.id, req.session.userId))
         .limit(1);
-      
+
       if (existingUsers.length > 0) {
         const user = existingUsers[0];
         console.log("📌 User found in database:", user.id);
-        
+
         // Don't expose sensitive data
         const safeUser = {
           id: user.id,
@@ -385,14 +385,14 @@ router.get("/me", async (req, res) => {
           lastName: user.lastName,
           firebaseUid: user.firebaseUid,
           createdAt: user.createdAt,
-          lastLogin: user.lastLogin
+          lastLogin: user.lastLogin,
         };
-        
+
         return res.status(200).json(safeUser);
       }
     }
-    
-    // If session auth fails, try JWT from Authorization header
+
+    // If session auth fails, try Firebase token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       console.log("📌 No Authorization header provided, not authenticated");
@@ -400,27 +400,49 @@ router.get("/me", async (req, res) => {
     }
 
     const token = authHeader.split("Bearer ")[1];
-    console.log("📌 Attempting JWT verification");
-    
+    console.log("📌 Attempting Firebase token verification");
+
     try {
-      const decoded = verifyToken(token);
-      
-      if (!decoded || !decoded.userId) {
-        console.log("📌 JWT verification failed");
+      // Using Firebase Admin SDK to verify the token
+      const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+
+      if (!decodedToken || !decodedToken.uid) {
+        console.log("📌 Firebase token verification failed");
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      console.log("📌 JWT verification successful, user ID:", decoded.userId);
-      
-      // Return user info from token
-      return res.status(200).json({
-        id: decoded.userId,
-        username: decoded.username,
-        email: decoded.email,
-        firebaseUid: decoded.firebaseUid,
-      });
+      console.log("📌 Firebase token verified for UID:", decodedToken.uid);
+
+      // Find user in database by Firebase UID
+      const existingUsers = await db
+        .select()
+        .from(users)
+        .where(eq(users.firebaseUid, decodedToken.uid))
+        .limit(1);
+
+      if (existingUsers.length > 0) {
+        const user = existingUsers[0];
+        console.log("📌 User found in database:", user.id);
+
+        // Don't expose sensitive data
+        const safeUser = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          firebaseUid: user.firebaseUid,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin,
+        };
+
+        return res.status(200).json(safeUser);
+      } else {
+        console.log("📌 No user found for Firebase UID:", decodedToken.uid);
+        return res.status(401).json({ message: "User not found" });
+      }
     } catch (error) {
-      console.log("📌 JWT verification error:", error);
+      console.log("📌 Firebase token verification error:", error);
       return res.status(401).json({ message: "Not authenticated" });
     }
   } catch (error) {
@@ -445,7 +467,7 @@ router.post("/logout", (req, res) => {
 });
 
 // Get user profile (protected route example)
-router.get("/profile", firebaseAuth, (req, res) => {
+router.get("/profile", verifyFirebaseToken, (req, res) => {
   return res.status(200).json({
     user: req.user,
     firebaseUser: req.firebaseUser,
