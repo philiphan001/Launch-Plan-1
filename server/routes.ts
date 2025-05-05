@@ -23,6 +23,7 @@ import { fileURLToPath } from "url";
 import { generateCareerInsights, generateCareerTimeline } from "./openai";
 import authRoutes from "./routes/auth-routes";
 import favoritesRoutes from "./routes/favorites-routes";
+import careerRoutes from "./routes/career-routes";
 import session from "express-session";
 import { sessionConfig } from "./session";
 
@@ -70,6 +71,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount the favorites routes
   app.use("/api/favorites", favoritesRoutes);
+
+  // Mount the career routes
+  app.use("/api/career", careerRoutes);
 
   // Zip code income routes
   app.get(
@@ -483,6 +487,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res
           .status(500)
           .json({ message: "Failed to fetch college calculations" });
+      }
+    }
+  );
+
+  // Add POST endpoint for saving college calculations
+  app.post(
+    "/api/college-calculations",
+    verifyFirebaseToken,
+    async (req: Request, res: Response) => {
+      try {
+        const authenticatedUser = req.user as AuthenticatedUser | undefined;
+        const userId = authenticatedUser?.id;
+
+        if (!userId) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        if (req.body.userId !== userId) {
+          return res.status(403).json({
+            message: "Forbidden: Cannot create calculation for another user.",
+          });
+        }
+
+        // Optionally validate req.body here
+
+        const calculation = await pgStorage.createCollegeCalculation(req.body);
+        res.status(201).json(calculation);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to create college calculation" });
       }
     }
   );

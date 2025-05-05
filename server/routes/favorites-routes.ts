@@ -150,7 +150,7 @@ router.get("/colleges/:userId", verifyFirebaseToken, async (req, res) => {
     try {
       const favoritesResult = await db.execute(
         sql`SELECT fc.id, fc.college_id as "collegeId", 
-                c.name, c.state, c.type, c.tuition
+                c.name, c.state, c.type, c.tuition, c.room_and_board, c.fees_by_income
              FROM favorite_colleges fc
              JOIN colleges c ON fc.college_id = c.id
              WHERE fc.user_id = ${userId}
@@ -166,12 +166,12 @@ router.get("/colleges/:userId", verifyFirebaseToken, async (req, res) => {
       // The response might be the array directly, not as a 'rows' property
       const rowsArray = Array.isArray(favoritesResult)
         ? favoritesResult
-        : favoritesResult.rows || [];
+        : [];
 
       console.log("Using rows array:", JSON.stringify(rowsArray));
       console.log("Rows array length:", rowsArray.length);
 
-      const formattedResults = rowsArray.map((row) => {
+      const formattedResults = rowsArray.map((row: any) => {
         console.log("Processing row:", row);
         return {
           id: row.id,
@@ -183,6 +183,8 @@ router.get("/colleges/:userId", verifyFirebaseToken, async (req, res) => {
             state: row.state,
             type: row.type,
             tuition: row.tuition,
+            roomAndBoard: row.room_and_board,
+            feesByIncome: row.fees_by_income,
           },
         };
       });
@@ -194,20 +196,25 @@ router.get("/colleges/:userId", verifyFirebaseToken, async (req, res) => {
 
       return res.json(formattedResults);
     } catch (error) {
-      console.error("Database error when fetching favorites:", error);
-      // If we get a relation does not exist error, just return an empty array
-      if (error.message && error.message.includes("does not exist")) {
+      if (error instanceof Error && error.message && error.message.includes("does not exist")) {
         return res.json([]);
       }
       throw error;
     }
   } catch (error) {
-    // Improved error logging for debugging
-    console.error("Error fetching favorite colleges:", error.stack || error);
-    return res.status(500).json({
-      message: "Failed to fetch favorite colleges",
-      error: error.message,
-    });
+    if (error instanceof Error) {
+      console.error("Error fetching favorite colleges:", error.stack || error);
+      return res.status(500).json({
+        message: "Failed to fetch favorite colleges",
+        error: error.message,
+      });
+    } else {
+      console.error("Error fetching favorite colleges:", error);
+      return res.status(500).json({
+        message: "Failed to fetch favorite colleges",
+        error: String(error),
+      });
+    }
   }
 });
 
@@ -349,12 +356,12 @@ router.get("/careers/:userId", verifyFirebaseToken, async (req, res) => {
       // The response might be the array directly, not as a 'rows' property
       const rowsArray = Array.isArray(favoritesResult)
         ? favoritesResult
-        : favoritesResult.rows || [];
+        : [];
 
       console.log("Using career rows array:", JSON.stringify(rowsArray));
       console.log("Career rows array length:", rowsArray.length);
 
-      const formattedResults = rowsArray.map((row) => {
+      const formattedResults = rowsArray.map((row: any) => {
         console.log("Processing career row:", row);
         return {
           id: row.id,
@@ -381,7 +388,7 @@ router.get("/careers/:userId", verifyFirebaseToken, async (req, res) => {
     } catch (error) {
       console.error("Database error when fetching favorite careers:", error);
       // If we get a relation does not exist error, just return an empty array
-      if (error.message && error.message.includes("does not exist")) {
+      if (error instanceof Error && error.message && error.message.includes("does not exist")) {
         return res.json([]);
       }
       throw error;

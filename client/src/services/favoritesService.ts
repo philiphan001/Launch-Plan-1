@@ -58,7 +58,7 @@ export interface FavoriteLocation {
 }
 
 // Helper for making authenticated API requests with improved error handling
-async function authenticatedFetch(
+export async function authenticatedFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {

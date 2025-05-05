@@ -726,16 +726,16 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
               </p>
               <div className="mt-2 space-y-1">
                 <p className="text-sm text-gray-700">
-                  <span className="font-medium">Estimated income:</span> ${zipCodeData.mean_income.toLocaleString()}
+                  <span className="font-medium">Estimated income:</span> {zipCodeData?.mean_income != null ? `$${zipCodeData.mean_income.toLocaleString()}` : 'N/A'}
                 </p>
                 {zipCodeData.estimated_investments && (
                   <p className="text-sm text-gray-700">
-                    <span className="font-medium">Estimated investments:</span> ${zipCodeData.estimated_investments.toLocaleString()}
+                    <span className="font-medium">Estimated investments:</span> {zipCodeData?.estimated_investments != null ? `$${zipCodeData.estimated_investments.toLocaleString()}` : 'N/A'}
                   </p>
                 )}
                 {zipCodeData.home_value && (
                   <p className="text-sm text-gray-700">
-                    <span className="font-medium">Estimated home value:</span> ${zipCodeData.home_value.toLocaleString()}
+                    <span className="font-medium">Estimated home value:</span> {zipCodeData?.home_value != null ? `$${zipCodeData.home_value.toLocaleString()}` : 'N/A'}
                   </p>
                 )}
               </div>
@@ -871,7 +871,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                               setUsingEstimatedIncome(true);
                             }}
                           >
-                            Use zip code estimate (${estimatedIncome.toLocaleString()})
+                            Use zip code estimate ({estimatedIncome != null ? estimatedIncome.toLocaleString() : 'N/A'})
                           </Button>
                         )}
                       </span>
@@ -958,7 +958,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                   setUsingEstimatedInvestments(true);
                                 }}
                               >
-                                Use zip code estimate (${estimatedInvestments.toLocaleString()})
+                                Use zip code estimate ({estimatedInvestments != null ? estimatedInvestments.toLocaleString() : 'N/A'})
                               </Button>
                             )}
                           </span>
@@ -1022,7 +1022,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                     setUsingEstimatedHomeValue(true);
                                   }}
                                 >
-                                  Use zip code estimate (${estimatedHomeValue.toLocaleString()})
+                                  Use zip code estimate ({estimatedHomeValue != null ? estimatedHomeValue.toLocaleString() : 'N/A'})
                                 </Button>
                               )}
                             </span>
@@ -1148,10 +1148,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                       )}
                       
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">Published Tuition:</span> ${selectedCollege.tuition.toLocaleString()}
-                        {selectedCollege.type.includes("Public") && !isInState && (
-                          <span className="text-xs text-destructive ml-2">(out-of-state rate)</span>
-                        )}
+                        <span className="font-medium">Published Tuition:</span> {selectedCollege?.tuition != null ? `$${selectedCollege.tuition.toLocaleString()}` : 'N/A'}
                       </p>
                       
                       {/* Housing section with on/off campus toggle */}
@@ -1175,15 +1172,12 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                           </div>
                         </div>
                         <p className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Room & Board:</span> ${selectedCollege.roomAndBoard.toLocaleString()}
-                          {!onCampusHousing && (
-                            <span className="text-xs text-muted-foreground ml-2">(estimated for off-campus)</span>
-                          )}
+                          <span className="font-medium">Room & Board:</span> {selectedCollege?.roomAndBoard != null ? `$${selectedCollege.roomAndBoard.toLocaleString()}` : 'N/A'}
                         </p>
                       </div>
                       
                       <p className="text-sm text-gray-600 font-medium pt-2 border-t border-gray-200 mt-2">
-                        <span>Total Cost:</span> ${(selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}
+                        <span>Total Cost:</span> {(selectedCollege?.tuition != null && selectedCollege?.roomAndBoard != null) ? `$${(selectedCollege.tuition + selectedCollege.roomAndBoard).toLocaleString()}` : 'N/A'}
                       </p>
 
                       {/* Transfer Student Options */}
@@ -1298,7 +1292,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                   <div className="flex justify-between text-sm">
                                     <span>In-State Tuition</span>
                                     <span className="font-mono">
-                                      ${inStateTuition.toLocaleString()}
+                                      {inStateTuition != null ? inStateTuition.toLocaleString() : 'N/A'}
                                       {!isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
                                     </span>
                                   </div>
@@ -1307,7 +1301,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                   <div className="flex justify-between text-sm">
                                     <span>Out-of-State Tuition</span>
                                     <span className="font-mono">
-                                      ${outOfStateTuition.toLocaleString()}
+                                      {outOfStateTuition != null ? outOfStateTuition.toLocaleString() : 'N/A'}
                                       {isInState && <span className="text-xs text-muted-foreground ml-2">(not applicable)</span>}
                                     </span>
                                   </div>
@@ -1316,7 +1310,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                                   <div className="flex justify-between text-sm font-medium">
                                     <span>Applied Tuition</span>
                                     <span className="font-mono">
-                                      ${isInState ? inStateTuition.toLocaleString() : outOfStateTuition.toLocaleString()}
+                                      {isInState ? (inStateTuition != null ? inStateTuition.toLocaleString() : 'N/A') : (outOfStateTuition != null ? outOfStateTuition.toLocaleString() : 'N/A')}
                                       <span className={`text-xs ml-2 ${isInState ? "text-success" : "text-destructive"}`}>
                                         ({isInState ? "in-state" : "out-of-state"})
                                       </span>
@@ -1330,19 +1324,23 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                           // For private colleges, just show the tuition
                           <div className="flex justify-between text-sm">
                             <span>Tuition</span>
-                            <span className="font-mono">${selectedCollege.tuition.toLocaleString()}</span>
+                            <span className="font-mono">
+                              {selectedCollege?.tuition != null ? selectedCollege.tuition.toLocaleString() : 'N/A'}
+                            </span>
                           </div>
                         )}
                         
                         <div className="flex justify-between text-sm">
                           <span>Room & Board</span>
-                          <span className="font-mono">${selectedCollege.roomAndBoard.toLocaleString()}</span>
+                          <span className="font-mono">
+                            {selectedCollege?.roomAndBoard != null ? selectedCollege.roomAndBoard.toLocaleString() : 'N/A'}
+                          </span>
                         </div>
                         
                         <div className="flex justify-between text-sm font-medium pt-2 border-t border-gray-300">
                           <span>Total Cost</span>
                           <span className="font-mono">
-                            ${(() => {
+                            {(() => {
                               if (selectedCollege.type.includes("Public") && !isInState) {
                                 const inStateTuition = selectedCollege.tuition;
                                 const outOfStateMultiplier = 3;
@@ -1369,7 +1367,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
                               
                               // Only show as aid if it's a positive number
                               if (financialAid >= 0) {
-                                return `- $${financialAid.toLocaleString()}`;
+                                return `- $${financialAid != null ? financialAid.toLocaleString() : 'N/A'}`;
                               } else {
                                 // If negative, show it as an extra cost (no financial aid)
                                 return "$0";

@@ -84,6 +84,20 @@ interface CareerTimeline {
 
 interface CareerBuilderProps extends AuthProps {}
 
+// Utility to map API career data to flat structure
+function mapCareerApiToFlat(career: any) {
+  if (!career) return career;
+  return {
+    ...career,
+    salary: career.salaryData?.midCareer || career.salary || 0,
+    salaryMedian: career.salaryData?.midCareer || career.salaryMedian || 0,
+    salaryPct10: career.salaryData?.entryLevel || career.salaryPct10 || 0,
+    salaryPct25: career.salaryData?.entryLevel || career.salaryPct25 || 0,
+    salaryPct75: career.salaryData?.experienced || career.salaryPct75 || 0,
+    salaryPct90: career.salaryData?.topEarners || career.salaryPct90 || 0,
+  };
+}
+
 const CareerBuilder: React.FC<CareerBuilderProps> = ({
   user,
   isAuthenticated,
@@ -211,15 +225,17 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
 
   // Handle career selection
   const handleCareerSelect = (career: Career) => {
-    setSelectedCareer(career);
+    // Map if needed (e.g., if coming from API)
+    const mappedCareer = mapCareerApiToFlat(career);
+    setSelectedCareer(mappedCareer);
     setInsights(null); // Reset insights when selecting a new career
     setTimeline(null); // Reset timeline when selecting a new career
-    fetchCareerInsights(career.id);
-    fetchCareerTimeline(career.id);
+    fetchCareerInsights(mappedCareer.id);
+    fetchCareerTimeline(mappedCareer.id);
 
     // Reset calculation form
-    setProjectedSalary(career.salary || 0);
-    setEducation(career.education || "");
+    setProjectedSalary(mappedCareer.salary || 0);
+    setEducation(mappedCareer.education || "");
     setAdditionalNotes("");
     setLocationCity("");
     setLocationState("");
@@ -416,20 +432,22 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
             <CardContent>
               {favoriteCareers && favoriteCareers.length > 0 ? (
                 <div className="space-y-2">
-                  {favoriteCareers.map((favCareer) => (
-                    <Button
-                      key={favCareer.id}
-                      variant={
-                        selectedCareer?.id === favCareer.career.id
-                          ? "default"
-                          : "outline"
-                      }
-                      className="w-full justify-start text-left"
-                      onClick={() => handleCareerSelect(favCareer.career)}
-                    >
-                      <div className="truncate">{favCareer.career.title}</div>
-                    </Button>
-                  ))}
+                  {favoriteCareers.map((favCareer) =>
+                    favCareer.career ? (
+                      <Button
+                        key={favCareer.id}
+                        variant={
+                          selectedCareer?.id === favCareer.career.id
+                            ? "default"
+                            : "outline"
+                        }
+                        className="w-full justify-start text-left"
+                        onClick={() => handleCareerSelect(mapCareerApiToFlat(favCareer.career))}
+                      >
+                        <div className="truncate">{favCareer.career.title}</div>
+                      </Button>
+                    ) : null
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8">

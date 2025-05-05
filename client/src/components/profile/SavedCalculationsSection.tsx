@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { authenticatedFetch } from "@/services/favoritesService";
 
 interface CollegeCalculation {
   id: number;
@@ -105,7 +106,7 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
         return [] as CollegeCalculation[];
       }
       
-      const response = await fetch(`/api/college-calculations/user/${userId}`);
+      const response = await authenticatedFetch(`/api/college-calculations/user/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch saved college calculations');
       }
@@ -139,7 +140,7 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
         return [] as CareerCalculation[];
       }
       
-      const response = await fetch(`/api/career-calculations/user/${userId}`);
+      const response = await authenticatedFetch(`/api/career-calculations/user/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch saved career calculations');
       }
