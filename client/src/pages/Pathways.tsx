@@ -2152,7 +2152,7 @@ const Pathways = ({
                           // Auto-generate career calculation if user is authenticated
                           if (isAuthenticated && user) {
                             // First, deselect any previously selected college calculation
-                            fetch(`/api/college-calculations/user/${user.id}`)
+                            apiRequest(`/api/college-calculations/user/${user.id}`)
                               .then(res => res.json())
                               .then(calculations => {
                                 // Find any currently included calculation
@@ -2170,7 +2170,7 @@ const Pathways = ({
                                   });
                                   
                                   // Use our dedicated endpoint for excluding college calculations
-                                  return fetch(`/api/college-calculations/${includedCalculation.id}/exclude-from-projection`, {
+                                  return apiRequest(`/api/college-calculations/${includedCalculation.id}/exclude-from-projection`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ userId: user.id })
@@ -2198,7 +2198,7 @@ const Pathways = ({
 
                                 // Step 2: Create a career calculation if a career was selected
                                 if (selectedCareerId && selectedProfession) {
-                                  fetch(`/api/careers/${selectedCareerId}`)
+                                  apiRequest(`/api/careers/${selectedCareerId}`)
                                     .then(res => res.json())
                                     .then(career => {
                                       // Use salary data from the career, with fallbacks
@@ -2225,7 +2225,7 @@ const Pathways = ({
                                       console.log('Auto-generating career calculation:', careerCalculation);
 
                                       // Save the career calculation
-                                      fetch('/api/career-calculations', {
+                                      apiRequest('/api/career-calculations', {
                                         method: 'POST',
                                         headers: {
                                           'Content-Type': 'application/json',
@@ -4003,7 +4003,7 @@ const Pathways = ({
                                         
                                         // Save the calculation to the database
                                         // First, reset any existing included calculations
-                                        fetch(`/api/college-calculations/user/${user.id}`)
+                                        apiRequest(`/api/college-calculations/user/${user.id}`)
                                           .then(res => res.json())
                                           .then(calculations => {
                                             // Find any currently included calculation
@@ -4011,7 +4011,7 @@ const Pathways = ({
                                             
                                             // If one exists, un-include it first
                                             if (includedCalculation) {
-                                              return fetch(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
+                                              return apiRequest(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 body: JSON.stringify({ userId: user.id })
@@ -4025,7 +4025,7 @@ const Pathways = ({
                                             // Log exactly what we're sending
                                             const requestPayload = JSON.stringify(collegeCalculation);
                                             console.log('Sending college calculation payload:', requestPayload);
-                                            return fetch('/api/college-calculations', {
+                                            return apiRequest('/api/college-calculations', {
                                               method: 'POST',
                                               headers: { 'Content-Type': 'application/json' },
                                               body: requestPayload
@@ -4112,7 +4112,7 @@ const Pathways = ({
                             // Step 2: Create a career calculation if a career was selected
                             if (selectedCareerId && selectedProfession) {
                               // Get the career data to access salary information
-                              fetch(`/api/careers/${selectedCareerId}`)
+                              apiRequest(`/api/careers/${selectedCareerId}`)
                                 .then(res => res.json())
                                 .then(career => {
                                   // Use salary data from the career, with fallbacks
@@ -4151,7 +4151,7 @@ const Pathways = ({
                                   console.log('Auto-generating career calculation:', careerCalculation);
                                   
                                   // First, reset any existing included calculations
-                                  fetch(`/api/career-calculations/user/${user.id}`)
+                                  apiRequest(`/api/career-calculations/user/${user.id}`)
                                     .then(res => res.json())
                                     .then(calculations => {
                                       // Find any currently included calculation
@@ -4159,7 +4159,7 @@ const Pathways = ({
                                       
                                       // If one exists, un-include it first
                                       if (includedCalculation) {
-                                        return fetch(`/api/career-calculations/${includedCalculation.id}/toggle-projection`, {
+                                        return apiRequest(`/api/career-calculations/${includedCalculation.id}/toggle-projection`, {
                                           method: 'POST',
                                           headers: { 'Content-Type': 'application/json' },
                                           body: JSON.stringify({ userId: user.id })
@@ -4170,7 +4170,7 @@ const Pathways = ({
                                     })
                                     .then(() => {
                                       // Then create our new calculation that will be included
-                                      return fetch('/api/career-calculations', {
+                                      return apiRequest('/api/career-calculations', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify(careerCalculation)

@@ -23,6 +23,7 @@ import {
   FavoriteCollege,
   FavoriteCareer,
 } from "@/services/favoritesService";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ProfileProps {
   user?: AuthProps["user"];
@@ -55,7 +56,7 @@ const Profile = ({ user }: ProfileProps) => {
     queryKey: ["/api/users", userId],
     queryFn: async () => {
       if (!userId) return null;
-      const response = await fetch(`/api/users/${userId}`);
+      const response = await apiRequest(`/api/users/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch user data");
       return response.json();
     },
@@ -102,7 +103,7 @@ const Profile = ({ user }: ProfileProps) => {
         throw new Error("User not authenticated");
       }
 
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await apiRequest(`/api/users/${userId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -149,12 +150,33 @@ const Profile = ({ user }: ProfileProps) => {
   const updateFinancialMutation = useMutation({
     mutationFn: async () => {
       // First check if financial profile exists for this user
-      const checkResponse = await fetch(
+      const checkResponse = await apiRequest(
         `/api/financial-profiles/user/${userId}`
       );
-      const existingProfile = checkResponse.ok
-        ? await checkResponse.json()
-        : null;
+      let existingProfile = null;
+      if (checkResponse.ok) {
+        existingProfile = await checkResponse.json();
+      } else if (checkResponse.status === 404) {
+        // Auto-create a new profile with default values if not found
+        const createResponse = await apiRequest("/api/financial-profiles", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId,
+            householdIncome: parseInt(householdIncome) || 0,
+            householdSize: parseInt(householdSize) || 1,
+            savingsAmount: parseInt(savingsAmount) || 0,
+            studentLoanAmount: parseInt(studentLoanAmount) || 0,
+            otherDebtAmount: parseInt(otherDebtAmount) || 0,
+          }),
+        });
+        if (!createResponse.ok) {
+          throw new Error("Failed to create financial profile");
+        }
+        existingProfile = await createResponse.json();
+      }
 
       const financialData = {
         userId: userId,
@@ -169,7 +191,7 @@ const Profile = ({ user }: ProfileProps) => {
 
       if (existingProfile) {
         // Update existing profile
-        response = await fetch(
+        response = await apiRequest(
           `/api/financial-profiles/${existingProfile.id}`,
           {
             method: "PATCH",
@@ -180,8 +202,8 @@ const Profile = ({ user }: ProfileProps) => {
           }
         );
       } else {
-        // Create new profile
-        response = await fetch("/api/financial-profiles", {
+        // Should not reach here, but fallback to create
+        response = await apiRequest("/api/financial-profiles", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

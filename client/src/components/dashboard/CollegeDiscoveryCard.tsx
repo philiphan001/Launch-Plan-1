@@ -55,7 +55,7 @@ const CollegeDiscoveryCard = ({
     <Card className="overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 className="font-medium text-gray-700">College Discovery</h3>
-        <Link href="/colleges" className="text-primary hover:text-primary-dark text-sm">
+        <Link href="/college-discovery" className="text-primary hover:text-primary-dark text-sm">
           View All
         </Link>
       </div>

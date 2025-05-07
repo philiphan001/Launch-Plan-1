@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ScenariosSectionProps {
   userId?: number;
@@ -60,8 +61,12 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
       
       console.log(`Fetching financial projections for user ID: ${userId}`);
       try {
-        const response = await fetch(`/api/financial-projections/${userId}`);
+        const response = await apiRequest(`/api/financial-projections/${userId}`);
         if (!response.ok) {
+          if (response.status === 404) {
+            // No projections found for this user, return empty array
+            return [];
+          }
           throw new Error(`Failed to fetch projections: ${response.statusText}`);
         }
         

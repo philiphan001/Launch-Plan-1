@@ -37,7 +37,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Career, InsertMilestone } from "@shared/schema";
+import { Career, InsertMilestone } from "../../../../shared/schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Heart,
@@ -54,6 +54,7 @@ import {
   UtensilsCrossed,
   ShoppingBag,
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 type MilestoneType =
   | "marriage"
@@ -181,7 +182,7 @@ const MilestonesSection = ({
   const { data: careers } = useQuery({
     queryKey: ["/api/careers"],
     queryFn: async () => {
-      const response = await fetch("/api/careers");
+      const response = await apiRequest("/api/careers");
       if (!response.ok) throw new Error("Failed to fetch careers");
       return response.json() as Promise<Career[]>;
     },
@@ -192,7 +193,7 @@ const MilestonesSection = ({
     {
       queryKey: ["/api/financial-profiles/user", userId],
       queryFn: async () => {
-        const response = await fetch(`/api/financial-profiles/user/${userId}`);
+        const response = await apiRequest(`/api/financial-profiles/user/${userId}`);
         if (!response.ok && response.status !== 404)
           throw new Error("Failed to fetch financial profile");
 
@@ -205,10 +206,9 @@ const MilestonesSection = ({
 
         return response.json();
       },
-      // Ensure we have the latest financial profile data when the dialog opens
       refetchOnWindowFocus: true,
       refetchOnMount: true,
-      staleTime: 0, // Always consider data stale to force a refetch
+      staleTime: 0,
     }
   );
 
@@ -236,7 +236,7 @@ const MilestonesSection = ({
       const targetYear = currentYear + yearsAway;
 
       try {
-        const response = await fetch("/api/calculate/future-savings", {
+        const response = await apiRequest("/api/calculate/future-savings", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -252,10 +252,9 @@ const MilestonesSection = ({
             "Future savings calculation failed with status:",
             response.status
           );
-          // Provide fallback values instead of throwing error
           return {
             currentSavings: financialProfile?.savingsAmount || 0,
-            futureSavings: financialProfile?.savingsAmount || 0, // No growth as fallback
+            futureSavings: financialProfile?.savingsAmount || 0,
             targetYear,
             yearsAway,
           };
@@ -264,7 +263,6 @@ const MilestonesSection = ({
         return response.json();
       } catch (error) {
         console.error("Error calculating future savings:", error);
-        // Provide fallback values on error
         return {
           currentSavings: financialProfile?.savingsAmount || 0,
           futureSavings: financialProfile?.savingsAmount || 0,
@@ -273,7 +271,7 @@ const MilestonesSection = ({
         };
       }
     },
-    enabled: yearsAway > 0 && dialogOpen, // Only fetch when dialog is open and years away is valid
+    enabled: yearsAway > 0 && dialogOpen,
   });
 
   // Effect to refetch future savings whenever dialog opens or years away changes
@@ -297,29 +295,29 @@ const MilestonesSection = ({
     queryFn: async () => {
       if (!userId) {
         console.warn("Attempting to fetch milestones without a valid userId");
-        return []; // Return empty array instead of throwing an error
+        return [];
       }
 
       try {
-        const response = await fetch(`/api/milestones/user/${userId}`);
+        const response = await apiRequest(`/api/milestones/user/${userId}`);
         if (!response.ok) {
           console.warn("Failed to fetch milestones, status:", response.status);
-          return []; // Return empty array for any error response
+          return [];
         }
 
         return response.json() as Promise<Milestone[]>;
       } catch (error) {
         console.error("Error fetching milestones:", error);
-        return []; // Return empty array for any error
+        return [];
       }
     },
-    enabled: !!userId, // Only run this query when userId is available
+    enabled: !!userId,
   });
 
   // Create a milestone
   const createMilestone = useMutation({
     mutationFn: async (milestone: InsertMilestone) => {
-      return await fetch("/api/milestones", {
+      return await apiRequest("/api/milestones", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -344,7 +342,7 @@ const MilestonesSection = ({
       id: number;
       data: Partial<InsertMilestone>;
     }) => {
-      return await fetch(`/api/milestones/${id}`, {
+      return await apiRequest(`/api/milestones/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -353,14 +351,9 @@ const MilestonesSection = ({
       });
     },
     onSuccess: () => {
-      // Invalidate milestone queries
       queryClient.invalidateQueries({ queryKey: ["/api/milestones", userId] });
-
-      // Reset editing state
       setIsEditing(false);
       setEditingMilestoneId(null);
-
-      // Trigger parent component update
       if (onMilestoneChange) {
         onMilestoneChange();
       }
@@ -370,15 +363,12 @@ const MilestonesSection = ({
   // Delete a milestone
   const deleteMilestone = useMutation({
     mutationFn: async (id: number) => {
-      return await fetch(`/api/milestones/${id}`, {
+      return await apiRequest(`/api/milestones/${id}`, {
         method: "DELETE",
       });
     },
     onSuccess: () => {
-      // Invalidate milestone queries
       queryClient.invalidateQueries({ queryKey: ["/api/milestones", userId] });
-
-      // Wait for a brief moment to ensure the query invalidation is processed
       setTimeout(() => {
         if (onMilestoneChange) {
           onMilestoneChange();
@@ -391,7 +381,7 @@ const MilestonesSection = ({
   const { data: locationCostData } = useQuery({
     queryKey: ["/api/location-cost-of-living/current"],
     queryFn: async () => {
-      const response = await fetch("/api/location-cost-of-living/current");
+      const response = await apiRequest("/api/location-cost-of-living/current");
       if (!response.ok) throw new Error("Failed to fetch location data");
       return response.json();
     },

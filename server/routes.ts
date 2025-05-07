@@ -412,6 +412,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Financial projections route
+  app.get(
+    "/api/financial-projections/:userId",
+    verifyFirebaseToken,
+    checkUserAccess,
+    async (req: Request, res: Response) => {
+      try {
+        const userId = parseInt(req.params.userId, 10);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: "Invalid user ID format" });
+        }
+        const projections = await pgStorage.getFinancialProjectionsByUserId(userId);
+        if (!projections || projections.length === 0) {
+          return res.status(404).json({ message: "No projections found for this user" });
+        }
+        res.json(projections);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch financial projections" });
+      }
+    }
+  );
+
   // College routes
   app.get("/api/colleges", async (req: Request, res: Response) => {
     try {
@@ -667,6 +689,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ message: "Failed to get location data" });
     }
+  });
+
+  // Dummy financial projection calculation endpoint
+  app.post('/api/calculate/financial-projection', async (req, res) => {
+    // TODO: Replace this with real calculation logic or call to Python service
+    res.json({
+      netWorth: [10000, 12000, 14000],
+      income: [50000, 52000, 54000],
+      expenses: [30000, 31000, 32000],
+      ages: [25, 26, 27],
+      cashFlow: [20000, 21000, 22000],
+      housing: [8000, 8200, 8400],
+      transportation: [2000, 2100, 2200],
+      food: [3000, 3100, 3200],
+      healthcare: [1000, 1100, 1200],
+      personalInsurance: [500, 520, 540],
+      apparel: [400, 410, 420],
+      services: [700, 710, 720],
+      entertainment: [600, 610, 620],
+      other: [500, 510, 520],
+      education: [0, 0, 0],
+      debt: [0, 0, 0],
+      childcare: [0, 0, 0],
+      discretionary: [1500, 1510, 1520],
+      homeValue: [0, 0, 0],
+      mortgage: [0, 0, 0],
+      carValue: [0, 0, 0],
+      carLoan: [0, 0, 0],
+      studentLoan: [0, 0, 0],
+      taxes: [5000, 5100, 5200],
+      payrollTax: [2000, 2100, 2200],
+      federalTax: [2000, 2100, 2200],
+      stateTax: [1000, 1100, 1200],
+      retirementContribution: [500, 520, 540],
+      effectiveTaxRate: [0.22, 0.22, 0.22],
+      marginalTaxRate: [0.24, 0.24, 0.24],
+      milestones: []
+    });
   });
 
   return httpServer;
