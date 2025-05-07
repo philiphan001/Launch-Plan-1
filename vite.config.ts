@@ -45,6 +45,7 @@ export default defineConfig({
       overlay: true,
     },
     proxy: {
+      '/api/calculate': 'http://localhost:5000',
       '/api': 'http://localhost:3001',
     },
     // Vite handles client-side routing fallback by default for SPA. No need for historyApiFallback.

@@ -25,6 +25,7 @@ import authRoutes from "./routes/auth-routes";
 import favoritesRoutes from "./routes/favorites-routes";
 import careerRoutes from "./routes/career-routes";
 import { sessionConfig } from "./session";
+import milestonesRoutes from "./routes/milestones-routes";
 
 // Get the directory name in ESM context
 const __filename = fileURLToPath(import.meta.url);
@@ -70,6 +71,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount the career routes
   app.use("/api/career", careerRoutes);
+
+  // Mount the milestones routes
+  app.use("/api/milestones", milestonesRoutes);
 
   // Zip code income routes
   app.get(
@@ -692,42 +696,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dummy financial projection calculation endpoint
-  app.post('/api/calculate/financial-projection', async (req, res) => {
-    // TODO: Replace this with real calculation logic or call to Python service
-    res.json({
-      netWorth: [10000, 12000, 14000],
-      income: [50000, 52000, 54000],
-      expenses: [30000, 31000, 32000],
-      ages: [25, 26, 27],
-      cashFlow: [20000, 21000, 22000],
-      housing: [8000, 8200, 8400],
-      transportation: [2000, 2100, 2200],
-      food: [3000, 3100, 3200],
-      healthcare: [1000, 1100, 1200],
-      personalInsurance: [500, 520, 540],
-      apparel: [400, 410, 420],
-      services: [700, 710, 720],
-      entertainment: [600, 610, 620],
-      other: [500, 510, 520],
-      education: [0, 0, 0],
-      debt: [0, 0, 0],
-      childcare: [0, 0, 0],
-      discretionary: [1500, 1510, 1520],
-      homeValue: [0, 0, 0],
-      mortgage: [0, 0, 0],
-      carValue: [0, 0, 0],
-      carLoan: [0, 0, 0],
-      studentLoan: [0, 0, 0],
-      taxes: [5000, 5100, 5200],
-      payrollTax: [2000, 2100, 2200],
-      federalTax: [2000, 2100, 2200],
-      stateTax: [1000, 1100, 1200],
-      retirementContribution: [500, 520, 540],
-      effectiveTaxRate: [0.22, 0.22, 0.22],
-      marginalTaxRate: [0.24, 0.24, 0.24],
-      milestones: []
-    });
-  });
+  // app.post('/api/calculate/financial-projection', async (req, res) => {
+  //   // TODO: Replace this with real calculation logic or call to Python service
+  //   res.json({
+  //     netWorth: [10000, 12000, 14000],
+  //     income: [50000, 52000, 54000],
+  //     expenses: [30000, 31000, 32000],
+  //     ages: [25, 26, 27],
+  //     cashFlow: [20000, 21000, 22000],
+  //     housing: [8000, 8200, 8400],
+  //     transportation: [2000, 2100, 2200],
+  //     food: [3000, 3100, 3200],
+  //     healthcare: [1000, 1100, 1200],
+  //     personalInsurance: [500, 520, 540],
+  //     apparel: [400, 410, 420],
+  //     services: [700, 710, 720],
+  //     entertainment: [600, 610, 620],
+  //     other: [500, 510, 520],
+  //     education: [0, 0, 0],
+  //     debt: [0, 0, 0],
+  //     childcare: [0, 0, 0],
+  //     discretionary: [1500, 1510, 1520],
+  //     homeValue: [0, 0, 0],
+  //     mortgage: [0, 0, 0],
+  //     carValue: [0, 0, 0],
+  //     carLoan: [0, 0, 0],
+  //     studentLoan: [0, 0, 0],
+  //     taxes: [5000, 5100, 5200],
+  //     payrollTax: [2000, 2100, 2200],
+  //     federalTax: [2000, 2100, 2200],
+  //     stateTax: [1000, 1100, 1200],
+  //     retirementContribution: [500, 520, 540],
+  //     effectiveTaxRate: [0.22, 0.22, 0.22],
+  //     marginalTaxRate: [0.24, 0.24, 0.24],
+  //     milestones: []
+  //   });
+  // });
 
   return httpServer;
 }
