@@ -399,8 +399,9 @@ const createSessionWithFirebaseToken = async (token: string): Promise<any> => {
 /**
  * Get a fresh token from Firebase and return it
  * This is useful for making authenticated API calls from components
+ * @param forceRefresh - If true, forces a token refresh even if the current token is still valid
  */
-export const getFreshToken = async (): Promise<string | null> => {
+export const getFreshToken = async (forceRefresh: boolean = false): Promise<string | null> => {
   try {
     const user = auth.currentUser;
     if (!user) {
@@ -408,7 +409,7 @@ export const getFreshToken = async (): Promise<string | null> => {
       return null;
     }
 
-    const token = await user.getIdToken(true); // Force token refresh
+    const token = await user.getIdToken(forceRefresh); // Force token refresh if requested
     localStorage.setItem("authToken", token);
     return token;
   } catch (error) {
@@ -436,5 +437,21 @@ export const getCurrentUserAsync = (): Promise<User | null> => {
       unsubscribe(); // Remove the listener once we get a response
       resolve(user); // Resolve with the user (might be null if not logged in)
     });
+  });
+};
+
+// Utility to ensure server session and user creation after login
+export const ensureServerSession = async () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return;
+  const token = await user.getIdToken();
+  await fetch("/api/auth/session", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
   });
 };

@@ -63,6 +63,10 @@ export const verifyFirebaseToken = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Log headers and cookies for debugging
+  console.log("[Auth Debug] Incoming headers:", req.headers);
+  console.log("[Auth Debug] Incoming cookies:", req.cookies);
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -75,7 +79,8 @@ export const verifyFirebaseToken = async (
   try {
     console.log("Auth Middleware: Verifying Firebase ID token...");
     const decodedToken = await admin.auth().verifyIdToken(token);
-    console.log(`Auth Middleware: Token verified for UID: ${decodedToken.uid}`);
+    console.log(`[Auth Debug] Token verified for UID: ${decodedToken.uid}`);
+    console.log("[Auth Debug] Decoded token:", decodedToken);
 
     // Attach the decoded token to the request object
     req.firebaseUser = decodedToken;
@@ -84,25 +89,26 @@ export const verifyFirebaseToken = async (
     try {
       const localUser = await getUserByFirebaseUid(decodedToken.uid);
       if (localUser) {
-        console.log(`Auth Middleware: Found local user ID: ${localUser.id}`);
+        console.log(`[Auth Debug] Found local user ID: ${localUser.id}`);
         // Exclude sensitive fields like passwordHash before attaching
         const { passwordHash, ...safeUser } = localUser;
         // Assign the correctly typed user object
         req.user = safeUser;
+        console.log("[Auth Debug] Attached user to req.user:", safeUser);
       } else {
         console.log(
-          `Auth Middleware: No local user found for UID: ${decodedToken.uid}. Only firebaseUser will be available.`
+          `[Auth Debug] No local user found for UID: ${decodedToken.uid}. Only firebaseUser will be available.`
         );
         req.user = undefined; // Ensure req.user is explicitly undefined
       }
     } catch (dbError) {
-      console.error("Auth Middleware: Error fetching user from DB:", dbError);
+      console.error("[Auth Debug] Error fetching user from DB:", dbError);
       req.user = undefined;
     }
 
     next(); // Proceed to the next middleware or route handler
   } catch (error: any) {
-    console.error("Auth Middleware: Error verifying Firebase ID token:", error);
+    console.error("[Auth Debug] Error verifying Firebase ID token:", error);
     // Handle specific Firebase auth errors
     let message = "Unauthorized: Invalid token";
     if (error.code === "auth/id-token-expired") {

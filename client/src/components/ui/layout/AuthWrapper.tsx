@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import React from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useLocation } from 'wouter';
+import { Loader2 } from 'lucide-react';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -13,10 +14,10 @@ interface AuthWrapperProps {
  * - Redirects returning users who try to access root to dashboard
  */
 const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
-  const { isAuthenticated, isFirstTimeUser } = useAuth();
+  const { isAuthenticated, isFirstTimeUser, authLoading } = useAuth();
   const [location, setLocation] = useLocation();
 
-  useEffect(() => {
+  React.useEffect(() => {
     // If at root path '/' and logged in, redirect appropriately
     if (location === '/') {
       if (isAuthenticated) {
@@ -33,6 +34,15 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
       setLocation('/login');
     }
   }, [location, isAuthenticated, isFirstTimeUser, setLocation]);
+
+  // Show loading spinner while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return <>{children}</>;
 };

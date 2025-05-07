@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User as FirebaseUser } from "firebase/auth";
 import * as authService from "../services/firebase-auth";
+import { authEvents, AUTH_EVENTS } from '../utils/auth-events';
+import { authStorage, AUTH_STORAGE_KEYS } from '../utils/auth-storage';
+import { tokenService } from '../utils/token-service';
 
 interface FirebaseAuthContextType {
   currentUser: FirebaseUser | null;
@@ -82,10 +85,12 @@ export function FirebaseAuthProvider({
       const data = await response.json();
       console.log("[DEBUG] Server session created successfully:", data.success);
 
-      // Store the user data and token in localStorage for persistence
-      localStorage.setItem("currentUser", JSON.stringify(data.user));
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("authToken", token);
+      // Use centralized storage
+      authStorage.setItem(AUTH_STORAGE_KEYS.CURRENT_USER, data.user);
+      authStorage.setItem(AUTH_STORAGE_KEYS.IS_AUTHENTICATED, true);
+      authStorage.setItem(AUTH_STORAGE_KEYS.AUTH_TOKEN, token);
+      // Emit event for AuthContext
+      authEvents.emit(AUTH_EVENTS.SESSION_CREATED, { user: data.user, token });
 
       return data;
     } catch (error) {
@@ -98,43 +103,16 @@ export function FirebaseAuthProvider({
   const refreshToken = async (): Promise<string | null> => {
     setError(null);
     try {
-      if (!currentUser) {
-        console.log("[DEBUG] No user to refresh token for");
-        return null;
-      }
-
-      console.log("[DEBUG] Getting fresh ID token");
-      const token = await currentUser.getIdToken(true);
-      console.log("[DEBUG] Token refreshed successfully");
-
-      // Update the stored token
-      localStorage.setItem("authToken", token);
-
-      // Also refresh the server session
-      try {
-        await createServerSession(currentUser);
-      } catch (err) {
-        console.error("[DEBUG] Error refreshing server session:", err);
-      }
-
-      return token;
+      return await tokenService.getToken(true);
     } catch (err) {
-      console.error("[DEBUG] Token refresh error:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to refresh authentication"
-      );
+      setError(err instanceof Error ? err.message : "Failed to refresh authentication");
       return null;
     }
   };
 
   // Get fresh token from the service
   const getFreshToken = async (): Promise<string | null> => {
-    try {
-      return await authService.getFreshToken();
-    } catch (err) {
-      console.error("[DEBUG] Error getting fresh token:", err);
-      return null;
-    }
+    return tokenService.getToken(false);
   };
 
   // Register with email and password
@@ -199,22 +177,12 @@ export function FirebaseAuthProvider({
   const logout = async () => {
     setError(null);
     try {
+      // Emit event so AuthContext can respond
+      authEvents.emit(AUTH_EVENTS.LOGOUT_INITIATED);
       await authService.logout();
-
-      // Clear local storage
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("isAuthenticated");
-      localStorage.removeItem("authToken");
-
-      // Also logout from the server
-      try {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          credentials: "include",
-        });
-      } catch (logoutErr) {
-        console.error("[DEBUG] Error during server logout:", logoutErr);
-      }
+      authStorage.clear();
+      tokenService.clearToken();
+      authEvents.emit(AUTH_EVENTS.LOGOUT_COMPLETED);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Logout failed");
       throw err;

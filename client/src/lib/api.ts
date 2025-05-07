@@ -1,3 +1,5 @@
+import { getApiUrl } from "../config/api";
+
 interface ApiRequestOptions extends RequestInit {
   body?: string;
 }
@@ -6,7 +8,10 @@ export async function apiRequest(url: string, options: ApiRequestOptions = {}) {
   // Get the auth token from localStorage if available
   const authToken = localStorage.getItem("authToken");
 
-  const response = await fetch(url, {
+  // Use the configured API URL
+  const fullUrl = getApiUrl(url);
+
+  const response = await fetch(fullUrl, {
     ...options,
     headers: {
       "Content-Type": "application/json",

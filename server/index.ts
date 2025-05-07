@@ -3,6 +3,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuthAndDatabase } from "./auth-integrator";
 import cors from "cors";
+import session from "express-session";
+import { sessionConfig } from "./session";
 
 const app = express();
 
@@ -16,6 +18,8 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(session(sessionConfig));
 
 // Increase JSON body size limit to 50MB to handle large career datasets
 app.use(express.json({ limit: "50mb" }));

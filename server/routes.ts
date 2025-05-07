@@ -24,7 +24,6 @@ import { generateCareerInsights, generateCareerTimeline } from "./openai";
 import authRoutes from "./routes/auth-routes";
 import favoritesRoutes from "./routes/favorites-routes";
 import careerRoutes from "./routes/career-routes";
-import session from "express-session";
 import { sessionConfig } from "./session";
 
 // Get the directory name in ESM context
@@ -60,9 +59,6 @@ const checkUserAccess = (req: Request, res: Response, next: NextFunction) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-
-  // Import and initialize session middleware
-  app.use(session(sessionConfig));
 
   // API routes
 
@@ -625,6 +621,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
+
+  // Career paths endpoint
+  app.get("/api/career-paths", async (req, res) => {
+    try {
+      const { fieldOfStudy } = req.query;
+      let paths;
+      if (fieldOfStudy) {
+        paths = await pgStorage.getCareerPathsByField(fieldOfStudy as string);
+      } else {
+        paths = await pgStorage.getAllCareerPaths();
+      }
+      res.json(paths);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get career paths" });
+    }
+  });
+
+  // Location cost of living by zip code
+  app.get("/api/location-cost-of-living/zip/:zip", async (req, res) => {
+    try {
+      const zip = req.params.zip;
+      const data = await pgStorage.getLocationCostOfLivingByZipCode(zip);
+      if (!data) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get location data" });
+    }
+  });
+
+  // Location cost of living by city and state
+  app.get("/api/location-cost-of-living/city", async (req, res) => {
+    try {
+      const { city, state } = req.query;
+      if (!city || !state) {
+        return res.status(400).json({ message: "City and state are required" });
+      }
+      const data = await pgStorage.getLocationCostOfLivingByCityState(city as string, state as string);
+      if (!data || data.length === 0) {
+        return res.status(404).json({ message: "Location not found" });
+      }
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get location data" });
+    }
+  });
 
   return httpServer;
 }

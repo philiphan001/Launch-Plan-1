@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { User } from "@/interfaces/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -87,6 +87,7 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
   // Get user ID from props
   const userId = user?.id;
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
   
   // State for active tab and dialog
   const [activeTab, setActiveTab] = useState<'college' | 'career'>('college');
@@ -468,10 +469,31 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
       
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Calculator className="h-5 w-5 mr-2" />
-            Your Saved Financial Calculations
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Calculator className="h-5 w-5 mr-2" />
+              Your Saved Financial Calculations
+            </CardTitle>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                // Check if a career calculation is included
+                const hasCareer = careerCalculations?.some(calc => calc.includedInProjection);
+                if (!hasCareer) {
+                  toast({
+                    title: "No Career Selected",
+                    description: "You have not selected a career for your projection. The projection will use default values.",
+                    variant: "destructive",
+                  });
+                }
+                // Redirect to projections page with autoGenerate flag and force recalculation
+                setLocation("/projections?autoGenerate=true&forceRecalculate=true");
+              }}
+            >
+              Run Projection
+            </Button>
+          </div>
           <CardDescription>View and compare your saved college and career calculations</CardDescription>
         </CardHeader>
         <CardContent>

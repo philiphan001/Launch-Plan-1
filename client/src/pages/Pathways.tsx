@@ -494,7 +494,7 @@ const Pathways = ({
     queryFn: async () => {
       if (!selectedFieldOfStudy) return [];
       console.log(`Fetching career paths for field: ${selectedFieldOfStudy}`);
-      const response = await fetch(`/api/career-paths/field/${encodeURIComponent(selectedFieldOfStudy)}`);
+      const response = await fetch(`/api/career-paths?fieldOfStudy=${encodeURIComponent(selectedFieldOfStudy)}`);
       if (!response.ok) {
         throw new Error('Failed to fetch career paths');
       }
@@ -523,7 +523,7 @@ const Pathways = ({
     queryFn: async () => {
       if (!selectedZipCode || selectedZipCode.length !== 5) return null;
       console.log(`Fetching location data for zip: ${selectedZipCode}`);
-      const response = await fetch(`/api/location-cost-of-living/zip/${selectedZipCode}`);
+      const response = await apiRequest(`/api/location-cost-of-living/zip/${selectedZipCode}`);
       if (!response.ok) {
         throw new Error('Failed to fetch location data');
       }
@@ -695,7 +695,7 @@ const Pathways = ({
     console.log("Fetching location for zip code:", zipCode);
     
     try {
-      const response = await fetch(`/api/location-cost-of-living/zip/${zipCode}`);
+      const response = await apiRequest(`/api/location-cost-of-living/zip/${zipCode}`);
       console.log("Response status:", response.status);
       
       if (response.ok) {
@@ -711,15 +711,10 @@ const Pathways = ({
           // Update user's zip code in the database
           if (user?.id) {
             try {
-              const updateResponse = await fetch('/api/users/update-zip-code', {
+              const updateResponse = await apiRequest('/api/users/update-zip-code', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  userId: user.id,
-                  zipCode: locationData.zip_code
-                }),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id, zipCode: locationData.zip_code }),
               });
               console.log("Zip code update response:", updateResponse.status);
             } catch (error) {
@@ -760,7 +755,7 @@ const Pathways = ({
     
     try {
       // Query the API for location by city and state
-      const response = await fetch(`/api/location-cost-of-living/city?city=${encodeURIComponent(city)}&state=${state}`);
+      const response = await apiRequest(`/api/location-cost-of-living/city?city=${encodeURIComponent(city)}&state=${state}`);
       console.log("Response status:", response.status);
       
       if (response.ok) {
@@ -782,15 +777,10 @@ const Pathways = ({
             // Update user's zip code in the database
             if (user?.id) {
               try {
-                const updateResponse = await fetch('/api/users/update-zip-code', {
+                const updateResponse = await apiRequest('/api/users/update-zip-code', {
                   method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    userId: user.id,
-                    zipCode: locationData.zip_code
-                  }),
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: user.id, zipCode: locationData.zip_code }),
                 });
                 console.log("Zip code update response:", updateResponse.status);
               } catch (error) {
@@ -2552,11 +2542,21 @@ const Pathways = ({
                   const college = availableColleges.find(c => c.id === collegeId);
                   if (college) {
                     setSpecificSchool(college.name);
-                    handleNext();
                   }
                 }}
                 educationType={educationType}
               />
+              {specificSchool && (
+                <div className="mt-4 flex justify-end">
+                  <Button 
+                    className="bg-green-500 hover:bg-green-600 text-white" 
+                    onClick={handleNext}
+                  >
+                    Next
+                    <span className="material-icons ml-2">arrow_forward</span>
+                  </Button>
+                </div>
+              )}
             </Step>
           );
         } else if (selectedPath === 'military') {
@@ -3890,11 +3890,11 @@ const Pathways = ({
                             // Step 1: Create a college calculation if a college was selected
                             if (selectedSchoolId && specificSchool) {
                               // Fetch the financial profile to get household income and size
-                              fetch(`/api/financial-profiles/user/${user.id}`)
+                              apiRequest(`/api/financial-profiles/user/${user.id}`)
                                 .then(res => res.json())
                                 .then(profile => {
                                   // Get the college data to access tuition and room/board info
-                                  fetch(`/api/colleges/${selectedSchoolId}`)
+                                  apiRequest(`/api/colleges/${selectedSchoolId}`)
                                     .then(res => res.json())
                                     .then(college => {
                                       // Default values if not available in financial profile
@@ -4071,7 +4071,7 @@ const Pathways = ({
                                         console.log(`Determining in-state status for ${college.name} (${collegeState})`);
                                         
                                         // Try to get user state from zip code data
-                                        fetch(`/api/zip-code-income/zip/${userZipCode}`)
+                                        apiRequest(`/api/zip-code-income/zip/${userZipCode}`)
                                           .then(response => response.ok ? response.json() : null)
                                           .then(data => {
                                             if (data && data.state) {

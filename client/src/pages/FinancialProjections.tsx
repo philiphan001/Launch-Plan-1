@@ -97,6 +97,7 @@ import {
   FinancialProjection,
   // ...add any other types you use from the schema
 } from "@shared/schema";
+import { authenticatedFetch } from '../services/favoritesService';
 
 type ProjectionType =
   | "netWorth"
@@ -305,7 +306,7 @@ const FinancialProjections = ({
   const { data: userData, isLoading: isLoadingUser } = useQuery({
     queryKey: ["/api/users", userId],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${userId}`);
+      const response = await apiRequest(`/api/users/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch user data");
       return response.json() as Promise<User>;
     },
@@ -357,7 +358,7 @@ const FinancialProjections = ({
     queryKey: ["/api/assumptions/user", userId],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/assumptions/user/${userId}`);
+        const response = await apiRequest(`/api/assumptions/user/${userId}`);
         if (!response.ok) {
           console.error("Failed to fetch assumptions:", response.statusText);
           return []; // Return empty array if fetch fails
@@ -378,7 +379,7 @@ const FinancialProjections = ({
   } = useQuery({
     queryKey: ["/api/financial-profiles/user", userId],
     queryFn: async () => {
-      const response = await fetch(`/api/financial-profiles/user/${userId}`);
+      const response = await apiRequest(`/api/financial-profiles/user/${userId}`);
       if (response.status === 404) {
         // Return a default financial profile if none exists
         return {
@@ -403,7 +404,7 @@ const FinancialProjections = ({
       queryKey: ["/api/location-cost-of-living/zip", userData?.zipCode],
       queryFn: async () => {
         if (!userData?.zipCode) return null;
-        const response = await fetch(
+        const response = await apiRequest(
           `/api/location-cost-of-living/zip/${userData.zipCode}`
         );
         if (response.status === 404) return null;
@@ -437,9 +438,7 @@ const FinancialProjections = ({
     useQuery({
       queryKey: ["/api/college-calculations/user", userId],
       queryFn: async () => {
-        const response = await fetch(
-          `/api/college-calculations/user/${userId}`
-        );
+        const response = await apiRequest(`/api/college-calculations/user/${user.id}`);
         if (!response.ok)
           throw new Error("Failed to fetch college calculations");
         return response.json() as Promise<CollegeCalculation[]>;
@@ -451,7 +450,7 @@ const FinancialProjections = ({
     useQuery({
       queryKey: ["/api/career-calculations/user", userId],
       queryFn: async () => {
-        const response = await fetch(`/api/career-calculations/user/${userId}`);
+        const response = await apiRequest(`/api/career-calculations/user/${userId}`);
         if (!response.ok)
           throw new Error("Failed to fetch career calculations");
         return response.json() as Promise<CareerCalculation[]>;
@@ -462,7 +461,7 @@ const FinancialProjections = ({
   const { data: milestones, isLoading: isLoadingMilestones } = useQuery({
     queryKey: ["/api/milestones/user", userId],
     queryFn: async () => {
-      const response = await fetch(`/api/milestones/user/${userId}`);
+      const response = await apiRequest(`/api/milestones/user/${userId}`);
       if (!response.ok) throw new Error("Failed to fetch milestones");
       return response.json() as Promise<Milestone[]>;
     },
@@ -477,7 +476,7 @@ const FinancialProjections = ({
       queryKey: ["/api/financial-projections", userId, timestamp], // Include timestamp to force fresh data
       queryFn: async () => {
         const cacheBuster = new Date().getTime();
-        const response = await fetch(
+        const response = await apiRequest(
           `/api/financial-projections/${userId}?_=${cacheBuster}`
         );
         if (!response.ok) throw new Error("Failed to fetch saved projections");
@@ -500,7 +499,7 @@ const FinancialProjections = ({
   const { data: careers, isLoading: isLoadingCareers } = useQuery({
     queryKey: ["/api/careers"],
     queryFn: async () => {
-      const response = await fetch("/api/careers");
+      const response = await apiRequest("/api/careers");
       if (!response.ok) throw new Error("Failed to fetch careers");
       return response.json();
     },
@@ -524,7 +523,7 @@ const FinancialProjections = ({
     mutationFn: async (data: Partial<FinancialProfile>) => {
       if (!financialProfile?.id) return null;
 
-      const response = await fetch(
+      const response = await apiRequest(
         `/api/financial-profiles/${financialProfile.id}`,
         {
           method: "PATCH",
@@ -550,7 +549,7 @@ const FinancialProjections = ({
   const deleteMilestonesMutation = useMutation({
     mutationFn: async (userId: number) => {
       // This will delete all milestones for the user
-      const response = await fetch(`/api/milestones/user/${userId}/all`, {
+      const response = await apiRequest(`/api/milestones/user/${userId}/all`, {
         method: "DELETE",
       });
 
@@ -586,7 +585,7 @@ const FinancialProjections = ({
       queryClient.invalidateQueries({
         queryKey: ["/api/favorites/colleges/user", userId],
       });
-      if (data?.alreadyExists) {
+      if (data && 'alreadyAdded' in data && data.alreadyAdded) {
         console.log("College is already in favorites:", collegeId);
       } else {
         console.log("College added to favorites successfully:", collegeId);
@@ -615,7 +614,7 @@ const FinancialProjections = ({
       queryClient.invalidateQueries({
         queryKey: ["/api/favorites/careers/user", userId],
       });
-      if (data?.alreadyExists) {
+      if (data && 'alreadyAdded' in data && data.alreadyAdded) {
         console.log("Career is already in favorites:", careerId);
       } else {
         console.log("Career added to favorites successfully:", careerId);
@@ -1216,7 +1215,7 @@ const FinancialProjections = ({
     queryKey: ["/api/assumptions/user", userId],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/assumptions/user/${userId}`);
+        const response = await apiRequest(`/api/assumptions/user/${userId}`);
         if (!response.ok) {
           console.error("Failed to fetch assumptions:", response.statusText);
           return []; // Return empty array if fetch fails
@@ -2092,10 +2091,7 @@ const FinancialProjections = ({
           `DEBUG - Making fetch request to URL: ${url} with full path: ${window.location.origin}${url}`
         );
 
-        const response = await fetch(url).catch((error) => {
-          console.error("DEBUG - Fetch error:", error);
-          throw error;
-        });
+        const response = await authenticatedFetch(url);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -3123,6 +3119,26 @@ const FinancialProjections = ({
     }
   };
 
+  // Add effect to handle force recalculation
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const forceRecalculate = searchParams.get('forceRecalculate');
+    
+    if (forceRecalculate === 'true' && !isInLoadingState) {
+      console.log('Force recalculating projection...');
+      // Reset loading state to force recalculation
+      setIsInLoadingState(true);
+      setTimeout(() => {
+        setIsInLoadingState(false);
+      }, 100);
+      
+      // Remove the forceRecalculate parameter from URL
+      searchParams.delete('forceRecalculate');
+      const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [isInLoadingState]);
+
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">
@@ -3446,7 +3462,7 @@ const FinancialProjections = ({
                         (locationCostData?.income_adjustment_factor || 1.0);
                       const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
 
-                      const response = await fetch(
+                      const response = await apiRequest(
                         "/api/financial-projections",
                         {
                           method: "POST",
@@ -3879,7 +3895,7 @@ const FinancialProjections = ({
                       (locationCostData?.income_adjustment_factor || 1.0);
                     const adjustedExpenses = expenses;
 
-                    const response = await fetch("/api/financial-projections", {
+                    const response = await apiRequest("/api/financial-projections", {
                       method: "POST",
                       headers: {
                         "Content-Type": "application/json",
@@ -4370,7 +4386,7 @@ const FinancialProjections = ({
                                         )
                                       ) {
                                         try {
-                                          const response = await fetch(
+                                          const response = await apiRequest(
                                             `/api/financial-projections/${projection.id}`,
                                             {
                                               method: "DELETE",
@@ -5227,7 +5243,7 @@ const UpdateLocationDialog = ({ userData }: UpdateLocationDialogProps) => {
       if (!citySearchQuery || !selectedState) return;
       setFetchingLocation(true);
       try {
-        const response = await fetch(
+        const response = await apiRequest(
           `/api/location-cost-of-living/city?city=${encodeURIComponent(citySearchQuery)}&state=${selectedState}`
         );
         if (response.ok) {

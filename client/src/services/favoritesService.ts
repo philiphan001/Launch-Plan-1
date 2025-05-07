@@ -1,5 +1,6 @@
 // favoritesService.ts - Centralized service for handling favorites functionality
-import { getCurrentUser, getFreshToken } from "./firebase-auth";
+import { tokenService } from '../utils/token-service';
+import { getApiUrl } from "../config/api";
 
 // Interface for favorite college data
 export interface FavoriteCollege {
@@ -63,69 +64,49 @@ export async function authenticatedFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   try {
-    console.log(
-      "[DEBUG] Getting fresh Firebase token for authenticated request"
-    );
-
-    // Use our new getFreshToken function from firebase-auth
-    const idToken = await getFreshToken();
-
-    if (!idToken) {
+    // Get a fresh token using tokenService
+    const token = await tokenService.getToken(true);
+    if (!token) {
       console.error("[DEBUG] No valid authentication token available");
       throw new Error("Authentication required");
     }
-
-    console.log("[DEBUG] Successfully got Firebase token");
-
-    // Create headers with authorization
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${idToken}`,
-      ...options.headers,
-    };
-
-    // Log the API call
-    console.log(`[DEBUG] Making authenticated API call to: ${url}`);
-
-    // Make the authenticated request
-    const response = await fetch(url, {
+    
+    // Use the configured API URL
+    const fullUrl = getApiUrl(url);
+    console.log("[DEBUG] Making authenticated request to:", fullUrl);
+    
+    const response = await fetch(fullUrl, {
       ...options,
-      headers,
-      credentials: "include", // Always include credentials for cookies
-    });
-
-    // Log the response status
-    console.log(`[DEBUG] API response status for ${url}:`, response.status);
-
-    // If unauthorized, try one more refresh and retry
-    if (response.status === 401) {
-      console.log("[DEBUG] Received 401, forcing token refresh and retry");
-
-      // Force a new token
-      const freshToken = await getFreshToken();
-
-      if (!freshToken) {
-        throw new Error("Unable to refresh authentication token");
-      }
-
-      const refreshedHeaders = {
+      headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${freshToken}`,
+        Authorization: `Bearer ${token}`,
         ...options.headers,
-      };
-
-      console.log(`[DEBUG] Retrying API call to: ${url} with fresh token`);
-      return fetch(url, {
-        ...options,
-        headers: refreshedHeaders,
-        credentials: "include",
-      });
+      },
+      credentials: "include",
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token might be invalid, try to refresh and retry once
+        const freshToken = await tokenService.getToken(true);
+        if (freshToken) {
+          const retryResponse = await fetch(fullUrl, {
+            ...options,
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${freshToken}`,
+              ...options.headers,
+            },
+            credentials: "include",
+          });
+          return retryResponse;
+        }
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     return response;
   } catch (error) {
-    // Enhanced error logging
-    console.error(`[DEBUG] Error in authenticatedFetch for ${url}:`, error);
+    console.error("[DEBUG] Error in authenticatedFetch:", error);
     throw error;
   }
 }

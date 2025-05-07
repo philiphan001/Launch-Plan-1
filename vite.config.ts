@@ -44,5 +44,9 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
+    proxy: {
+      '/api': 'http://localhost:3001',
+    },
+    // Vite handles client-side routing fallback by default for SPA. No need for historyApiFallback.
   },
 });

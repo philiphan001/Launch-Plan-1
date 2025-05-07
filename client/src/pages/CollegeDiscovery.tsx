@@ -509,7 +509,7 @@ const CollegeDiscovery = ({
           className="flex items-center bg-green-600 text-white hover:bg-green-700"
           asChild
         >
-          <Link href="/calculator">
+          <Link href="/net-price-calculator">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 mr-2"
@@ -1357,7 +1357,8 @@ const CollegeDiscovery = ({
                             ? "Certificate"
                             : selectedCollege.degreesAwardedPredominant === 2
                               ? "Associate's"
-                              : selectedCollege.degreesAwardedPredominant === 3
+                              : selectedCollege.degreesAwardedPredominant ===
+                                3
                                 ? "Bachelor's"
                                 : selectedCollege.degreesAwardedPredominant ===
                                     4

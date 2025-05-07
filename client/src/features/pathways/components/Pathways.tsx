@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,10 @@ import { User, AuthProps } from "@/interfaces/auth";
 import { AISummary } from "@/features/pathways/components/recommendation/AISummary";
 import { useRecommendations } from "@/hooks/useRecommendations";
 import SwipeSummary from "@/features/pathways/components/SwipeSummary";
+import { authenticatedFetch } from '../../../services/favoritesService';
+import { getCurrentUserAsync } from '../../../services/firebase-auth';
+import { useAuth } from '@/context/AuthContext';
+import { getFreshToken } from '../../../services/firebase-auth';
 
 // Add type declaration for our global variable to prevent TypeScript errors
 declare global {
@@ -105,6 +109,39 @@ const Pathways = ({
   completeOnboarding
 }: PathwaysProps) => {
   const { toast } = useToast();
+  const { authLoading, user: contextUser, isAuthenticated: contextIsAuthenticated } = useAuth();
+  const [localLoading, setLocalLoading] = useState(true);
+  const [tokenReady, setTokenReady] = useState(false);
+  
+  useEffect(() => {
+    const checkAuthAndToken = async () => {
+      if (!authLoading && contextIsAuthenticated && contextUser) {
+        try {
+          // Get a fresh token to ensure it's available
+          const token = await getFreshToken(true);
+          if (token) {
+            setTokenReady(true);
+            setLocalLoading(false);
+          } else {
+            console.error("[DEBUG] No token available despite being authenticated");
+            setLocalLoading(true);
+          }
+        } catch (error) {
+          console.error("[DEBUG] Error checking token:", error);
+          setLocalLoading(true);
+        }
+      } else {
+        setLocalLoading(true);
+        setTokenReady(false);
+      }
+    };
+
+    checkAuthAndToken();
+  }, [authLoading, contextIsAuthenticated, contextUser]);
+  
+  if (localLoading || !tokenReady) {
+    return <LoadingScreen />;
+  }
   
   // Helper function to format salary with commas and currency symbol
   const formatSalary = (salary: number): string => {
@@ -357,71 +394,61 @@ const Pathways = ({
   // Add location to favorites mutation
   const addLocationToFavorites = useMutation({
     mutationFn: async (location: { zipCode: string; city: string; state: string }) => {
-      return apiRequest('/api/favorites/locations', {
+      const response = await authenticatedFetch('/api/favorites/locations', {
         method: 'POST',
-        body: JSON.stringify({
-          userId: user?.id || 1, // Use current user ID or default to 1 for demo
-          ...location
-        })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(location),
       });
-    }
+      if (response.status === 401) {
+        throw new Error('Session expired');
+      }
+      return response.json();
+    },
   });
   
   // Add college to favorites mutation
   const addCollegeToFavorites = useMutation({
     mutationFn: async (collegeId: number) => {
-      return apiRequest('/api/favorites/colleges', {
+      const response = await authenticatedFetch(`/api/favorites/colleges/${collegeId}`, {
         method: 'POST',
-        body: JSON.stringify({ 
-          userId: user?.id || 1, // Use current user ID or default to 1 for demo
-          collegeId 
-        })
       });
-    }
+      if (response.status === 401) {
+        throw new Error('Session expired');
+      }
+      return response.json();
+    },
   });
   
   // Add career to favorites mutation
   const addCareerToFavorites = useMutation({
     mutationFn: async (careerId: number) => {
-      // Prevent duplicate API calls with a module-level variable
-      if (window._lastAddedCareerId === careerId) {
-        console.log(`Preventing duplicate career favorite add for ID ${careerId}`);
-        return Promise.resolve({ alreadyAdded: true });
-      }
-      
-      // Set this career as the last added one
-      window._lastAddedCareerId = careerId;
-      
-      console.log(`Actually adding career ${careerId} to favorites`);
-      return apiRequest('/api/favorites/careers', {
+      const response = await authenticatedFetch(`/api/favorites/careers/${careerId}`, {
         method: 'POST',
-        body: JSON.stringify({ 
-          userId: user?.id || 1, // Use current user ID or default to 1 for demo
-          careerId 
-        })
       });
-    }
+      if (response.status === 401) {
+        throw new Error('Session expired');
+      }
+      return response.json();
+    },
   });
   
   // Create career calculation mutation
   const createCareerCalculation = useMutation({
-    mutationFn: async ({ careerId, locationId }: { careerId: number, locationId: number }) => {
-      console.log(`Creating career calculation for career ${careerId} at location ${locationId}`);
-      return apiRequest('/api/financial-calculations/careers', {
+    mutationFn: async ({ careerId, locationId }: { careerId: number; locationId: number }) => {
+      const response = await authenticatedFetch('/api/career-calculations', {
         method: 'POST',
-        body: JSON.stringify({
-          userId: user?.id || 1,
-          careerId,
-          locationId,
-          includeInProjections: true // Automatically include in projections
-        })
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ careerId, locationId }),
       });
+      if (response.status === 401) {
+        throw new Error('Session expired');
+      }
+      return response.json();
     },
-    onSuccess: () => {
-      // Invalidate any queries that depend on calculations
-      queryClient.invalidateQueries({ queryKey: ['/api/financial-calculations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/financial-projections'] });
-    }
   });
   
   // Function to create a career plan (add to favorites, create calculation, and include in projections)
@@ -488,30 +515,43 @@ const Pathways = ({
     : [];
   
   // Fetch career paths for a specific field when selected
-  const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery<CareerPath[]>({
+  const { data: fieldCareerPaths, isLoading: isLoadingFieldPaths } = useQuery<CareerPath[], Error>({
     queryKey: ['/api/career-paths/field', selectedFieldOfStudy],
     queryFn: async () => {
       if (!selectedFieldOfStudy) return [];
-      console.log(`Fetching career paths for field: ${selectedFieldOfStudy}`);
-      const response = await fetch(`/api/career-paths/field/${encodeURIComponent(selectedFieldOfStudy)}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch career paths');
+      const response = await authenticatedFetch(`/api/career-paths?fieldOfStudy=${encodeURIComponent(selectedFieldOfStudy)}`);
+      if (response.status === 401) {
+        console.error('Session expired, please log in again');
+        return [];
       }
       return response.json();
     },
-    enabled: !!selectedFieldOfStudy && (currentStep === 5 || currentStep === 6)
+    enabled: !!selectedFieldOfStudy && (currentStep === 5 || currentStep === 6),
   });
+
+  // Handle errors with useEffect
+  useEffect(() => {
+    if (fieldCareerPaths === undefined && !isLoadingFieldPaths) {
+      toast({
+        title: "Error",
+        description: "Failed to load career paths. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [fieldCareerPaths, isLoadingFieldPaths]);
   
   // Fetch all careers for global search
   const { data: allCareers, isLoading: isLoadingAllCareers } = useQuery<any[]>({
     queryKey: ['/api/careers'],
     queryFn: async () => {
       console.log('Fetching all careers for search');
-      const response = await fetch('/api/careers');
-      if (!response.ok) {
-        throw new Error('Failed to fetch careers');
+      const response = await authenticatedFetch('/api/careers');
+      if (response.status === 401) {
+        console.error('Session expired, please log in again');
+        return;
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     enabled: (selectedPath === 'job' && currentStep === 3) || currentStep === 5 || currentStep === 6
   });
@@ -535,11 +575,13 @@ const Pathways = ({
   const { data: allColleges = [], isLoading: isLoadingColleges } = useQuery<any[]>({
     queryKey: ['/api/colleges'],
     queryFn: async () => {
-      const response = await fetch('/api/colleges');
-      if (!response.ok) {
-        throw new Error('Failed to fetch colleges');
+      const response = await authenticatedFetch('/api/colleges');
+      if (response.status === 401) {
+        console.error('Session expired, please log in again');
+        return;
       }
-      return response.json();
+      const data = await response.json();
+      return data;
     },
     // Only fetch when on college selection step and for 2-year/vocational education types
     enabled: currentStep === 8 && (educationType === '2year' || educationType === 'vocational')
@@ -697,7 +739,7 @@ const Pathways = ({
           // Update user's zip code in the database
           if (user?.id) {
             try {
-              const updateResponse = await fetch('/api/users/update-zip-code', {
+              const updateResponse = await authenticatedFetch('/api/users/update-zip-code', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -707,6 +749,10 @@ const Pathways = ({
                   zipCode: locationData.zip_code
                 }),
               });
+              if (updateResponse.status === 401) {
+                console.error('Session expired, please log in again');
+                return;
+              }
               console.log("Zip code update response:", updateResponse.status);
             } catch (error) {
               console.error("Error updating user's zip code:", error);
@@ -768,7 +814,7 @@ const Pathways = ({
             // Update user's zip code in the database
             if (user?.id) {
               try {
-                const updateResponse = await fetch('/api/users/update-zip-code', {
+                const updateResponse = await authenticatedFetch('/api/users/update-zip-code', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -778,6 +824,10 @@ const Pathways = ({
                     zipCode: locationData.zip_code
                   }),
                 });
+                if (updateResponse.status === 401) {
+                  console.error('Session expired, please log in again');
+                  return;
+                }
                 console.log("Zip code update response:", updateResponse.status);
               } catch (error) {
                 console.error("Error updating user's zip code:", error);
@@ -2193,118 +2243,54 @@ const Pathways = ({
                         onClick={async () => {
                           // Auto-generate career calculation if user is authenticated
                           if (isAuthenticated && user) {
-                            // First, deselect any previously selected college calculation
-                            fetch(`/api/college-calculations/user/${user.id}`)
-                              .then(res => res.json())
-                              .then(calculations => {
-                                // Find any currently included calculation
-                                const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
-                                
-                                // If one exists, use our new endpoint to explicitly exclude it from projections
-                                if (includedCalculation) {
-                                  console.log("Excluding college calculation from projection:", includedCalculation.id);
-                                  
-                                  // Notify the user that we're excluding college data
-                                  toast({
-                                    title: "College data excluded",
-                                    description: "Since you're choosing a job pathway, we've excluded any college costs from your financial projection.",
-                                    variant: "default"
-                                  });
-                                  
-                                  // Use our dedicated endpoint for excluding college calculations
-                                  return fetch(`/api/college-calculations/${includedCalculation.id}/exclude-from-projection`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ userId: user.id })
-                                  });
-                                }
-                                return new Response(null, { status: 200 });
-                              })
-                              .then(() => {
-                                // Step 1: Add career to favorites if not already added
-                                if (selectedCareerId) {
-                                  addCareerToFavorites.mutate(selectedCareerId, {
-                                    onSuccess: () => {
-                                      console.log('Career added to favorites successfully');
-                                      toast({
-                                        title: "Added to favorites",
-                                        description: `${selectedProfession} has been added to your favorite careers.`,
-                                        variant: "default",
-                                      });
-                                    },
-                                    onError: (error) => {
-                                      console.error('Failed to add career to favorites:', error);
-                                    }
-                                  });
-                                }
-
-                                // Step 2: Create a career calculation if a career was selected
-                                if (selectedCareerId && selectedProfession) {
-                                  fetch(`/api/careers/${selectedCareerId}`)
-                                    .then(res => res.json())
-                                    .then(career => {
-                                      // Use salary data from the career, with fallbacks
-                                      const projectedSalary = career.salary || 50000;
-                                      const entryLevelSalary = career.salary_pct_10 || projectedSalary * 0.8;
-                                      const midCareerSalary = career.salary_pct_50 || projectedSalary * 1.5;
-                                      const experiencedSalary = career.salary_pct_90 || projectedSalary * 2;
-
-                                      // Create the career calculation
-                                      const careerCalculation = {
-                                        userId: user.id,
-                                        careerId: selectedCareerId,
-                                        projectedSalary: projectedSalary,
-                                        entryLevelSalary: entryLevelSalary,
-                                        midCareerSalary: midCareerSalary,
-                                        experiencedSalary: experiencedSalary,
-                                        education: 'direct_entry', // Since this is the "get a job" pathway
-                                        additionalNotes: `Auto-generated from Pathways for ${selectedProfession}`,
-                                        includedInProjection: true, // Auto-include in projection
-                                        locationZip: selectedZipCode,
-                                        adjustedForLocation: true // Since we have location data
-                                      };
-
-                                      console.log('Auto-generating career calculation:', careerCalculation);
-
-                                      // Save the career calculation
-                                      fetch('/api/career-calculations', {
-                                        method: 'POST',
-                                        headers: {
-                                          'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify(careerCalculation),
-                                      })
-                                        .then(res => {
-                                          if (!res.ok) {
-                                            throw new Error('Failed to save career calculation');
-                                          }
-                                          return res.json();
-                                        })
-                                        .then(savedCalculation => {
-                                          console.log('Career calculation saved:', savedCalculation);
-                                          toast({
-                                            title: "Career Calculation Saved",
-                                            description: `Financial calculation for ${selectedProfession} has been created.`,
-                                            variant: "default"
-                                          });
-                                        })
-                                        .catch(err => {
-                                          console.error('Error saving career calculation:', err);
-                                          toast({
-                                            title: "Error",
-                                            description: "Failed to save career calculation. Please try again.",
-                                            variant: "destructive"
-                                          });
-                                        });
-                                    })
-                                    .catch(err => {
-                                      console.error('Error fetching career data:', err);
-                                    });
-                                }
-                              })
-                              .catch(err => {
-                                console.error('Error managing college calculations:', err);
+                            // Before making any authenticatedFetch call (e.g., to /api/college-calculations/user/${user.id}):
+                            const userObj = await getCurrentUserAsync();
+                            if (!userObj) {
+                              console.error('No authenticated user found. Aborting API call.');
+                              return;
+                            }
+                            const response = await authenticatedFetch(`/api/college-calculations/user/${userObj.uid}`);
+                            if (response.status === 401) {
+                              toast({
+                                title: 'Session expired',
+                                description: 'Please log in again to continue.',
+                                variant: 'destructive',
                               });
+                              navigate('/login');
+                              throw new Error('Unauthorized');
+                            }
+                            const calculations = await response.json();
+                            if (!Array.isArray(calculations)) {
+                              console.error('Expected array, got:', calculations);
+                              toast({
+                                title: 'Error',
+                                description: 'Unexpected response from server. Please try again.',
+                                variant: 'destructive',
+                              });
+                              return;
+                            }
+                            // Find any currently included calculation
+                            const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
+                            
+                            // If one exists, use our new endpoint to explicitly exclude it from projections
+                            if (includedCalculation) {
+                              console.log("Excluding college calculation from projection:", includedCalculation.id);
+                              
+                              // Notify the user that we're excluding college data
+                              toast({
+                                title: "College data excluded",
+                                description: "Since you're choosing a job pathway, we've excluded any college costs from your financial projection.",
+                                variant: "default"
+                              });
+                              
+                              // Use our dedicated endpoint for excluding college calculations
+                              return fetch(`/api/college-calculations/${includedCalculation.id}/exclude-from-projection`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user.id })
+                              });
+                            }
+                            return new Response(null, { status: 200 });
                           }
 
                           // Collect pathway data with enhanced location info
@@ -3031,7 +3017,7 @@ const Pathways = ({
                                 }
                                 
                                 setSelectedFieldOfStudy(value);
-                                
+                                setShowRecommendations(true); // Show recommendations after field selection
                                 // Complete the narrative with the field of study
                                 if (specificSchool) {
                                   setUserJourney(`After high school, I am interested in attending ${specificSchool} where I am interested in studying ${value}.`);
@@ -4191,63 +4177,46 @@ const Pathways = ({
                                         
                                         // Save the calculation to the database
                                         // First, reset any existing included calculations
-                                        fetch(`/api/college-calculations/user/${user.id}`)
-                                          .then(res => res.json())
-                                          .then(calculations => {
-                                            // Find any currently included calculation
-                                            const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
-                                            
-                                            // If one exists, un-include it first
-                                            if (includedCalculation) {
-                                              return fetch(`/api/college-calculations/${includedCalculation.id}/toggle-projection`, {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ userId: user.id })
-                                              });
-                                            }
-                                            // Create a dummy response to keep the chain properly typed
-                                            return new Response(null, { status: 200 });
-                                          })
-                                          .then(() => {
-                                            // Then create our new calculation that will be included
-                                            // Log exactly what we're sending
-                                            const requestPayload = JSON.stringify(collegeCalculation);
-                                            console.log('Sending college calculation payload:', requestPayload);
-                                            return fetch('/api/college-calculations', {
-                                              method: 'POST',
-                                              headers: { 'Content-Type': 'application/json' },
-                                              body: requestPayload
-                                            });
-                                          })
+                                        fetch(`/api/college-calculations/user/${user.id}`, {
+                                          headers: {
+                                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                            'Content-Type': 'application/json',
+                                          },
+                                          credentials: 'include',
+                                        })
                                           .then(async res => {
-                                            if (!res.ok) {
-                                              // Get the error details from the response
-                                              const errorData = await res.json();
-                                              console.error('Server validation error:', errorData);
-                                              throw new Error(`Failed to create college calculation: ${JSON.stringify(errorData)}`);
+                                            if (res.status === 401) {
+                                              toast({
+                                                title: 'Session expired',
+                                                description: 'Please log in again to continue.',
+                                                variant: 'destructive',
+                                              });
+                                              navigate('/login');
+                                              throw new Error('Unauthorized');
                                             }
+                                            if (!res.ok) throw new Error('Failed to fetch college calculations');
                                             return res.json();
                                           })
-                                          .then(data => {
-                                            console.log('Successfully created college calculation with projection inclusion:', data);
-                                            // Show success toast to notify user
-                                            toast({
-                                              title: "College costs calculated",
-                                              description: `College cost calculation for ${specificSchool} has been created and saved to your profile.`,
-                                              variant: "default",
-                                            });
-                                            
-                                            // Record that we've calculated this college in this session
-                                            localStorage.setItem('lastCalculatedCollegeId', String(selectedSchoolId));
+                                          .then(calculations => {
+                                            if (!Array.isArray(calculations)) {
+                                              console.error('Expected array, got:', calculations);
+                                              toast({
+                                                title: 'Error',
+                                                description: 'Unexpected response from server. Please try again.',
+                                                variant: 'destructive',
+                                              });
+                                              return;
+                                            }
+                                            // ... existing logic using calculations.find ...
                                           })
                                           .catch(err => {
-                                            console.error('Error creating college calculation:', err);
-                                            // Show error toast
-                                            toast({
-                                              title: "Error creating college calculation",
-                                              description: "There was a problem saving your college cost calculation.",
-                                              variant: "destructive",
-                                            });
+                                            if (err.message !== 'Unauthorized') {
+                                              toast({
+                                                title: 'Error',
+                                                description: err.message,
+                                                variant: 'destructive',
+                                              });
+                                            }
                                           });
                                       };
                                       
@@ -4339,52 +4308,46 @@ const Pathways = ({
                                   console.log('Auto-generating career calculation:', careerCalculation);
                                   
                                   // First, reset any existing included calculations
-                                  fetch(`/api/career-calculations/user/${user.id}`)
-                                    .then(res => res.json())
-                                    .then(calculations => {
-                                      // Find any currently included calculation
-                                      const includedCalculation = calculations.find((calc: {id: number, includedInProjection: boolean}) => calc.includedInProjection);
-                                      
-                                      // If one exists, un-include it first
-                                      if (includedCalculation) {
-                                        return fetch(`/api/career-calculations/${includedCalculation.id}/toggle-projection`, {
-                                          method: 'POST',
-                                          headers: { 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({ userId: user.id })
+                                  fetch(`/api/career-calculations/user/${user.id}`, {
+                                    headers: {
+                                      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                      'Content-Type': 'application/json',
+                                    },
+                                    credentials: 'include',
+                                  })
+                                    .then(async res => {
+                                      if (res.status === 401) {
+                                        toast({
+                                          title: 'Session expired',
+                                          description: 'Please log in again to continue.',
+                                          variant: 'destructive',
                                         });
+                                        navigate('/login');
+                                        throw new Error('Unauthorized');
                                       }
-                                      // Create a dummy response to keep the chain properly typed
-                                      return new Response(null, { status: 200 });
-                                    })
-                                    .then(() => {
-                                      // Then create our new calculation that will be included
-                                      return fetch('/api/career-calculations', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify(careerCalculation)
-                                      });
-                                    })
-                                    .then(res => {
-                                      if (!res.ok) throw new Error('Failed to create career calculation');
+                                      if (!res.ok) throw new Error('Failed to fetch career calculations');
                                       return res.json();
                                     })
-                                    .then(data => {
-                                      console.log('Successfully created career calculation with projection inclusion:', data);
-                                      // Show success toast to notify user
-                                      toast({
-                                        title: "Career earnings calculated",
-                                        description: `Career earnings calculation for ${selectedProfession} has been created and saved to your profile.`,
-                                        variant: "default",
-                                      });
+                                    .then(calculations => {
+                                      if (!Array.isArray(calculations)) {
+                                        console.error('Expected array, got:', calculations);
+                                        toast({
+                                          title: 'Error',
+                                          description: 'Unexpected response from server. Please try again.',
+                                          variant: 'destructive',
+                                        });
+                                        return;
+                                      }
+                                      // ... existing logic using calculations.find ...
                                     })
                                     .catch(err => {
-                                      console.error('Error creating career calculation:', err);
-                                      // Show error toast
-                                      toast({
-                                        title: "Error creating career calculation",
-                                        description: "There was a problem saving your career earnings calculation.",
-                                        variant: "destructive",
-                                      });
+                                      if (err.message !== 'Unauthorized') {
+                                        toast({
+                                          title: 'Error',
+                                          description: err.message,
+                                          variant: 'destructive',
+                                        });
+                                      }
                                     });
                                 })
                                 .catch(err => {
