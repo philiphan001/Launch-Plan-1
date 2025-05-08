@@ -541,6 +541,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
+  // Toggle college calculation projection inclusion
+  app.post(
+    "/api/college-calculations/:calculationId/toggle-projection",
+    verifyFirebaseToken,
+    async (req: Request, res: Response) => {
+      try {
+        const authenticatedUser = req.user as AuthenticatedUser | undefined;
+        const userId = authenticatedUser?.id;
+        const calculationId = parseInt(req.params.calculationId, 10);
+
+        if (!userId) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        if (req.body.userId !== userId) {
+          return res.status(403).json({
+            message: "Forbidden: Cannot modify calculation for another user.",
+          });
+        }
+
+        // Use the toggleProjectionInclusion method
+        const updated = await pgStorage.toggleProjectionInclusion(calculationId, userId);
+        if (!updated) {
+          return res.status(404).json({ message: "Calculation not found or not owned by user" });
+        }
+        res.status(200).json(updated);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to toggle college projection" });
+      }
+    }
+  );
+
   // Career routes
   app.get("/api/careers", async (req: Request, res: Response) => {
     try {
@@ -644,6 +675,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res
           .status(500)
           .json({ message: "Failed to fetch career calculations" });
+      }
+    }
+  );
+
+  // Career calculation creation route
+  app.post(
+    "/api/career-calculations",
+    verifyFirebaseToken,
+    async (req: Request, res: Response) => {
+      try {
+        const authenticatedUser = req.user as AuthenticatedUser | undefined;
+        const userId = authenticatedUser?.id;
+
+        if (!userId) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        if (req.body.userId !== userId) {
+          return res.status(403).json({
+            message: "Forbidden: Cannot create calculation for another user.",
+          });
+        }
+
+        // Optionally validate req.body here
+
+        const calculation = await pgStorage.createCareerCalculation(req.body);
+        res.status(201).json(calculation);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to create career calculation" });
+      }
+    }
+  );
+
+  // Toggle career calculation projection inclusion
+  app.post(
+    "/api/career-calculations/:calculationId/toggle-projection",
+    verifyFirebaseToken,
+    async (req: Request, res: Response) => {
+      try {
+        const authenticatedUser = req.user as AuthenticatedUser | undefined;
+        const userId = authenticatedUser?.id;
+        const calculationId = parseInt(req.params.calculationId, 10);
+
+        if (!userId) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        if (req.body.userId !== userId) {
+          return res.status(403).json({
+            message: "Forbidden: Cannot modify calculation for another user.",
+          });
+        }
+
+        // Use the toggleCareerProjectionInclusion method
+        const updated = await pgStorage.toggleCareerProjectionInclusion(calculationId, userId);
+        if (!updated) {
+          return res.status(404).json({ message: "Calculation not found or not owned by user" });
+        }
+        res.status(200).json(updated);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to toggle career projection" });
       }
     }
   );

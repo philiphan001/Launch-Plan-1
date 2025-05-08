@@ -916,7 +916,16 @@ export class PgStorage implements IStorage {
       return undefined;
     }
 
-    // Begin a transaction
+    // If already included, unselect it only
+    if (calculation.includedInProjection) {
+      await db
+        .update(collegeCalculations)
+        .set({ includedInProjection: false })
+        .where(eq(collegeCalculations.id, id));
+      return await this.getCollegeCalculation(id);
+    }
+
+    // Begin a transaction for normal selection
     return await db.transaction(async (tx) => {
       // First, reset all other calculations for this user
       await tx
@@ -1021,7 +1030,16 @@ export class PgStorage implements IStorage {
       return undefined;
     }
 
-    // Begin a transaction
+    // If already included, unselect it only
+    if (calculation.includedInProjection) {
+      await db
+        .update(careerCalculations)
+        .set({ includedInProjection: false })
+        .where(eq(careerCalculations.id, id));
+      return await this.getCareerCalculation(id);
+    }
+
+    // Begin a transaction for normal selection
     return await db.transaction(async (tx) => {
       // First, reset all other career calculations for this user
       await tx
@@ -1036,7 +1054,7 @@ export class PgStorage implements IStorage {
         .where(eq(careerCalculations.id, id))
         .returning();
 
-      return result[0];
+      return await this.getCareerCalculation(id);
     });
   }
 

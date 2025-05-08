@@ -66,8 +66,17 @@ export const verifyFirebaseToken = async (
   // Log headers and cookies for debugging
   console.log("[Auth Debug] Incoming headers:", req.headers);
   console.log("[Auth Debug] Incoming cookies:", req.cookies);
+  console.log("[Auth Debug] Authorization header:", req.headers.authorization);
+  console.log("[Auth Debug] Session cookie:", req.cookies && req.cookies['connect.sid']);
 
   const authHeader = req.headers.authorization;
+
+  // Allow session-based authentication if user is present in session
+  if (!authHeader && req.session && (req.session as any).user) {
+    console.log("[Auth Debug] Using session-based authentication. User:", (req.session as any).user);
+    req.user = (req.session as any).user;
+    return next();
+  }
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     console.log("Auth Middleware: No Bearer token provided.");

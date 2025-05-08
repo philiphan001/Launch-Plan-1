@@ -117,8 +117,18 @@ router.post("/session", async (req, res) => {
 
         // Set the user in session
         if (req.session) {
-          req.session.userId = user.id;
-          req.session.firebaseUid = user.firebaseUid;
+          (req.session as any).userId = user.id;
+          (req.session as any).firebaseUid = user.firebaseUid;
+          (req.session as any).user = {
+            id: user.id,
+            username: user.username,
+            email: (user.email ?? undefined),
+            firstName: (user.firstName ?? undefined),
+            lastName: (user.lastName ?? undefined),
+            firebaseUid: user.firebaseUid,
+            createdAt: user.createdAt,
+            lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
+          };
           console.log(`📌 User session created for user ID: ${user.id}`);
         } else {
           console.warn(
@@ -130,10 +140,10 @@ router.post("/session", async (req, res) => {
         const safeUser = {
           id: user.id,
           username: user.username,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          firebaseUid: user.firebaseUid,
+          email: (user.email ?? undefined),
+          firstName: (user.firstName ?? undefined),
+          lastName: (user.lastName ?? undefined),
+          firebaseUid: (user.firebaseUid ?? undefined),
           createdAt: user.createdAt,
           lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
         };
@@ -142,8 +152,8 @@ router.post("/session", async (req, res) => {
         const jwtToken = generateToken({
           userId: user.id,
           username: user.username,
-          email: user.email,
-          firebaseUid: user.firebaseUid,
+          email: (user.email ?? undefined),
+          firebaseUid: (user.firebaseUid ?? undefined),
         });
 
         console.log(`📌 Session created successfully. Returning user data.`);
@@ -206,10 +216,20 @@ router.post("/session", async (req, res) => {
 
         // Set the user in session
         if (req.session) {
-          req.session.userId = user.id;
+          (req.session as any).userId = user.id;
           if (user.firebaseUid) {
-            req.session.firebaseUid = user.firebaseUid;
+            (req.session as any).firebaseUid = user.firebaseUid;
           }
+          (req.session as any).user = {
+            id: user.id,
+            username: user.username,
+            email: (user.email ?? undefined),
+            firstName: (user.firstName ?? undefined),
+            lastName: (user.lastName ?? undefined),
+            firebaseUid: user.firebaseUid,
+            createdAt: user.createdAt,
+            lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
+          };
           console.log(`📌 Session created for user ID: ${user.id}`);
         } else {
           console.warn(
@@ -221,10 +241,10 @@ router.post("/session", async (req, res) => {
         const safeUser = {
           id: user.id,
           username: user.username,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          firebaseUid: user.firebaseUid,
+          email: (user.email ?? undefined),
+          firstName: (user.firstName ?? undefined),
+          lastName: (user.lastName ?? undefined),
+          firebaseUid: (user.firebaseUid ?? undefined),
           createdAt: user.createdAt,
           lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
         };
@@ -233,8 +253,8 @@ router.post("/session", async (req, res) => {
         const jwtToken = generateToken({
           userId: user.id,
           username: user.username,
-          email: user.email,
-          firebaseUid: user.firebaseUid,
+          email: (user.email ?? undefined),
+          firebaseUid: (user.firebaseUid ?? undefined),
         });
 
         console.log(`📌 Session created successfully via JWT fallback`);
@@ -311,9 +331,9 @@ router.post("/login", async (req, res) => {
 
     // Set the user in session
     if (req.session) {
-      req.session.userId = user.id;
+      (req.session as any).userId = user.id;
       if (user.firebaseUid) {
-        req.session.firebaseUid = user.firebaseUid;
+        (req.session as any).firebaseUid = user.firebaseUid;
       }
     }
 
@@ -321,10 +341,10 @@ router.post("/login", async (req, res) => {
     const safeUser = {
       id: user.id,
       username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      firebaseUid: user.firebaseUid,
+      email: (user.email ?? undefined),
+      firstName: (user.firstName ?? undefined),
+      lastName: (user.lastName ?? undefined),
+      firebaseUid: (user.firebaseUid ?? undefined),
       createdAt: user.createdAt,
       lastLogin: user.lastLogin, // Changed from lastLoginAt to lastLogin
     };
@@ -333,8 +353,8 @@ router.post("/login", async (req, res) => {
     const token = generateToken({
       userId: user.id,
       username: user.username,
-      email: user.email,
-      firebaseUid: user.firebaseUid,
+      email: (user.email ?? undefined),
+      firebaseUid: (user.firebaseUid ?? undefined),
     });
 
     return res.status(200).json({
@@ -362,14 +382,14 @@ router.get("/me", async (req, res) => {
 
   try {
     // Check if session has userId - this is our primary session check
-    if (req.session && req.session.userId) {
-      console.log("📌 Found userId in session:", req.session.userId);
+    if (req.session && (req.session as any).userId) {
+      console.log("📌 Found userId in session:", (req.session as any).userId);
 
       // Fetch user data from database based on session userId
       const existingUsers = await db
         .select()
         .from(users)
-        .where(eq(users.id, req.session.userId))
+        .where(eq(users.id, (req.session as any).userId))
         .limit(1);
 
       if (existingUsers.length > 0) {
@@ -380,10 +400,10 @@ router.get("/me", async (req, res) => {
         const safeUser = {
           id: user.id,
           username: user.username,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          firebaseUid: user.firebaseUid,
+          email: (user.email ?? undefined),
+          firstName: (user.firstName ?? undefined),
+          lastName: (user.lastName ?? undefined),
+          firebaseUid: (user.firebaseUid ?? undefined),
           createdAt: user.createdAt,
           lastLogin: user.lastLogin,
         };
@@ -428,10 +448,10 @@ router.get("/me", async (req, res) => {
         const safeUser = {
           id: user.id,
           username: user.username,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          firebaseUid: user.firebaseUid,
+          email: (user.email ?? undefined),
+          firstName: (user.firstName ?? undefined),
+          lastName: (user.lastName ?? undefined),
+          firebaseUid: (user.firebaseUid ?? undefined),
           createdAt: user.createdAt,
           lastLogin: user.lastLogin,
         };

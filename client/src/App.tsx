@@ -25,6 +25,7 @@ import AppShell from "@/components/ui/layout/AppShell";
 import { useAuth } from "@/context/AuthContext";
 import { useFirebaseAuth } from "@/context/FirebaseAuthContext";
 import { User, LoginCredentials, RegisterCredentials, AuthProps } from "@/interfaces/auth";
+import CityExploration from "@/pages/city-exploration";
 
 function createApolloClient(getFreshToken: () => Promise<string | null>) {
   const httpLink = createHttpLink({ uri: "/graphql" });
@@ -200,6 +201,19 @@ function App() {
             return <CareerBuilder {...authProps} />;
           }}</Route>
           <Route path="/college-discovery">{() => {
+            const authProps: AuthProps = {
+              user,
+              isAuthenticated,
+              isFirstTimeUser,
+              login,
+              signup,
+              logout,
+              completeOnboarding
+            };
+            return <CollegeDiscovery {...authProps} />;
+          }}</Route>
+          <Route path="/city-exploration">{() => <CityExploration />}</Route>
+          <Route path="/colleges">{() => {
             const authProps: AuthProps = {
               user,
               isAuthenticated,

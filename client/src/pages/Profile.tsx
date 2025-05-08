@@ -40,7 +40,6 @@ const Profile = ({ user }: ProfileProps) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [currentLocation, setCurrentLocation] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [birthYear, setBirthYear] = useState(0);
 
@@ -69,7 +68,6 @@ const Profile = ({ user }: ProfileProps) => {
       setFirstName(userData.firstName || "");
       setLastName(userData.lastName || "");
       setEmail(userData.email || "");
-      setCurrentLocation(userData.location || "");
       setZipCode(userData.zipCode || "");
       setBirthYear(userData.birthYear || 0);
     }
@@ -112,7 +110,6 @@ const Profile = ({ user }: ProfileProps) => {
           firstName,
           lastName,
           email,
-          location: currentLocation,
           zipCode,
           birthYear,
         }),
@@ -165,11 +162,11 @@ const Profile = ({ user }: ProfileProps) => {
           },
           body: JSON.stringify({
             userId,
-            householdIncome: parseInt(householdIncome) || 0,
-            householdSize: parseInt(householdSize) || 1,
-            savingsAmount: parseInt(savingsAmount) || 0,
-            studentLoanAmount: parseInt(studentLoanAmount) || 0,
-            otherDebtAmount: parseInt(otherDebtAmount) || 0,
+            householdIncome: 60000,
+            householdSize: 1,
+            savingsAmount: 5000,
+            studentLoanAmount: 0,
+            otherDebtAmount: 0,
           }),
         });
         if (!createResponse.ok) {
@@ -296,6 +293,29 @@ const Profile = ({ user }: ProfileProps) => {
     removeFavoriteCareerMutation.mutate(id);
   };
 
+  // Ensure financial profile exists on mount
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const response = await apiRequest(`/api/financial-profiles/user/${userId}`);
+      if (response.status === 404) {
+        // Create default profile
+        await apiRequest("/api/financial-profiles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            householdIncome: 60000,
+            householdSize: 1,
+            savingsAmount: 5000,
+            studentLoanAmount: 0,
+            otherDebtAmount: 0,
+          }),
+        });
+      }
+    })();
+  }, [userId]);
+
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">
@@ -344,22 +364,12 @@ const Profile = ({ user }: ProfileProps) => {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    readOnly
                     className="mt-1"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="location">Current Location</Label>
-                    <Input
-                      id="location"
-                      value={currentLocation}
-                      onChange={(e) => setCurrentLocation(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-
                   <div>
                     <Label htmlFor="zipCode">Zip Code</Label>
                     <Input
@@ -489,9 +499,10 @@ const Profile = ({ user }: ProfileProps) => {
             <Card>
               <CardContent className="pt-6">
                 <Tabs defaultValue="colleges" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="colleges">Colleges</TabsTrigger>
                     <TabsTrigger value="careers">Careers</TabsTrigger>
+                    <TabsTrigger value="cities">Cities</TabsTrigger>
                   </TabsList>
                   <TabsContent value="colleges">
                     {userId && <CollegeList userId={userId} />}
@@ -533,6 +544,15 @@ const Profile = ({ user }: ProfileProps) => {
                       </div>
                     )}
                   </TabsContent>
+                  <TabsContent value="cities">
+                    {userId ? (
+                      <SavedCitiesList userId={userId} />
+                    ) : (
+                      <div className="text-center py-6 text-muted-foreground">
+                        Please sign in to view your saved cities.
+                      </div>
+                    )}
+                  </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
@@ -546,5 +566,63 @@ const Profile = ({ user }: ProfileProps) => {
     </div>
   );
 };
+
+function SavedCitiesList({ userId }: { userId: number }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: favoriteLocations = [], isLoading } = useQuery({
+    queryKey: ["/api/favorites/locations", userId],
+    queryFn: async () => {
+      return await FavoritesService.getFavoriteLocations(userId);
+    },
+    enabled: !!userId,
+  });
+  const removeFavoriteLocationMutation = useMutation({
+    mutationFn: async (favoriteId: number) => {
+      return await FavoritesService.removeLocationFromFavorites(favoriteId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites/locations", userId] });
+      toast({
+        title: "City removed",
+        description: "City has been removed from your saved cities.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error removing favorite city:", error);
+      toast({
+        title: "Error removing city",
+        description: "There was a problem removing this city from your saved cities.",
+        variant: "destructive",
+      });
+    },
+  });
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!favoriteLocations.length) {
+    return <div className="text-center py-6 text-muted-foreground">No saved cities yet</div>;
+  }
+  return (
+    <div className="space-y-3">
+      {favoriteLocations.map((loc) => (
+        <div key={loc.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+          <div>
+            <span className="font-bold text-primary mr-2">🏙️</span>
+            <span>{loc.city}, {loc.state} ({loc.zipCode})</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-destructive"
+            onClick={() => removeFavoriteLocationMutation.mutate(loc.id)}
+          >
+            ✕
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default Profile;

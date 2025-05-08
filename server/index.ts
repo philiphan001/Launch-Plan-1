@@ -5,8 +5,11 @@ import { setupAuthAndDatabase } from "./auth-integrator";
 import cors from "cors";
 import session from "express-session";
 import { sessionConfig } from "./session";
+import cookieParser from 'cookie-parser';
 
 const app = express();
+
+app.use(cookieParser());
 
 // Enable CORS with credentials for Firebase Auth
 app.use(

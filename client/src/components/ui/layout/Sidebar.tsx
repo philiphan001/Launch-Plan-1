@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { path: "/projections", label: "Financial Projections", icon: "trending_up" },
   { path: "/career-exploration", label: "Career Exploration", icon: "work" },
   { path: "/college-discovery", label: "College Discovery", icon: "school" },
+  { path: "/city-exploration", label: "City Exploration", icon: "location_city" },
   { path: "/profile", label: "Profile", icon: "account_circle" },
 ];
 

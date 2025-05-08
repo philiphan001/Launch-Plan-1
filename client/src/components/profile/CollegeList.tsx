@@ -143,7 +143,7 @@ const CollegeList = ({ userId }: CollegeListProps) => {
             <p className="text-gray-500 mt-2">No favorite colleges added yet</p>
             <Button
               className="mt-4"
-              onClick={() => (window.location.href = "/colleges")}
+              onClick={() => (window.location.href = "/college-discovery")}
             >
               Explore Colleges
             </Button>

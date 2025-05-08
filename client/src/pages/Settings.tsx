@@ -184,41 +184,21 @@ const Settings = (props: SettingsProps) => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="financial">Financial Profile</TabsTrigger>
-          <TabsTrigger value="favorites">My Favorites</TabsTrigger>
+          <TabsTrigger value="profile">My Account Settings</TabsTrigger>
+          {/* <TabsTrigger value="financial">Financial Profile</TabsTrigger> */}
           <TabsTrigger value="assumptions">Launch Plan</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
-          <Card>
+          {/* Remove the Personal Information section entirely */}
+          {/* <Card> ...Personal Information... </Card> */}
+
+          <Card className="mt-6">
             <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Personal Information</h3>
+              <h3 className="text-lg font-medium mb-4">Account Settings</h3>
 
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
                 <div>
                   <Label htmlFor="email">Email Address</Label>
                   <Input
@@ -230,40 +210,6 @@ const Settings = (props: SettingsProps) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="location">Current Location</Label>
-                    <Input
-                      id="location"
-                      value={currentLocation}
-                      onChange={(e) => setCurrentLocation(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="zipCode">Zip Code</Label>
-                    <Input
-                      id="zipCode"
-                      value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Button className="mt-6" onClick={handleSaveProfile}>
-                Save Changes
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">Account Settings</h3>
-
-              <div className="space-y-4">
                 <div>
                   <Label htmlFor="current-password">Current Password</Label>
                   <Input
@@ -300,262 +246,8 @@ const Settings = (props: SettingsProps) => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="financial">
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">
-                Financial Information
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="income">Annual Household Income</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="income"
-                      type="number"
-                      value={householdIncome}
-                      onChange={(e) => setHouseholdIncome(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="householdSize">Household Size</Label>
-                  <Select
-                    value={householdSize}
-                    onValueChange={setHouseholdSize}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select household size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 person</SelectItem>
-                      <SelectItem value="2">2 people</SelectItem>
-                      <SelectItem value="3">3 people</SelectItem>
-                      <SelectItem value="4">4 people</SelectItem>
-                      <SelectItem value="5">5 people</SelectItem>
-                      <SelectItem value="6+">6+ people</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="savings">Current Savings</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="savings"
-                      type="number"
-                      value={savingsAmount}
-                      onChange={(e) => setSavingsAmount(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="studentLoans">Student Loan Debt</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="studentLoans"
-                      type="number"
-                      value={studentLoanAmount}
-                      onChange={(e) => setStudentLoanAmount(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="otherDebt">Other Debt</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="otherDebt"
-                      type="number"
-                      value={otherDebtAmount}
-                      onChange={(e) => setOtherDebtAmount(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Button className="mt-6" onClick={handleSaveFinancial}>
-                Save Financial Information
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="mt-6">
-            <SavedCalculationsSection />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="favorites">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Favorite Colleges</h3>
-
-                {favoriteColleges && favoriteColleges.length > 0 ? (
-                  <div className="space-y-3">
-                    {favoriteColleges.map(
-                      (favoriteCollege: FavoriteCollege) => (
-                        <div
-                          key={favoriteCollege.id}
-                          className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
-                        >
-                          <div className="flex items-center">
-                            <span className="font-bold text-primary mr-2">
-                              🎓
-                            </span>
-                            <span>{favoriteCollege.college.name}</span>
-                          </div>
-                          <div className="flex space-x-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-destructive"
-                              onClick={() =>
-                                removeFavoriteCollege(favoriteCollege.id)
-                              }
-                            >
-                              ✕
-                            </Button>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <span className="text-gray-400 text-3xl">📚</span>
-                    <p className="text-gray-500 mt-2">
-                      No favorite colleges added yet
-                    </p>
-                    <Button
-                      className="mt-4"
-                      onClick={() =>
-                        (window.location.href = "/college-discovery")
-                      }
-                    >
-                      Explore Colleges
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Favorite Careers</h3>
-
-                {favoriteCareers && favoriteCareers.length > 0 ? (
-                  <div className="space-y-3">
-                    {favoriteCareers.map((career: FavoriteCareer) => (
-                      <div
-                        key={career.id}
-                        className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
-                      >
-                        <div className="flex items-center">
-                          <span className="material-icons text-primary mr-2">
-                            work
-                          </span>
-                          <span>
-                            {career.career
-                              ? career.career.title
-                              : `Career #${career.careerId}`}
-                          </span>
-                        </div>
-                        <div className="flex space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => removeFavoriteCareer(career.id)}
-                          >
-                            <span className="material-icons text-gray-500">
-                              close
-                            </span>
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <span className="material-icons text-gray-400 text-3xl">
-                      bookmark_border
-                    </span>
-                    <p className="text-gray-500 mt-2">
-                      No favorite careers added yet
-                    </p>
-                    <Button className="mt-4">Explore Careers</Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-medium mb-4">
-                Saved Financial Projections
-              </h3>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <span className="material-icons text-primary mr-2">
-                      trending_up
-                    </span>
-                    <div>
-                      <p className="font-medium">My Career Plan</p>
-                      <p className="text-xs text-gray-500">
-                        Created: May 15, 2023
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <span className="material-icons text-gray-500">
-                        close
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
-                  <div className="flex items-center">
-                    <span className="material-icons text-primary mr-2">
-                      trending_up
-                    </span>
-                    <div>
-                      <p className="font-medium">College Comparison</p>
-                      <p className="text-xs text-gray-500">
-                        Created: June 2, 2023
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-1">
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <span className="material-icons text-gray-500">
-                        close
-                      </span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Remove the Financial Profile tab content */}
+        {/* <TabsContent value="financial"> ... </TabsContent> */}
 
         <TabsContent value="notifications">
           <Card>

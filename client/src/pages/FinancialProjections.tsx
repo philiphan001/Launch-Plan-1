@@ -98,6 +98,7 @@ import {
   // ...add any other types you use from the schema
 } from "@shared/schema";
 import { authenticatedFetch } from '../services/favoritesService';
+import ProjectionAvatar from '@/components/ProjectionAvatar';
 
 type ProjectionType =
   | "netWorth"
@@ -3139,564 +3140,156 @@ const FinancialProjections = ({
     }
   }, [isInLoadingState]);
 
+  // Example: determine mood and commentary based on net worth
+  const netWorth = 0; // Replace with actual net worth calculation
+  let mood: 'happy' | 'worried' = 'happy';
+  let commentary = "You're on track!";
+  if (netWorth < 0) {
+    mood = 'worried';
+    commentary = "Uh oh! Your net worth is negative. Let's look at ways to improve your savings or reduce debt.";
+  } else if (netWorth > 100000) {
+    mood = 'happy';
+    commentary = "Amazing! Your financial future looks bright!";
+  }
+
+  // Add this just before the main return statement in FinancialProjections:
+  const floatingAvatar = (
+    <div
+      style={{
+        position: 'fixed',
+        top: 70, // fine-tuned alignment below the top bar
+        right: 24,
+        zIndex: 1000,
+        background: 'white',
+        borderRadius: '50%',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        padding: 8,
+      }}
+    >
+      <ProjectionAvatar mood="happy" commentary="I'm here to help!" />
+    </div>
+  );
+
   return (
-    <div className="max-w-7xl mx-auto">
-      <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">
-        Financial Projections
-      </h1>
+    <>
+      {floatingAvatar}
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">
+          Financial Projections
+        </h1>
 
-      {/* Show the new ProjectionSummary component when available */}
-      {projectionSummaryData ? (
-        <ProjectionSummary
-          data={projectionSummaryData}
-          isLoading={isLoadingProjectionSummary}
-        />
-      ) : effectiveCollegeCalc || effectiveCareerCalc ? (
-        <CurrentProjectionSummary
-          collegeCalculation={effectiveCollegeCalc}
-          careerCalculation={effectiveCareerCalc}
-          locationData={locationCostData}
-        />
-      ) : (
-        pathwaySummary && (
-          /* Show Pathway Summary Section only if there's no active financial projection */
-          <Card className="mb-6 border-l-4 border-l-blue-500">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold mb-3 flex items-center">
-                <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
-                Your Pathway Summary
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex flex-col space-y-1">
-                  <span className="text-sm font-medium text-gray-500">
-                    Education
-                  </span>
-                  <span className="text-base font-medium">
-                    {formatEducationType(pathwaySummary.educationType)}
-                    {pathwaySummary.transferOption === "yes" &&
-                      " → Transfer to 4-Year College"}
-                  </span>
-                  <span className="text-sm text-gray-700">
-                    {pathwaySummary.selectedFieldOfStudy || "General Studies"}
-                    {pathwaySummary.transferOption === "yes" &&
-                      pathwaySummary.transferFieldOfStudy &&
-                      ` → ${pathwaySummary.transferFieldOfStudy}`}
-                  </span>
-                  {pathwaySummary.specificSchool && (
-                    <span className="text-xs text-gray-500">
-                      {pathwaySummary.specificSchool}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col space-y-1">
-                  <span className="text-sm font-medium text-gray-500">
-                    Career
-                  </span>
-                  <span className="text-base font-medium">
-                    {pathwaySummary.selectedProfession || "General Career Path"}
-                  </span>
-                </div>
-
-                <div className="flex flex-col space-y-1">
-                  <span className="text-sm font-medium text-gray-500">
-                    Location
-                  </span>
-                  {pathwaySummary.location ? (
-                    <>
-                      <span className="text-base font-medium">
-                        {pathwaySummary.location.city},{" "}
-                        {pathwaySummary.location.state}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Zip Code: {pathwaySummary.location.zipCode}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-base font-medium">Not specified</span>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      )}
-
-      <Tabs
-        defaultValue="view"
-        value={mainTab}
-        onValueChange={setMainTab}
-        className="w-full mb-6"
-      >
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl mx-auto mb-6">
-          <TabsTrigger value="view" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span>View</span>
-          </TabsTrigger>
-          <TabsTrigger value="edit" className="flex items-center gap-2">
-            <Edit className="h-4 w-4" />
-            <span>Edit</span>
-          </TabsTrigger>
-          <TabsTrigger value="compare" className="flex items-center gap-2">
-            <BarChart4 className="h-4 w-4" />
-            <span>Compare</span>
-          </TabsTrigger>
-          <TabsTrigger value="manage" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span>Manage</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="view">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <Card>
+        {/* Show the new ProjectionSummary component when available */}
+        {projectionSummaryData ? (
+          <ProjectionSummary
+            data={projectionSummaryData}
+            isLoading={isLoadingProjectionSummary}
+          />
+        ) : effectiveCollegeCalc || effectiveCareerCalc ? (
+          <CurrentProjectionSummary
+            collegeCalculation={effectiveCollegeCalc}
+            careerCalculation={effectiveCareerCalc}
+            locationData={locationCostData}
+          />
+        ) : (
+          pathwaySummary && (
+            /* Show Pathway Summary Section only if there's no active financial projection */
+            <Card className="mb-6 border-l-4 border-l-blue-500">
               <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">
-                  Projection Settings
-                </h3>
+                <h2 className="text-lg font-semibold mb-3 flex items-center">
+                  <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
+                  Your Pathway Summary
+                </h2>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="age">Current Age</Label>
-                    <Input
-                      id="age"
-                      type="number"
-                      value={age}
-                      onChange={(e) => setAge(Number(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="timeframe">Timeframe</Label>
-                    <select
-                      id="timeframe"
-                      className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
-                      value={timeframe}
-                      onChange={(e) => setTimeframe(e.target.value)}
-                    >
-                      <option>5 Years</option>
-                      <option>10 Years</option>
-                      <option>20 Years</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="savings">Starting Savings ($)</Label>
-                    <Input
-                      id="savings"
-                      type="number"
-                      value={startingSavings}
-                      onChange={(e) => {
-                        const newValue = Number(e.target.value);
-                        setStartingSavings(newValue);
-
-                        // Update financial profile in database when savings amount changes
-                        if (financialProfile?.id) {
-                          updateFinancialProfileMutation.mutate({
-                            savingsAmount: newValue,
-                          });
-                        }
-                      }}
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="studentLoanDebt">
-                      Student Loan Debt ($)
-                    </Label>
-                    <Input
-                      id="studentLoanDebt"
-                      type="number"
-                      value={studentLoanDebt}
-                      onChange={(e) =>
-                        setStudentLoanDebt(Number(e.target.value))
-                      }
-                      className="mt-1"
-                    />
-                    {effectiveCollegeCalc && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Using student loan amount from{" "}
-                        {effectiveCollegeCalc.college?.name}
-                      </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Education
+                    </span>
+                    <span className="text-base font-medium">
+                      {formatEducationType(pathwaySummary.educationType)}
+                      {pathwaySummary.transferOption === "yes" &&
+                        " → Transfer to 4-Year College"}
+                    </span>
+                    <span className="text-sm text-gray-700">
+                      {pathwaySummary.selectedFieldOfStudy || "General Studies"}
+                      {pathwaySummary.transferOption === "yes" &&
+                        pathwaySummary.transferFieldOfStudy &&
+                        ` → ${pathwaySummary.transferFieldOfStudy}`}
+                    </span>
+                    {pathwaySummary.specificSchool && (
+                      <span className="text-xs text-gray-500">
+                        {pathwaySummary.specificSchool}
+                      </span>
                     )}
                   </div>
 
-                  <div>
-                    <Label htmlFor="income">Annual Income ($)</Label>
-                    <Input
-                      id="income"
-                      type="number"
-                      value={income}
-                      onChange={(e) => setIncome(Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    {effectiveCareerCalc && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Using salary from {effectiveCareerCalc.career?.title}{" "}
-                        career
-                      </p>
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Career
+                    </span>
+                    <span className="text-base font-medium">
+                      {pathwaySummary.selectedProfession || "General Career Path"}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-sm font-medium text-gray-500">
+                      Location
+                    </span>
+                    {pathwaySummary.location ? (
+                      <>
+                        <span className="text-base font-medium">
+                          {pathwaySummary.location.city},{" "}
+                          {pathwaySummary.location.state}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Zip Code: {pathwaySummary.location.zipCode}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-base font-medium">Not specified</span>
                     )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="expenses">Annual Expenses ($)</Label>
-                    <Input
-                      id="expenses"
-                      type="number"
-                      value={expenses}
-                      onChange={(e) => setExpenses(Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    {locationCostData && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        Adjusted for cost of living in{" "}
-                        {locationCostData.city || locationCostData.zip_code}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Income Growth Rate moved to General Assumptions */}
-
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <Collapsible
-                      open={advancedSettingsOpen}
-                      onOpenChange={setAdvancedSettingsOpen}
-                    >
-                      <CollapsibleTrigger className="flex justify-between w-full py-2 text-left">
-                        <h4 className="text-md font-semibold">
-                          Advanced Settings
-                        </h4>
-                        {advancedSettingsOpen ? (
-                          <ChevronUp className="h-5 w-5" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5" />
-                        )}
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="mb-3 mt-3">
-                          <Label>
-                            Emergency Fund Amount:{" "}
-                            {formatCurrency(emergencyFundAmount)}
-                          </Label>
-                          <div className="flex space-x-2 items-center mt-2">
-                            <Input
-                              type="number"
-                              value={emergencyFundAmount}
-                              onChange={(e) =>
-                                setEmergencyFundAmount(Number(e.target.value))
-                              }
-                              min={1000}
-                              step={1000}
-                              className="w-full"
-                            />
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Recommended: $10,000 minimum
-                          </p>
-                        </div>
-
-                        <div className="mb-3">
-                          <Label>
-                            Personal Loan Term (Years): {personalLoanTermYears}
-                          </Label>
-                          <Slider
-                            value={[personalLoanTermYears]}
-                            onValueChange={(value) =>
-                              setPersonalLoanTermYears(value[0])
-                            }
-                            min={1}
-                            max={10}
-                            step={1}
-                            className="mt-2"
-                          />
-                        </div>
-
-                        <div>
-                          <Label>
-                            Personal Loan Interest Rate:{" "}
-                            {personalLoanInterestRate}%
-                          </Label>
-                          <Slider
-                            value={[personalLoanInterestRate]}
-                            onValueChange={(value) =>
-                              setPersonalLoanInterestRate(value[0])
-                            }
-                            min={3}
-                            max={20}
-                            step={0.5}
-                            className="mt-2"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Applied to negative cash flow scenarios
-                          </p>
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <Label htmlFor="projectionName">
-                            Projection Name
-                          </Label>
-                          <Input
-                            id="projectionName"
-                            value={projectionName}
-                            onChange={(e) => setProjectionName(e.target.value)}
-                            placeholder="Enter a name for this projection"
-                            className="mt-2"
-                          />
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </div>
-                </div>
-
-                <Button
-                  className="w-full mt-6"
-                  onClick={async () => {
-                    try {
-                      // Adjust income based on location, but we don't need to adjust expenses again
-                      // since they're already adjusted in the UI as part of the expenses state
-                      const adjustedIncome =
-                        income *
-                        (locationCostData?.income_adjustment_factor || 1.0);
-                      const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
-
-                      const response = await apiRequest(
-                        "/api/financial-projections",
-                        {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            userId,
-                            name: projectionName, // Changed from projectionName to name to match schema
-                            timeframe: years,
-                            startingAge: age,
-                            startingSavings,
-                            income: Math.round(adjustedIncome),
-                            expenses: Math.round(adjustedExpenses),
-                            incomeGrowth,
-                            studentLoanDebt,
-                            projectionData: projectionData,
-                            includesCollegeCalculation: !!effectiveCollegeCalc,
-                            includesCareerCalculation: !!effectiveCareerCalc,
-                            collegeCalculationId:
-                              effectiveCollegeCalc?.id || null,
-                            careerCalculationId:
-                              effectiveCareerCalc?.id || null,
-                            locationAdjusted: !!locationCostData,
-                            locationZipCode: userData?.zipCode || null,
-                            costOfLivingIndex: locationCostData
-                              ? locationCostData.income_adjustment_factor || 1.0
-                              : null,
-                            incomeAdjustmentFactor:
-                              locationCostData?.income_adjustment_factor ||
-                              null,
-                            // Save the configurable parameters
-                            emergencyFundAmount: emergencyFundAmount,
-                            personalLoanTermYears: personalLoanTermYears,
-                            personalLoanInterestRate: personalLoanInterestRate,
-                          }),
-                        }
-                      );
-
-                      if (response.ok) {
-                        alert("Projection saved successfully!");
-                        // Invalidate the financial projections query to refresh the list
-                        queryClient.invalidateQueries({
-                          queryKey: ["/api/financial-projections", userId],
-                        });
-
-                        // If this is a first-time user, mark them as having completed onboarding
-                        if (isFirstTimeUser && completeOnboarding) {
-                          console.log(
-                            "User saved their first projection, marking as completed onboarding"
-                          );
-                          try {
-                            await completeOnboarding();
-                          } catch (error) {
-                            console.error(
-                              "Failed to update onboarding status:",
-                              error
-                            );
-                            // Non-critical error, continue without showing an error to the user
-                          }
-                        }
-                      } else {
-                        throw new Error("Failed to save projection");
-                      }
-                    } catch (error) {
-                      console.error("Error saving projection:", error);
-                      alert("Failed to save projection. Please try again.");
-                    }
-                  }}
-                >
-                  Save Projection
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="md:col-span-3">
-              <CardContent className="p-6">
-                <div className="flex flex-wrap mb-4">
-                  <button
-                    className={`mr-2 mb-2 px-4 py-2 ${activeTab === "netWorth" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
-                    onClick={() => setActiveTab("netWorth")}
-                  >
-                    Net Worth
-                  </button>
-                  <button
-                    className={`mr-2 mb-2 px-4 py-2 ${activeTab === "income" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
-                    onClick={() => setActiveTab("income")}
-                  >
-                    Income
-                  </button>
-                  <button
-                    className={`mr-2 mb-2 px-4 py-2 ${activeTab === "expenses" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
-                    onClick={() => setActiveTab("expenses")}
-                  >
-                    Expenses
-                  </button>
-                  <button
-                    className={`mr-2 mb-2 px-4 py-2 ${activeTab === "assets" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
-                    onClick={() => setActiveTab("assets")}
-                  >
-                    Assets
-                  </button>
-                  <button
-                    className={`mr-2 mb-2 px-4 py-2 ${activeTab === "liabilities" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
-                    onClick={() => setActiveTab("liabilities")}
-                  >
-                    Liabilities
-                  </button>
-                  <button
-                    className={`mr-2 mb-2 px-4 py-2 ${activeTab === "cashFlow" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
-                    onClick={() => setActiveTab("cashFlow")}
-                  >
-                    Cash Flow
-                  </button>
-                </div>
-
-                <div className="h-96">
-                  <canvas ref={chartRef}></canvas>
-                </div>
-
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <p className="text-sm text-gray-500 uppercase">
-                      Net Worth at{" "}
-                      {projectionData?.ages?.length > 0
-                        ? projectionData.ages[projectionData.ages.length - 1]
-                        : age}
-                    </p>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
-                            $
-                            {projectionData?.netWorth?.length > 0
-                              ? projectionData.netWorth[
-                                  projectionData.netWorth.length - 1
-                                ].toLocaleString()
-                              : startingSavings.toLocaleString()}
-                          </p>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>
-                            Includes all assets (like home and car value) minus
-                            all liabilities (like mortgages and loans).
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <p className="text-sm text-gray-500 uppercase">
-                      Total Savings & Investments
-                    </p>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
-                            $
-                            {projectionData?.savingsValue?.length > 0
-                              ? projectionData.savingsValue[
-                                  projectionData.savingsValue.length - 1
-                                ].toLocaleString()
-                              : startingSavings.toLocaleString()}
-                          </p>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>
-                            Represents only liquid savings and investments. Does
-                            not include the value of physical assets like homes
-                            and cars.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <p className="text-sm text-gray-500 uppercase">
-                      Annual Savings Rate
-                    </p>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
-                            {projectionData?.income?.length > 0 &&
-                            projectionData?.expenses?.length > 0
-                              ? Math.round(
-                                  ((projectionData.income[0] -
-                                    projectionData.expenses[0]) /
-                                    projectionData.income[0]) *
-                                    100
-                                )
-                              : Math.round(
-                                  ((income - expenses) / income) * 100
-                                )}
-                            %
-                          </p>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p>
-                            Percentage of income saved each year. Higher rates
-                            lead to faster wealth accumulation.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
+          )
+        )}
 
-        <TabsContent value="edit">
-          <div className="p-6">
-            <h3 className="text-xl font-semibold mb-4">Edit Projection</h3>
+        <Tabs
+          defaultValue="view"
+          value={mainTab}
+          onValueChange={setMainTab}
+          className="w-full mb-6"
+        >
+          <TabsList className="grid grid-cols-4 w-full max-w-2xl mx-auto mb-6">
+            <TabsTrigger value="view" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span>View</span>
+            </TabsTrigger>
+            <TabsTrigger value="edit" className="flex items-center gap-2">
+              <Edit className="h-4 w-4" />
+              <span>Edit</span>
+            </TabsTrigger>
+            <TabsTrigger value="compare" className="flex items-center gap-2">
+              <BarChart4 className="h-4 w-4" />
+              <span>Compare</span>
+            </TabsTrigger>
+            <TabsTrigger value="manage" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              <span>Manage</span>
+            </TabsTrigger>
+          </TabsList>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <TabsContent value="view">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
               <Card>
                 <CardContent className="pt-6">
-                  <h4 className="text-lg font-medium mb-4">Basic Settings</h4>
+                  <h3 className="text-lg font-medium mb-4">
+                    Projection Settings
+                  </h3>
 
                   <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="projectionName">Projection Name</Label>
-                      <Input
-                        id="projectionName"
-                        value={projectionName}
-                        onChange={(e) => setProjectionName(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-
                     <div>
                       <Label htmlFor="age">Current Age</Label>
                       <Input
@@ -3719,70 +3312,36 @@ const FinancialProjections = ({
                         <option>5 Years</option>
                         <option>10 Years</option>
                         <option>20 Years</option>
-                        <option>30 Years</option>
-                        <option>40 Years</option>
                       </select>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
 
-              <Card>
-                <CardContent className="pt-6">
-                  <h4 className="text-lg font-medium mb-4">
-                    Financial Details
-                  </h4>
-
-                  <div className="space-y-4">
                     <div>
-                      <Label htmlFor="editSavings">Starting Savings ($)</Label>
+                      <Label htmlFor="savings">Starting Savings ($)</Label>
                       <Input
-                        id="editSavings"
+                        id="savings"
                         type="number"
                         value={startingSavings}
-                        onChange={(e) =>
-                          setStartingSavings(Number(e.target.value))
-                        }
+                        onChange={(e) => {
+                          const newValue = Number(e.target.value);
+                          setStartingSavings(newValue);
+
+                          // Update financial profile in database when savings amount changes
+                          if (financialProfile?.id) {
+                            updateFinancialProfileMutation.mutate({
+                              savingsAmount: newValue,
+                            });
+                          }
+                        }}
                         className="mt-1"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="editIncome">Annual Income ($)</Label>
-                      <Input
-                        id="editIncome"
-                        type="number"
-                        value={income}
-                        onChange={(e) => setIncome(Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="editExpenses">Annual Expenses ($)</Label>
-                      <Input
-                        id="editExpenses"
-                        type="number"
-                        value={expenses}
-                        onChange={(e) => setExpenses(Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <h4 className="text-lg font-medium mb-4">Education & Debt</h4>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="editStudentLoan">
+                      <Label htmlFor="studentLoanDebt">
                         Student Loan Debt ($)
                       </Label>
                       <Input
-                        id="editStudentLoan"
+                        id="studentLoanDebt"
                         type="number"
                         value={studentLoanDebt}
                         onChange={(e) =>
@@ -3790,1070 +3349,1460 @@ const FinancialProjections = ({
                         }
                         className="mt-1"
                       />
+                      {effectiveCollegeCalc && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Using student loan amount from{" "}
+                          {effectiveCollegeCalc.college?.name}
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <Label htmlFor="incomeGrowth">
-                        Income Growth Rate (%)
-                      </Label>
-                      <Slider
-                        id="incomeGrowth"
-                        value={[incomeGrowth * 100]}
-                        onValueChange={(value) =>
-                          setIncomeGrowth(value[0] / 100)
-                        }
-                        min={0}
-                        max={10}
-                        step={0.1}
-                        className="mt-2"
+                      <Label htmlFor="income">Annual Income ($)</Label>
+                      <Input
+                        id="income"
+                        type="number"
+                        value={income}
+                        onChange={(e) => setIncome(Number(e.target.value))}
+                        className="mt-1"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Current: {(incomeGrowth * 100).toFixed(1)}%
-                      </p>
+                      {effectiveCareerCalc && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Using salary from {effectiveCareerCalc.career?.title}{" "}
+                          career
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="expenses">Annual Expenses ($)</Label>
+                      <Input
+                        id="expenses"
+                        type="number"
+                        value={expenses}
+                        onChange={(e) => setExpenses(Number(e.target.value))}
+                        className="mt-1"
+                      />
+                      {locationCostData && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Adjusted for cost of living in{" "}
+                          {locationCostData.city || locationCostData.zip_code}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Income Growth Rate moved to General Assumptions */}
+
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <Collapsible
+                        open={advancedSettingsOpen}
+                        onOpenChange={setAdvancedSettingsOpen}
+                      >
+                        <CollapsibleTrigger className="flex justify-between w-full py-2 text-left">
+                          <h4 className="text-md font-semibold">
+                            Advanced Settings
+                          </h4>
+                          {advancedSettingsOpen ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mb-3 mt-3">
+                            <Label>
+                              Emergency Fund Amount:{" "}
+                              {formatCurrency(emergencyFundAmount)}
+                            </Label>
+                            <div className="flex space-x-2 items-center mt-2">
+                              <Input
+                                type="number"
+                                value={emergencyFundAmount}
+                                onChange={(e) =>
+                                  setEmergencyFundAmount(Number(e.target.value))
+                                }
+                                min={1000}
+                                step={1000}
+                                className="w-full"
+                              />
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Recommended: $10,000 minimum
+                            </p>
+                          </div>
+
+                          <div className="mb-3">
+                            <Label>
+                              Personal Loan Term (Years): {personalLoanTermYears}
+                            </Label>
+                            <Slider
+                              value={[personalLoanTermYears]}
+                              onValueChange={(value) =>
+                                setPersonalLoanTermYears(value[0])
+                              }
+                              min={1}
+                              max={10}
+                              step={1}
+                              className="mt-2"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>
+                              Personal Loan Interest Rate:{" "}
+                              {personalLoanInterestRate}%
+                            </Label>
+                            <Slider
+                              value={[personalLoanInterestRate]}
+                              onValueChange={(value) =>
+                                setPersonalLoanInterestRate(value[0])
+                              }
+                              min={3}
+                              max={20}
+                              step={0.5}
+                              className="mt-2"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Applied to negative cash flow scenarios
+                            </p>
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <Label htmlFor="projectionName">
+                              Projection Name
+                            </Label>
+                            <Input
+                              id="projectionName"
+                              value={projectionName}
+                              onChange={(e) => setProjectionName(e.target.value)}
+                              placeholder="Enter a name for this projection"
+                              className="mt-2"
+                            />
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
                   </div>
+
+                  <Button
+                    className="w-full mt-6"
+                    onClick={async () => {
+                      try {
+                        // Adjust income based on location, but we don't need to adjust expenses again
+                        // since they're already adjusted in the UI as part of the expenses state
+                        const adjustedIncome =
+                          income *
+                          (locationCostData?.income_adjustment_factor || 1.0);
+                        const adjustedExpenses = expenses; // expenses is already adjusted via useEffect
+
+                        const response = await apiRequest(
+                          "/api/financial-projections",
+                          {
+                            method: "POST",
+                            headers: {
+                              "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                              userId,
+                              name: projectionName, // Changed from projectionName to name to match schema
+                              timeframe: years,
+                              startingAge: age,
+                              startingSavings,
+                              income: Math.round(adjustedIncome),
+                              expenses: Math.round(adjustedExpenses),
+                              incomeGrowth,
+                              studentLoanDebt,
+                              projectionData: projectionData,
+                              includesCollegeCalculation: !!effectiveCollegeCalc,
+                              includesCareerCalculation: !!effectiveCareerCalc,
+                              collegeCalculationId:
+                                effectiveCollegeCalc?.id || null,
+                              careerCalculationId:
+                                effectiveCareerCalc?.id || null,
+                              locationAdjusted: !!locationCostData,
+                              locationZipCode: userData?.zipCode || null,
+                              costOfLivingIndex: locationCostData
+                                ? locationCostData.income_adjustment_factor || 1.0
+                                : null,
+                              incomeAdjustmentFactor:
+                                locationCostData?.income_adjustment_factor ||
+                                null,
+                              // Save the configurable parameters
+                              emergencyFundAmount: emergencyFundAmount,
+                              personalLoanTermYears: personalLoanTermYears,
+                              personalLoanInterestRate: personalLoanInterestRate,
+                            }),
+                          }
+                        );
+
+                        if (response.ok) {
+                          alert("Projection saved successfully!");
+                          // Invalidate the financial projections query to refresh the list
+                          queryClient.invalidateQueries({
+                            queryKey: ["/api/financial-projections", userId],
+                          });
+
+                          // If this is a first-time user, mark them as having completed onboarding
+                          if (isFirstTimeUser && completeOnboarding) {
+                            console.log(
+                              "User saved their first projection, marking as completed onboarding"
+                            );
+                            try {
+                              await completeOnboarding();
+                            } catch (error) {
+                              console.error(
+                                "Failed to update onboarding status:",
+                                error
+                              );
+                              // Non-critical error, continue without showing an error to the user
+                            }
+                          }
+                        } else {
+                          throw new Error("Failed to save projection");
+                        }
+                      } catch (error) {
+                        console.error("Error saving projection:", error);
+                        alert("Failed to save projection. Please try again.");
+                      }
+                    }}
+                  >
+                    Save Projection
+                  </Button>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="pt-6">
-                  <h4 className="text-lg font-medium mb-4">
-                    Emergency & Loans
-                  </h4>
+              <Card className="md:col-span-3">
+                <CardContent className="p-6">
+                  <div className="flex flex-wrap mb-4">
+                    <button
+                      className={`mr-2 mb-2 px-4 py-2 ${activeTab === "netWorth" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
+                      onClick={() => setActiveTab("netWorth")}
+                    >
+                      Net Worth
+                    </button>
+                    <button
+                      className={`mr-2 mb-2 px-4 py-2 ${activeTab === "income" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
+                      onClick={() => setActiveTab("income")}
+                    >
+                      Income
+                    </button>
+                    <button
+                      className={`mr-2 mb-2 px-4 py-2 ${activeTab === "expenses" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
+                      onClick={() => setActiveTab("expenses")}
+                    >
+                      Expenses
+                    </button>
+                    <button
+                      className={`mr-2 mb-2 px-4 py-2 ${activeTab === "assets" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
+                      onClick={() => setActiveTab("assets")}
+                    >
+                      Assets
+                    </button>
+                    <button
+                      className={`mr-2 mb-2 px-4 py-2 ${activeTab === "liabilities" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
+                      onClick={() => setActiveTab("liabilities")}
+                    >
+                      Liabilities
+                    </button>
+                    <button
+                      className={`mr-2 mb-2 px-4 py-2 ${activeTab === "cashFlow" ? "bg-primary text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"} rounded-full text-sm`}
+                      onClick={() => setActiveTab("cashFlow")}
+                    >
+                      Cash Flow
+                    </button>
+                  </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <Label>
-                        Emergency Fund Target:{" "}
-                        {formatCurrency(emergencyFundAmount)}
-                      </Label>
-                      <Slider
-                        value={[emergencyFundAmount]}
-                        onValueChange={(value) =>
-                          setEmergencyFundAmount(value[0])
-                        }
-                        min={1000}
-                        max={50000}
-                        step={1000}
-                        className="mt-2"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Recommended: 3-6 months of expenses
+                  <div className="h-96">
+                    <canvas ref={chartRef}></canvas>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                      <p className="text-sm text-gray-500 uppercase">
+                        Net Worth at{" "}
+                        {projectionData?.ages?.length > 0
+                          ? projectionData.ages[projectionData.ages.length - 1]
+                          : age}
                       </p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
+                              $
+                              {projectionData?.netWorth?.length > 0
+                                ? projectionData.netWorth[
+                                    projectionData.netWorth.length - 1
+                                  ].toLocaleString()
+                                : startingSavings.toLocaleString()}
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>
+                              Includes all assets (like home and car value) minus
+                              all liabilities (like mortgages and loans).
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
-                    <div>
-                      <Label>
-                        Personal Loan Term: {personalLoanTermYears} years
-                      </Label>
-                      <Slider
-                        value={[personalLoanTermYears]}
-                        onValueChange={(value) =>
-                          setPersonalLoanTermYears(value[0])
-                        }
-                        min={1}
-                        max={10}
-                        step={1}
-                        className="mt-2"
-                      />
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                      <p className="text-sm text-gray-500 uppercase">
+                        Total Savings & Investments
+                      </p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
+                              $
+                              {projectionData?.savingsValue?.length > 0
+                                ? projectionData.savingsValue[
+                                    projectionData.savingsValue.length - 1
+                                  ].toLocaleString()
+                                : startingSavings.toLocaleString()}
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>
+                              Represents only liquid savings and investments. Does
+                              not include the value of physical assets like homes
+                              and cars.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
-                    <div>
-                      <Label>
-                        Loan Interest Rate: {personalLoanInterestRate}%
-                      </Label>
-                      <Slider
-                        value={[personalLoanInterestRate]}
-                        onValueChange={(value) =>
-                          setPersonalLoanInterestRate(value[0])
-                        }
-                        min={3}
-                        max={20}
-                        step={0.5}
-                        className="mt-2"
-                      />
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                      <p className="text-sm text-gray-500 uppercase">
+                        Annual Savings Rate
+                      </p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-2xl font-mono font-medium text-gray-800 cursor-help">
+                              {projectionData?.income?.length > 0 &&
+                              projectionData?.expenses?.length > 0
+                                ? Math.round(
+                                    ((projectionData.income[0] -
+                                      projectionData.expenses[0]) /
+                                      projectionData.income[0]) *
+                                      100
+                                  )
+                                : Math.round(
+                                    ((income - expenses) / income) * 100
+                                  )}
+                              %
+                            </p>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>
+                              Percentage of income saved each year. Higher rates
+                              lead to faster wealth accumulation.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            <div className="flex justify-end mt-6">
-              <Button
-                variant="outline"
-                className="mr-2"
-                onClick={() => setMainTab("view")}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    // Adjust income based on location
-                    const adjustedIncome =
-                      income *
-                      (locationCostData?.income_adjustment_factor || 1.0);
-                    const adjustedExpenses = expenses;
+          <TabsContent value="edit">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Edit Projection</h3>
 
-                    const response = await apiRequest("/api/financial-projections", {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        userId,
-                        name: projectionName,
-                        timeframe: years,
-                        startingAge: age,
-                        startingSavings,
-                        income: Math.round(adjustedIncome),
-                        expenses: Math.round(adjustedExpenses),
-                        incomeGrowth,
-                        studentLoanDebt,
-                        projectionData: projectionData,
-                        includesCollegeCalculation: !!effectiveCollegeCalc,
-                        includesCareerCalculation: !!effectiveCareerCalc,
-                        collegeCalculationId: effectiveCollegeCalc?.id || null,
-                        careerCalculationId: effectiveCareerCalc?.id || null,
-                        locationAdjusted: !!locationCostData,
-                        locationZipCode: userData?.zipCode || null,
-                        costOfLivingIndex: locationCostData
-                          ? locationCostData.income_adjustment_factor || 1.0
-                          : null,
-                        incomeAdjustmentFactor:
-                          locationCostData?.income_adjustment_factor || null,
-                        emergencyFundAmount: emergencyFundAmount,
-                        personalLoanTermYears: personalLoanTermYears,
-                        personalLoanInterestRate: personalLoanInterestRate,
-                      }),
-                    });
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <Card>
+                  <CardContent className="pt-6">
+                    <h4 className="text-lg font-medium mb-4">Basic Settings</h4>
 
-                    if (response.ok) {
-                      alert("Projection saved successfully!");
-                      queryClient.invalidateQueries({
-                        queryKey: ["/api/financial-projections", userId],
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="projectionName">Projection Name</Label>
+                        <Input
+                          id="projectionName"
+                          value={projectionName}
+                          onChange={(e) => setProjectionName(e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="age">Current Age</Label>
+                        <Input
+                          id="age"
+                          type="number"
+                          value={age}
+                          onChange={(e) => setAge(Number(e.target.value))}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="timeframe">Timeframe</Label>
+                        <select
+                          id="timeframe"
+                          className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                          value={timeframe}
+                          onChange={(e) => setTimeframe(e.target.value)}
+                        >
+                          <option>5 Years</option>
+                          <option>10 Years</option>
+                          <option>20 Years</option>
+                          <option>30 Years</option>
+                          <option>40 Years</option>
+                        </select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <h4 className="text-lg font-medium mb-4">
+                      Financial Details
+                    </h4>
+
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="editSavings">Starting Savings ($)</Label>
+                        <Input
+                          id="editSavings"
+                          type="number"
+                          value={startingSavings}
+                          onChange={(e) =>
+                            setStartingSavings(Number(e.target.value))
+                          }
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="editIncome">Annual Income ($)</Label>
+                        <Input
+                          id="editIncome"
+                          type="number"
+                          value={income}
+                          onChange={(e) => setIncome(Number(e.target.value))}
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="editExpenses">Annual Expenses ($)</Label>
+                        <Input
+                          id="editExpenses"
+                          type="number"
+                          value={expenses}
+                          onChange={(e) => setExpenses(Number(e.target.value))}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <h4 className="text-lg font-medium mb-4">Education & Debt</h4>
+
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="editStudentLoan">
+                          Student Loan Debt ($)
+                        </Label>
+                        <Input
+                          id="editStudentLoan"
+                          type="number"
+                          value={studentLoanDebt}
+                          onChange={(e) =>
+                            setStudentLoanDebt(Number(e.target.value))
+                          }
+                          className="mt-1"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="incomeGrowth">
+                          Income Growth Rate (%)
+                        </Label>
+                        <Slider
+                          id="incomeGrowth"
+                          value={[incomeGrowth * 100]}
+                          onValueChange={(value) =>
+                            setIncomeGrowth(value[0] / 100)
+                          }
+                          min={0}
+                          max={10}
+                          step={0.1}
+                          className="mt-2"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Current: {(incomeGrowth * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <h4 className="text-lg font-medium mb-4">
+                      Emergency & Loans
+                    </h4>
+
+                    <div className="space-y-4">
+                      <div>
+                        <Label>
+                          Emergency Fund Target:{" "}
+                          {formatCurrency(emergencyFundAmount)}
+                        </Label>
+                        <Slider
+                          value={[emergencyFundAmount]}
+                          onValueChange={(value) =>
+                            setEmergencyFundAmount(value[0])
+                          }
+                          min={1000}
+                          max={50000}
+                          step={1000}
+                          className="mt-2"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Recommended: 3-6 months of expenses
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label>
+                          Personal Loan Term: {personalLoanTermYears} years
+                        </Label>
+                        <Slider
+                          value={[personalLoanTermYears]}
+                          onValueChange={(value) =>
+                            setPersonalLoanTermYears(value[0])
+                          }
+                          min={1}
+                          max={10}
+                          step={1}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label>
+                          Loan Interest Rate: {personalLoanInterestRate}%
+                        </Label>
+                        <Slider
+                          value={[personalLoanInterestRate]}
+                          onValueChange={(value) =>
+                            setPersonalLoanInterestRate(value[0])
+                          }
+                          min={3}
+                          max={20}
+                          step={0.5}
+                          className="mt-2"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <Button
+                  variant="outline"
+                  className="mr-2"
+                  onClick={() => setMainTab("view")}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      // Adjust income based on location
+                      const adjustedIncome =
+                        income *
+                        (locationCostData?.income_adjustment_factor || 1.0);
+                      const adjustedExpenses = expenses;
+
+                      const response = await apiRequest("/api/financial-projections", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          userId,
+                          name: projectionName,
+                          timeframe: years,
+                          startingAge: age,
+                          startingSavings,
+                          income: Math.round(adjustedIncome),
+                          expenses: Math.round(adjustedExpenses),
+                          incomeGrowth,
+                          studentLoanDebt,
+                          projectionData: projectionData,
+                          includesCollegeCalculation: !!effectiveCollegeCalc,
+                          includesCareerCalculation: !!effectiveCareerCalc,
+                          collegeCalculationId: effectiveCollegeCalc?.id || null,
+                          careerCalculationId: effectiveCareerCalc?.id || null,
+                          locationAdjusted: !!locationCostData,
+                          locationZipCode: userData?.zipCode || null,
+                          costOfLivingIndex: locationCostData
+                            ? locationCostData.income_adjustment_factor || 1.0
+                            : null,
+                          incomeAdjustmentFactor:
+                            locationCostData?.income_adjustment_factor || null,
+                          emergencyFundAmount: emergencyFundAmount,
+                          personalLoanTermYears: personalLoanTermYears,
+                          personalLoanInterestRate: personalLoanInterestRate,
+                        }),
                       });
 
-                      // If this is a first-time user, mark them as having completed onboarding
-                      if (isFirstTimeUser && completeOnboarding) {
-                        console.log(
-                          "User saved their first projection, marking as completed onboarding"
-                        );
-                        try {
-                          await completeOnboarding();
-                        } catch (error) {
-                          console.error(
-                            "Failed to update onboarding status:",
-                            error
+                      if (response.ok) {
+                        alert("Projection saved successfully!");
+                        queryClient.invalidateQueries({
+                          queryKey: ["/api/financial-projections", userId],
+                        });
+
+                        // If this is a first-time user, mark them as having completed onboarding
+                        if (isFirstTimeUser && completeOnboarding) {
+                          console.log(
+                            "User saved their first projection, marking as completed onboarding"
                           );
-                          // Non-critical error, continue without showing an error to the user
+                          try {
+                            await completeOnboarding();
+                          } catch (error) {
+                            console.error(
+                              "Failed to update onboarding status:",
+                              error
+                            );
+                            // Non-critical error, continue without showing an error to the user
+                          }
                         }
+
+                        // After saving, switch back to view tab
+                        setMainTab("view");
+                      } else {
+                        throw new Error("Failed to save projection");
                       }
-
-                      // After saving, switch back to view tab
-                      setMainTab("view");
-                    } else {
-                      throw new Error("Failed to save projection");
+                    } catch (error) {
+                      console.error("Error saving projection:", error);
+                      alert("Failed to save projection. Please try again.");
                     }
-                  } catch (error) {
-                    console.error("Error saving projection:", error);
-                    alert("Failed to save projection. Please try again.");
-                  }
-                }}
-              >
-                Save Changes
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="compare">
-          <div className="p-6">
-            <h3 className="text-xl font-semibold mb-4">Compare Projections</h3>
-
-            {savedProjections && savedProjections.length >= 2 ? (
-              <div className="space-y-6">
-                <div className="bg-slate-50 p-4 rounded-md">
-                  <h4 className="font-medium mb-2">
-                    Select Projections to Compare
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Choose up to 3 projections to compare side by side. This
-                    will show key metrics across your different financial
-                    scenarios.
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {savedProjections.slice(0, 6).map((projection: any) => (
-                      <div
-                        key={projection.id}
-                        className="border rounded-md p-3 bg-white cursor-pointer hover:border-primary transition-colors"
-                      >
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`projection-${projection.id}`}
-                            className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                          />
-                          <label
-                            htmlFor={`projection-${projection.id}`}
-                            className="text-sm font-medium text-gray-900 cursor-pointer"
-                          >
-                            {projection.name || "Unnamed Projection"}
-                          </label>
-                        </div>
-                        <div className="mt-2 text-xs text-gray-500">
-                          {projection.timeframe || 10} year projection
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <h4 className="text-lg font-medium mb-2">
-                        Standard Projection
-                      </h4>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Base scenario
-                      </p>
-
-                      <div className="space-y-4">
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">Starting Age</p>
-                          <p className="text-lg font-medium">25</p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">
-                            Starting Savings
-                          </p>
-                          <p className="text-lg font-medium">
-                            {formatCurrency(10000)}
-                          </p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">Annual Income</p>
-                          <p className="text-lg font-medium">
-                            {formatCurrency(50000)}
-                          </p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">
-                            Final Net Worth
-                          </p>
-                          <p className="text-lg font-medium text-green-600">
-                            {formatCurrency(250000)}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <h4 className="text-lg font-medium mb-2">
-                        Higher Education
-                      </h4>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Graduate degree scenario
-                      </p>
-
-                      <div className="space-y-4">
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">Starting Age</p>
-                          <p className="text-lg font-medium">25</p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">
-                            Starting Savings
-                          </p>
-                          <p className="text-lg font-medium">
-                            {formatCurrency(5000)}
-                          </p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">Annual Income</p>
-                          <p className="text-lg font-medium">
-                            {formatCurrency(70000)}
-                          </p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">
-                            Final Net Worth
-                          </p>
-                          <p className="text-lg font-medium text-green-600">
-                            {formatCurrency(320000)}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <h4 className="text-lg font-medium mb-2">Early Career</h4>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Work experience scenario
-                      </p>
-
-                      <div className="space-y-4">
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">Starting Age</p>
-                          <p className="text-lg font-medium">22</p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">
-                            Starting Savings
-                          </p>
-                          <p className="text-lg font-medium">
-                            {formatCurrency(3000)}
-                          </p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">Annual Income</p>
-                          <p className="text-lg font-medium">
-                            {formatCurrency(45000)}
-                          </p>
-                        </div>
-
-                        <div className="bg-slate-50 p-3 rounded-md">
-                          <p className="text-xs text-gray-500">
-                            Final Net Worth
-                          </p>
-                          <p className="text-lg font-medium text-green-600">
-                            {formatCurrency(280000)}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-3">Net Worth Comparison</h4>
-                  <div className="bg-white border rounded-md p-4 h-96">
-                    <div className="text-center text-gray-500 h-full flex items-center justify-center">
-                      <p>Select projections above to generate comparison</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium mb-3">Income Comparison</h4>
-                    <div className="bg-white border rounded-md p-4 h-72">
-                      <div className="text-center text-gray-500 h-full flex items-center justify-center">
-                        <p>Income comparison data will appear here</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium mb-3">Debt Comparison</h4>
-                    <div className="bg-white border rounded-md p-4 h-72">
-                      <div className="text-center text-gray-500 h-full flex items-center justify-center">
-                        <p>Debt comparison data will appear here</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-md border border-gray-200">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
+                  }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No projections to compare
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  You need at least 2 saved projections to use the comparison
-                  feature.
-                </p>
-                <div className="mt-6">
-                  <Button onClick={() => setMainTab("view")}>
-                    Create Projection
-                  </Button>
-                </div>
+                  Save Changes
+                </Button>
               </div>
-            )}
-          </div>
-        </TabsContent>
+            </div>
+          </TabsContent>
 
-        <TabsContent value="manage">
-          <div className="p-6">
-            <h3 className="text-xl font-semibold mb-4">Manage Projections</h3>
+          <TabsContent value="compare">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Compare Projections</h3>
 
-            {savedProjections.length > 0 ? (
-              <div className="space-y-4">
-                <div className="rounded-md border overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Name
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Age Range
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Net Worth (Final)
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Created
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {savedProjections.map(
-                        (projection: FinancialProjection) => {
-                          const projData = projection.projectionData
-                            ? typeof projection.projectionData === "string"
-                              ? JSON.parse(projection.projectionData)
-                              : projection.projectionData
-                            : null;
+              {savedProjections && savedProjections.length >= 2 ? (
+                <div className="space-y-6">
+                  <div className="bg-slate-50 p-4 rounded-md">
+                    <h4 className="font-medium mb-2">
+                      Select Projections to Compare
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Choose up to 3 projections to compare side by side. This
+                      will show key metrics across your different financial
+                      scenarios.
+                    </p>
 
-                          const startAge =
-                            projection.startingAge || projData?.ages?.[0] || 0;
-                          const endAge = projData?.ages
-                            ? projData.ages[projData.ages.length - 1]
-                            : startAge + (projection.timeframe || 10);
-                          const finalNetWorth = projData?.netWorth
-                            ? projData.netWorth[projData.netWorth.length - 1]
-                            : projection.startingSavings || 0;
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {savedProjections.slice(0, 6).map((projection: any) => (
+                        <div
+                          key={projection.id}
+                          className="border rounded-md p-3 bg-white cursor-pointer hover:border-primary transition-colors"
+                        >
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              id={`projection-${projection.id}`}
+                              className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                            />
+                            <label
+                              htmlFor={`projection-${projection.id}`}
+                              className="text-sm font-medium text-gray-900 cursor-pointer"
+                            >
+                              {projection.name || "Unnamed Projection"}
+                            </label>
+                          </div>
+                          <div className="mt-2 text-xs text-gray-500">
+                            {projection.timeframe || 10} year projection
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                          return (
-                            <tr key={projection.id}>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {projection.name}
-                                </div>
-                                {projection.includesCareerCalculation && (
-                                  <div className="text-xs text-gray-500">
-                                    Includes career calculation
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <h4 className="text-lg font-medium mb-2">
+                          Standard Projection
+                        </h4>
+                        <p className="text-xs text-gray-500 mb-4">
+                          Base scenario
+                        </p>
+
+                        <div className="space-y-4">
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">Starting Age</p>
+                            <p className="text-lg font-medium">25</p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">
+                              Starting Savings
+                            </p>
+                            <p className="text-lg font-medium">
+                              {formatCurrency(10000)}
+                            </p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">Annual Income</p>
+                            <p className="text-lg font-medium">
+                              {formatCurrency(50000)}
+                            </p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">
+                              Final Net Worth
+                            </p>
+                            <p className="text-lg font-medium text-green-600">
+                              {formatCurrency(250000)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-6">
+                        <h4 className="text-lg font-medium mb-2">
+                          Higher Education
+                        </h4>
+                        <p className="text-xs text-gray-500 mb-4">
+                          Graduate degree scenario
+                        </p>
+
+                        <div className="space-y-4">
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">Starting Age</p>
+                            <p className="text-lg font-medium">25</p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">
+                              Starting Savings
+                            </p>
+                            <p className="text-lg font-medium">
+                              {formatCurrency(5000)}
+                            </p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">Annual Income</p>
+                            <p className="text-lg font-medium">
+                              {formatCurrency(70000)}
+                            </p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">
+                              Final Net Worth
+                            </p>
+                            <p className="text-lg font-medium text-green-600">
+                              {formatCurrency(320000)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-6">
+                        <h4 className="text-lg font-medium mb-2">Early Career</h4>
+                        <p className="text-xs text-gray-500 mb-4">
+                          Work experience scenario
+                        </p>
+
+                        <div className="space-y-4">
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">Starting Age</p>
+                            <p className="text-lg font-medium">22</p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">
+                              Starting Savings
+                            </p>
+                            <p className="text-lg font-medium">
+                              {formatCurrency(3000)}
+                            </p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">Annual Income</p>
+                            <p className="text-lg font-medium">
+                              {formatCurrency(45000)}
+                            </p>
+                          </div>
+
+                          <div className="bg-slate-50 p-3 rounded-md">
+                            <p className="text-xs text-gray-500">
+                              Final Net Worth
+                            </p>
+                            <p className="text-lg font-medium text-green-600">
+                              {formatCurrency(280000)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">Net Worth Comparison</h4>
+                    <div className="bg-white border rounded-md p-4 h-96">
+                      <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                        <p>Select projections above to generate comparison</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-medium mb-3">Income Comparison</h4>
+                      <div className="bg-white border rounded-md p-4 h-72">
+                        <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                          <p>Income comparison data will appear here</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-medium mb-3">Debt Comparison</h4>
+                      <div className="bg-white border rounded-md p-4 h-72">
+                        <div className="text-center text-gray-500 h-full flex items-center justify-center">
+                          <p>Debt comparison data will appear here</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-md border border-gray-200">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    No projections to compare
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    You need at least 2 saved projections to use the comparison
+                    feature.
+                  </p>
+                  <div className="mt-6">
+                    <Button onClick={() => setMainTab("view")}>
+                      Create Projection
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="manage">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Manage Projections</h3>
+
+              {savedProjections.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="rounded-md border overflow-hidden">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Name
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Age Range
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Net Worth (Final)
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Created
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {savedProjections.map(
+                          (projection: FinancialProjection) => {
+                            const projData = projection.projectionData
+                              ? typeof projection.projectionData === "string"
+                                ? JSON.parse(projection.projectionData)
+                                : projection.projectionData
+                              : null;
+
+                            const startAge =
+                              projection.startingAge || projData?.ages?.[0] || 0;
+                            const endAge = projData?.ages
+                              ? projData.ages[projData.ages.length - 1]
+                              : startAge + (projection.timeframe || 10);
+                            const finalNetWorth = projData?.netWorth
+                              ? projData.netWorth[projData.netWorth.length - 1]
+                              : projection.startingSavings || 0;
+
+                            return (
+                              <tr key={projection.id}>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {projection.name}
                                   </div>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
-                                  {startAge} to {endAge}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {endAge - startAge} years
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">
-                                  {formatCurrency(finalNetWorth)}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {projection.createdAt
-                                  ? new Date(
-                                      projection.createdAt
-                                    ).toLocaleDateString()
-                                  : "Unknown"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div className="flex justify-end space-x-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      // Log that we're starting to load this projection
-                                      console.log(
-                                        `----- LOADING PROJECTION ${projection.id} -----`
-                                      );
-                                      console.log(
-                                        `Current projection ID in state: ${projectionId}`
-                                      );
-                                      console.log(
-                                        `Target projection ID to load: ${projection.id}`
-                                      );
-
-                                      // First step: Reset all state to defaults to prevent stale data
-                                      setProjectionData(null);
-                                      setAge(25);
-                                      setTimeframe("10 Years");
-                                      setStartingSavings(5000);
-                                      setIncome(40000);
-                                      setExpenses(35000);
-                                      setIncomeGrowth(0.03);
-                                      setStudentLoanDebt(0);
-                                      setEmergencyFundAmount(10000);
-                                      setPersonalLoanTermYears(5);
-                                      setPersonalLoanInterestRate(8.0);
-                                      setProjectionName("");
-
-                                      // Generate a truly unique timestamp to ensure cache busting
-                                      const timestamp = Date.now();
-
-                                      // Second step: Completely reset all React Query cache
-                                      // This is the most aggressive approach but ensures all stale data is cleared
-                                      queryClient.clear();
-                                      console.log(
-                                        `Cleared entire React Query cache to prevent stale data`
-                                      );
-
-                                      // Third step: Set UI to loading state to indicate transition
-                                      setMainTab("loading");
-                                      console.log(
-                                        `Set UI to loading state during transition`
-                                      );
-
-                                      // Fourth step: Navigate with URL parameters after a small delay
-                                      // This ensures React has time to process the state resets
-                                      setTimeout(() => {
+                                  {projection.includesCareerCalculation && (
+                                    <div className="text-xs text-gray-500">
+                                      Includes career calculation
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900">
+                                    {startAge} to {endAge}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {endAge - startAge} years
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900">
+                                    {formatCurrency(finalNetWorth)}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {projection.createdAt
+                                    ? new Date(
+                                        projection.createdAt
+                                      ).toLocaleDateString()
+                                    : "Unknown"}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                  <div className="flex justify-end space-x-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        // Log that we're starting to load this projection
                                         console.log(
-                                          `Navigating to projection ${projection.id} with timestamp ${timestamp}`
+                                          `----- LOADING PROJECTION ${projection.id} -----`
                                         );
                                         console.log(
-                                          `Navigation URL: /projections?id=${projection.id}&t=${timestamp}`
+                                          `Current projection ID in state: ${projectionId}`
+                                        );
+                                        console.log(
+                                          `Target projection ID to load: ${projection.id}`
                                         );
 
-                                        // Use URL approach for navigation which triggers all loading mechanisms
-                                        setLocation(
-                                          `/projections?id=${projection.id}&t=${timestamp}`,
-                                          {
-                                            replace: true, // Replace current history entry to avoid back button issues
-                                          }
+                                        // First step: Reset all state to defaults to prevent stale data
+                                        setProjectionData(null);
+                                        setAge(25);
+                                        setTimeframe("10 Years");
+                                        setStartingSavings(5000);
+                                        setIncome(40000);
+                                        setExpenses(35000);
+                                        setIncomeGrowth(0.03);
+                                        setStudentLoanDebt(0);
+                                        setEmergencyFundAmount(10000);
+                                        setPersonalLoanTermYears(5);
+                                        setPersonalLoanInterestRate(8.0);
+                                        setProjectionName("");
+
+                                        // Generate a truly unique timestamp to ensure cache busting
+                                        const timestamp = Date.now();
+
+                                        // Second step: Completely reset all React Query cache
+                                        // This is the most aggressive approach but ensures all stale data is cleared
+                                        queryClient.clear();
+                                        console.log(
+                                          `Cleared entire React Query cache to prevent stale data`
                                         );
 
-                                        // Final step: Switch to view tab after navigation
+                                        // Third step: Set UI to loading state to indicate transition
+                                        setMainTab("loading");
+                                        console.log(
+                                          `Set UI to loading state during transition`
+                                        );
+
+                                        // Fourth step: Navigate with URL parameters after a small delay
+                                        // This ensures React has time to process the state resets
                                         setTimeout(() => {
-                                          setMainTab("view");
                                           console.log(
-                                            `Switched to view tab for projection ${projection.id}`
+                                            `Navigating to projection ${projection.id} with timestamp ${timestamp}`
+                                          );
+                                          console.log(
+                                            `Navigation URL: /projections?id=${projection.id}&t=${timestamp}`
                                           );
 
-                                          // Force a refetch of the saved projection data
-                                          refetchProjection();
-                                          console.log(
-                                            `Triggered manual refetch of projection data`
-                                          );
-                                        }, 300);
-                                      }, 100);
-                                    }}
-                                  >
-                                    Load
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={async () => {
-                                      if (
-                                        confirm(
-                                          `Are you sure you want to delete "${projection.name}"?`
-                                        )
-                                      ) {
-                                        try {
-                                          const response = await apiRequest(
-                                            `/api/financial-projections/${projection.id}`,
+                                          // Use URL approach for navigation which triggers all loading mechanisms
+                                          setLocation(
+                                            `/projections?id=${projection.id}&t=${timestamp}`,
                                             {
-                                              method: "DELETE",
+                                              replace: true, // Replace current history entry to avoid back button issues
                                             }
                                           );
 
-                                          if (response.ok) {
-                                            // Remove the specific projection from the cache to prevent ghost data
-                                            queryClient.removeQueries({
-                                              queryKey: [
-                                                "/api/financial-projections/detail",
-                                                projection.id,
-                                              ],
-                                            });
+                                          // Final step: Switch to view tab after navigation
+                                          setTimeout(() => {
+                                            setMainTab("view");
+                                            console.log(
+                                              `Switched to view tab for projection ${projection.id}`
+                                            );
 
-                                            // Also invalidate the list to refresh it
-                                            queryClient.invalidateQueries({
-                                              queryKey: [
-                                                "/api/financial-projections",
-                                                userId,
-                                              ],
-                                            });
+                                            // Force a refetch of the saved projection data
+                                            refetchProjection();
+                                            console.log(
+                                              `Triggered manual refetch of projection data`
+                                            );
+                                          }, 300);
+                                        }, 100);
+                                      }}
+                                    >
+                                      Load
+                                    </Button>
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={async () => {
+                                        if (
+                                          confirm(
+                                            `Are you sure you want to delete "${projection.name}"?`
+                                          )
+                                        ) {
+                                          try {
+                                            const response = await apiRequest(
+                                              `/api/financial-projections/${projection.id}`,
+                                              {
+                                                method: "DELETE",
+                                              }
+                                            );
 
-                                            // If we're currently viewing this projection, reset the URL
-                                            if (
-                                              projectionId === projection.id
-                                            ) {
-                                              // Reset the URL to the base projections page
-                                              window.history.pushState(
-                                                {},
-                                                "",
-                                                "/projections"
+                                            if (response.ok) {
+                                              // Remove the specific projection from the cache to prevent ghost data
+                                              queryClient.removeQueries({
+                                                queryKey: [
+                                                  "/api/financial-projections/detail",
+                                                  projection.id,
+                                                ],
+                                              });
+
+                                              // Also invalidate the list to refresh it
+                                              queryClient.invalidateQueries({
+                                                queryKey: [
+                                                  "/api/financial-projections",
+                                                  userId,
+                                                ],
+                                              });
+
+                                              // If we're currently viewing this projection, reset the URL
+                                              if (
+                                                projectionId === projection.id
+                                              ) {
+                                                // Reset the URL to the base projections page
+                                                window.history.pushState(
+                                                  {},
+                                                  "",
+                                                  "/projections"
+                                                );
+                                                // Reset component state
+                                                setProjectionData(null);
+                                                setAge(25);
+                                                setTimeframe("10 Years");
+                                                setStartingSavings(5000);
+                                                setIncome(40000);
+                                                setExpenses(35000);
+                                                setIncomeGrowth(3.0);
+                                                setStudentLoanDebt(0);
+                                                setEmergencyFundAmount(10000);
+                                                setPersonalLoanTermYears(5);
+                                                setPersonalLoanInterestRate(8.0);
+                                                setProjectionName("");
+                                              }
+
+                                              // Show success message
+                                              toast({
+                                                title: "Projection deleted",
+                                                description: `Successfully deleted "${projection.name}"`,
+                                              });
+                                            } else {
+                                              throw new Error(
+                                                "Failed to delete projection"
                                               );
-                                              // Reset component state
-                                              setProjectionData(null);
-                                              setAge(25);
-                                              setTimeframe("10 Years");
-                                              setStartingSavings(5000);
-                                              setIncome(40000);
-                                              setExpenses(35000);
-                                              setIncomeGrowth(3.0);
-                                              setStudentLoanDebt(0);
-                                              setEmergencyFundAmount(10000);
-                                              setPersonalLoanTermYears(5);
-                                              setPersonalLoanInterestRate(8.0);
-                                              setProjectionName("");
                                             }
-
-                                            // Show success message
-                                            toast({
-                                              title: "Projection deleted",
-                                              description: `Successfully deleted "${projection.name}"`,
-                                            });
-                                          } else {
-                                            throw new Error(
-                                              "Failed to delete projection"
+                                          } catch (error) {
+                                            console.error(
+                                              "Error deleting projection:",
+                                              error
+                                            );
+                                            alert(
+                                              "Failed to delete projection. Please try again."
                                             );
                                           }
-                                        } catch (error) {
-                                          console.error(
-                                            "Error deleting projection:",
-                                            error
-                                          );
-                                          alert(
-                                            "Failed to delete projection. Please try again."
-                                          );
                                         }
-                                      }
-                                    }}
-                                  >
-                                    Delete
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        }
-                      )}
-                    </tbody>
-                  </table>
+                                      }}
+                                    >
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          }
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-md border border-gray-200">
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    No saved projections
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Create a projection and save it to see it here.
+                  </p>
+                  <div className="mt-6">
+                    <Button onClick={() => setMainTab("view")}>
+                      Create New Projection
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Card to display location-based cost of living or 'Add Location' card if no data */}
+        {locationCostData ? (
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Location Cost of Living</h3>
+                <div className="flex items-center">
+                  <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mr-2">
+                    {locationCostData.city || "Your Location"},{" "}
+                    {locationCostData.state} ({userData?.zipCode})
+                  </div>
+                  <UpdateLocationDialog userData={userData} />
                 </div>
               </div>
-            ) : (
-              <div className="text-center py-12 bg-gray-50 rounded-md border border-gray-200">
+
+              <p className="text-gray-600 mb-4">
+                Your financial projections are adjusted based on the cost of
+                living in your location.
+                {locationCostData.income_adjustment_factor > 1
+                  ? ` This area has a ${((locationCostData.income_adjustment_factor - 1) * 100).toFixed(0)}% higher cost of living than the national average.`
+                  : ` This area has a ${((1 - locationCostData.income_adjustment_factor) * 100).toFixed(0)}% lower cost of living than the national average.`}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-500 uppercase">
+                    Income Adjustment
+                  </p>
+                  <p className="text-2xl font-medium text-primary">
+                    {(locationCostData.income_adjustment_factor * 100).toFixed(0)}
+                    %
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {locationCostData.income_adjustment_factor > 1
+                      ? "Higher"
+                      : "Lower"}{" "}
+                    than average
+                  </p>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-500 uppercase">Housing Cost</p>
+                  <p className="text-2xl font-medium text-primary">
+                    ${(locationCostData.housing || 0).toFixed(0)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Monthly cost</p>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-500 uppercase">
+                    Total Monthly Cost
+                  </p>
+                  <p className="text-2xl font-medium text-primary">
+                    $
+                    {(
+                      (locationCostData.housing || 0) +
+                      (locationCostData.food || 0) +
+                      (locationCostData.transportation || 0) +
+                      (locationCostData.healthcare || 0) +
+                      (locationCostData.personal_insurance || 0) +
+                      (locationCostData.entertainment || 0) +
+                      (locationCostData.services || 0)
+                    ).toFixed(0)}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Sum of all expense categories
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h4 className="text-sm font-medium mb-3">
+                  Detailed Cost Breakdown
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Housing</p>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 bg-blue-100 rounded-full w-full">
+                        <div
+                          className="h-2 bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min((locationCostData.housing || 0) / 25, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs ml-2">
+                        ${(locationCostData.housing || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Food</p>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 bg-blue-100 rounded-full w-full">
+                        <div
+                          className="h-2 bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min((locationCostData.food || 0) / 25, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs ml-2">
+                        ${(locationCostData.food || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Transportation</p>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 bg-blue-100 rounded-full w-full">
+                        <div
+                          className="h-2 bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min((locationCostData.transportation || 0) / 25, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs ml-2">
+                        ${(locationCostData.transportation || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Healthcare</p>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 bg-blue-100 rounded-full w-full">
+                        <div
+                          className="h-2 bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min((locationCostData.healthcare || 0) / 25, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs ml-2">
+                        ${(locationCostData.healthcare || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Insurance</p>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 bg-blue-100 rounded-full w-full">
+                        <div
+                          className="h-2 bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min((locationCostData.personal_insurance || 0) / 25, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs ml-2">
+                        ${(locationCostData.personal_insurance || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Entertainment</p>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 bg-blue-100 rounded-full w-full">
+                        <div
+                          className="h-2 bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min((locationCostData.entertainment || 0) / 25, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs ml-2">
+                        ${(locationCostData.entertainment || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-gray-500">Services</p>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 bg-blue-100 rounded-full w-full">
+                        <div
+                          className="h-2 bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min((locationCostData.services || 0) / 25, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="text-xs ml-2">
+                        ${(locationCostData.services || 0).toFixed(0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Impact on your finances:</span> In{" "}
+                  {locationCostData.city || "your location"},
+                  {(locationCostData.income_adjustment_factor || 0) >= 1
+                    ? ` salaries tend to be higher to compensate for the increased cost of living.`
+                    : ` your expenses will be lower, but salaries may also be lower than in more expensive areas.`}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Location Cost of Living</h3>
+                <div className="flex items-center">
+                  <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mr-2">
+                    {userData?.zipCode || "No location set"}
+                  </div>
+                  <UpdateLocationDialog userData={userData} />
+                </div>
+              </div>
+
+              <div className="py-8 text-center">
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400"
+                  xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={1.5}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
                 <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No saved projections
+                  No location data available
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Create a projection and save it to see it here.
+                  {userData?.zipCode
+                    ? `We don't have cost of living data for your current zip code (${userData.zipCode}).
+                      Try changing to 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) to see data.`
+                    : "Set your location to adjust financial projections based on cost of living."}
                 </p>
                 <div className="mt-6">
-                  <Button onClick={() => setMainTab("view")}>
-                    Create New Projection
-                  </Button>
+                  <UpdateLocationDialog userData={userData} />
                 </div>
               </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Card to display location-based cost of living or 'Add Location' card if no data */}
-      {locationCostData ? (
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Location Cost of Living</h3>
-              <div className="flex items-center">
-                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mr-2">
-                  {locationCostData.city || "Your Location"},{" "}
-                  {locationCostData.state} ({userData?.zipCode})
-                </div>
-                <UpdateLocationDialog userData={userData} />
-              </div>
-            </div>
-
-            <p className="text-gray-600 mb-4">
-              Your financial projections are adjusted based on the cost of
-              living in your location.
-              {locationCostData.income_adjustment_factor > 1
-                ? ` This area has a ${((locationCostData.income_adjustment_factor - 1) * 100).toFixed(0)}% higher cost of living than the national average.`
-                : ` This area has a ${((1 - locationCostData.income_adjustment_factor) * 100).toFixed(0)}% lower cost of living than the national average.`}
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-500 uppercase">
-                  Income Adjustment
-                </p>
-                <p className="text-2xl font-medium text-primary">
-                  {(locationCostData.income_adjustment_factor * 100).toFixed(0)}
-                  %
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {locationCostData.income_adjustment_factor > 1
-                    ? "Higher"
-                    : "Lower"}{" "}
-                  than average
-                </p>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-500 uppercase">Housing Cost</p>
-                <p className="text-2xl font-medium text-primary">
-                  ${(locationCostData.housing || 0).toFixed(0)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Monthly cost</p>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-500 uppercase">
-                  Total Monthly Cost
-                </p>
-                <p className="text-2xl font-medium text-primary">
-                  $
-                  {(
-                    (locationCostData.housing || 0) +
-                    (locationCostData.food || 0) +
-                    (locationCostData.transportation || 0) +
-                    (locationCostData.healthcare || 0) +
-                    (locationCostData.personal_insurance || 0) +
-                    (locationCostData.entertainment || 0) +
-                    (locationCostData.services || 0)
-                  ).toFixed(0)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Sum of all expense categories
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <h4 className="text-sm font-medium mb-3">
-                Detailed Cost Breakdown
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500">Housing</p>
-                  <div className="flex items-center mt-1">
-                    <div className="h-2 bg-blue-100 rounded-full w-full">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full"
-                        style={{
-                          width: `${Math.min((locationCostData.housing || 0) / 25, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-xs ml-2">
-                      ${(locationCostData.housing || 0).toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Food</p>
-                  <div className="flex items-center mt-1">
-                    <div className="h-2 bg-blue-100 rounded-full w-full">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full"
-                        style={{
-                          width: `${Math.min((locationCostData.food || 0) / 25, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-xs ml-2">
-                      ${(locationCostData.food || 0).toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Transportation</p>
-                  <div className="flex items-center mt-1">
-                    <div className="h-2 bg-blue-100 rounded-full w-full">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full"
-                        style={{
-                          width: `${Math.min((locationCostData.transportation || 0) / 25, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-xs ml-2">
-                      ${(locationCostData.transportation || 0).toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Healthcare</p>
-                  <div className="flex items-center mt-1">
-                    <div className="h-2 bg-blue-100 rounded-full w-full">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full"
-                        style={{
-                          width: `${Math.min((locationCostData.healthcare || 0) / 25, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-xs ml-2">
-                      ${(locationCostData.healthcare || 0).toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Insurance</p>
-                  <div className="flex items-center mt-1">
-                    <div className="h-2 bg-blue-100 rounded-full w-full">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full"
-                        style={{
-                          width: `${Math.min((locationCostData.personal_insurance || 0) / 25, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-xs ml-2">
-                      ${(locationCostData.personal_insurance || 0).toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Entertainment</p>
-                  <div className="flex items-center mt-1">
-                    <div className="h-2 bg-blue-100 rounded-full w-full">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full"
-                        style={{
-                          width: `${Math.min((locationCostData.entertainment || 0) / 25, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-xs ml-2">
-                      ${(locationCostData.entertainment || 0).toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-gray-500">Services</p>
-                  <div className="flex items-center mt-1">
-                    <div className="h-2 bg-blue-100 rounded-full w-full">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full"
-                        style={{
-                          width: `${Math.min((locationCostData.services || 0) / 25, 100)}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-xs ml-2">
-                      ${(locationCostData.services || 0).toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600">
-                <span className="font-medium">Impact on your finances:</span> In{" "}
-                {locationCostData.city || "your location"},
-                {(locationCostData.income_adjustment_factor || 0) >= 1
-                  ? ` salaries tend to be higher to compensate for the increased cost of living.`
-                  : ` your expenses will be lower, but salaries may also be lower than in more expensive areas.`}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Location Cost of Living</h3>
-              <div className="flex items-center">
-                <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mr-2">
-                  {userData?.zipCode || "No location set"}
-                </div>
-                <UpdateLocationDialog userData={userData} />
-              </div>
-            </div>
-
-            <div className="py-8 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">
-                No location data available
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {userData?.zipCode
-                  ? `We don't have cost of living data for your current zip code (${userData.zipCode}).
-                    Try changing to 90210 (Beverly Hills), 02142 (Cambridge), 94103 (San Francisco), or 30328 (Atlanta) to see data.`
-                  : "Set your location to adjust financial projections based on cost of living."}
-              </p>
-              <div className="mt-6">
-                <UpdateLocationDialog userData={userData} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Location Adjustment Info */}
-      {projectionData?.location && (
-        <Card className="mb-6">
-          <Collapsible
-            open={locationSectionOpen}
-            onOpenChange={setLocationSectionOpen}
-          >
-            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
-              <h3 className="text-lg font-medium">Location Impact Details</h3>
-              {locationSectionOpen ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-6 pt-0">
-                <LocationAdjustmentInfo projectionData={projectionData} />
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-      )}
-
-      {/* Expense Breakdown Chart */}
-      {projectionData?.currentExpenses && (
-        <Card className="mb-6">
-          <Collapsible
-            open={expenseSectionOpen}
-            onOpenChange={setExpenseSectionOpen}
-          >
-            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
-              <h3 className="text-lg font-medium">Expense Breakdown</h3>
-              {expenseSectionOpen ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-6 pt-0">
-                <ExpenseBreakdownChart
-                  currentExpenses={projectionData.currentExpenses}
-                />
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">
-                      Understanding your expenses:
-                    </span>{" "}
-                    This breakdown shows where your money is going. Housing
-                    (30%), transportation (15%), food (15%), healthcare (10%),
-                    taxes (typically 15-25%), and discretionary spending (30%)
-                    form your basic expenses, with additional categories for
-                    education, debt, and childcare when applicable.
-                  </p>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-      )}
-
-      {/* Debt Breakdown section starts below */}
-
-      {/* Debt Breakdown by Loan Type */}
-      {projectionData?.debt && (
-        <Card className="mb-6">
-          <Collapsible open={debtSectionOpen} onOpenChange={setDebtSectionOpen}>
-            <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
-              <h3 className="text-lg font-medium">Debt Breakdown</h3>
-              {debtSectionOpen ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="p-6 pt-0">
-                <DebtBreakdownComponent projectionData={projectionData} />
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
-      )}
-
-      {/* Tax Breakdown Chart */}
-      {projectionData?.payrollTax &&
-        projectionData?.federalTax &&
-        projectionData?.stateTax && (
+        {/* Location Adjustment Info */}
+        {projectionData?.location && (
           <Card className="mb-6">
-            <Collapsible open={taxSectionOpen} onOpenChange={setTaxSectionOpen}>
+            <Collapsible
+              open={locationSectionOpen}
+              onOpenChange={setLocationSectionOpen}
+            >
               <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
-                <h3 className="text-lg font-medium">Tax Breakdown</h3>
-                {taxSectionOpen ? (
+                <h3 className="text-lg font-medium">Location Impact Details</h3>
+                {locationSectionOpen ? (
                   <ChevronUp className="h-5 w-5" />
                 ) : (
                   <ChevronDown className="h-5 w-5" />
@@ -4861,47 +4810,43 @@ const FinancialProjections = ({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="p-6 pt-0">
-                  <TaxBreakdownChart
-                    projectionData={projectionData}
-                    isLoading={isLoading}
+                  <LocationAdjustmentInfo projectionData={projectionData} />
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
+
+        {/* Expense Breakdown Chart */}
+        {projectionData?.currentExpenses && (
+          <Card className="mb-6">
+            <Collapsible
+              open={expenseSectionOpen}
+              onOpenChange={setExpenseSectionOpen}
+            >
+              <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
+                <h3 className="text-lg font-medium">Expense Breakdown</h3>
+                {expenseSectionOpen ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="p-6 pt-0">
+                  <ExpenseBreakdownChart
+                    currentExpenses={projectionData.currentExpenses}
                   />
-
-                  {/* Add tabular view for detailed tax data - now collapsible */}
-                  <div className="mt-6">
-                    <Collapsible
-                      open={taxTableSectionOpen}
-                      onOpenChange={setTaxTableSectionOpen}
-                    >
-                      <CollapsibleTrigger className="flex justify-between w-full p-3 text-left bg-slate-50 hover:bg-slate-100 rounded-md border">
-                        <h4 className="text-md font-medium">
-                          Tax Breakdown Table
-                        </h4>
-                        {taxTableSectionOpen ? (
-                          <ChevronUp className="h-5 w-5" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5" />
-                        )}
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="pt-3">
-                        <TaxBreakdownTable
-                          projectionData={projectionData}
-                          isLoading={isLoading}
-                        />
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </div>
-
                   <div className="mt-4">
                     <p className="text-sm text-gray-600">
                       <span className="font-medium">
-                        Understanding your taxes:
+                        Understanding your expenses:
                       </span>{" "}
-                      This breakdown shows the different types of taxes you'll
-                      pay based on your income projections. This includes
-                      federal income tax, state income tax, and payroll taxes
-                      (Social Security and Medicare). Your effective tax rate
-                      represents the percentage of your total income paid in
-                      taxes.
+                      This breakdown shows where your money is going. Housing
+                      (30%), transportation (15%), food (15%), healthcare (10%),
+                      taxes (typically 15-25%), and discretionary spending (30%)
+                      form your basic expenses, with additional categories for
+                      education, debt, and childcare when applicable.
                     </p>
                   </div>
                 </CardContent>
@@ -4910,208 +4855,126 @@ const FinancialProjections = ({
           </Card>
         )}
 
-      {/* Detailed Cash Flow Table with collapsible container */}
-      {/* Apply the fixLiabilityCalculation function to ensure graduate school loans are properly counted */}
-      <CashFlowTable
-        {...fixLiabilityCalculation(ensureValidProjectionData(projectionData))}
-        ages={ensureValidProjectionData(projectionData).ages}
-        income={ensureValidProjectionData(projectionData).income}
-        spouseIncome={projectionData?.spouseIncome || []}
-        expenses={ensureValidProjectionData(projectionData).expenses}
-        housingExpenses={projectionData?.housing || []}
-        transportationExpenses={projectionData?.transportation || []}
-        foodExpenses={projectionData?.food || []}
-        healthcareExpenses={projectionData?.healthcare || []}
-        personalInsuranceExpenses={projectionData?.personalInsurance || []}
-        apparelExpenses={projectionData?.apparel || []}
-        servicesExpenses={projectionData?.services || []}
-        entertainmentExpenses={projectionData?.entertainment || []}
-        otherExpenses={projectionData?.other || []}
-        educationExpenses={projectionData?.education || []}
-        childcareExpenses={projectionData?.childcare || []}
-        debtExpenses={projectionData?.debt || []}
-        discretionaryExpenses={projectionData?.discretionary || []}
-      />
+        {/* Debt Breakdown section starts below */}
 
-      {/* Card to display included college and career calculations */}
-      <Card className="mb-6">
-        <Collapsible
-          open={calculationsSectionOpen}
-          onOpenChange={setCalculationsSectionOpen}
-        >
-          <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
-            <h3 className="text-lg font-medium">Included Calculations</h3>
-            {calculationsSectionOpen ? (
-              <ChevronUp className="h-5 w-5" />
-            ) : (
-              <ChevronDown className="h-5 w-5" />
-            )}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent className="p-6 pt-0">
-              <p className="text-gray-600 mb-4">
-                These saved calculations are factored into your financial
-                projections.
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-full p-0 ml-1"
+        {/* Debt Breakdown by Loan Type */}
+        {projectionData?.debt && (
+          <Card className="mb-6">
+            <Collapsible open={debtSectionOpen} onOpenChange={setDebtSectionOpen}>
+              <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
+                <h3 className="text-lg font-medium">Debt Breakdown</h3>
+                {debtSectionOpen ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="p-6 pt-0">
+                  <DebtBreakdownComponent projectionData={projectionData} />
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
+
+        {/* Tax Breakdown Chart */}
+        {projectionData?.payrollTax &&
+          projectionData?.federalTax &&
+          projectionData?.stateTax && (
+            <Card className="mb-6">
+              <Collapsible open={taxSectionOpen} onOpenChange={setTaxSectionOpen}>
+                <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
+                  <h3 className="text-lg font-medium">Tax Breakdown</h3>
+                  {taxSectionOpen ? (
+                    <ChevronUp className="h-5 w-5" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5" />
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="p-6 pt-0">
+                    <TaxBreakdownChart
+                      projectionData={projectionData}
+                      isLoading={isLoading}
+                    />
+
+                    {/* Add tabular view for detailed tax data - now collapsible */}
+                    <div className="mt-6">
+                      <Collapsible
+                        open={taxTableSectionOpen}
+                        onOpenChange={setTaxTableSectionOpen}
                       >
-                        <Info className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs">
-                        Your age is derived from birth year, student debt comes
-                        from college calculations, and starting income uses your
-                        career's entry-level salary.
-                        {locationCostData &&
-                          " Income and expenses are adjusted based on your location's cost of living."}
+                        <CollapsibleTrigger className="flex justify-between w-full p-3 text-left bg-slate-50 hover:bg-slate-100 rounded-md border">
+                          <h4 className="text-md font-medium">
+                            Tax Breakdown Table
+                          </h4>
+                          {taxTableSectionOpen ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-3">
+                          <TaxBreakdownTable
+                            projectionData={projectionData}
+                            isLoading={isLoading}
+                          />
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">
+                          Understanding your taxes:
+                        </span>{" "}
+                        This breakdown shows the different types of taxes you'll
+                        pay based on your income projections. This includes
+                        federal income tax, state income tax, and payroll taxes
+                        (Social Security and Medicare). Your effective tax rate
+                        represents the percentage of your total income paid in
+                        taxes.
                       </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </p>
-
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* College calculation section */}
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <School className="h-5 w-5 text-primary mr-2" />
-                      <h4 className="font-medium">College</h4>
                     </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+          )}
 
-                    {includedCollegeCalc ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            College:
-                          </span>
-                          <span className="font-medium">
-                            {includedCollegeCalc.college?.name ||
-                              "Unknown College"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            Student Loan Amount:
-                          </span>
-                          <span className="font-medium">
-                            {formatCurrency(
-                              includedCollegeCalc.studentLoanAmount || 0
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            Total Cost:
-                          </span>
-                          <span className="font-medium">
-                            {formatCurrency(includedCollegeCalc.netPrice)}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-3">
-                        <span className="text-gray-400">
-                          No college calculation included
-                        </span>
-                        <div className="mt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              (window.location.href = "/net-price-calculator")
-                            }
-                          >
-                            Add College Cost
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+        {/* Detailed Cash Flow Table with collapsible container */}
+        {/* Apply the fixLiabilityCalculation function to ensure graduate school loans are properly counted */}
+        <CashFlowTable
+          {...fixLiabilityCalculation(ensureValidProjectionData(projectionData))}
+          ages={ensureValidProjectionData(projectionData).ages}
+          income={ensureValidProjectionData(projectionData).income}
+          spouseIncome={projectionData?.spouseIncome || []}
+          expenses={ensureValidProjectionData(projectionData).expenses}
+          housingExpenses={projectionData?.housing || []}
+          transportationExpenses={projectionData?.transportation || []}
+          foodExpenses={projectionData?.food || []}
+          healthcareExpenses={projectionData?.healthcare || []}
+          personalInsuranceExpenses={projectionData?.personalInsurance || []}
+          apparelExpenses={projectionData?.apparel || []}
+          servicesExpenses={projectionData?.services || []}
+          entertainmentExpenses={projectionData?.entertainment || []}
+          otherExpenses={projectionData?.other || []}
+          educationExpenses={projectionData?.education || []}
+          childcareExpenses={projectionData?.childcare || []}
+          debtExpenses={projectionData?.debt || []}
+          discretionaryExpenses={projectionData?.discretionary || []}
+        />
 
-                  {/* Career calculation section */}
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center mb-2">
-                      <Briefcase className="h-5 w-5 text-primary mr-2" />
-                      <h4 className="font-medium">Career</h4>
-                    </div>
-
-                    {includedCareerCalc ? (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Career:</span>
-                          <span className="font-medium">
-                            {includedCareerCalc.career?.title ||
-                              "Unknown Career"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            Starting Salary:
-                          </span>
-                          <span className="font-medium">
-                            {formatCurrency(
-                              includedCareerCalc.entryLevelSalary ||
-                                includedCareerCalc.projectedSalary
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            Education:
-                          </span>
-                          <span className="font-medium">
-                            {includedCareerCalc.education || "Not specified"}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-3">
-                        <span className="text-gray-400">
-                          No career calculation included
-                        </span>
-                        <div className="mt-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              (window.location.href = "/career-builder")
-                            }
-                          >
-                            Add Career
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </CollapsibleContent>
-        </Collapsible>
-      </Card>
-
-      {/* Financial Advice Section */}
-      {financialAdvice.length > 0 && (
+        {/* Card to display included college and career calculations */}
         <Card className="mb-6">
           <Collapsible
-            open={adviceSectionOpen}
-            onOpenChange={setAdviceSectionOpen}
+            open={calculationsSectionOpen}
+            onOpenChange={setCalculationsSectionOpen}
           >
             <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
-              <h3 className="text-lg font-medium">Financial Recommendations</h3>
-              {adviceSectionOpen ? (
+              <h3 className="text-lg font-medium">Included Calculations</h3>
+              {calculationsSectionOpen ? (
                 <ChevronUp className="h-5 w-5" />
               ) : (
                 <ChevronDown className="h-5 w-5" />
@@ -5119,36 +4982,207 @@ const FinancialProjections = ({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="p-6 pt-0">
-                <AdvicePanel
-                  advice={financialAdvice}
-                  title=""
-                  showCount={true}
-                />
+                <p className="text-gray-600 mb-4">
+                  These saved calculations are factored into your financial
+                  projections.
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 rounded-full p-0 ml-1"
+                        >
+                          <Info className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs">
+                          Your age is derived from birth year, student debt comes
+                          from college calculations, and starting income uses your
+                          career's entry-level salary.
+                          {locationCostData &&
+                            " Income and expenses are adjusted based on your location's cost of living."}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </p>
+
+                {isLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* College calculation section */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center mb-2">
+                        <School className="h-5 w-5 text-primary mr-2" />
+                        <h4 className="font-medium">College</h4>
+                      </div>
+
+                      {includedCollegeCalc ? (
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              College:
+                            </span>
+                            <span className="font-medium">
+                              {includedCollegeCalc.college?.name ||
+                                "Unknown College"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              Student Loan Amount:
+                            </span>
+                            <span className="font-medium">
+                              {formatCurrency(
+                                includedCollegeCalc.studentLoanAmount || 0
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              Total Cost:
+                            </span>
+                            <span className="font-medium">
+                              {formatCurrency(includedCollegeCalc.netPrice)}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-3">
+                          <span className="text-gray-400">
+                            No college calculation included
+                          </span>
+                          <div className="mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                (window.location.href = "/net-price-calculator")
+                              }
+                            >
+                              Add College Cost
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Career calculation section */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center mb-2">
+                        <Briefcase className="h-5 w-5 text-primary mr-2" />
+                        <h4 className="font-medium">Career</h4>
+                      </div>
+
+                      {includedCareerCalc ? (
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Career:</span>
+                            <span className="font-medium">
+                              {includedCareerCalc.career?.title ||
+                                "Unknown Career"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              Starting Salary:
+                            </span>
+                            <span className="font-medium">
+                              {formatCurrency(
+                                includedCareerCalc.entryLevelSalary ||
+                                  includedCareerCalc.projectedSalary
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">
+                              Education:
+                            </span>
+                            <span className="font-medium">
+                              {includedCareerCalc.education || "Not specified"}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-3">
+                          <span className="text-gray-400">
+                            No career calculation included
+                          </span>
+                          <div className="mt-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                (window.location.href = "/career-builder")
+                              }
+                            >
+                              Add Career
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </CollapsibleContent>
           </Collapsible>
         </Card>
-      )}
 
-      {/* Life Milestones Section */}
-      <MilestonesSection
-        userId={userId}
-        onMilestoneChange={() => {
-          console.log("Milestone changed, recalculating projections...");
+        {/* Financial Advice Section */}
+        {financialAdvice.length > 0 && (
+          <Card className="mb-6">
+            <Collapsible
+              open={adviceSectionOpen}
+              onOpenChange={setAdviceSectionOpen}
+            >
+              <CollapsibleTrigger className="flex justify-between w-full px-6 py-4 text-left">
+                <h3 className="text-lg font-medium">Financial Recommendations</h3>
+                {adviceSectionOpen ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="p-6 pt-0">
+                  <AdvicePanel
+                    advice={financialAdvice}
+                    title=""
+                    showCount={true}
+                  />
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        )}
 
-          // Force a re-fetch of milestone data with a higher priority
-          queryClient.invalidateQueries({
-            queryKey: ["/api/milestones/user", userId],
-            // This will cause the query to refetch immediately and update the UI
-            refetchType: "active",
-          });
+        {/* Life Milestones Section */}
+        <MilestonesSection
+          userId={userId}
+          onMilestoneChange={() => {
+            console.log("Milestone changed, recalculating projections...");
 
-          // No need for the workaround with the income change - the refetchOnWindowFocus
-          // setting we added previously, combined with the invalidation above, ensures
-          // the data will refresh properly
-        }}
-      />
-    </div>
+            // Force a re-fetch of milestone data with a higher priority
+            queryClient.invalidateQueries({
+              queryKey: ["/api/milestones/user", userId],
+              // This will cause the query to refetch immediately and update the UI
+              refetchType: "active",
+            });
+
+            // No need for the workaround with the income change - the refetchOnWindowFocus
+            // setting we added previously, combined with the invalidation above, ensures
+            // the data will refresh properly
+          }}
+        />
+      </div>
+    </>
   );
 };
 

@@ -42,6 +42,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { apiRequest } from "@/lib/queryClient";
+import { authenticatedFetch } from '../services/favoritesService';
 
 interface College {
   id: number;
@@ -141,7 +143,7 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
     queryKey: ['/api/users', userId],
     queryFn: async () => {
       if (!userId) return null;
-      const response = await fetch(`/api/users/${userId}`);
+      const response = await authenticatedFetch(`/api/users/${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch user data');
       }
@@ -600,18 +602,16 @@ const NetPriceCalculator = (props: NetPriceCalculatorProps) => {
   // Mutation for saving calculations
   const { mutate: saveCalculation, isPending: isSaving } = useMutation({
     mutationFn: async (calculationData: CollegeCalculation) => {
-      const response = await fetch('/api/college-calculations', {
+      const response = await apiRequest('/api/college-calculations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(calculationData),
       });
-      
       if (!response.ok) {
         throw new Error('Failed to save calculation');
       }
-      
       return response.json();
     },
     onSuccess: (data) => {

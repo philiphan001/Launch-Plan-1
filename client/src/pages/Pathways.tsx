@@ -43,6 +43,7 @@ import PathSelectionStep from '@/components/pathways/PathSelectionStep';
 import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
 import CareerSearch from '@/components/pathways/CareerSearch';
 import CollegeSearch from '../components/pathways/CollegeSearch';
+import SwipeSummary from "@/components/pathways/SwipeSummary";
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -470,6 +471,8 @@ const Pathways = ({
     wildcard: ''
   });
   const [hasShownQuickSpinSummary, setHasShownQuickSpinSummary] = useState(false);
+  const [hasShownSwipeSummary, setHasShownSwipeSummary] = useState(false);
+  const [showSwipeSummary, setShowSwipeSummary] = useState(false);
   
   // Fetch all career paths for the field selection dropdown
   const { data: allCareerPaths = [], isLoading: isLoadingCareerPaths } = useQuery<CareerPath[]>({
@@ -1426,7 +1429,7 @@ const Pathways = ({
                       resetKey={resetCounter}
                       onComplete={(results) => {
                         setSwipeResults(results);
-                        handleNext();
+                        setShowSwipeSummary(true);
                       }} 
                     />
                     <div className="flex justify-center mt-6">
@@ -4355,23 +4358,15 @@ const Pathways = ({
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500"></div>
         <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTYwMCAwdjYwMEgwVjBaIi8+PHBhdGggc3Ryb2tlPSIjZmZmZmZmMTAiIGZpbGw9Im5vbmUiIGQ9Ik02MDAgMEgwdjYwMGg2MDBWMFoiLz48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTAgMzAwaDYwME0zMDAgMHY2MDAiLz48cGF0aCBkPSJNMCAwdjYwMGw2MDAtNjAwSDBaIiBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik02MDAgMHY2MDBMODAwIDYwMFYwSDYwMFoiIHN0cm9rZT0iI2ZmZmZmZjEwIiBmaWxsPSJub25lIi8+PC9zdmc+')]"></div>
         
-        <div className="relative flex flex-col md:flex-row justify-between items-center gap-4 text-white">
-          <div className="flex-1">
-            <h1 className="text-xl md:text-2xl font-display font-medium mb-1">Explore Your Pathways</h1>
-            <p className="text-white/80 text-sm max-w-xl">
-              Chart your course to an empowered future by making informed choices that align with your unique talents and aspirations.
-            </p>
-          </div>
-          <div>
-            <Button 
-              variant="outline" 
-              onClick={handleStartOver}
-              className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-sm shadow-sm flex items-center gap-1 transition-all"
-            >
-              <span className="material-icons text-sm">refresh</span>
-              Start Over
-            </Button>
-          </div>
+        <div className="relative flex justify-end items-center gap-4 text-white">
+          <Button 
+            variant="outline" 
+            onClick={handleStartOver}
+            className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-sm shadow-sm flex items-center gap-1 transition-all"
+          >
+            <span className="material-icons text-sm">refresh</span>
+            Start Over
+          </Button>
         </div>
       </div>
       

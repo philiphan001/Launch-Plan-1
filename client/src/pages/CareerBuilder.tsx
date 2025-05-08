@@ -38,6 +38,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { FavoritesService } from "@/services/favoritesService";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Career {
   id: number;
@@ -345,7 +346,7 @@ const CareerBuilder: React.FC<CareerBuilderProps> = ({
         includedInProjection: true,
       };
 
-      const response = await fetch("/api/career-calculations", {
+      const response = await apiRequest("/api/career-calculations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -90,7 +90,7 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
   const [location, setLocation] = useLocation();
   
   // State for active tab and dialog
-  const [activeTab, setActiveTab] = useState<'college' | 'career'>('college');
+  const [activeTab, setActiveTab] = useState<'college' | 'career' | 'cities'>('college');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedCalculationId, setSelectedCalculationId] = useState<number | null>(null);
   
@@ -113,9 +113,9 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
       }
       return response.json() as Promise<CollegeCalculation[]>;
     },
-    // Refresh data every 5 seconds to catch new calculations
-    refetchInterval: 5000,
-    refetchOnWindowFocus: true,
+    // Only refetch when window regains focus after 30 seconds
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // Data is considered fresh for 30 seconds
     // Don't run query if user isn't authenticated
     enabled: !!userId
   });
@@ -129,7 +129,9 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
         throw new Error('Failed to fetch colleges');
       }
       return response.json() as Promise<College[]>;
-    }
+    },
+    staleTime: 30000, // Data is considered fresh for 30 seconds
+    refetchOnWindowFocus: false
   });
   
   // Fetch saved career calculations with automatic refresh
@@ -147,10 +149,8 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
       }
       return response.json() as Promise<CareerCalculation[]>;
     },
-    // Refresh data every 5 seconds to catch new calculations
-    refetchInterval: 5000, 
-    refetchOnWindowFocus: true,
-    // Don't run query if user isn't authenticated
+    refetchOnWindowFocus: false,
+    staleTime: 30000, // Data is considered fresh for 30 seconds
     enabled: !!userId
   });
   
@@ -474,25 +474,47 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
               <Calculator className="h-5 w-5 mr-2" />
               Your Saved Financial Calculations
             </CardTitle>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => {
-                // Check if a career calculation is included
-                const hasCareer = careerCalculations?.some(calc => calc.includedInProjection);
-                if (!hasCareer) {
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  // Clear all selections
+                  const collegePromises = collegeCalculations
+                    ?.filter(calc => calc.includedInProjection)
+                    .map(calc => toggleCollegeProjectionMutation.mutateAsync(calc.id)) || [];
+                  const careerPromises = careerCalculations
+                    ?.filter(calc => calc.includedInProjection)
+                    .map(calc => toggleCareerProjectionMutation.mutateAsync(calc.id)) || [];
+                  await Promise.all([...collegePromises, ...careerPromises]);
                   toast({
-                    title: "No Career Selected",
-                    description: "You have not selected a career for your projection. The projection will use default values.",
-                    variant: "destructive",
+                    title: "Selections Cleared",
+                    description: "All projection selections have been cleared.",
                   });
-                }
-                // Redirect to projections page with autoGenerate flag and force recalculation
-                setLocation("/projections?autoGenerate=true&forceRecalculate=true");
-              }}
-            >
-              Run Projection
-            </Button>
+                }}
+              >
+                Clear All Selections
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  // Check if a career calculation is included
+                  const hasCareer = careerCalculations?.some(calc => calc.includedInProjection);
+                  if (!hasCareer) {
+                    toast({
+                      title: "No Career Selected",
+                      description: "You have not selected a career for your projection. The projection will use default values.",
+                      variant: "destructive",
+                    });
+                  }
+                  // Redirect to projections page with autoGenerate flag and force recalculation
+                  setLocation("/projections?autoGenerate=true&forceRecalculate=true");
+                }}
+              >
+                Run Projection
+              </Button>
+            </div>
           </div>
           <CardDescription>View and compare your saved college and career calculations</CardDescription>
         </CardHeader>
@@ -500,10 +522,10 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
           <Tabs 
             defaultValue="college" 
             value={activeTab} 
-            onValueChange={(value) => setActiveTab(value as 'college' | 'career')}
+            onValueChange={(value) => setActiveTab(value as 'college' | 'career' | 'cities')}
             className="mt-2"
           >
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="college" className="flex items-center">
                 <School className="mr-2 h-4 w-4" />
                 College Costs
@@ -511,6 +533,10 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
               <TabsTrigger value="career" className="flex items-center">
                 <Briefcase className="mr-2 h-4 w-4" />
                 Career Earnings
+              </TabsTrigger>
+              <TabsTrigger value="cities" className="flex items-center">
+                <Book className="mr-2 h-4 w-4" />
+                Saved Cities
               </TabsTrigger>
             </TabsList>
             
@@ -770,11 +796,75 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
                 </div>
               )}
             </TabsContent>
+            
+            {/* Saved Cities Tab */}
+            <TabsContent value="cities">
+              <SavedCitiesList userId={userId} />
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
     </>
   );
 };
+
+function SavedCitiesList({ userId }: { userId?: number }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: favoriteLocations = [], isLoading } = useQuery({
+    queryKey: ["/api/favorites/locations", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      return await import("@/services/favoritesService").then(m => m.FavoritesService.getFavoriteLocations(userId));
+    },
+    enabled: !!userId,
+  });
+  const removeFavoriteLocationMutation = useMutation({
+    mutationFn: async (favoriteId: number) => {
+      return await import("@/services/favoritesService").then(m => m.FavoritesService.removeLocationFromFavorites(favoriteId));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/favorites/locations", userId] });
+      toast({
+        title: "City removed",
+        description: "City has been removed from your saved cities.",
+      });
+    },
+    onError: (error) => {
+      console.error("Error removing favorite city:", error);
+      toast({
+        title: "Error removing city",
+        description: "There was a problem removing this city from your saved cities.",
+        variant: "destructive",
+      });
+    },
+  });
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!favoriteLocations.length) {
+    return <div className="text-center py-6 text-muted-foreground">No saved cities yet</div>;
+  }
+  return (
+    <div className="space-y-3">
+      {favoriteLocations.map((loc) => (
+        <div key={loc.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+          <div>
+            <span className="font-bold text-primary mr-2">🏙️</span>
+            <span>{loc.city}, {loc.state} ({loc.zipCode})</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-destructive"
+            onClick={() => removeFavoriteLocationMutation.mutate(loc.id)}
+          >
+            ✕
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default SavedCalculationsSection;
