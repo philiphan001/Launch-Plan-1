@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { useLocation } from "wouter";
 
 interface PathSelectionStepProps {
   onPathSelect: (needsGuidance: boolean) => void;
@@ -6,6 +7,7 @@ interface PathSelectionStepProps {
 }
 
 const PathSelectionStep = ({ onPathSelect, onNext }: PathSelectionStepProps) => {
+  const [, navigate] = useLocation();
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* "I know what I want to do" option */}
@@ -150,8 +152,7 @@ const PathSelectionStep = ({ onPathSelect, onNext }: PathSelectionStepProps) => 
       <div 
         className="group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative"
         onClick={() => {
-          onPathSelect(false);
-          onNext();
+          navigate("/number-playground");
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/90 to-pink-600/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>

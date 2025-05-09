@@ -26,6 +26,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useFirebaseAuth } from "@/context/FirebaseAuthContext";
 import { User, LoginCredentials, RegisterCredentials, AuthProps } from "@/interfaces/auth";
 import CityExploration from "@/pages/city-exploration";
+import NumberPlayground from "@/pages/NumberPlayground";
 
 function createApolloClient(getFreshToken: () => Promise<string | null>) {
   const httpLink = createHttpLink({ uri: "/graphql" });
@@ -249,6 +250,7 @@ function App() {
             };
             return <Pathways {...authProps} />;
           }}</Route>
+          <Route path="/number-playground">{() => <NumberPlayground />}</Route>
           <Route path="/coffee-calculator">{() => {
             const authProps: AuthProps = {
               user,

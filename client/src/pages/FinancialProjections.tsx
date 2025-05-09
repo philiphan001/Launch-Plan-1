@@ -3152,27 +3152,8 @@ const FinancialProjections = ({
     commentary = "Amazing! Your financial future looks bright!";
   }
 
-  // Add this just before the main return statement in FinancialProjections:
-  const floatingAvatar = (
-    <div
-      style={{
-        position: 'fixed',
-        top: 70, // fine-tuned alignment below the top bar
-        right: 24,
-        zIndex: 1000,
-        background: 'white',
-        borderRadius: '50%',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        padding: 8,
-      }}
-    >
-      <ProjectionAvatar mood="happy" commentary="I'm here to help!" />
-    </div>
-  );
-
   return (
     <>
-      {floatingAvatar}
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">
           Financial Projections

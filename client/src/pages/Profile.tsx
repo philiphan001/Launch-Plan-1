@@ -45,7 +45,6 @@ const Profile = ({ user }: ProfileProps) => {
 
   // Financial profile state
   const [householdIncome, setHouseholdIncome] = useState("");
-  const [householdSize, setHouseholdSize] = useState("");
   const [savingsAmount, setSavingsAmount] = useState("");
   const [studentLoanAmount, setStudentLoanAmount] = useState("");
   const [otherDebtAmount, setOtherDebtAmount] = useState("");
@@ -62,6 +61,19 @@ const Profile = ({ user }: ProfileProps) => {
     enabled: !!userId,
   });
 
+  // Fetch financial profile
+  const { data: financialProfile, isLoading: isLoadingFinancialProfile } = useQuery({
+    queryKey: ["/api/financial-profiles/user", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const response = await apiRequest(`/api/financial-profiles/user/${userId}`);
+      if (!response.ok) throw new Error("Failed to fetch financial profile");
+      return response.json();
+    },
+    enabled: !!userId,
+    staleTime: 600000, // 10 minutes
+  });
+
   // Update local state when user data is loaded
   useEffect(() => {
     if (userData) {
@@ -72,6 +84,16 @@ const Profile = ({ user }: ProfileProps) => {
       setBirthYear(userData.birthYear || 0);
     }
   }, [userData]);
+
+  // Update local state when financial profile is loaded
+  useEffect(() => {
+    if (financialProfile) {
+      setHouseholdIncome(financialProfile.householdIncome?.toString() || "");
+      setSavingsAmount(financialProfile.savingsAmount?.toString() || "");
+      setStudentLoanAmount(financialProfile.studentLoanAmount?.toString() || "");
+      setOtherDebtAmount(financialProfile.otherDebtAmount?.toString() || "");
+    }
+  }, [financialProfile]);
 
   // Fetch favorite colleges using FavoritesService
   const { data: favoriteColleges = [], isLoading: isLoadingColleges } =
@@ -163,7 +185,6 @@ const Profile = ({ user }: ProfileProps) => {
           body: JSON.stringify({
             userId,
             householdIncome: 60000,
-            householdSize: 1,
             savingsAmount: 5000,
             studentLoanAmount: 0,
             otherDebtAmount: 0,
@@ -178,7 +199,6 @@ const Profile = ({ user }: ProfileProps) => {
       const financialData = {
         userId: userId,
         householdIncome: parseInt(householdIncome) || 0,
-        householdSize: parseInt(householdSize) || 1,
         savingsAmount: parseInt(savingsAmount) || 0,
         studentLoanAmount: parseInt(studentLoanAmount) || 0,
         otherDebtAmount: parseInt(otherDebtAmount) || 0,
@@ -306,7 +326,6 @@ const Profile = ({ user }: ProfileProps) => {
           body: JSON.stringify({
             userId,
             householdIncome: 60000,
-            householdSize: 1,
             savingsAmount: 5000,
             studentLoanAmount: 0,
             otherDebtAmount: 0,
@@ -425,26 +444,6 @@ const Profile = ({ user }: ProfileProps) => {
                       onChange={(e) => setHouseholdIncome(e.target.value)}
                     />
                   </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="householdSize">Household Size</Label>
-                  <Select
-                    value={householdSize}
-                    onValueChange={setHouseholdSize}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select household size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1 person</SelectItem>
-                      <SelectItem value="2">2 people</SelectItem>
-                      <SelectItem value="3">3 people</SelectItem>
-                      <SelectItem value="4">4 people</SelectItem>
-                      <SelectItem value="5">5 people</SelectItem>
-                      <SelectItem value="6+">6+ people</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div>
