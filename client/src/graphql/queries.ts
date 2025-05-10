@@ -41,4 +41,21 @@ export const GET_FAVORITE_CAREERS = gql`
       industry
     }
   }
+`;
+
+export const GET_FINANCIAL_PROFILE = gql`
+  query GetFinancialProfile {
+    financialProfile {
+      income
+      expenses
+      savings
+      debt
+      investmentReturns
+      financialGoals {
+        targetSavings
+        targetIncome
+        targetDebtReduction
+      }
+    }
+  }
 `; 

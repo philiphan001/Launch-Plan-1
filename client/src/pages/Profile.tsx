@@ -335,21 +335,31 @@ const Profile = ({ user }: ProfileProps) => {
     })();
   }, [userId]);
 
+  const [activeTab, setActiveTab] = useState("personal");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto">
       <h1 className="text-2xl font-display font-semibold text-gray-800 mb-6">
         User Profile
       </h1>
 
-      <Tabs defaultValue="profile">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="profile">Personal Info</TabsTrigger>
+          <TabsTrigger value="personal">Personal Info</TabsTrigger>
           <TabsTrigger value="financial">Financial Profile</TabsTrigger>
           <TabsTrigger value="favorites">My Favorites</TabsTrigger>
           <TabsTrigger value="calculations">Saved Calculations</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile">
+        <TabsContent value="personal">
           <Card>
             <CardContent className="pt-6">
               <h3 className="text-lg font-medium mb-4">Personal Information</h3>
@@ -559,7 +569,10 @@ const Profile = ({ user }: ProfileProps) => {
         </TabsContent>
 
         <TabsContent value="calculations">
-          <SavedCalculationsSection user={user} />
+          <SavedCalculationsSection 
+            user={user} 
+            defaultTab={new URLSearchParams(window.location.search).get("subtab") || undefined}
+          />
         </TabsContent>
       </Tabs>
     </div>

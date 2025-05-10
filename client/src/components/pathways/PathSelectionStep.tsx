@@ -1,31 +1,33 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { useLocation } from "wouter";
+import React from 'react';
+import { useLocation } from 'wouter';
 
 interface PathSelectionStepProps {
-  onPathSelect: (needsGuidance: boolean) => void;
-  onNext: () => void;
+  needsGuidance: boolean;
+  setNeedsGuidance: (value: boolean) => void;
+  handleNext: () => void;
 }
 
-const PathSelectionStep = ({ onPathSelect, onNext }: PathSelectionStepProps) => {
+const PathSelectionStep = ({ needsGuidance, setNeedsGuidance, handleNext }: PathSelectionStepProps) => {
   const [, navigate] = useLocation();
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* "I know what I want to do" option */}
+      {/* Direct path card */}
       <div 
-        className="group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative"
+        className={`group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative ${needsGuidance === false ? 'ring-4 ring-green-400 ring-opacity-50' : ''}`}
         onClick={() => {
-          onPathSelect(false);
-          onNext();
+          setNeedsGuidance(false);
+          handleNext();
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-green-400/90 to-blue-500/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/90 to-teal-600/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
         <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] group-hover:backdrop-blur-[0px] transition-all duration-300"></div>
         <div className="relative p-8 text-center text-white z-10">
           <div className="bg-white/20 backdrop-blur-sm rounded-full h-20 w-20 flex items-center justify-center mx-auto mb-5 shadow-glow transform transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
             <span className="material-icons text-3xl">map</span>
           </div>
           <h3 className="text-2xl font-display font-bold mb-3 text-white">I know what I want to do</h3>
-          <p className="text-white/80 mb-4">Already have a game plan? Sweet. We'll show you the different ways to get there—school, jobs, training, the works—so you can see what it might actually look like in real life.</p>
+          <p className="text-white/80 mb-4">I have a clear path in mind after high school and want to see where it leads</p>
           
           {/* Storyboard path visualization */}
           <div className="relative my-4 py-2 px-2 bg-white/10 rounded-lg backdrop-blur-sm">
@@ -79,12 +81,12 @@ const PathSelectionStep = ({ onPathSelect, onNext }: PathSelectionStepProps) => 
         </div>
       </div>
       
-      {/* "Help me explore options" option */}
+      {/* Exploration card */}
       <div 
-        className="group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative"
+        className={`group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative ${needsGuidance === true ? 'ring-4 ring-green-400 ring-opacity-50' : ''}`}
         onClick={() => {
-          onPathSelect(true);
-          onNext();
+          setNeedsGuidance(true);
+          handleNext();
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/90 to-purple-600/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
@@ -139,7 +141,7 @@ const PathSelectionStep = ({ onPathSelect, onNext }: PathSelectionStepProps) => 
           </div>
           
           <div className="py-1 px-4 bg-white/20 rounded-full w-fit mx-auto backdrop-blur-sm text-sm font-medium">
-            Guided Discovery
+            Guided Exploration
           </div>
           
           <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
@@ -148,7 +150,7 @@ const PathSelectionStep = ({ onPathSelect, onNext }: PathSelectionStepProps) => 
         </div>
       </div>
 
-      {/* "I just want to mess around with the numbers" option */}
+      {/* Numbers playground card */}
       <div 
         className="group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative"
         onClick={() => {
@@ -206,72 +208,6 @@ const PathSelectionStep = ({ onPathSelect, onNext }: PathSelectionStepProps) => 
           
           <div className="py-1 px-4 bg-white/20 rounded-full w-fit mx-auto backdrop-blur-sm text-sm font-medium">
             Free Play
-          </div>
-          
-          <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">
-            <span className="material-icons text-xl">arrow_forward</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bonus Round box - spans full width */}
-      <div 
-        className="group cursor-pointer transition-all duration-300 ease-in-out rounded-xl overflow-hidden shadow-lg hover:shadow-xl relative col-span-1 md:col-span-3"
-        onClick={() => {
-          onPathSelect(false);
-          onNext();
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/90 via-orange-500/90 to-red-500/90 transform transition-all duration-300 ease-in-out group-hover:scale-105"></div>
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] group-hover:backdrop-blur-[0px] transition-all duration-300"></div>
-        <div className="relative p-8 text-center text-white z-10">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="bg-white/20 backdrop-blur-sm rounded-full h-16 w-16 flex items-center justify-center shadow-glow transform transition-all duration-300 group-hover:scale-110 group-hover:bg-white/30">
-              <span className="material-icons text-2xl">stars</span>
-            </div>
-            <h3 className="text-2xl font-display font-bold text-white">Bonus Round: Ever Wonder How Rich SpongeBob Is?</h3>
-          </div>
-          <p className="text-white/80 max-w-3xl mx-auto">
-            Okay, maybe not SpongeBob. But our Celebrity Financial Profiles let you peek into what your favorite characters' financial lives might look like. It's part fun, part "whoa, that's actually useful."
-          </p>
-          
-          {/* Celebrity profiles visualization */}
-          <div className="relative my-6 py-4 px-4 bg-white/10 rounded-lg backdrop-blur-sm max-w-2xl mx-auto">
-            <div className="flex items-center justify-center gap-6">
-              {/* Character cards */}
-              <div className="relative h-24 w-24">
-                <div className="absolute inset-0 bg-blue-400/20 rounded-lg border border-blue-400/40 transform -rotate-6 shadow-md"></div>
-                <div className="absolute inset-0 bg-green-400/20 rounded-lg border border-green-400/40 transform rotate-3 shadow-md"></div>
-                <div className="absolute inset-0 bg-purple-400/20 rounded-lg border border-purple-400/40 shadow-md flex items-center justify-center">
-                  <span className="material-icons text-white text-2xl">face</span>
-                </div>
-              </div>
-              
-              {/* Money bag */}
-              <div className="relative h-24 w-24">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-20 bg-yellow-400/20 rounded-lg border border-yellow-400/40 flex items-center justify-center">
-                    <span className="material-icons text-white text-2xl">attach_money</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Calculator */}
-              <div className="relative h-24 w-24">
-                <div className="absolute inset-0 bg-white/10 rounded-lg border border-white/20 flex flex-col p-2">
-                  <div className="h-4 bg-white/20 rounded mb-2"></div>
-                  <div className="grid grid-cols-3 gap-1">
-                    {[1,2,3,4,5,6,7,8,9].map((num) => (
-                      <div key={num} className="h-3 bg-white/20 rounded"></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="py-1 px-4 bg-white/20 rounded-full w-fit mx-auto backdrop-blur-sm text-sm font-medium">
-            Fun with Finance
           </div>
           
           <div className="absolute bottom-3 right-3 bg-white/10 rounded-full p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300">

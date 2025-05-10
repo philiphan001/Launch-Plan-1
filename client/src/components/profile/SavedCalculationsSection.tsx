@@ -79,10 +79,11 @@ interface Career {
 
 interface SavedCalculationsSectionProps {
   user?: User | null;
+  defaultTab?: 'colleges' | 'careers' | 'cities';
 }
 
 // This is a profile component to display saved college and career calculations
-const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
+const SavedCalculationsSection = ({ user, defaultTab }: SavedCalculationsSectionProps) => {
   const { toast } = useToast();
   // Get user ID from props
   const userId = user?.id;
@@ -90,13 +91,20 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
   const [location, setLocation] = useLocation();
   
   // State for active tab and dialog
-  const [activeTab, setActiveTab] = useState<'college' | 'career' | 'cities'>('college');
+  const [activeTab, setActiveTab] = useState<'colleges' | 'careers' | 'cities'>(defaultTab || 'colleges');
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedCalculationId, setSelectedCalculationId] = useState<number | null>(null);
   
   // State to track selected calculations
   const [selectedCollegeId, setSelectedCollegeId] = useState<number | null>(null);
   const [selectedCareerId, setSelectedCareerId] = useState<number | null>(null);
+  
+  // Update activeTab when defaultTab changes
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
   
   // Fetch saved college calculations with automatic refresh
   const { data: collegeCalculations, isLoading: isLoadingCollegeCalcs, error: collegeError } = useQuery({
@@ -368,7 +376,7 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
   const confirmToggleProjection = () => {
     if (selectedCalculationId === null) return;
     
-    if (activeTab === 'college') {
+    if (activeTab === 'colleges') {
       toggleCollegeProjectionMutation.mutate(selectedCalculationId);
     } else {
       toggleCareerProjectionMutation.mutate(selectedCalculationId);
@@ -453,8 +461,8 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Replace existing projection?</AlertDialogTitle>
             <AlertDialogDescription>
-              You already have a {activeTab === 'college' ? 'college' : 'career'} scenario selected for your financial projection. 
-              Do you want to replace it with this selection? Only one {activeTab === 'college' ? 'college' : 'career'} scenario 
+              You already have a {activeTab === 'colleges' ? 'college' : 'career'} scenario selected for your financial projection. 
+              Do you want to replace it with this selection? Only one {activeTab === 'colleges' ? 'college' : 'career'} scenario 
               can be active at a time for your financial projections.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -520,17 +528,17 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
         </CardHeader>
         <CardContent>
           <Tabs 
-            defaultValue="college" 
+            defaultValue="colleges" 
             value={activeTab} 
-            onValueChange={(value) => setActiveTab(value as 'college' | 'career' | 'cities')}
+            onValueChange={(value) => setActiveTab(value as 'colleges' | 'careers' | 'cities')}
             className="mt-2"
           >
             <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="college" className="flex items-center">
+              <TabsTrigger value="colleges" className="flex items-center">
                 <School className="mr-2 h-4 w-4" />
                 College Costs
               </TabsTrigger>
-              <TabsTrigger value="career" className="flex items-center">
+              <TabsTrigger value="careers" className="flex items-center">
                 <Briefcase className="mr-2 h-4 w-4" />
                 Career Earnings
               </TabsTrigger>
@@ -541,7 +549,7 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
             </TabsList>
             
             {/* College Calculations Tab */}
-            <TabsContent value="college">
+            <TabsContent value="colleges">
               {collegeCalculations && collegeCalculations.length > 0 ? (
                 <div className="space-y-6">
                   {/* Group calculations by college type */}
@@ -695,7 +703,7 @@ const SavedCalculationsSection = ({ user }: SavedCalculationsSectionProps) => {
             </TabsContent>
             
             {/* Career Calculations Tab */}
-            <TabsContent value="career">
+            <TabsContent value="careers">
               {careerCalculations && careerCalculations.length > 0 ? (
                 <div className="space-y-4">
                   {careerCalculations.map((calc) => (

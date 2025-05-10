@@ -40,6 +40,7 @@ import {
   BarChart4,
   FileText,
   Settings,
+  Pencil,
 } from "lucide-react";
 import {
   Collapsible,
@@ -99,6 +100,7 @@ import {
 } from "@shared/schema";
 import { authenticatedFetch } from '../services/favoritesService';
 import ProjectionAvatar from '@/components/ProjectionAvatar';
+import { Link } from "wouter";
 
 type ProjectionType =
   | "netWorth"
@@ -3164,78 +3166,62 @@ const FinancialProjections = ({
           <ProjectionSummary
             data={projectionSummaryData}
             isLoading={isLoadingProjectionSummary}
+            renderEditButtons={({ section }) => {
+              if (section === 'education') {
+                return (
+                  <Link href="/profile?tab=calculations&subtab=colleges" className="ml-2" title="Edit Education Path">
+                    <Pencil className="w-4 h-4 text-gray-400 hover:text-primary cursor-pointer" />
+                  </Link>
+                );
+              }
+              if (section === 'career') {
+                return (
+                  <Link href="/profile?tab=calculations&subtab=careers" className="ml-2" title="Edit Career Path">
+                    <Pencil className="w-4 h-4 text-gray-400 hover:text-primary cursor-pointer" />
+                  </Link>
+                );
+              }
+              if (section === 'location') {
+                return (
+                  <span className="ml-2" title="Location editing coming soon">
+                    <Pencil className="w-4 h-4 text-gray-400 opacity-50" />
+                  </span>
+                );
+              }
+              return null;
+            }}
           />
         ) : effectiveCollegeCalc || effectiveCareerCalc ? (
           <CurrentProjectionSummary
             collegeCalculation={effectiveCollegeCalc}
             careerCalculation={effectiveCareerCalc}
             locationData={locationCostData}
+            renderEditButtons={({ section }) => {
+              if (section === 'education') {
+                return (
+                  <Link href="/profile?tab=calculations&subtab=colleges" className="ml-2" title="Edit Education Path">
+                    <Pencil className="w-4 h-4 text-gray-400 hover:text-primary cursor-pointer" />
+                  </Link>
+                );
+              }
+              if (section === 'career') {
+                return (
+                  <Link href="/profile?tab=calculations&subtab=careers" className="ml-2" title="Edit Career Path">
+                    <Pencil className="w-4 h-4 text-gray-400 hover:text-primary cursor-pointer" />
+                  </Link>
+                );
+              }
+              if (section === 'location') {
+                return (
+                  <span className="ml-2" title="Location editing coming soon">
+                    <Pencil className="w-4 h-4 text-gray-400 opacity-50" />
+                  </span>
+                );
+              }
+              return null;
+            }}
           />
-        ) : (
-          pathwaySummary && (
-            /* Show Pathway Summary Section only if there's no active financial projection */
-            <Card className="mb-6 border-l-4 border-l-blue-500">
-              <CardContent className="pt-6">
-                <h2 className="text-lg font-semibold mb-3 flex items-center">
-                  <GraduationCap className="mr-2 h-5 w-5 text-blue-500" />
-                  Your Pathway Summary
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">
-                      Education
-                    </span>
-                    <span className="text-base font-medium">
-                      {formatEducationType(pathwaySummary.educationType)}
-                      {pathwaySummary.transferOption === "yes" &&
-                        " → Transfer to 4-Year College"}
-                    </span>
-                    <span className="text-sm text-gray-700">
-                      {pathwaySummary.selectedFieldOfStudy || "General Studies"}
-                      {pathwaySummary.transferOption === "yes" &&
-                        pathwaySummary.transferFieldOfStudy &&
-                        ` → ${pathwaySummary.transferFieldOfStudy}`}
-                    </span>
-                    {pathwaySummary.specificSchool && (
-                      <span className="text-xs text-gray-500">
-                        {pathwaySummary.specificSchool}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">
-                      Career
-                    </span>
-                    <span className="text-base font-medium">
-                      {pathwaySummary.selectedProfession || "General Career Path"}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col space-y-1">
-                    <span className="text-sm font-medium text-gray-500">
-                      Location
-                    </span>
-                    {pathwaySummary.location ? (
-                      <>
-                        <span className="text-base font-medium">
-                          {pathwaySummary.location.city},{" "}
-                          {pathwaySummary.location.state}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Zip Code: {pathwaySummary.location.zipCode}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-base font-medium">Not specified</span>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        )}
+        ) : null}
 
         <Tabs
           defaultValue="view"

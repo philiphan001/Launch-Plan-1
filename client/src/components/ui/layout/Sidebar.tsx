@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User } from "@/context/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import ProjectionAvatar from "@/components/ProjectionAvatar";
+import { Coffee, User as UserIcon } from "lucide-react";
 
 // Props-based approach for more reliable auth
 interface SidebarProps {
@@ -42,7 +43,7 @@ const Sidebar = ({ user }: SidebarProps) => {
   const isProjectionsPage = location.startsWith("/projections");
 
   return (
-    <aside className="w-16 md:w-64 bg-white shadow-lg flex-shrink-0 sticky top-14 h-[calc(100vh-56px)] overflow-y-auto z-5">
+    <aside className="w-64 bg-white shadow flex flex-col h-full">
       <nav className="py-4">
         <ul>
           {navItems.map((item) => (
@@ -81,16 +82,20 @@ const Sidebar = ({ user }: SidebarProps) => {
               <span className="hidden md:inline">Coffee Calculator</span>
             </Link>
           </li>
+          <li className="mb-1">
+            <Link
+              href="/celebrity-profiles"
+              className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary"
+            >
+              <span className="material-icons md:mr-3">star</span>
+              <span className="hidden md:inline">Celebrity Profiles</span>
+            </Link>
+          </li>
           <li className="my-4">
             <div className="border-t border-gray-200 mx-4"></div>
           </li>
           <li className="flex justify-center py-4">
-            <ProjectionAvatar mood="happy" commentary="" />
-          </li>
-          <li className="flex justify-center pb-4">
-            <div className="bg-blue-50 text-blue-900 rounded-xl px-4 py-2 text-sm shadow-md max-w-[160px] text-center">
-              "Hi there! I'm your financial guide. Click around to explore your options!"
-            </div>
+            <ProjectionAvatar />
           </li>
         </ul>
       </nav>

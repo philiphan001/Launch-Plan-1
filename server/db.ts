@@ -112,3 +112,5 @@ export async function executeSQLFile(filename) {
   const sqlContent = fs.readFileSync(filePath, "utf8");
   await db.execute(sql.raw(sqlContent));
 }
+
+export { sqlClient };

@@ -33,11 +33,14 @@ export interface ProjectionSummaryData {
   };
 }
 
-// ProjectionSummary component
-const ProjectionSummary: React.FC<{
+interface ProjectionSummaryProps {
   data: ProjectionSummaryData | null;
   isLoading: boolean;
-}> = ({ data, isLoading }) => {
+  renderEditButtons?: (args: { section: 'education' | 'career' | 'location' }) => React.ReactNode;
+}
+
+// ProjectionSummary component
+const ProjectionSummary: React.FC<ProjectionSummaryProps> = ({ data, isLoading, renderEditButtons }) => {
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow p-4 mb-6">
@@ -68,7 +71,10 @@ const ProjectionSummary: React.FC<{
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Education Section */}
         <div className="border-r pr-4">
-          <h4 className="font-medium text-gray-600">Education Path</h4>
+          <h4 className="font-medium text-gray-600 flex items-center">
+            Education Path
+            {renderEditButtons && renderEditButtons({ section: 'education' })}
+          </h4>
           {data.college ? (
             <div className="mt-2">
               <p className="text-sm font-medium">{data.college.name}</p>
@@ -96,7 +102,10 @@ const ProjectionSummary: React.FC<{
 
         {/* Career Section */}
         <div className="border-r px-4">
-          <h4 className="font-medium text-gray-600">Career Path</h4>
+          <h4 className="font-medium text-gray-600 flex items-center">
+            Career Path
+            {renderEditButtons && renderEditButtons({ section: 'career' })}
+          </h4>
           {data.career ? (
             <div className="mt-2">
               <p className="text-sm font-medium">{data.career.title}</p>
@@ -119,7 +128,10 @@ const ProjectionSummary: React.FC<{
 
         {/* Location Section */}
         <div className="pl-4">
-          <h4 className="font-medium text-gray-600">Location</h4>
+          <h4 className="font-medium text-gray-600 flex items-center">
+            Location
+            {renderEditButtons && renderEditButtons({ section: 'location' })}
+          </h4>
           {data.location ? (
             <div className="mt-2">
               <p className="text-sm font-medium">

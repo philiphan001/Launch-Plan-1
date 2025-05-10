@@ -49,7 +49,7 @@ export const validateProjectionData = (
   const requiredArrays = ["ages", "netWorth", "income", "expenses"];
   for (const arrayName of requiredArrays) {
     if (!Array.isArray(data[arrayName])) {
-      errors.push(`Required array "${arrayName}" is missing or not an array`);
+      errors.push(`Required array \"${arrayName}\" is missing or not an array`);
     }
   }
 
@@ -58,31 +58,41 @@ export const validateProjectionData = (
     return { isValid: false, errors };
   }
 
-  // Validate array lengths match
+  // Validate array lengths match for numeric arrays only
   const baseLength = data.ages.length;
   const arrayLengths: Record<string, number> = {};
 
   for (const key in data) {
     if (Array.isArray(data[key])) {
-      arrayLengths[key] = data[key].length;
+      // Only validate arrays of numbers (skip arrays of objects)
+      const isNumericArray = data[key].every(
+        (val: unknown) => typeof val === "number" || val === null || val === undefined || (typeof val === "string" && !isNaN(Number(val as string)))
+      );
+      if (!isNumericArray) continue; // skip arrays of objects like milestones
 
+      arrayLengths[key] = data[key].length;
       if (data[key].length !== baseLength) {
         errors.push(
-          `Array "${key}" length (${data[key].length}) doesn't match ages array length (${baseLength})`
+          `Array \"${key}\" length (${data[key].length}) doesn't match ages array length (${baseLength})`
         );
       }
     }
   }
 
-  // Validate array values are numbers or null
+  // Validate array values are numbers or null (skip arrays of objects)
   for (const key in data) {
     if (Array.isArray(data[key])) {
+      const isNumericArray = data[key].every(
+        (val: unknown) => typeof val === "number" || val === null || val === undefined || (typeof val === "string" && !isNaN(Number(val as string)))
+      );
+      if (!isNumericArray) continue;
       for (let i = 0; i < data[key].length; i++) {
         const value = data[key][i];
         if (
           value !== null &&
           typeof value !== "undefined" &&
-          typeof value !== "number"
+          typeof value !== "number" &&
+          !(typeof value === "string" && !isNaN(Number(value as string)))
         ) {
           errors.push(
             `${key}[${i}] is not a number, null, or undefined: ${typeof value}`
@@ -92,9 +102,13 @@ export const validateProjectionData = (
     }
   }
 
-  // Check for NaN values which are technically numbers but invalid
+  // Check for NaN values which are technically numbers but invalid (skip arrays of objects)
   for (const key in data) {
     if (Array.isArray(data[key])) {
+      const isNumericArray = data[key].every(
+        (val: unknown) => typeof val === "number" || val === null || val === undefined || (typeof val === "string" && !isNaN(Number(val as string)))
+      );
+      if (!isNumericArray) continue;
       for (let i = 0; i < data[key].length; i++) {
         if (typeof data[key][i] === "number" && isNaN(data[key][i])) {
           errors.push(`${key}[${i}] is NaN`);

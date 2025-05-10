@@ -26,6 +26,7 @@ import favoritesRoutes from "./routes/favorites-routes";
 import careerRoutes from "./routes/career-routes";
 import { sessionConfig } from "./session";
 import milestonesRoutes from "./routes/milestones-routes";
+import { db, sqlClient } from "./db";
 
 // Get the directory name in ESM context
 const __filename = fileURLToPath(import.meta.url);
@@ -785,43 +786,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dummy financial projection calculation endpoint
-  // app.post('/api/calculate/financial-projection', async (req, res) => {
-  //   // TODO: Replace this with real calculation logic or call to Python service
-  //   res.json({
-  //     netWorth: [10000, 12000, 14000],
-  //     income: [50000, 52000, 54000],
-  //     expenses: [30000, 31000, 32000],
-  //     ages: [25, 26, 27],
-  //     cashFlow: [20000, 21000, 22000],
-  //     housing: [8000, 8200, 8400],
-  //     transportation: [2000, 2100, 2200],
-  //     food: [3000, 3100, 3200],
-  //     healthcare: [1000, 1100, 1200],
-  //     personalInsurance: [500, 520, 540],
-  //     apparel: [400, 410, 420],
-  //     services: [700, 710, 720],
-  //     entertainment: [600, 610, 620],
-  //     other: [500, 510, 520],
-  //     education: [0, 0, 0],
-  //     debt: [0, 0, 0],
-  //     childcare: [0, 0, 0],
-  //     discretionary: [1500, 1510, 1520],
-  //     homeValue: [0, 0, 0],
-  //     mortgage: [0, 0, 0],
-  //     carValue: [0, 0, 0],
-  //     carLoan: [0, 0, 0],
-  //     studentLoan: [0, 0, 0],
-  //     taxes: [5000, 5100, 5200],
-  //     payrollTax: [2000, 2100, 2200],
-  //     federalTax: [2000, 2100, 2200],
-  //     stateTax: [1000, 1100, 1200],
-  //     retirementContribution: [500, 520, 540],
-  //     effectiveTaxRate: [0.22, 0.22, 0.22],
-  //     marginalTaxRate: [0.24, 0.24, 0.24],
-  //     milestones: []
-  //   });
-  // });
+  // Fetch random questions for a game
+  app.get('/api/questions', async (req: Request, res: Response) => {
+    try {
+      const { game, limit = 10 } = req.query;
+      if (!game || typeof game !== 'string') {
+        return res.status(400).json({ error: 'Missing or invalid game parameter' });
+      }
+      // Look up the game by name
+      const gameResult = await sqlClient`SELECT id FROM games WHERE name = ${game}`;
+      if (!gameResult || gameResult.length === 0) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+      const game_id = gameResult[0].id;
+      // Fetch random questions for the game
+      const questionsResult = await sqlClient`
+        SELECT q.id, q.title, q.description, q.emoji, c.name as category, s.name as subcategory
+        FROM questions q
+        LEFT JOIN categories c ON q.category_id = c.id
+        LEFT JOIN subcategories s ON q.subcategory_id = s.id
+        WHERE q.game_id = ${game_id} AND q.is_active = true
+        ORDER BY RANDOM() LIMIT ${limit}
+      `;
+      return res.json(questionsResult);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      return res.status(500).json({ error: 'Failed to fetch questions' });
+    }
+  });
+
+  // Record a user response
+  app.post('/api/responses', async (req: Request, res: Response) => {
+    try {
+      const { session_id, question_id, response_value, response_time_ms, device_info } = req.body;
+      if (!session_id || !question_id || typeof response_value === 'undefined') {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      // Ensure session exists in sessions table
+      await sqlClient`
+        INSERT INTO sessions (id)
+        VALUES (${session_id})
+        ON CONFLICT (id) DO NOTHING
+      `;
+      // Now insert the response
+      await sqlClient`
+        INSERT INTO responses (session_id, question_id, response_value, response_time_ms, device_info)
+        VALUES (${session_id}, ${question_id}, ${response_value}, ${response_time_ms ?? null}, ${device_info})
+      `;
+      return res.json({ status: 'ok' });
+    } catch (error) {
+      console.error('Error recording response:', error);
+      return res.status(500).json({ error: 'Failed to record response' });
+    }
+  });
+
+  // Analyze responses and build LLM prompt
+  app.post('/api/llm/analyze', async (req: Request, res: Response) => {
+    try {
+      const { session_id, analysis_type } = req.body;
+      if (!session_id) {
+        return res.status(400).json({ error: 'session_id is required' });
+      }
+      // Fetch all responses for the session, join with questions, games, and categories
+      const responses = await sqlClient`
+        SELECT r.response_value, r.question_id, q.title AS question_title, q.description AS question_description, g.name AS game_name, c.name AS category
+        FROM responses r
+        JOIN questions q ON r.question_id = q.id
+        JOIN games g ON q.game_id = g.id
+        LEFT JOIN categories c ON q.category_id = c.id
+        WHERE r.session_id = ${session_id}
+        ORDER BY g.name, q.id
+      `;
+      // Group responses by game
+      const grouped = responses.reduce((acc, r) => {
+        if (!acc[r.game_name]) acc[r.game_name] = [];
+        acc[r.game_name].push(r);
+        return acc;
+      }, {} as Record<string, any[]>);
+      // Build prompt string
+      let prompt = '';
+      for (const [game, answers] of Object.entries(grouped)) {
+        prompt += `Game: ${game}\n`;
+        for (const r of answers) {
+          prompt += `Q: [${r.category}] ${r.question_title} - ${r.question_description}\nA: ${r.response_value}\n`;
+        }
+        prompt += '\n';
+      }
+      // (Optional) Call LLM API here in the future
+      res.json({ prompt });
+    } catch (error) {
+      console.error('Error generating LLM prompt:', error);
+      res.status(500).json({ error: 'Failed to generate LLM prompt' });
+    }
+  });
 
   return httpServer;
 }

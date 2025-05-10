@@ -1,11 +1,20 @@
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useSwipeableCard } from '@/hooks/useSwipeableCard';
-import { scenarios, getCategoryGradient } from '@/data/swipeableScenarios';
 import confetti from 'canvas-confetti';
+
+interface Scenario {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  subcategory?: string;
+  emoji: string;
+}
 
 interface SwipeableScenariosProps {
   onComplete: (results: Record<string, boolean>) => void;
@@ -13,6 +22,29 @@ interface SwipeableScenariosProps {
 }
 
 export default function SwipeableScenarios({ onComplete, resetKey = 0 }: SwipeableScenariosProps) {
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch('/api/questions?game=Swipe Cards&limit=10')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch questions');
+        return res.json();
+      })
+      .then(data => {
+        // Convert all ids to strings for compatibility
+        setScenarios(data.map((q: any) => ({ ...q, id: String(q.id) })));
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [resetKey]);
+
   const {
     currentIndex,
     dragOffset,
@@ -27,7 +59,17 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
     resetKey,
     onComplete
   });
-  
+
+  if (loading) {
+    return <div className="text-center py-12">Loading questions...</div>;
+  }
+  if (error) {
+    return <div className="text-center py-12 text-red-500">{error}</div>;
+  }
+  if (scenarios.length === 0) {
+    return <div className="text-center py-12">No questions available.</div>;
+  }
+
   if (currentIndex >= scenarios.length) {
     // Trigger confetti effect
     confetti({
@@ -78,10 +120,10 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
       </motion.div>
     );
   }
-  
+
   const currentScenario = scenarios[currentIndex];
   const progressPercent = (currentIndex / scenarios.length) * 100;
-  
+
   return (
     <div className="flex flex-col items-center">
       <div className="w-full mb-6">
@@ -155,7 +197,8 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
                 <div className="text-sm font-medium text-gray-500 mb-2">Category</div>
                 <div className={cn(
                   "text-sm font-bold py-2 px-4 rounded-full inline-block",
-                  `bg-gradient-to-r ${getCategoryGradient(currentScenario.category)}`,
+                  // You may want to update getCategoryGradient to handle dynamic categories
+                  "bg-gradient-to-r from-violet-500 to-fuchsia-500",
                   "text-white shadow-md"
                 )}>
                   {currentScenario.category}

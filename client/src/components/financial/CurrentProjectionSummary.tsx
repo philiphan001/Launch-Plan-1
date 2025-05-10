@@ -40,12 +40,14 @@ interface CurrentProjectionSummaryProps {
   collegeCalculation: CollegeCalculation | null | undefined;
   careerCalculation: CareerCalculation | null | undefined;
   locationData: LocationData | null | undefined;
+  renderEditButtons?: (args: { section: 'education' | 'career' | 'location' }) => React.ReactNode;
 }
 
 const CurrentProjectionSummary: React.FC<CurrentProjectionSummaryProps> = ({
   collegeCalculation,
   careerCalculation,
   locationData,
+  renderEditButtons,
 }) => {
   return (
     <Card className="mb-6 border-l-4 border-l-primary">
@@ -67,6 +69,7 @@ const CurrentProjectionSummary: React.FC<CurrentProjectionSummaryProps> = ({
                 <h4 className="text-sm font-medium text-muted-foreground flex items-center">
                   <School className="h-4 w-4 mr-1.5" />
                   Education
+                  {renderEditButtons && renderEditButtons({ section: 'education' })}
                 </h4>
                 {collegeCalculation ? (
                   <>
@@ -92,6 +95,7 @@ const CurrentProjectionSummary: React.FC<CurrentProjectionSummaryProps> = ({
                 <h4 className="text-sm font-medium text-muted-foreground flex items-center">
                   <Briefcase className="h-4 w-4 mr-1.5" />
                   Career
+                  {renderEditButtons && renderEditButtons({ section: 'career' })}
                 </h4>
                 {careerCalculation ? (
                   <>
@@ -117,6 +121,7 @@ const CurrentProjectionSummary: React.FC<CurrentProjectionSummaryProps> = ({
                 <h4 className="text-sm font-medium text-muted-foreground flex items-center">
                   <MapPin className="h-4 w-4 mr-1.5" />
                   Location
+                  {renderEditButtons && renderEditButtons({ section: 'location' })}
                 </h4>
                 {locationData ? (
                   <>

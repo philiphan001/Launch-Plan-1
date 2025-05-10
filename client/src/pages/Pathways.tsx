@@ -44,6 +44,8 @@ import ExplorationMethodStep from '@/components/pathways/ExplorationMethodStep';
 import CareerSearch from '@/components/pathways/CareerSearch';
 import CollegeSearch from '../components/pathways/CollegeSearch';
 import SwipeSummary from "@/components/pathways/SwipeSummary";
+import { Link } from "wouter";
+import rocketIcon from '../assets/rocket-svgrepo-com.svg';
 
 type PathChoice = "education" | "job" | "military" | "gap";
 
@@ -937,10 +939,9 @@ const Pathways = ({
             subtitle="Select how you'd like to proceed with your journey"
           >
             <PathSelectionStep
-              onPathSelect={(needsGuidance) => {
-                setNeedsGuidance(needsGuidance);
-              }}
-              onNext={handleNext}
+              needsGuidance={!!needsGuidance}
+              setNeedsGuidance={setNeedsGuidance}
+              handleNext={handleNext}
             />
           </Step>
         );
@@ -4354,23 +4355,25 @@ const Pathways = ({
       {/* Loading screen overlay */}
       {showLoadingScreen && <LoadingScreen message="Preparing your financial plan..." />}
       
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/70 to-primary-dark/70 shadow-sm mb-6 p-4">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/70 to-primary-dark/70 shadow-sm mb-6 p-4 flex items-center justify-between">
         <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-400 via-cyan-500 to-blue-500"></div>
-        <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTYwMCAwdjYwMEgwVjBaIi8+PHBhdGggc3Ryb2tlPSIjZmZmZmZmMTAiIGZpbGw9Im5vbmUiIGQ9Ik02MDAgMEgwdjYwMGg2MDBWMFoiLz48cGF0aCBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIgZD0iTTAgMzAwaDYwME0zMDAgMHY2MDAiLz48cGF0aCBkPSJNMCAwdjYwMGw2MDAtNjAwSDBaIiBzdHJva2U9IiNmZmZmZmYxMCIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik02MDAgMHY2MDBMODAwIDYwMFYwSDYwMFoiIHN0cm9rZT0iI2ZmZmZmZjEwIiBmaWxsPSJub25lIi8+PC9zdmc+')]"></div>
-        
-        <div className="relative flex justify-end items-center gap-4 text-white">
+        {/* Left: Take Flight text and rocket icon */}
+        <div className="flex items-center">
+          <span className="text-2xl md:text-3xl font-bold text-white tracking-wide mr-3">Take Flight</span>
+          {/* Use imported SVG as an image */}
+          <img src={rocketIcon} alt="Rocket" width={72} height={72} style={{ display: 'block' }} />
+        </div>
+        {/* Right: Start Over button */}
+        <div className="flex justify-end items-center gap-4 text-white">
           <Button 
-            variant="outline" 
             onClick={handleStartOver}
-            className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-sm shadow-sm flex items-center gap-1 transition-all"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 border-0 transition-all"
           >
-            <span className="material-icons text-sm">refresh</span>
+            <span className="material-icons text-lg">refresh</span>
             Start Over
           </Button>
         </div>
       </div>
-      
-      {/* Progress indicator removed as requested */}
       
       {renderCurrentStep()}
       

@@ -62,6 +62,33 @@ export function useSwipeableCard({ scenarios, resetKey = 0, onComplete }: UseSwi
     if (currentIndex < scenarios.length) {
       const scenario = scenarios[currentIndex];
       
+      // Post response to backend
+      const session_id = window.localStorage.getItem('swipe_session_id') || crypto.randomUUID();
+      window.localStorage.setItem('swipe_session_id', session_id);
+      const question_id = scenario.id;
+      const response_value = liked;
+      const device_info = window.navigator.userAgent;
+      fetch('/api/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id,
+          question_id,
+          response_value,
+          response_time_ms: null,
+          device_info,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          // Optionally handle success
+          console.log('Response saved:', data);
+        })
+        .catch(err => {
+          // Optionally handle error
+          console.error('Failed to save response:', err);
+        });
+      
       // Animate card off-screen
       cardControls.start({ 
         x: liked ? 500 : -500, 
