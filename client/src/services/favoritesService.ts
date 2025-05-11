@@ -1,6 +1,7 @@
 // favoritesService.ts - Centralized service for handling favorites functionality
 import { tokenService } from '../utils/token-service';
 import { getApiUrl } from "../config/api";
+import { ensureValidServerSession } from '../services/firebase-auth';
 
 // Interface for favorite college data
 export interface FavoriteCollege {
@@ -64,6 +65,13 @@ export async function authenticatedFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   try {
+    // First ensure we have a valid server session
+    const hasValidSession = await ensureValidServerSession();
+    if (!hasValidSession) {
+      console.error("[DEBUG] No valid server session available");
+      throw new Error("Authentication required - please log in again");
+    }
+
     // Get a fresh token using tokenService
     const token = await tokenService.getToken(true);
     if (!token) {
@@ -87,20 +95,26 @@ export async function authenticatedFetch(
     
     if (!response.ok) {
       if (response.status === 401) {
-        // Token might be invalid, try to refresh and retry once
-        const freshToken = await tokenService.getToken(true);
-        if (freshToken) {
-          const retryResponse = await fetch(fullUrl, {
-            ...options,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${freshToken}`,
-              ...options.headers,
-            },
-            credentials: "include",
-          });
-          return retryResponse;
+        // Session might be invalid, try to refresh and retry once
+        const hasRefreshedSession = await ensureValidServerSession();
+        if (hasRefreshedSession) {
+          // Get a fresh token after session refresh
+          const freshToken = await tokenService.getToken(true);
+          if (freshToken) {
+            const retryResponse = await fetch(fullUrl, {
+              ...options,
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${freshToken}`,
+                ...options.headers,
+              },
+              credentials: "include",
+            });
+            return retryResponse;
+          }
         }
+        // If we get here, session refresh failed
+        throw new Error("Session expired - please log in again");
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }

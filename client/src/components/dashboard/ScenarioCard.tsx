@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { createMainProjectionChart } from "@/lib/charts";
 import { Button } from "@/components/ui/button";
 import { BarChart, Eye, Pencil, Calculator, TrendingUp } from "lucide-react";
@@ -56,10 +56,9 @@ const ScenarioCard = ({
   ageSliderActive = false,
   ageSliderValue = 30
 }: ScenarioCardProps) => {
-  const netWorthChartRef = useRef<HTMLCanvasElement>(null);
-  const cashFlowChartRef = useRef<HTMLCanvasElement>(null);
-  const netWorthChartInstance = useRef<any>(null);
-  const cashFlowChartInstance = useRef<any>(null);
+  const chartRef = useRef<HTMLCanvasElement>(null);
+  const chartInstance = useRef<any>(null);
+  const [activeTab, setActiveTab] = useState<'netWorth' | 'cashFlow'>('netWorth');
   
   // Safely get the last value from an array
   const getSafeDataValue = (arr: number[] | undefined): number => {
@@ -163,71 +162,40 @@ const ScenarioCard = ({
     const hasValidProjectionData = scenario?.projectionData && 
                                  Array.isArray(scenario.projectionData.ages) && 
                                  scenario.projectionData.ages.length > 0;
-    
     if (!hasValidProjectionData) {
       console.warn("Missing or invalid projection data in scenario:", scenario?.id);
       return; // Skip chart creation entirely if data is invalid
     }
-    
-    if (netWorthChartRef.current) {
-      const ctx = netWorthChartRef.current.getContext("2d");
+    if (chartRef.current) {
+      const ctx = chartRef.current.getContext("2d");
       if (ctx) {
-        // Destroy previous chart instance if it exists
-        if (netWorthChartInstance.current) {
-          netWorthChartInstance.current.destroy();
+        if (chartInstance.current) {
+          chartInstance.current.destroy();
         }
-        
         try {
-          // Create new net worth chart with a deep clone of the data to prevent mutations
           const safeProjectionData = {
+            ...scenario.projectionData,
             ages: [...(scenario.projectionData.ages || [])],
             netWorth: [...(scenario.projectionData.netWorth || [])],
             income: [...(scenario.projectionData.income || [])],
             expenses: [...(scenario.projectionData.expenses || [])]
           };
-          
-          netWorthChartInstance.current = createMainProjectionChart(ctx, safeProjectionData, "netWorth");
+          if (activeTab === 'netWorth') {
+            chartInstance.current = createMainProjectionChart(ctx, safeProjectionData, 'netWorth');
+          } else {
+            chartInstance.current = createMainProjectionChart(ctx, safeProjectionData, 'cashFlow');
+          }
         } catch (err) {
-          console.error("Error creating net worth chart:", err);
+          console.error("Error creating chart:", err);
         }
       }
     }
-    
-    if (cashFlowChartRef.current) {
-      const ctx = cashFlowChartRef.current.getContext("2d");
-      if (ctx) {
-        // Destroy previous chart instance if it exists
-        if (cashFlowChartInstance.current) {
-          cashFlowChartInstance.current.destroy();
-        }
-        
-        try {
-          // Create cash flow chart with income and expenses
-          // Using a fresh object to prevent unexpected mutations
-          const safeProjectionData = {
-            ages: [...(scenario.projectionData.ages || [])],
-            income: [...(scenario.projectionData.income || [])],
-            expenses: [...(scenario.projectionData.expenses || [])],
-            netWorth: [...(scenario.projectionData.netWorth || [])] // Add netWorth to satisfy type requirement
-          };
-          
-          cashFlowChartInstance.current = createMainProjectionChart(ctx, safeProjectionData, "income");
-        } catch (err) {
-          console.error("Error creating cash flow chart:", err);
-        }
-      }
-    }
-    
-    // Cleanup on unmount
     return () => {
-      if (netWorthChartInstance.current) {
-        netWorthChartInstance.current.destroy();
-      }
-      if (cashFlowChartInstance.current) {
-        cashFlowChartInstance.current.destroy();
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
       }
     };
-  }, [scenario]);
+  }, [scenario, activeTab]);
 
   return (
     <motion.div
@@ -339,70 +307,49 @@ const ScenarioCard = ({
         </CardHeader>
         
         <CardContent className="p-4">
-          <Tabs defaultValue="netWorth">
-            <TabsList className="mb-2 grid w-full grid-cols-2">
-              <TabsTrigger value="netWorth" className="flex items-center">
-                <BarChart className="h-4 w-4 mr-1" />
-                Net Worth
-              </TabsTrigger>
-              <TabsTrigger value="cashFlow" className="flex items-center">
-                <Calculator className="h-4 w-4 mr-1" />
-                Cash Flow
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="netWorth" className="mt-0">
-              <div className="h-56">
-                <canvas ref={netWorthChartRef}></canvas>
-              </div>
-              <div className="mt-2 text-center">
-                {ageSliderActive ? (
-                  <>
-                    <div className="text-xl font-semibold text-blue-600">
-                      ${getNetWorthAtAge(ageSliderValue).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-500">Net Worth at Age {ageSliderValue}</div>
-                    <div className="text-xs text-blue-500 mt-1">
-                      {scenario?.projectionData?.ages && Array.isArray(scenario.projectionData.ages) &&
-                       scenario.projectionData.ages.includes(ageSliderValue) ? 
-                        "(Exact data point)" : 
-                        "(Interpolated value)"}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-xl font-semibold">
-                      ${scenario?.projectionData?.netWorth && Array.isArray(scenario.projectionData.netWorth) && 
-                         scenario.projectionData.netWorth.length > 0 ? 
-                         Math.max(...scenario.projectionData.netWorth).toLocaleString() : 
-                         "0"}
-                    </div>
-                    <div className="text-sm text-gray-500">Projected Peak Net Worth</div>
-                  </>
-                )}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="cashFlow" className="mt-0">
-              <div className="h-56">
-                <canvas ref={cashFlowChartRef}></canvas>
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-2 text-center">
-                <div>
-                  <div className="text-green-600 text-lg font-semibold">
-                    ${getSafeDataValue(scenario?.projectionData?.income).toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-500">Annual Income</div>
+          <div className="mb-2 grid w-full grid-cols-2">
+            <button 
+              className={`flex items-center px-4 py-2 rounded-full text-sm ${activeTab === 'netWorth' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              onClick={() => setActiveTab('netWorth')}
+            >
+              <BarChart className="h-4 w-4 mr-1" /> Net Worth
+            </button>
+            <button 
+              className={`flex items-center px-4 py-2 rounded-full text-sm ${activeTab === 'cashFlow' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              onClick={() => setActiveTab('cashFlow')}
+            >
+              <Calculator className="h-4 w-4 mr-1" /> Cash Flow
+            </button>
+          </div>
+          <div className="h-56">
+            <canvas ref={chartRef}></canvas>
+          </div>
+          <div className="mt-2 text-center">
+            {ageSliderActive ? (
+              <>
+                <div className="text-xl font-semibold text-blue-600">
+                  ${getNetWorthAtAge(ageSliderValue).toLocaleString()}
                 </div>
-                <div>
-                  <div className="text-red-600 text-lg font-semibold">
-                    ${getSafeDataValue(scenario?.projectionData?.expenses).toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-500">Annual Expenses</div>
+                <div className="text-sm text-gray-500">Net Worth at Age {ageSliderValue}</div>
+                <div className="text-xs text-blue-500 mt-1">
+                  {scenario?.projectionData?.ages && Array.isArray(scenario.projectionData.ages) &&
+                   scenario.projectionData.ages.includes(ageSliderValue) ? 
+                    "(Exact data point)" : 
+                    "(Interpolated value)"}
                 </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+              </>
+            ) : (
+              <>
+                <div className="text-xl font-semibold">
+                  ${scenario?.projectionData?.netWorth && Array.isArray(scenario.projectionData.netWorth) && 
+                     scenario.projectionData.netWorth.length > 0 ? 
+                     Math.max(...scenario.projectionData.netWorth).toLocaleString() : 
+                     "0"}
+                </div>
+                <div className="text-sm text-gray-500">Projected Peak Net Worth</div>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     </motion.div>

@@ -97,7 +97,7 @@ import {
   Milestone,
   FinancialProjection,
   // ...add any other types you use from the schema
-} from "@shared/schema";
+} from "../../../shared/schema";
 import { authenticatedFetch } from '../services/favoritesService';
 import ProjectionAvatar from '@/components/ProjectionAvatar';
 import { Link } from "wouter";
@@ -110,101 +110,15 @@ type ProjectionType =
   | "liabilities"
   | "cashFlow";
 
-// Interfaces for API responses
-interface User {
-  id: number;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  location: string | null;
-  zipCode: string | null;
-  birthYear: number | null;
-}
-
-interface CollegeCalculation {
-  id: number;
-  userId: number;
-  collegeId: number;
-  netPrice: number;
-  studentLoanAmount: number;
-  includedInProjection: boolean;
-  inState?: boolean;
-  college?: {
-    name: string;
-    type?: string;
-  };
-}
-
-interface CareerCalculation {
-  id: number;
-  userId: number;
-  careerId: number;
-  projectedSalary: number;
-  entryLevelSalary: number | null;
-  startYear: number | null;
-  includedInProjection: boolean;
-  education: string | null;
-  career?: {
-    title: string;
-  };
-}
-
-interface Milestone {
-  id: number;
-  userId: number;
-  type: string;
-  title: string;
-  date: string;
-  yearsAway: number;
-  // Marriage specific fields
-  spouseOccupation?: string;
-  spouseIncome?: number;
-  spouseAssets?: number;
-  spouseLiabilities?: number;
-  // Home specific fields
-  homeValue?: number;
-  homeDownPayment?: number;
-  homeMonthlyPayment?: number;
-  // Car specific fields
-  carValue?: number;
-  carDownPayment?: number;
-  carMonthlyPayment?: number;
-  // Children specific fields
-  childrenCount?: number;
-  childrenExpensePerYear?: number;
-  // Education specific fields
-  educationCost?: number;
-  educationType?: string;
-  educationYears?: number;
-  educationAnnualCost?: number;
-  educationAnnualLoan?: number;
-  targetOccupation?: string;
-  educationField?: string;
-  targetCareer?: string;
-  workStatus?: string; // "no", "part-time", or "full-time"
-  partTimeIncome?: number;
-  returnToSameProfession?: boolean;
-  // Additional properties used in the app but not in the database
-  financialImpact?: number;
-  active?: boolean;
-  completed?: boolean;
-  details?: Record<string, any>;
-  createdAt?: Date | null;
-}
-
-interface FinancialProfile {
-  id: number;
-  userId: number;
-  householdIncome: number | null;
-  householdSize: number | null;
-  savingsAmount: number | null;
-  studentLoanAmount: number | null;
-  otherDebtAmount: number | null;
-}
-
 interface FinancialProjectionsProps extends AuthProps {
   initialProjectionId?: number;
 }
+
+// Add local types to extend imported types with frontend-enriched fields
+// These are used for display purposes only
+
+type CollegeCalculationWithCollege = CollegeCalculation & { college?: { name: string; type?: string } };
+type CareerCalculationWithCareer = CareerCalculation & { career?: { title: string } };
 
 const FinancialProjections = ({
   user,
@@ -441,7 +355,7 @@ const FinancialProjections = ({
     useQuery({
       queryKey: ["/api/college-calculations/user", userId],
       queryFn: async () => {
-        const response = await apiRequest(`/api/college-calculations/user/${user.id}`);
+        const response = await apiRequest(`/api/college-calculations/user/${userId}`);
         if (!response.ok)
           throw new Error("Failed to fetch college calculations");
         return response.json() as Promise<CollegeCalculation[]>;
@@ -1427,7 +1341,7 @@ const FinancialProjections = ({
 
     // Sort milestones by yearsAway to process them in chronological order
     const sortedMilestones = milestones
-      ? [...milestones].sort((a, b) => a.yearsAway - b.yearsAway)
+      ? [...milestones].sort((a, b) => (a.yearsAway ?? 0) - (b.yearsAway ?? 0))
       : [];
 
     // Define milestone references for amortization and calculations
@@ -1443,9 +1357,9 @@ const FinancialProjections = ({
     const milestonesByYear = new Map();
     if (sortedMilestones.length > 0) {
       sortedMilestones.forEach((milestone) => {
-        if (milestone.yearsAway <= years) {
-          milestonesByYear.set(milestone.yearsAway, [
-            ...(milestonesByYear.get(milestone.yearsAway) || []),
+        if ((milestone.yearsAway ?? 0) <= years) {
+          milestonesByYear.set(milestone.yearsAway ?? 0, [
+            ...(milestonesByYear.get(milestone.yearsAway ?? 0) || []),
             milestone,
           ]);
         }
@@ -2246,18 +2160,18 @@ const FinancialProjections = ({
       college: effectiveCollegeCalc
         ? {
             id: effectiveCollegeCalc.id,
-            name: effectiveCollegeCalc.college?.name || "Unknown College",
-            type: effectiveCollegeCalc.college?.type,
+            name: (effectiveCollegeCalc as CollegeCalculationWithCollege).college?.name || "Unknown College",
+            type: (effectiveCollegeCalc as CollegeCalculationWithCollege).college?.type,
             totalCost: effectiveCollegeCalc.netPrice || 0,
             studentLoanAmount: effectiveCollegeCalc.studentLoanAmount || 0,
-            inState: effectiveCollegeCalc.inState,
+            inState: effectiveCollegeCalc.inState ?? undefined,
           }
         : undefined,
 
       career: effectiveCareerCalc
         ? {
             id: effectiveCareerCalc.id,
-            title: effectiveCareerCalc.career?.title || "Unknown Career",
+            title: (effectiveCareerCalc as CareerCalculationWithCareer).career?.title || "Unknown Career",
             entryLevelSalary: effectiveCareerCalc.entryLevelSalary || 0,
             projectedSalary: effectiveCareerCalc.projectedSalary || 0,
             education: effectiveCareerCalc.education || undefined,
@@ -2351,25 +2265,36 @@ const FinancialProjections = ({
       // First, clear existing data to prevent stale information
       setProjectionData(null);
 
-      // Create a batch of state updates to be executed together for better performance
-      const stateUpdates = () => {
-        const savedProj = savedProjection;
-        if (!savedProj) {
-          console.error(
-            "Failed to load projection: No data returned from server"
-          );
-          throw new Error("Failed to load projection: No data returned");
-        }
+      // Convert string ID to number and validate
+      const numericId = parseInt(projId, 10);
+      if (isNaN(numericId)) {
+        throw new Error("Invalid projection ID");
+      }
 
+      // Add cache-busting timestamp to ensure fresh data
+      const cacheBuster = new Date().getTime();
+      const url = `/api/financial-projections/detail/${numericId}?_=${cacheBuster}`;
+      console.log(`Making fetch request to: ${url}`);
+
+      const response = await authenticatedFetch(url);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Failed to fetch projection data: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`Failed to load projection: ${response.statusText}`);
+      }
+
+      const savedProj = await response.json();
+      if (!savedProj) {
+        throw new Error("No data returned from server");
+      }
+
+      // Create a batch of state updates to be executed together
+      const stateUpdates = () => {
         // Load the projection name
-        setProjectionName(
-          savedProj.name || `Projection - ${new Date().toLocaleDateString()}`
-        );
+        setProjectionName(savedProj.name || `Projection - ${new Date().toLocaleDateString()}`);
 
         // Load basic parameters with validation
-        setTimeframe(
-          savedProj.timeframe ? `${savedProj.timeframe} Years` : "10 Years"
-        );
+        setTimeframe(savedProj.timeframe ? `${savedProj.timeframe} Years` : "10 Years");
         setAge(savedProj.startingAge || 25);
         setStartingSavings(savedProj.startingSavings || 5000);
         setIncome(savedProj.income || 40000);
@@ -2393,24 +2318,20 @@ const FinancialProjections = ({
 
             // Validate key fields exist
             if (!parsedData.netWorth || !Array.isArray(parsedData.netWorth)) {
-              console.error(
-                "Invalid projection data format: missing netWorth array"
-              );
+              console.error("Invalid projection data format: missing netWorth array");
               parsedData = {
-                netWorth: [startingSavings],
-                ages: [age],
-                income: [income],
-                expenses: [expenses],
+                netWorth: [savedProj.startingSavings || 5000],
+                ages: [savedProj.startingAge || 25],
+                income: [savedProj.income || 40000],
+                expenses: [savedProj.expenses || 35000],
               };
             }
 
             // Add a unique key to force chart re-renders
-            parsedData._key = `loaded-projection-${projId}-${Date.now()}`;
+            parsedData._key = `loaded-projection-${numericId}-${Date.now()}`;
 
-            // Use the saved projection data directly instead of recalculating
-            console.log(
-              "LOAD PROJECTION: Setting projection data directly from saved projection, no recalculation"
-            );
+            // Use the saved projection data directly
+            console.log("Setting projection data from saved projection");
             setProjectionData(parsedData);
 
             // Switch to view tab
@@ -2419,10 +2340,10 @@ const FinancialProjections = ({
             console.error("Error parsing saved projection data:", error);
             // Fall back to generating new data
             setProjectionData({
-              netWorth: [startingSavings],
-              ages: [age],
-              income: [income],
-              expenses: [expenses],
+              netWorth: [savedProj.startingSavings || 5000],
+              ages: [savedProj.startingAge || 25],
+              income: [savedProj.income || 40000],
+              expenses: [savedProj.expenses || 35000],
               _key: `fallback-${Date.now()}`,
             });
           }
@@ -2431,11 +2352,20 @@ const FinancialProjections = ({
 
       // Execute state updates
       stateUpdates();
+
+      // Show success message
+      toast({
+        title: "Projection Loaded",
+        description: `Successfully loaded "${savedProj.name}"`,
+      });
+
     } catch (error) {
       console.error("Error in loadProjection:", error);
-      alert(
-        "Failed to load the financial projection. Please try again or create a new one."
-      );
+      toast({
+        title: "Error Loading Projection",
+        description: error instanceof Error ? error.message : "Failed to load projection",
+        variant: "destructive",
+      });
       // Reset to defaults
       resetProjection();
     } finally {
@@ -2718,18 +2648,18 @@ const FinancialProjections = ({
           college: effectiveCollegeCalc
             ? {
                 id: effectiveCollegeCalc.id,
-                name: effectiveCollegeCalc.college?.name || "Unknown College",
-                type: effectiveCollegeCalc.college?.type,
+                name: (effectiveCollegeCalc as CollegeCalculationWithCollege).college?.name || "Unknown College",
+                type: (effectiveCollegeCalc as CollegeCalculationWithCollege).college?.type,
                 totalCost: effectiveCollegeCalc.netPrice || 0,
                 studentLoanAmount: effectiveCollegeCalc.studentLoanAmount || 0,
-                inState: effectiveCollegeCalc.inState,
+                inState: effectiveCollegeCalc.inState ?? undefined,
               }
             : undefined,
 
           career: effectiveCareerCalc
             ? {
                 id: effectiveCareerCalc.id,
-                title: effectiveCareerCalc.career?.title || "Unknown Career",
+                title: (effectiveCareerCalc as CareerCalculationWithCareer).career?.title || "Unknown Career",
                 entryLevelSalary: effectiveCareerCalc.entryLevelSalary || 0,
                 projectedSalary: effectiveCareerCalc.projectedSalary || 0,
                 education: effectiveCareerCalc.education || undefined,
@@ -3039,17 +2969,17 @@ const FinancialProjections = ({
     // Add home-related values if milestones include a home purchase
     const homeMilestone = milestones?.find((m) => m.type === "home");
     if (homeMilestone) {
-      financialState.homeValue = homeMilestone.homeValue;
-      financialState.homeDownPayment = homeMilestone.homeDownPayment;
-      financialState.homeMonthlyPayment = homeMilestone.homeMonthlyPayment;
+      financialState.homeValue = homeMilestone.homeValue ?? undefined;
+      financialState.homeDownPayment = homeMilestone.homeDownPayment ?? undefined;
+      financialState.homeMonthlyPayment = homeMilestone.homeMonthlyPayment ?? undefined;
     }
 
     // Add car-related values if milestones include a car purchase
     const carMilestone = milestones?.find((m) => m.type === "car");
     if (carMilestone) {
-      financialState.carValue = carMilestone.carValue;
-      financialState.carDownPayment = carMilestone.carDownPayment;
-      financialState.carMonthlyPayment = carMilestone.carMonthlyPayment;
+      financialState.carValue = carMilestone.carValue ?? undefined;
+      financialState.carDownPayment = carMilestone.carDownPayment ?? undefined;
+      financialState.carMonthlyPayment = carMilestone.carMonthlyPayment ?? undefined;
     }
 
     // Generate financial advice
@@ -3088,7 +3018,7 @@ const FinancialProjections = ({
         chartInstance.current.destroy();
       }
     };
-  }, [projectionData, activeTab, timeframe]);
+  }, [projectionData, activeTab, timeframe, mainTab]);
 
   // State to hold pathway data for display
   const [pathwaySummary, setPathwaySummary] = useState<any>(null);
@@ -3193,8 +3123,8 @@ const FinancialProjections = ({
           />
         ) : effectiveCollegeCalc || effectiveCareerCalc ? (
           <CurrentProjectionSummary
-            collegeCalculation={effectiveCollegeCalc}
-            careerCalculation={effectiveCareerCalc}
+            collegeCalculation={effectiveCollegeCalc as CollegeCalculationWithCollege}
+            careerCalculation={effectiveCareerCalc as CareerCalculationWithCareer}
             locationData={locationCostData}
             renderEditButtons={({ section }) => {
               if (section === 'education') {
@@ -3319,7 +3249,7 @@ const FinancialProjections = ({
                       {effectiveCollegeCalc && (
                         <p className="text-xs text-gray-500 mt-1">
                           Using student loan amount from{" "}
-                          {effectiveCollegeCalc.college?.name}
+                          {(effectiveCollegeCalc as CollegeCalculationWithCollege).college?.name}
                         </p>
                       )}
                     </div>
@@ -3335,8 +3265,7 @@ const FinancialProjections = ({
                       />
                       {effectiveCareerCalc && (
                         <p className="text-xs text-gray-500 mt-1">
-                          Using salary from {effectiveCareerCalc.career?.title}{" "}
-                          career
+                          Using salary from {(effectiveCareerCalc as CareerCalculationWithCareer).career?.title} career
                         </p>
                       )}
                     </div>
@@ -4997,7 +4926,7 @@ const FinancialProjections = ({
                               College:
                             </span>
                             <span className="font-medium">
-                              {includedCollegeCalc.college?.name ||
+                              {(effectiveCollegeCalc as CollegeCalculationWithCollege).college?.name ||
                                 "Unknown College"}
                             </span>
                           </div>
@@ -5052,7 +4981,7 @@ const FinancialProjections = ({
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Career:</span>
                             <span className="font-medium">
-                              {includedCareerCalc.career?.title ||
+                              {(effectiveCareerCalc as CareerCalculationWithCareer).career?.title ||
                                 "Unknown Career"}
                             </span>
                           </div>

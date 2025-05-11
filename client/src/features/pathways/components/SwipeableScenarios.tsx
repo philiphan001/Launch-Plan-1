@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useSwipeableCard } from '@/hooks/useSwipeableCard';
 import confetti from 'canvas-confetti';
+import SwipeSummary from './SwipeSummary';
 
 interface Scenario {
   id: string;
@@ -25,6 +26,7 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [gameComplete, setGameComplete] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -57,7 +59,13 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
   } = useSwipeableCard({
     scenarios,
     resetKey,
-    onComplete
+    onComplete: (results) => {
+      // When the swipe game is complete, trigger confetti and set gameComplete to true
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      setGameComplete(true);
+      // Optionally, you can still call the original onComplete if needed (e.g. for logging or further processing)
+      // onComplete(results);
+    }
   });
 
   if (loading) {
@@ -70,55 +78,8 @@ export default function SwipeableScenarios({ onComplete, resetKey = 0 }: Swipeab
     return <div className="text-center py-12">No questions available.</div>;
   }
 
-  if (currentIndex >= scenarios.length) {
-    // Trigger confetti effect
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-
-    return (
-      <motion.div 
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", duration: 0.8 }}
-        className="text-center space-y-6"
-      >
-        <div className="relative">
-          <motion.div 
-            animate={{ 
-              y: [0, -20, 0],
-              rotate: [0, -10, 10, 0]
-            }}
-            transition={{ 
-              duration: 2,
-              repeat: Infinity,
-              repeatType: "reverse"
-            }}
-            className="inline-block mb-4"
-          >
-            <span className="text-6xl filter drop-shadow-lg">🎉</span>
-          </motion.div>
-        </div>
-        <h3 className="text-3xl font-bold bg-gradient-to-r from-violet-600 via-pink-500 to-orange-500 text-transparent bg-clip-text animate-gradient">
-          You're Amazing! 
-        </h3>
-        <p className="text-gray-600 text-lg font-medium">
-          Get ready to discover your perfect path! 
-        </p>
-        <div className="flex justify-center mt-4 gap-4">
-          <motion.div 
-            animate={{ 
-              scale: [1, 1.2, 1],
-              rotate: [0, 360]
-            }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="h-12 w-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg"
-          />
-        </div>
-      </motion.div>
-    );
+  if (gameComplete) {
+    return <SwipeSummary onContinue={() => { onComplete({}); }} />;
   }
 
   const currentScenario = scenarios[currentIndex];

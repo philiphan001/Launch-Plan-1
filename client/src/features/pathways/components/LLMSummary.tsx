@@ -34,14 +34,22 @@ export function LLMSummary({ sessionId, analysisType, className }: LLMSummaryPro
   if (!sessionId) return null;
 
   return (
-    <div className={className || ''}>
-      <h3 className="font-semibold mb-1">AI Summary</h3>
+    <div className={className}>
       {loading ? (
-        <div>Generating summary...</div>
+        <p>Loading LLM summary…</p>
       ) : error ? (
-        <div className="text-red-500">{error}</div>
+        <p>Error: {error}</p>
       ) : (
-        <pre className="bg-gray-100 p-2 rounded whitespace-pre-wrap">{llmPrompt}</pre>
+        <>
+          <h3>AI Summary</h3>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{llmPrompt}</pre>
+          {llmPrompt && (
+            <div style={{ marginTop: '1em' }}>
+              <h4>LLM Prompt (Raw)</h4>
+              <pre style={{ background: '#f4f4f4', padding: '1em', borderRadius: '4px', overflowX: 'auto' }}>{llmPrompt}</pre>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

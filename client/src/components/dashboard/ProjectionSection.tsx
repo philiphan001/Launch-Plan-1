@@ -58,6 +58,7 @@ const ProjectionSection = ({
   const chartInstance = useRef<any>(null);
 
   useEffect(() => {
+    console.log('[ProjectionSection] activeTab:', activeTab, 'projectionData:', projectionData);
     if (chartRef.current) {
       const ctx = chartRef.current.getContext("2d");
       if (ctx) {
@@ -78,6 +79,11 @@ const ProjectionSection = ({
       }
     };
   }, [projectionData, activeTab, timeframe]);
+
+  // Also log when the tab is switched
+  useEffect(() => {
+    console.log('[ProjectionSection] Tab switched to:', activeTab);
+  }, [activeTab]);
 
   return (
     <div className="mb-6">

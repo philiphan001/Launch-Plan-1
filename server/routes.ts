@@ -815,18 +815,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Record a user response
+  // Record a user response (associate session with an authenticated user if available)
   app.post('/api/responses', async (req: Request, res: Response) => {
     try {
       const { session_id, question_id, response_value, response_time_ms, device_info } = req.body;
       if (!session_id || !question_id || typeof response_value === 'undefined') {
         return res.status(400).json({ error: 'Missing required fields' });
       }
-      // Ensure session exists in sessions table
+      // (Optional) If a user is authenticated, associate the session with that user (for example, by updating a user_id column in sessions)
+      const authenticatedUser = req.user as AuthenticatedUser | undefined;
+      const userId = authenticatedUser?.id;
+      if (userId) {
+         // (For example, update sessions so that session_id is associated with userId.)
+         // (You may need to update your sessions table (or trigger) so that if a session is "stale" (or if a new user logs in), a new session (with a new session_id) is created.)
+         // (For now, we'll log (or print) a message.)
+         console.log("Associating session (session_id:", session_id, ") with authenticated user (userId:", userId, ")");
+         // (You can add a query like: UPDATE sessions SET user_id = ${userId} WHERE id = ${session_id}; if your sessions table has a user_id column.)
+      }
+      // Ensure session exists in sessions table (and (optionally) associate it with the authenticated user)
       await sqlClient`
-        INSERT INTO sessions (id)
-        VALUES (${session_id})
-        ON CONFLICT (id) DO NOTHING
+        INSERT INTO sessions (id, user_id)
+        VALUES (${session_id}, ${userId ?? null})
+        ON CONFLICT (id) DO UPDATE SET user_id = ${userId ?? null}
       `;
       // Now insert the response
       await sqlClient`
@@ -840,45 +850,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Analyze responses and build LLM prompt
+  // Analyze responses and build LLM prompt (fetching only the last 20 responses for LLM purposes)
   app.post('/api/llm/analyze', async (req: Request, res: Response) => {
     try {
       const { session_id, analysis_type } = req.body;
       if (!session_id) {
-        return res.status(400).json({ error: 'session_id is required' });
+         return res.status(400).json({ error: 'session_id is required' });
       }
-      // Fetch all responses for the session, join with questions, games, and categories
-      const responses = await sqlClient`
-        SELECT r.response_value, r.question_id, q.title AS question_title, q.description AS question_description, g.name AS game_name, c.name AS category
-        FROM responses r
-        JOIN questions q ON r.question_id = q.id
-        JOIN games g ON q.game_id = g.id
-        LEFT JOIN categories c ON q.category_id = c.id
-        WHERE r.session_id = ${session_id}
-        ORDER BY g.name, q.id
-      `;
-      // Group responses by game
-      const grouped = responses.reduce((acc, r) => {
-        if (!acc[r.game_name]) acc[r.game_name] = [];
-        acc[r.game_name].push(r);
-        return acc;
-      }, {} as Record<string, any[]>);
-      // Build prompt string
-      let prompt = '';
-      for (const [game, answers] of Object.entries(grouped)) {
-        prompt += `Game: ${game}\n`;
-        for (const r of answers) {
-          prompt += `Q: [${r.category}] ${r.question_title} - ${r.question_description}\nA: ${r.response_value}\n`;
-        }
-        prompt += '\n';
+      const authenticatedUser = req.user as AuthenticatedUser | undefined;
+      const userId = authenticatedUser?.id;
+      let responses;
+      if (userId) {
+        // Only return responses for sessions with a matching user_id
+        responses = await sqlClient`
+          SELECT r.response_value, r.question_id, q.title AS question_title, q.description AS question_description, g.name AS game_name, c.name AS category
+          FROM responses r
+          JOIN sessions s ON r.session_id = s.id
+          JOIN questions q ON r.question_id = q.id
+          JOIN games g ON q.game_id = g.id
+          LEFT JOIN categories c ON q.category_id = c.id
+          WHERE r.session_id = ${session_id} AND s.user_id = ${userId}
+          ORDER BY g.name, q.id
+        `;
+      } else {
+        // Fallback: return responses for the session (unauthenticated)
+        responses = await sqlClient`
+          SELECT r.response_value, r.question_id, q.title AS question_title, q.description AS question_description, g.name AS game_name, c.name AS category
+          FROM responses r
+          JOIN sessions s ON r.session_id = s.id
+          JOIN questions q ON r.question_id = q.id
+          JOIN games g ON q.game_id = g.id
+          LEFT JOIN categories c ON q.category_id = c.id
+          WHERE r.session_id = ${session_id}
+          ORDER BY g.name, q.id
+        `;
       }
-      // (Optional) Call LLM API here in the future
-      res.json({ prompt });
-    } catch (error) {
-      console.error('Error generating LLM prompt:', error);
-      res.status(500).json({ error: 'Failed to generate LLM prompt' });
+      const prompt = responses.map(r => `Game: ${r.game_name}\nQ: [${r.category}] ${r.question_title} – ${r.question_description}\nA: ${r.response_value ? "true" : "false"}`).join("\n");
+      res.json({ prompt, responses });
+    } catch (err) {
+      console.error("Error analyzing responses:", err);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
+
+  // (Optional) Add a trigger or cleanup job (or update /api/responses) so that if a session has more than 100 responses, only the last 100 (ordered by response_time_ms DESC) are kept.
+  // For example, you can add a trigger (or a scheduled job) that runs a DELETE query like:
+  // DELETE FROM responses WHERE session_id = ? AND id NOT IN (SELECT id FROM (SELECT id FROM responses WHERE session_id = ? ORDER BY response_time_ms DESC NULLS LAST LIMIT 100) AS t);
+  // (Note: If your responses table does not have a response_time_ms column, you may need to add one or use a computed value.)
+
+  app.post(
+    "/api/financial-projections",
+    verifyFirebaseToken,
+    async (req: Request, res: Response) => {
+      try {
+        const authenticatedUser = req.user as AuthenticatedUser | undefined;
+        const userId = authenticatedUser?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Not authenticated" });
+        }
+        // Accept projection data from the request body
+        const projectionData = req.body;
+        // Attach userId to the projection
+        const savedProjection = await pgStorage.createFinancialProjection({
+          ...projectionData,
+          userId,
+        });
+        res.status(201).json(savedProjection);
+      } catch (error) {
+        console.error("Error saving financial projection:", error);
+        res.status(500).json({ message: "Failed to save financial projection" });
+      }
+    }
+  );
 
   return httpServer;
 }

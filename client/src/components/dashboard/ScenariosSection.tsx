@@ -143,9 +143,14 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
   };
 
   const handleEditScenario = (scenario: ScenarioData) => {
+    if (!scenario?.id || isNaN(Number(scenario.id))) {
+      console.error("Invalid scenario ID for edit:", scenario);
+      // Optionally show a toast or alert here
+      alert("Cannot edit a scenario with an invalid ID.");
+      return;
+    }
     const timestamp = Date.now();
     setLocation(`/projections?id=${scenario.id}&t=${timestamp}`);
-    
     console.log(`Navigating to edit projection ${scenario.id}`);
   };
 

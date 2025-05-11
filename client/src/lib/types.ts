@@ -170,7 +170,14 @@ export interface College {
 
 // Pathway related types
 export type PathChoice = "education" | "job" | "military" | "gap";
-export type EducationType = "4year" | "2year" | "vocational" | null;
+export type EducationType = 
+  | "4year_college" 
+  | "2year_college" 
+  | "vocational" 
+  | "masters" 
+  | "doctorate" 
+  | "professional" 
+  | null;
 export type JobType = "fulltime" | "parttime" | "apprenticeship" | null;
 export type MilitaryBranch = "army" | "navy" | "airforce" | "marines" | "coastguard" | "spaceguard" | null;
 export type GapYearActivity = "travel" | "volunteer" | "work" | "other" | null;
@@ -245,4 +252,11 @@ export interface LocationData {
 export interface UserLocations {
   homeLocation: LocationData;
   targetLocation: LocationData | null;  // null means same as homeLocation
+}
+
+export interface GrowthAssumptions {
+  incomeGrowthRate: number;        // Annual growth rate for income
+  costOfLivingGrowthRate: number;  // Annual growth rate for cost of living
+  educationCostGrowthRate: number; // Annual growth rate for education costs
+  inflationRate: number;          // General inflation rate
 }

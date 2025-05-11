@@ -1439,6 +1439,8 @@ export function createCombinedCashFlowChart(ctx: CanvasRenderingContext2D, data:
 }
 
 export function createMainProjectionChart(ctx: CanvasRenderingContext2D, data: ProjectionData, type: string = 'netWorth'): Chart {
+  // Debug log for chart creation
+  console.log('[createMainProjectionChart] type:', type, 'data:', data);
   // Apply the liability fix to ensure graduate school loans are properly counted
   data = fixLiabilityCalculation(data);
   

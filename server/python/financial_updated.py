@@ -3495,3 +3495,207 @@ class FinancialCalculator:
         # Just return the calculator object - don't run calculation here
         # The caller will run calculator.calculate_projection() as needed
         return calculator
+
+    def process_education_milestone(self, milestone: Dict[str, Any], year: int):
+        """Process education milestone with support for different education types and future value calculations."""
+        education_type = milestone.get('educationType', '4year_college')
+        education_years = self._get_education_years(education_type)
+        education_cost = milestone.get('educationCost', 0)
+        work_status = milestone.get('workStatus', 'no')
+        
+        # Get growth rates from assumptions or use defaults
+        growth_rates = milestone.get('growthAssumptions', {
+            'incomeGrowthRate': 0.03,  # 3% default income growth
+            'costOfLivingGrowthRate': 0.02,  # 2% default cost of living growth
+            'educationCostGrowthRate': 0.04,  # 4% default education cost growth
+            'inflationRate': 0.02  # 2% default inflation
+        })
+        
+        # Calculate future value of education cost
+        future_education_cost = self._calculate_future_value(
+            education_cost,
+            growth_rates['educationCostGrowthRate'],
+            year
+        )
+        
+        # Calculate education expenses with future value
+        annual_education_cost = future_education_cost / education_years
+        for i in range(year, year + education_years):
+            self.expenses_yearly[i] += annual_education_cost
+            
+            # Handle work status during education
+            if work_status == 'part-time':
+                part_time_income = milestone.get('partTimeIncome', 0)
+                # Apply future value to part-time income
+                future_part_time_income = self._calculate_future_value(
+                    part_time_income,
+                    growth_rates['incomeGrowthRate'],
+                    i
+                )
+                self.income_yearly[i] = future_part_time_income
+            elif work_status == 'no':
+                self.income_yearly[i] = 0
+        
+        # Calculate post-education income with future value
+        graduation_year = year + education_years
+        base_income = milestone.get('initialIncome', 0)
+        income_multiplier = self._get_education_income_multiplier(education_type)
+        
+        # Apply future value to post-education income
+        future_base_income = self._calculate_future_value(
+            base_income,
+            growth_rates['incomeGrowthRate'],
+            graduation_year
+        )
+        
+        # Apply education multiplier to future income
+        target_salary = int(future_base_income * income_multiplier)
+        
+        # Set post-education income with annual growth
+        for i in range(graduation_year, self.years_to_project + 1):
+            years_after_graduation = i - graduation_year
+            growth_factor = (1 + growth_rates['incomeGrowthRate']) ** years_after_graduation
+            self.income_yearly[i] = int(target_salary * growth_factor)
+
+    def _get_education_years(self, education_type: str) -> int:
+        """Get the number of years for different education types."""
+        education_years_map = {
+            '4year_college': 4,
+            '2year_college': 2,
+            'vocational': 2,
+            'masters': 2,
+            'doctorate': 4,
+            'professional': 3
+        }
+        return education_years_map.get(education_type, 4)
+
+    def _get_education_income_multiplier(self, education_type: str) -> float:
+        """Get the income multiplier for different education types."""
+        multiplier_map = {
+            '4year_college': 1.3,  # 30% increase
+            '2year_college': 1.15,  # 15% increase
+            'vocational': 1.2,     # 20% increase
+            'masters': 1.5,        # 50% increase
+            'doctorate': 1.8,      # 80% increase
+            'professional': 2.0    # 100% increase
+        }
+        return multiplier_map.get(education_type, 1.2)
+
+    def _calculate_future_value(self, present_value: float, growth_rate: float, years: int) -> float:
+        """Calculate future value using compound growth."""
+        return present_value * (1 + growth_rate) ** years
+
+    def compare_career_paths(self, paths: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Compare different career paths and their financial implications.
+        
+        Args:
+            paths: List of career path definitions to compare
+        
+        Returns:
+            Dictionary containing comparison results for each path
+        """
+        comparison_results = {}
+        
+        for path in paths:
+            # Create a copy of the calculator for this path
+            path_calculator = FinancialCalculator.from_input_data(self.input_data)
+            
+            # Set path-specific parameters
+            path_type = path.get('type')
+            start_year = path.get('startYear', 0)
+            duration = path.get('duration', 0)
+            work_status = path.get('workStatus', 'full-time')
+            
+            # Handle different path types
+            if path_type == 'immediate_work':
+                # Start with base salary immediately
+                initial_income = path.get('initialIncome', 0)
+                career_income = SalaryIncome(
+                    name="Career Income",
+                    annual_amount=initial_income,
+                    growth_rate=0.03,  # Standard career growth
+                    start_year=start_year
+                )
+                path_calculator.add_income(career_income)
+                
+            elif path_type in ['education', 'vocational']:
+                # Handle education costs and income during education
+                education_type = path.get('educationType')
+                education_cost = path.get('educationCost', 0)
+                
+                # Add education milestone
+                education_milestone = {
+                    'type': 'education',
+                    'educationType': education_type,
+                    'year': start_year,
+                    'duration': duration,
+                    'workStatus': work_status,
+                    'educationCost': education_cost,
+                    'targetOccupation': path.get('targetOccupation')
+                }
+                path_calculator.add_milestone(education_milestone)
+                
+                # Handle income during education based on work status
+                if work_status == 'part-time':
+                    part_time_income = path.get('partTimeIncome', 0)
+                    part_time = Income(
+                        name="Part-time Work",
+                        annual_amount=part_time_income,
+                        growth_rate=0.02,
+                        start_year=start_year,
+                        end_year=start_year + duration - 1
+                    )
+                    path_calculator.add_income(part_time)
+                
+                # Add post-education income
+                if path.get('targetOccupation'):
+                    occupation_data = self._get_occupation_data(path['targetOccupation'])
+                    if occupation_data:
+                        post_education_income = SalaryIncome(
+                            name=f"Post-{education_type} Career",
+                            annual_amount=occupation_data.get('salary', 0),
+                            growth_rate=0.04,  # Higher growth for career start
+                            start_year=start_year + duration
+                        )
+                        path_calculator.add_income(post_education_income)
+            
+            # Calculate projection for this path
+            path_results = path_calculator.calculate_projection()
+            
+            # Calculate key metrics
+            total_income = sum(path_results.get('income', []))
+            total_expenses = sum(path_results.get('expenses', []))
+            net_worth = path_results.get('netWorth', [])[-1] if path_results.get('netWorth') else 0
+            
+            # Calculate present value of future earnings
+            present_value = self._calculate_present_value_of_earnings(
+                path_results.get('income', []),
+                self.input_data.get('discountRate', 0.03)
+            )
+            
+            comparison_results[path_type] = {
+                'totalIncome': total_income,
+                'totalExpenses': total_expenses,
+                'netWorth': net_worth,
+                'presentValueOfEarnings': present_value,
+                'yearlyBreakdown': path_results
+            }
+        
+        return comparison_results
+
+    def _calculate_present_value_of_earnings(self, yearly_income: List[float], discount_rate: float) -> float:
+        """
+        Calculate the present value of future earnings.
+        
+        Args:
+            yearly_income: List of yearly income amounts
+            discount_rate: Rate to discount future earnings
+        
+        Returns:
+            Present value of all future earnings
+        """
+        present_value = 0
+        for year, income in enumerate(yearly_income):
+            present_value += income / ((1 + discount_rate) ** year)
+        return present_value

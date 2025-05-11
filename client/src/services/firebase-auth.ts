@@ -359,10 +359,23 @@ export const updateUserPassword = async (password: string): Promise<void> => {
 
 /**
  * Create a server session with Firebase ID token
+ * This function ensures both the Firebase token and server session are valid
  */
-const createSessionWithFirebaseToken = async (token: string): Promise<any> => {
+const createSessionWithFirebaseToken = async (token: string, forceRefresh: boolean = false): Promise<any> => {
   try {
-    console.log("[DEBUG] Creating server session with token");
+    console.log("[DEBUG] Creating/refreshing server session with token");
+    
+    // If forceRefresh is true, get a fresh token first
+    if (forceRefresh) {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) {
+        token = await user.getIdToken(true);
+        console.log("[DEBUG] Got fresh Firebase token");
+      }
+    }
+
+    // Create/refresh the server session
     const response = await fetch("/api/auth/session", {
       method: "POST",
       headers: {
@@ -375,18 +388,26 @@ const createSessionWithFirebaseToken = async (token: string): Promise<any> => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(
-        `[DEBUG] Failed to create server session: ${response.status}, Response: ${errorText}`
+        `[DEBUG] Failed to create/refresh server session: ${response.status}, Response: ${errorText}`
       );
-      throw new Error("Failed to create server session");
+      
+      // If we get a 401, try one more time with a forced token refresh
+      if (response.status === 401 && !forceRefresh) {
+        console.log("[DEBUG] Session expired, trying with fresh token");
+        return createSessionWithFirebaseToken(token, true);
+      }
+      
+      throw new Error("Failed to create/refresh server session");
     }
 
     const data = await response.json();
-    console.log("[DEBUG] Server session created successfully:", data);
+    console.log("[DEBUG] Server session created/refreshed successfully:", data);
 
     // Save the authenticated user data and token for persistence
     if (data && data.user) {
       localStorage.setItem("currentUser", JSON.stringify(data.user));
       localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("authToken", token);
     }
 
     return data;
@@ -454,4 +475,33 @@ export const ensureServerSession = async () => {
     },
     credentials: "include",
   });
+};
+
+/**
+ * Ensure server session is valid before making authenticated requests
+ * This should be called before any authenticated API calls
+ */
+export const ensureValidServerSession = async (): Promise<boolean> => {
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      console.warn("[DEBUG] No user logged in to ensure server session");
+      return false;
+    }
+
+    // Get current token
+    const token = await user.getIdToken(false);
+    if (!token) {
+      console.warn("[DEBUG] No token available");
+      return false;
+    }
+
+    // Try to refresh session
+    await createSessionWithFirebaseToken(token, false);
+    return true;
+  } catch (error) {
+    console.error("[DEBUG] Failed to ensure valid server session:", error);
+    return false;
+  }
 };

@@ -15,6 +15,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { EducationType } from "../client/src/lib/types";
 
 // Users table
 export const users = pgTable("users", {
@@ -297,7 +298,7 @@ export const milestones = pgTable("milestones", {
   carDownPayment: integer("car_down_payment"),
   carMonthlyPayment: integer("car_monthly_payment"),
   educationCost: integer("education_cost"),
-  educationType: text("education_type"),
+  educationType: text("education_type").$type<EducationType | null>(),
   educationYears: integer("education_years"),
   educationAnnualCost: integer("education_annual_cost"),
   educationAnnualLoan: integer("education_annual_loan"),
@@ -313,6 +314,16 @@ export const milestones = pgTable("milestones", {
   completed: boolean("completed").default(false),
   details: jsonb("details"),
   createdAt: timestamp("created_at").defaultNow(),
+  incomeGrowthRate: real("income_growth_rate").default(0.03),
+  costOfLivingGrowthRate: real("cost_of_living_growth_rate").default(0.02),
+  educationCostGrowthRate: real("education_cost_growth_rate").default(0.04),
+  inflationRate: real("inflation_rate").default(0.02),
+  educationPathwayType: text("education_pathway_type"),
+  educationScholarships: integer("education_scholarships").default(0),
+  educationGrants: integer("education_grants").default(0),
+  educationSavingsUsed: integer("education_savings_used").default(0),
+  educationLoanInterestRate: real("education_loan_interest_rate").default(0.05),
+  educationLoanTermYears: integer("education_loan_term_years").default(10),
 });
 
 export const insertMilestoneSchema = createInsertSchema(milestones).pick({
@@ -349,6 +360,16 @@ export const insertMilestoneSchema = createInsertSchema(milestones).pick({
   active: true,
   completed: true,
   details: true,
+  incomeGrowthRate: true,
+  costOfLivingGrowthRate: true,
+  educationCostGrowthRate: true,
+  inflationRate: true,
+  educationPathwayType: true,
+  educationScholarships: true,
+  educationGrants: true,
+  educationSavingsUsed: true,
+  educationLoanInterestRate: true,
+  educationLoanTermYears: true,
 });
 
 // Export types
@@ -842,6 +863,58 @@ export const defaultAssumptions: Omit<InsertAssumption, "userId">[] = [
     maxValue: 30,
     stepValue: 1,
     unit: "years",
+    isEnabled: true,
+  },
+  {
+    category: "growth",
+    key: "income-growth-rate",
+    label: "Income Growth Rate",
+    description: "Annual growth rate for income over time",
+    value: 3.0,
+    defaultValue: 3.0,
+    minValue: 0,
+    maxValue: 10,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true,
+  },
+  {
+    category: "growth",
+    key: "cost-of-living-growth",
+    label: "Cost of Living Growth Rate",
+    description: "Annual growth rate for cost of living expenses",
+    value: 2.0,
+    defaultValue: 2.0,
+    minValue: 0,
+    maxValue: 8,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true,
+  },
+  {
+    category: "growth",
+    key: "education-cost-growth",
+    label: "Education Cost Growth Rate",
+    description: "Annual growth rate for education costs",
+    value: 4.0,
+    defaultValue: 4.0,
+    minValue: 0,
+    maxValue: 10,
+    stepValue: 0.25,
+    unit: "%",
+    isEnabled: true,
+  },
+  {
+    category: "growth",
+    key: "inflation-rate",
+    label: "General Inflation Rate",
+    description: "Annual general inflation rate",
+    value: 2.0,
+    defaultValue: 2.0,
+    minValue: 0,
+    maxValue: 8,
+    stepValue: 0.25,
+    unit: "%",
     isEnabled: true,
   },
 ];

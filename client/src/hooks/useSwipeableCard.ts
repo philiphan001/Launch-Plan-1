@@ -120,18 +120,54 @@ export function useSwipeableCard({ scenarios, resetKey = 0, onComplete }: UseSwi
   };
   
   const handleSkip = () => {
-    // Complete the activity early with current results
-    // Add the currently visible card as neutral (false) to ensure we don't skip it entirely
     if (currentIndex < scenarios.length) {
-      const updatedResults = {
-        ...results,
-        [scenarios[currentIndex].id]: false
-      };
-      if (onComplete) {
-        onComplete(updatedResults);
-      }
-    } else if (onComplete) {
-      onComplete(results);
+      const scenario = scenarios[currentIndex];
+      // Post skipped response to backend
+      const session_id = window.localStorage.getItem('swipe_session_id') || crypto.randomUUID();
+      window.localStorage.setItem('swipe_session_id', session_id);
+      const question_id = scenario.id;
+      const response_value = false;
+      const device_info = window.navigator.userAgent;
+      fetch('/api/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id,
+          question_id,
+          response_value,
+          response_time_ms: null,
+          device_info,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          console.log('Skipped response saved:', data);
+        })
+        .catch(err => {
+          console.error('Failed to save skipped response:', err);
+        });
+      // Animate card off-screen (to the left)
+      cardControls.start({
+        x: -500,
+        rotate: -30,
+        opacity: 0,
+        transition: { duration: 0.5 }
+      }).then(() => {
+        const updatedResults = {
+          ...results,
+          [scenario.id]: false
+        };
+        setResults(updatedResults);
+        if (currentIndex < scenarios.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+          setDragOffset(0);
+          cardControls.set({ x: 0, rotate: 0, opacity: 1 });
+        } else {
+          if (onComplete) {
+            onComplete(updatedResults);
+          }
+        }
+      });
     }
   };
   
