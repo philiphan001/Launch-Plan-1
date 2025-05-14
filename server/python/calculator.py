@@ -58,123 +58,97 @@ def create_baseline_projection(input_data: Dict[str, Any]) -> Dict[str, Any]:
        (housing_factor, healthcare_factor, transportation_factor, food_factor)
     2. Simple costOfLivingFactor (usually in the range of 0.7-1.3) applied to all income/expenses
     
-    With the enhanced centralized location handling, the backend API automatically fetches 
-    location data based on zip code, so the frontend only needs to provide the zip code.
-    
-    This factor gets incorporated by the FinancialCalculator.from_input_data() method
-    during the creation of income and expense objects.
-    
-    Args:
-        input_data: Dictionary containing financial input parameters
-                   including locationData or costOfLivingFactor for location adjustments
-        
-    Returns:
-        Dictionary with projection results including location information
+    With the enhanced central calculator model, all projections use the same core engine.
     """
+    # Handle age adjustment based on education type
+    original_age = input_data.get('startAge', 22)
+    age_adjustment_years = 0
+    education_type = "none"
+    
+    # If college data is provided, determine the education type
+    if 'collegeData' in input_data:
+        college_data = input_data['collegeData']
+        college_type = college_data.get('type', '').lower() if college_data.get('type') else ''
+        
+        # Debug logging
+        print(f"DEBUG: College data received: {college_data}")
+        print(f"DEBUG: College type: '{college_type}'")
+        
+        # Improved detection of 2-year colleges - make patterns case-insensitive
+        if any(pattern in college_type for pattern in ['2-year', '2year', '2 year', 
+                                                      'two-year', 'two year', 
+                                                      'associate', 'community college']):
+            education_type = "2year_college"
+            age_adjustment_years = 2
+            print(f"DEBUG: Detected as 2-year college, adding {age_adjustment_years} years")
+        # Improved detection of 4-year colleges - make patterns case-insensitive
+        elif any(pattern in college_type for pattern in ['4-year', '4year', '4 year',
+                                                       'four-year', 'four year', 
+                                                       'bachelor', 'private research',
+                                                       'public research', 'liberal arts',
+                                                       'private']):
+            education_type = "4year_college"
+            age_adjustment_years = 4
+            print(f"DEBUG: Detected as 4-year college, adding {age_adjustment_years} years")
+        # Improved detection of graduate schools - make patterns case-insensitive
+        elif any(pattern in college_type for pattern in ['graduate', 'professional',
+                                                       'masters', 'phd', 'doctorate']):
+            education_type = "graduate_school"
+            age_adjustment_years = 6
+            print(f"DEBUG: Detected as graduate school, adding {age_adjustment_years} years")
+        else:
+            print(f"DEBUG: College type not recognized: '{college_type}'")
+    # If no college data but educationType is provided
+    elif 'educationType' in input_data:
+        education_type = input_data['educationType']
+        print(f"DEBUG: Using provided education type: '{education_type}'")
+        if education_type == "2year_college":
+            age_adjustment_years = 2
+            print(f"DEBUG: Adding {age_adjustment_years} years for 2-year college")
+        elif education_type == "4year_college":
+            age_adjustment_years = 4
+            print(f"DEBUG: Adding {age_adjustment_years} years for 4-year college")
+        elif education_type == "graduate_school":
+            age_adjustment_years = 6
+            print(f"DEBUG: Adding {age_adjustment_years} years for graduate school")
+    
+    # Apply the age adjustment
+    adjusted_age = original_age + age_adjustment_years
+    
+    # Use the adjusted age for calculations
+    input_data['startAge'] = adjusted_age
+    
+    # Create a financial calculator from the input data
     try:
-        # Check for education milestones with missing fields
-        for i, milestone in enumerate(input_data.get('milestones', [])):
-            if milestone.get('type') == 'education':
-                # Log milestone data for debugging
-                with open('healthcare_debug.log', 'a') as f:
-                    f.write(f"\n==== Preprocessing Education Milestone {i} ====\n")
-                    f.write(f"Milestone data: {milestone}\n")
-                
-                # Log the workStatus value and type for debugging
-                with open('healthcare_debug.log', 'a') as f:
-                    work_status = milestone.get('workStatus')
-                    f.write(f"Original workStatus: {work_status} (type: {type(work_status).__name__})\n")
-                
-                # Enhanced logging to diagnose workStatus issues
-                with open('healthcare_debug.log', 'a') as f:
-                    f.write(f"Debug workStatus issue: Original value={work_status}, Type={type(work_status).__name__}, isNone={work_status is None}, isEmpty={work_status == ''}, isString={isinstance(work_status, str)}\n")
-                    
-                    # Debug string equality comparison
-                    if isinstance(work_status, str):
-                        f.write(f"String comparison diagnostics: equals 'no'={work_status == 'no'}, equals 'full-time'={work_status == 'full-time'}, length={len(work_status)}\n")
-                        # Check for hidden characters or encoding issues
-                        f.write(f"Character codes: {[ord(c) for c in work_status]}\n")
-                
-                # Check for required fields and set defaults if missing
-                # But carefully preserve 'no', 'false', and other valid values
-                if 'workStatus' not in milestone:
-                    # Only set default if field is completely missing
-                    milestone['workStatus'] = 'no'  # Changed default to 'no' instead of 'full-time'
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Added default workStatus (missing): 'no'\n")
-                # If it's None, set a default value
-                elif milestone['workStatus'] is None:
-                    milestone['workStatus'] = 'no'  # Changed default to 'no' instead of 'full-time'
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Added default workStatus (None): 'no'\n")
-                # If it's an empty string, also set a default
-                elif milestone['workStatus'] == '':
-                    milestone['workStatus'] = 'no'  # Empty string is treated as "no"
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Empty workStatus converted to: 'no'\n")
-                # Debug: Force string conversion for non-None values to ensure consistent type
-                elif milestone['workStatus'] is not None:
-                    # If workStatus is something else like boolean or number, convert to string
-                    milestone['workStatus'] = str(milestone['workStatus']).lower()
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Force converted workStatus to string: {milestone['workStatus']}\n")
-                
-                if 'partTimeIncome' not in milestone or milestone['partTimeIncome'] is None:
-                    milestone['partTimeIncome'] = 20000
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Added default partTimeIncome: 20000\n")
-                
-                if 'returnToSameProfession' not in milestone:
-                    milestone['returnToSameProfession'] = False
-                    with open('healthcare_debug.log', 'a') as f:
-                        f.write(f"Added default returnToSameProfession: False\n")
+        fc = FinancialCalculator.from_input_data(input_data)
         
-        # Create the calculator instance and store input_data as an attribute
-        calculator = FinancialCalculator.from_input_data(input_data)
+        # Run the projection for the specified number of years
+        years_to_project = input_data.get('yearsToProject', 10)
+        result_data = fc.calculate_projection()
         
-        # Ensure careersData is available to the calculator for milestone processing
-        if 'careersData' in input_data and not hasattr(calculator, 'careersData'):
-            calculator.careersData = input_data.get('careersData', [])
-            with open('healthcare_debug.log', 'a') as f:
-                f.write(f"\nEnsured careersData is available to calculator: {len(calculator.careersData)} careers\n")
-                
-        # Calculate the projection
-        result = calculator.calculate_projection()
+        # Add age adjustment information to the result
+        if age_adjustment_years > 0:
+            result_data['age_adjustment'] = {
+                'original_age': original_age,
+                'adjusted_age': adjusted_age,
+                'years_added': age_adjustment_years,
+                'education_type': education_type
+            }
         
+        return result_data
     except Exception as e:
-        # Log detailed error information
-        import traceback
-        with open('healthcare_debug.log', 'a') as f:
-            f.write(f"\n==== CRITICAL ERROR IN BASELINE PROJECTION ====\n")
-            f.write(f"Error: {str(e)}\n")
-            f.write(f"Traceback: {traceback.format_exc()}\n")
-            f.write(f"Input data: {str(input_data)[:500]}...\n")  # Log truncated input data
-        
-        # Re-raise the exception to be caught by the caller
-        raise
-    
-    # Add location information to the result
-    if 'locationData' in input_data:
-        location_data = input_data['locationData']
-        result['location'] = {
-            'city': location_data.get('city', 'Unknown'),
-            'state': location_data.get('state', 'Unknown'),
-            'zipCode': location_data.get('zip_code', input_data.get('zipCode', 'Unknown')),
-            'costOfLivingIndex': location_data.get('cost_of_living_index', 100),
-            'incomeAdjustmentFactor': location_data.get('income_adjustment_factor', 1.0),
-            'housingFactor': location_data.get('housing_factor', 1.0),
-            'healthcareFactor': location_data.get('healthcare_factor', 1.0),
-            'transportationFactor': location_data.get('transportation_factor', 1.0),
-            'foodFactor': location_data.get('food_factor', 1.0)
+        # Log the error
+        print(f"ERROR in create_baseline_projection: {str(e)}")
+        # Return a simple result that won't break the frontend
+        return {
+            "error": f"Error calculating projection: {str(e)}",
+            "netWorth": [0] * (years_to_project + 1),
+            "income": [0] * (years_to_project + 1),
+            "expenses": [0] * (years_to_project + 1),
+            "assets": [0] * (years_to_project + 1),
+            "liabilities": [0] * (years_to_project + 1),
+            "ages": list(range(original_age, original_age + years_to_project + 1))
         }
-    elif 'costOfLivingFactor' in input_data or 'zipCode' in input_data:
-        # If we have only the simple factor or just a zip code
-        result['location'] = {
-            'zipCode': input_data.get('zipCode', 'Unknown'),
-            'incomeAdjustmentFactor': input_data.get('costOfLivingFactor', 1.0)
-        }
-    
-    return result
 
 
 def create_education_projection(input_data: Dict[str, Any], college_id: str, occupation_id: str) -> Dict[str, Any]:
