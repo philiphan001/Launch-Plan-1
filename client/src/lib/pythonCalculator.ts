@@ -14,6 +14,9 @@ export interface CalculatorInputData {
   personalLoanInterestRate?: number; // Annual interest rate for personal loans (decimal format)
   retirementContributionRate?: number; // Percentage of income to contribute to retirement accounts (decimal format)
   retirementGrowthRate?: number; // Annual growth rate for retirement accounts (decimal format)
+  collegeData?: any; // College data for age adjustment
+  educationType?: string; // Education type (4year_college, 2year_college, etc.) if no college is selected
+  careerData?: any; // Career data for future income projections
   careersData?: Array<{
     id: number;
     title: string;
@@ -113,6 +116,14 @@ export interface FinancialProjectionData {
   effectiveTaxRate?: number[];
   marginalTaxRate?: number[];
   
+  // Age adjustment information
+  age_adjustment?: {
+    original_age: number;
+    adjusted_age: number;
+    years_added: number;
+    education_type: string;
+  };
+  
   // Location information
   location?: {
     city?: string;
@@ -171,7 +182,9 @@ export const generatePythonCalculatorInput = (
   personalLoanTermYears: number = 5,
   personalLoanInterestRate: number = 0.08,
   retirementContributionRate: number = 0.05,
-  retirementGrowthRate: number = 0.07
+  retirementGrowthRate: number = 0.07,
+  collegeData: any = null,
+  educationType: string = "none"
 ): CalculatorInputData => {
   // Sort milestones by yearsAway 
   const sortedMilestones = milestones ? [...milestones].sort((a, b) => {
@@ -369,6 +382,11 @@ export const generatePythonCalculatorInput = (
     personalLoanInterestRate: personalLoanInterestRate,
     retirementContributionRate: retirementContributionRate,
     retirementGrowthRate: retirementGrowthRate,
+    
+    // Include college data for age adjustment if available
+    ...(collegeData ? { collegeData } : {}),
+    // Include education type if no college data is available
+    ...((!collegeData && educationType !== "none") ? { educationType } : {}),
     
     // Assets
     assets: [
@@ -575,7 +593,10 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       ...(result.militaryPath && { militaryPath: result.militaryPath }),
       
       // Add milestone data if available
-      milestones: result.milestones || []
+      milestones: result.milestones || [],
+      
+      // Add age adjustment information if available
+      ...(result.age_adjustment && { age_adjustment: result.age_adjustment })
     };
     
     return projectionData;
@@ -637,7 +658,15 @@ export const calculateFinancialProjection = async (inputData: CalculatorInputDat
       effectiveTaxRate: [0.22],
       marginalTaxRate: [0.24],
       // Combined taxes
-      taxes: [calculatePercentage(baseExpense, 0.22)]
+      taxes: [calculatePercentage(baseExpense, 0.22)],
+      
+      // Age adjustment information
+      age_adjustment: {
+        original_age: 0,
+        adjusted_age: 0,
+        years_added: 0,
+        education_type: ""
+      }
     };
   }
 };

@@ -1,0 +1,832 @@
+id,title,description,salary,growthRate,education,category
+2402,Public Relations Managers,Public Relations Managers in the Other field,134760,stable,Bachelor's,Other
+2403,Fundraising Managers,Fundraising Managers in the Other field,119200,slow,Bachelor's,Other
+2404,Administrative Services Managers,Administrative Services Managers in the Other field,106470,stable,Bachelor's,Other
+2405,Facilities Managers,Facilities Managers in the Finance field,102340,stable,Bachelor's,Finance
+2407,Financial Managers,Financial Managers in the Other field,156100,fast,Bachelor's,Other
+2408,Industrial Production Managers,Industrial Production Managers in the Other field,116970,stable,Bachelor's,Other
+2409,Purchasing Managers,Purchasing Managers in the Other field,136380,stable,Bachelor's,Other
+2411,Compensation and Benefits Managers,Compensation and Benefits Managers in the Management field,136380,slow,Master's,Management
+2412,Human Resources Managers,Human Resources Managers in the Other field,136350,stable,Bachelor's,Other
+2413,Training and Development Managers,Training and Development Managers in the Other field,125040,slow,Bachelor's,Other
+2415,Construction Managers,Construction Managers in the Other field,104900,stable,Bachelor's,Other
+2416,"Education and Childcare Administrators, Preschool and Daycare","Education and Childcare Administrators, Preschool and Daycare in the Other field",54290,stable,Bachelor's,Other
+2417,"Education Administrators, Kindergarten through Secondary","Education Administrators, Kindergarten through Secondary in the Other field",103460,stable,Bachelor's,Other
+2418,"Education Administrators, Postsecondary","Education Administrators, Postsecondary in the Other field",102610,stable,Bachelor's,Other
+2419,"Education Administrators, All Other","Education Administrators, All Other in the Other field",88460,stable,Bachelor's,Other
+2420,Architectural and Engineering Managers,Architectural and Engineering Managers in the Other field,165370,stable,Bachelor's,Other
+2421,Food Service Managers,Food Service Managers in the Other field,63060,stable,Bachelor's,Other
+2422,Gambling Managers,Gambling Managers in the Other field,82380,slow,Bachelor's,Other
+2424,Lodging Managers,Lodging Managers in the Other field,65360,slow,Bachelor's,Other
+2425,Medical and Health Services Managers,Medical and Health Services Managers in the Management field,110680,fast,Master's,Management
+2426,Natural Sciences Managers,Natural Sciences Managers in the Other field,157740,stable,Bachelor's,Other
+2427,Postmasters and Mail Superintendents,Postmasters and Mail Superintendents in the Other field,88670,slow,Bachelor's,Other
+2429,Social and Community Service Managers,Social and Community Service Managers in the Other field,77030,stable,Bachelor's,Other
+2430,Emergency Management Directors,Emergency Management Directors in the Other field,83960,slow,Bachelor's,Other
+2432,"Personal Service Managers, All Other","Personal Service Managers, All Other in the Other field",57570,slow,Bachelor's,Other
+2433,"Managers, All Other","Managers, All Other in the Other field",133560,fast,Bachelor's,Other
+2435,Buyers and Purchasing Agents,Buyers and Purchasing Agents in the Finance field,71950,stable,Bachelor's,Finance
+2436,"Claims Adjusters, Examiners, and Investigators","Claims Adjusters, Examiners, and Investigators in the Finance field",75050,stable,Bachelor's,Finance
+2437,"Insurance Appraisers, Auto Damage","Insurance Appraisers, Auto Damage in the Finance field",74520,slow,Bachelor's,Finance
+2400,Marketing Managers,Marketing Managers in the Other field,157620,stable,Bachelor's,Other
+2401,Sales Managers,Sales Managers in the Other field,135160,fast,Bachelor's,Other
+2431,Funeral Home Managers,Funeral Home Managers in the Other field,75660,slow,Bachelor's,Other
+2439,Cost Estimators,Cost Estimators in the Finance field,74740,stable,Bachelor's,Finance
+2441,Farm Labor Contractors,Farm Labor Contractors in the Finance field,45730,slow,Bachelor's,Finance
+2442,Labor Relations Specialists,Labor Relations Specialists in the Finance field,89980,stable,Bachelor's,Finance
+2398,Legislators,Legislators in the Management field,47290,slow,Master's,Management
+2452,Accountants and Auditors,Accountants and Auditors in the Finance field,79880,fast,Bachelor's,Finance
+2453,Property Appraisers and Assessors,Property Appraisers and Assessors in the Finance field,61630,stable,Bachelor's,Finance
+2454,Budget Analysts,Budget Analysts in the Finance field,84940,slow,Bachelor's,Finance
+2462,Loan Officers,Loan Officers in the Finance field,69990,stable,Bachelor's,Finance
+2468,Computer and Information Research Scientists,Computer and Information Research Scientists in the Technology field,145080,slow,Bachelor's,Technology
+2473,Database Architects,Database Architects in the Technology field,134700,stable,Bachelor's,Technology
+2475,Computer Programmers,Computer Programmers in the Technology field,99700,stable,Bachelor's,Technology
+2480,"Computer Occupations, All Other","Computer Occupations, All Other in the Technology field",104920,stable,Bachelor's,Technology
+2482,Mathematicians,Mathematicians in the Technology field,116440,slow,Bachelor's,Technology
+2443,Logisticians,Logisticians in the Finance field,79400,stable,Bachelor's,Finance
+2445,Management Analysts,Management Analysts in the Finance field,99410,fast,Bachelor's,Finance
+2447,Fundraisers,Fundraisers in the Finance field,64160,stable,Bachelor's,Finance
+2449,Training and Development Specialists,Training and Development Specialists in the Finance field,64340,stable,Bachelor's,Finance
+2451,"Business Operations Specialists, All Other","Business Operations Specialists, All Other in the Finance field",79590,fast,Bachelor's,Finance
+2455,Credit Analysts,Credit Analysts in the Finance field,79420,stable,Bachelor's,Finance
+2457,Personal Financial Advisors,Personal Financial Advisors in the Finance field,99580,stable,Bachelor's,Finance
+2458,Insurance Underwriters,Insurance Underwriters in the Finance field,77860,stable,Bachelor's,Finance
+2459,Financial Risk Specialists,Financial Risk Specialists in the Finance field,106090,stable,Bachelor's,Finance
+2460,Financial Examiners,Financial Examiners in the Finance field,84300,stable,Bachelor's,Finance
+2461,Credit Counselors,Credit Counselors in the Finance field,48570,slow,Bachelor's,Finance
+2464,Tax Preparers,Tax Preparers in the Finance field,49010,stable,Bachelor's,Finance
+2465,"Financial Specialists, All Other","Financial Specialists, All Other in the Finance field",78310,stable,Bachelor's,Finance
+2466,Computer Systems Analysts,Computer Systems Analysts in the Technology field,103800,stable,Bachelor's,Technology
+2467,Information Security Analysts,Information Security Analysts in the Technology field,120360,stable,Bachelor's,Technology
+2469,Computer Network Support Specialists,Computer Network Support Specialists in the Technology field,71530,stable,Bachelor's,Technology
+2470,Computer User Support Specialists,Computer User Support Specialists in the Technology field,59240,fast,Bachelor's,Technology
+2471,Computer Network Architects,Computer Network Architects in the Technology field,129840,stable,Bachelor's,Technology
+2476,Software Developers,Software Developers in the Technology field,132270,fast,Bachelor's,Technology
+2477,Software Quality Assurance Analysts and Testers,Software Quality Assurance Analysts and Testers in the Technology field,101800,stable,Bachelor's,Technology
+2478,Web Developers,Web Developers in the Technology field,84960,stable,Bachelor's,Technology
+2481,Actuaries,Actuaries in the Technology field,120000,slow,Bachelor's,Technology
+2483,Operations Research Analysts,Operations Research Analysts in the Technology field,83640,stable,Bachelor's,Technology
+2484,Statisticians,Statisticians in the Technology field,104110,slow,Bachelor's,Technology
+2487,"Architects, Except Landscape and Naval","Architects, Except Landscape and Naval in the Other field",93310,stable,Bachelor's,Other
+2489,Cartographers and Photogrammetrists,Cartographers and Photogrammetrists in the Other field,76210,slow,Bachelor's,Other
+2490,Surveyors,Surveyors in the Other field,68540,stable,Bachelor's,Other
+2492,Agricultural Engineers,Agricultural Engineers in the Other field,88750,slow,Bachelor's,Other
+2493,Bioengineers and Biomedical Engineers,Bioengineers and Biomedical Engineers in the Other field,100730,slow,Bachelor's,Other
+2494,Chemical Engineers,Chemical Engineers in the Other field,112100,slow,Bachelor's,Other
+2502,Marine Engineers and Naval Architects,Marine Engineers and Naval Architects in the Other field,100270,slow,Bachelor's,Other
+2503,Materials Engineers,Materials Engineers in the Other field,104100,slow,Bachelor's,Other
+2504,Mechanical Engineers,Mechanical Engineers in the Other field,99510,stable,Bachelor's,Other
+2506,Nuclear Engineers,Nuclear Engineers in the Other field,125460,slow,Bachelor's,Other
+2507,Petroleum Engineers,Petroleum Engineers in the Other field,135690,slow,Bachelor's,Other
+2508,"Engineers, All Other","Engineers, All Other in the Other field",111970,stable,Bachelor's,Other
+2509,Architectural and Civil Drafters,Architectural and Civil Drafters in the Other field,61820,stable,Bachelor's,Other
+2510,Electrical and Electronics Drafters,Electrical and Electronics Drafters in the Other field,69260,slow,Bachelor's,Other
+2511,Mechanical Drafters,Mechanical Drafters in the Other field,64060,slow,Bachelor's,Other
+2518,Industrial Engineering Technologists and Technicians,Industrial Engineering Technologists and Technicians in the Other field,62610,stable,Bachelor's,Other
+2519,Mechanical Engineering Technologists and Technicians,Mechanical Engineering Technologists and Technicians in the Other field,64020,slow,Bachelor's,Other
+2520,Calibration Technologists and Technicians,Calibration Technologists and Technicians in the Other field,62790,slow,Bachelor's,Other
+2521,"Engineering Technologists and Technicians, Except Drafters, All Other","Engineering Technologists and Technicians, Except Drafters, All Other in the Other field",73500,stable,Bachelor's,Other
+2522,Surveying and Mapping Technicians,Surveying and Mapping Technicians in the Other field,48940,stable,Bachelor's,Other
+2523,Animal Scientists,Animal Scientists in the Other field,70140,slow,Bachelor's,Other
+2524,Food Scientists and Technologists,Food Scientists and Technologists in the Other field,82090,slow,Bachelor's,Other
+2525,Soil and Plant Scientists,Soil and Plant Scientists in the Other field,68240,slow,Bachelor's,Other
+2526,Biochemists and Biophysicists,Biochemists and Biophysicists in the Other field,107460,slow,Bachelor's,Other
+2528,Zoologists and Wildlife Biologists,Zoologists and Wildlife Biologists in the Other field,70600,slow,Bachelor's,Other
+2501,Industrial Engineers,Industrial Engineers in the Other field,99380,stable,Bachelor's,Other
+2512,"Drafters, All Other","Drafters, All Other in the Other field",59260,slow,Bachelor's,Other
+2514,Civil Engineering Technologists and Technicians,Civil Engineering Technologists and Technicians in the Other field,60700,stable,Bachelor's,Other
+2516,Electro-Mechanical and Mechatronics Technologists and Technicians,Electro-Mechanical and Mechatronics Technologists and Technicians in the Other field,65080,slow,Bachelor's,Other
+2517,Environmental Engineering Technologists and Technicians,Environmental Engineering Technologists and Technicians in the Other field,54000,slow,Bachelor's,Other
+2527,Microbiologists,Microbiologists in the Other field,85470,slow,Bachelor's,Other
+2529,"Biological Scientists, All Other","Biological Scientists, All Other in the Other field",91100,stable,Bachelor's,Other
+2531,Foresters,Foresters in the Other field,67330,slow,Bachelor's,Other
+2532,Epidemiologists,Epidemiologists in the Other field,81390,slow,Bachelor's,Other
+2534,"Life Scientists, All Other","Life Scientists, All Other in the Other field",86950,slow,Bachelor's,Other
+2535,Astronomers,Astronomers in the Other field,127930,slow,Bachelor's,Other
+2536,Physicists,Physicists in the Other field,155680,slow,Bachelor's,Other
+2537,Atmospheric and Space Scientists,Atmospheric and Space Scientists in the Other field,92860,slow,Bachelor's,Other
+2538,Chemists,Chemists in the Other field,84680,stable,Bachelor's,Other
+2539,Materials Scientists,Materials Scientists in the Other field,106160,slow,Bachelor's,Other
+2541,"Geoscientists, Except Hydrologists and Geographers","Geoscientists, Except Hydrologists and Geographers in the Other field",92580,slow,Bachelor's,Other
+2497,Electrical Engineers,Electrical Engineers in the Other field,106950,stable,Bachelor's,Other
+2499,Environmental Engineers,Environmental Engineers in the Other field,100090,slow,Bachelor's,Other
+2563,Hydrologic Technicians,Hydrologic Technicians in the Other field,55890,slow,Bachelor's,Other
+2564,Nuclear Technicians,Nuclear Technicians in the Other field,101740,slow,Bachelor's,Other
+2565,Social Science Research Assistants,Social Science Research Assistants in the Other field,56400,slow,Bachelor's,Other
+2567,Forensic Science Technicians,Forensic Science Technicians in the Other field,64940,slow,Bachelor's,Other
+2568,"Life, Physical, and Social Science Technicians, All Other","Life, Physical, and Social Science Technicians, All Other in the Other field",58350,stable,Bachelor's,Other
+2569,Occupational Health and Safety Specialists,Occupational Health and Safety Specialists in the Other field,81140,stable,Bachelor's,Other
+2570,Occupational Health and Safety Technicians,Occupational Health and Safety Technicians in the Other field,57920,slow,Bachelor's,Other
+2571,"Educational, Guidance, and Career Counselors and Advisors","Educational, Guidance, and Career Counselors and Advisors in the Other field",61710,stable,Bachelor's,Other
+2572,Marriage and Family Therapists,Marriage and Family Therapists in the Other field,58510,stable,Bachelor's,Other
+2573,Rehabilitation Counselors,Rehabilitation Counselors in the Other field,44040,stable,Bachelor's,Other
+2587,"Religious Workers, All Other","Religious Workers, All Other in the Other field",37960,slow,Bachelor's,Other
+2589,Judicial Law Clerks,Judicial Law Clerks in the Other field,57490,slow,Bachelor's,Other
+2544,Economists,Economists in the Other field,115730,slow,Bachelor's,Other
+2545,Survey Researchers,Survey Researchers in the Other field,60960,slow,Bachelor's,Other
+2546,Industrial-Organizational Psychologists,Industrial-Organizational Psychologists in the Other field,147420,slow,Bachelor's,Other
+2547,Clinical and Counseling Psychologists,Clinical and Counseling Psychologists in the Other field,96100,stable,Bachelor's,Other
+2548,School Psychologists,School Psychologists in the Other field,84940,stable,Bachelor's,Other
+2549,"Psychologists, All Other","Psychologists, All Other in the Other field",117750,slow,Bachelor's,Other
+2550,Sociologists,Sociologists in the Other field,101770,slow,Bachelor's,Other
+2551,Urban and Regional Planners,Urban and Regional Planners in the Other field,81800,slow,Bachelor's,Other
+2552,Anthropologists and Archeologists,Anthropologists and Archeologists in the Other field,63800,slow,Bachelor's,Other
+2553,Geographers,Geographers in the Other field,90880,slow,Bachelor's,Other
+2554,Historians,Historians in the Other field,72890,slow,Bachelor's,Other
+2558,Food Science Technicians,Food Science Technicians in the Other field,49090,slow,Bachelor's,Other
+2559,Biological Technicians,Biological Technicians in the Other field,51430,stable,Bachelor's,Other
+2562,"Geological Technicians, Except Hydrologic Technicians","Geological Technicians, Except Hydrologic Technicians in the Other field",52440,slow,Bachelor's,Other
+2575,"Counselors, All Other","Counselors, All Other in the Other field",46130,slow,Bachelor's,Other
+2576,"Child, Family, and School Social Workers","Child, Family, and School Social Workers in the Other field",53940,stable,Bachelor's,Other
+2577,Healthcare Social Workers,Healthcare Social Workers in the Other field,62940,stable,Bachelor's,Other
+2579,"Social Workers, All Other","Social Workers, All Other in the Other field",63770,stable,Bachelor's,Other
+2582,Social and Human Service Assistants,Social and Human Service Assistants in the Other field,41410,stable,Bachelor's,Other
+2583,Community Health Workers,Community Health Workers in the Other field,48200,stable,Bachelor's,Other
+2585,Clergy,Clergy in the Other field,58920,stable,Bachelor's,Other
+2588,Lawyers,Lawyers in the Other field,145760,fast,Bachelor's,Other
+2590,"Administrative Law Judges, Adjudicators, and Hearing Officers","Administrative Law Judges, Adjudicators, and Hearing Officers in the Other field",111090,slow,Bachelor's,Other
+2542,Hydrologists,Hydrologists in the Other field,88770,slow,Bachelor's,Other
+2543,"Physical Scientists, All Other","Physical Scientists, All Other in the Other field",112280,slow,Bachelor's,Other
+2603,"Forestry and Conservation Science Teachers, Postsecondary","Forestry and Conservation Science Teachers, Postsecondary in the Education field",101650,slow,Bachelor's,Education
+2594,"Title Examiners, Abstractors, and Searchers","Title Examiners, Abstractors, and Searchers in the Other field",53550,slow,Bachelor's,Other
+2595,"Legal Support Workers, All Other","Legal Support Workers, All Other in the Other field",67700,slow,Bachelor's,Other
+2596,"Business Teachers, Postsecondary","Business Teachers, Postsecondary in the Education field",97130,stable,Bachelor's,Education
+2599,"Architecture Teachers, Postsecondary","Architecture Teachers, Postsecondary in the Education field",105770,slow,Bachelor's,Education
+2600,"Engineering Teachers, Postsecondary","Engineering Teachers, Postsecondary in the Education field",106910,slow,Bachelor's,Education
+2601,"Agricultural Sciences Teachers, Postsecondary","Agricultural Sciences Teachers, Postsecondary in the Education field",85260,slow,Bachelor's,Education
+2602,"Biological Science Teachers, Postsecondary","Biological Science Teachers, Postsecondary in the Education field",83920,stable,Bachelor's,Education
+2605,"Chemistry Teachers, Postsecondary","Chemistry Teachers, Postsecondary in the Education field",85810,slow,Bachelor's,Education
+2606,"Environmental Science Teachers, Postsecondary","Environmental Science Teachers, Postsecondary in the Education field",88410,slow,Bachelor's,Education
+2607,"Physics Teachers, Postsecondary","Physics Teachers, Postsecondary in the Education field",98020,slow,Bachelor's,Education
+2608,"Anthropology and Archeology Teachers, Postsecondary","Anthropology and Archeology Teachers, Postsecondary in the Education field",93650,slow,Bachelor's,Education
+2609,"Area, Ethnic, and Cultural Studies Teachers, Postsecondary","Area, Ethnic, and Cultural Studies Teachers, Postsecondary in the Education field",86030,slow,Bachelor's,Education
+2610,"Economics Teachers, Postsecondary","Economics Teachers, Postsecondary in the Education field",115300,slow,Bachelor's,Education
+2611,"Geography Teachers, Postsecondary","Geography Teachers, Postsecondary in the Education field",85600,slow,Bachelor's,Education
+2612,"Political Science Teachers, Postsecondary","Political Science Teachers, Postsecondary in the Education field",93810,slow,Bachelor's,Education
+2613,"Psychology Teachers, Postsecondary","Psychology Teachers, Postsecondary in the Education field",82140,slow,Bachelor's,Education
+2614,"Sociology Teachers, Postsecondary","Sociology Teachers, Postsecondary in the Education field",82670,slow,Bachelor's,Education
+2616,"Health Specialties Teachers, Postsecondary","Health Specialties Teachers, Postsecondary in the Education field",105650,stable,Bachelor's,Education
+2617,"Nursing Instructors and Teachers, Postsecondary","Nursing Instructors and Teachers, Postsecondary in the Education field",80780,stable,Bachelor's,Education
+2618,"Education Teachers, Postsecondary","Education Teachers, Postsecondary in the Education field",73240,stable,Bachelor's,Education
+2619,"Library Science Teachers, Postsecondary","Library Science Teachers, Postsecondary in the Education field",80310,slow,Bachelor's,Education
+2620,"Criminal Justice and Law Enforcement Teachers, Postsecondary","Criminal Justice and Law Enforcement Teachers, Postsecondary in the Education field",69030,slow,Bachelor's,Education
+2621,"Law Teachers, Postsecondary","Law Teachers, Postsecondary in the Education field",127360,slow,Bachelor's,Education
+2622,"Social Work Teachers, Postsecondary","Social Work Teachers, Postsecondary in the Education field",75020,slow,Bachelor's,Education
+2623,"Art, Drama, and Music Teachers, Postsecondary","Art, Drama, and Music Teachers, Postsecondary in the Education field",80360,stable,Bachelor's,Education
+2625,"English Language and Literature Teachers, Postsecondary","English Language and Literature Teachers, Postsecondary in the Education field",78130,stable,Bachelor's,Education
+2626,"Foreign Language and Literature Teachers, Postsecondary","Foreign Language and Literature Teachers, Postsecondary in the Education field",78760,slow,Bachelor's,Education
+2627,"History Teachers, Postsecondary","History Teachers, Postsecondary in the Education field",82140,slow,Bachelor's,Education
+2628,"Philosophy and Religion Teachers, Postsecondary","Philosophy and Religion Teachers, Postsecondary in the Education field",79930,slow,Bachelor's,Education
+2631,"Career/Technical Education Teachers, Postsecondary","Career/Technical Education Teachers, Postsecondary in the Education field",62060,stable,Bachelor's,Education
+2632,"Postsecondary Teachers, All Other","Postsecondary Teachers, All Other in the Education field",79870,stable,Bachelor's,Education
+2633,"Preschool Teachers, Except Special Education","Preschool Teachers, Except Special Education in the Education field",37130,stable,Bachelor's,Education
+2634,"Kindergarten Teachers, Except Special Education","Kindergarten Teachers, Except Special Education in the Education field",62690,stable,Bachelor's,Education
+2591,"Arbitrators, Mediators, and Conciliators","Arbitrators, Mediators, and Conciliators in the Other field",71540,slow,Bachelor's,Other
+2592,"Judges, Magistrate Judges, and Magistrates","Judges, Magistrate Judges, and Magistrates in the Other field",148910,slow,Bachelor's,Other
+2656,Instructional Coordinators,Instructional Coordinators in the Education field,74620,stable,Bachelor's,Education
+2657,"Teaching Assistants, Postsecondary","Teaching Assistants, Postsecondary in the Education field",43750,stable,Bachelor's,Education
+2660,Art Directors,Art Directors in the Other field,106500,stable,Bachelor's,Other
+2661,Craft Artists,Craft Artists in the Other field,36600,slow,Bachelor's,Other
+2664,"Artists and Related Workers, All Other","Artists and Related Workers, All Other in the Other field",74750,slow,Bachelor's,Other
+2678,Dancers,Dancers in the Other field,,slow,Bachelor's,Other
+2683,"Entertainers and Performers, Sports and Related Workers, All Other","Entertainers and Performers, Sports and Related Workers, All Other in the Other field",,slow,Bachelor's,Other
+2638,"Secondary School Teachers, Except Special and Career/Technical Education","Secondary School Teachers, Except Special and Career/Technical Education in the Education field",65220,fast,Bachelor's,Education
+2639,"Career/Technical Education Teachers, Secondary School","Career/Technical Education Teachers, Secondary School in the Education field",65130,stable,Bachelor's,Education
+2640,"Special Education Teachers, Preschool","Special Education Teachers, Preschool in the Education field",65270,slow,Bachelor's,Education
+2641,"Special Education Teachers, Kindergarten and Elementary School","Special Education Teachers, Kindergarten and Elementary School in the Education field",64910,stable,Bachelor's,Education
+2642,"Special Education Teachers, Middle School","Special Education Teachers, Middle School in the Education field",66600,stable,Bachelor's,Education
+2643,"Special Education Teachers, Secondary School","Special Education Teachers, Secondary School in the Education field",66620,stable,Bachelor's,Education
+2644,"Special Education Teachers, All Other","Special Education Teachers, All Other in the Education field",67190,slow,Bachelor's,Education
+2646,Self-Enrichment Teachers,Self-Enrichment Teachers in the Education field,45330,stable,Bachelor's,Education
+2647,"Substitute Teachers, Short-Term","Substitute Teachers, Short-Term in the Education field",37380,stable,Bachelor's,Education
+2648,Tutors,Tutors in the Education field,39580,stable,Bachelor's,Education
+2649,"Teachers and Instructors, All Other","Teachers and Instructors, All Other in the Education field",64390,stable,Bachelor's,Education
+2650,Archivists,Archivists in the Education field,59910,slow,Bachelor's,Education
+2651,Curators,Curators in the Education field,61750,slow,Bachelor's,Education
+2653,Librarians and Media Collections Specialists,Librarians and Media Collections Specialists in the Education field,64370,stable,Bachelor's,Education
+2654,Library Technicians,Library Technicians in the Education field,39310,stable,Bachelor's,Education
+2655,Farm and Home Management Educators,Farm and Home Management Educators in the Education field,59770,slow,Bachelor's,Education
+2663,Special Effects Artists and Animators,Special Effects Artists and Animators in the Other field,99060,slow,Bachelor's,Other
+2665,Commercial and Industrial Designers,Commercial and Industrial Designers in the Other field,76250,slow,Bachelor's,Other
+2666,Fashion Designers,Fashion Designers in the Other field,79290,slow,Bachelor's,Other
+2667,Floral Designers,Floral Designers in the Other field,34690,slow,Bachelor's,Other
+2669,Interior Designers,Interior Designers in the Other field,62510,stable,Bachelor's,Other
+2671,Set and Exhibit Designers,Set and Exhibit Designers in the Other field,59490,slow,Bachelor's,Other
+2672,"Designers, All Other","Designers, All Other in the Other field",67500,slow,Bachelor's,Other
+2673,Actors,Actors in the Other field,,stable,Bachelor's,Other
+2674,Producers and Directors,Producers and Directors in the Other field,82510,stable,Bachelor's,Other
+2675,Athletes and Sports Competitors,Athletes and Sports Competitors in the Other field,70280,slow,Bachelor's,Other
+2676,Coaches and Scouts,Coaches and Scouts in the Other field,45910,stable,Bachelor's,Other
+2679,Choreographers,Choreographers in the Other field,52000,slow,Bachelor's,Other
+2680,Music Directors and Composers,Music Directors and Composers in the Other field,62590,slow,Bachelor's,Other
+2681,Musicians and Singers,Musicians and Singers in the Other field,,slow,Bachelor's,Other
+2682,"Disc Jockeys, Except Radio","Disc Jockeys, Except Radio in the Other field",,slow,Bachelor's,Other
+2684,Broadcast Announcers and Radio Disc Jockeys,Broadcast Announcers and Radio Disc Jockeys in the Other field,44890,slow,Bachelor's,Other
+2635,"Elementary School Teachers, Except Special Education","Elementary School Teachers, Except Special Education in the Education field",63680,fast,Bachelor's,Education
+2637,"Career/Technical Education Teachers, Middle School","Career/Technical Education Teachers, Middle School in the Education field",63860,slow,Bachelor's,Education
+2697,Photographers,Photographers in the Other field,40760,stable,Bachelor's,Other
+2699,Film and Video Editors,Film and Video Editors in the Other field,66600,slow,Bachelor's,Other
+2701,Chiropractors,Chiropractors in the Healthcare field,76530,slow,Bachelor's,Healthcare
+2705,Prosthodontists,Prosthodontists in the Healthcare field,234000,slow,Bachelor's,Healthcare
+2706,"Dentists, All Other Specialists","Dentists, All Other Specialists in the Healthcare field",227690,slow,Bachelor's,Healthcare
+2708,Optometrists,Optometrists in the Healthcare field,131860,slow,Bachelor's,Healthcare
+2710,Physician Assistants,Physician Assistants in the Healthcare field,130020,stable,Bachelor's,Healthcare
+2711,Podiatrists,Podiatrists in the Healthcare field,141650,slow,Bachelor's,Healthcare
+2712,Occupational Therapists,Occupational Therapists in the Healthcare field,96370,stable,Bachelor's,Healthcare
+2713,Physical Therapists,Physical Therapists in the Healthcare field,99710,stable,Bachelor's,Healthcare
+2725,Audiologists,Audiologists in the Healthcare field,87740,slow,Bachelor's,Healthcare
+2726,Anesthesiologists,Anesthesiologists in the Healthcare field,,slow,Bachelor's,Healthcare
+2730,Family Medicine Physicians,Family Medicine Physicians in the Healthcare field,224640,stable,Bachelor's,Healthcare
+2731,General Internal Medicine Physicians,General Internal Medicine Physicians in the Healthcare field,223310,stable,Bachelor's,Healthcare
+2732,Neurologists,Neurologists in the Healthcare field,,slow,Bachelor's,Healthcare
+2733,Obstetricians and Gynecologists,Obstetricians and Gynecologists in the Healthcare field,,slow,Bachelor's,Healthcare
+2734,"Pediatricians, General","Pediatricians, General in the Healthcare field",198690,slow,Bachelor's,Healthcare
+2735,"Physicians, Pathologists","Physicians, Pathologists in the Healthcare field",,slow,Bachelor's,Healthcare
+2736,Psychiatrists,Psychiatrists in the Healthcare field,,slow,Bachelor's,Healthcare
+2737,Radiologists,Radiologists in the Healthcare field,,slow,Bachelor's,Healthcare
+2739,"Ophthalmologists, Except Pediatric","Ophthalmologists, Except Pediatric in the Healthcare field",,slow,Bachelor's,Healthcare
+2685,"News Analysts, Reporters, and Journalists","News Analysts, Reporters, and Journalists in the Other field",57500,slow,Bachelor's,Other
+2688,Technical Writers,Technical Writers in the Other field,80050,slow,Bachelor's,Other
+2689,Writers and Authors,Writers and Authors in the Other field,73690,slow,Bachelor's,Other
+2692,"Media and Communication Workers, All Other","Media and Communication Workers, All Other in the Other field",61900,slow,Bachelor's,Other
+2693,Audio and Video Technicians,Audio and Video Technicians in the Other field,51640,stable,Bachelor's,Other
+2694,Broadcast Technicians,Broadcast Technicians in the Other field,57690,slow,Bachelor's,Other
+2696,Lighting Technicians,Lighting Technicians in the Other field,62240,slow,Bachelor's,Other
+2702,"Dentists, General","Dentists, General in the Healthcare field",166300,stable,Bachelor's,Healthcare
+2703,Oral and Maxillofacial Surgeons,Oral and Maxillofacial Surgeons in the Healthcare field,,slow,Bachelor's,Healthcare
+2704,Orthodontists,Orthodontists in the Healthcare field,,slow,Bachelor's,Healthcare
+2709,Pharmacists,Pharmacists in the Healthcare field,136030,stable,Bachelor's,Healthcare
+2714,Radiation Therapists,Radiation Therapists in the Healthcare field,98300,slow,Bachelor's,Healthcare
+2716,Respiratory Therapists,Respiratory Therapists in the Healthcare field,77960,stable,Bachelor's,Healthcare
+2717,Speech-Language Pathologists,Speech-Language Pathologists in the Healthcare field,89290,stable,Bachelor's,Healthcare
+2718,Exercise Physiologists,Exercise Physiologists in the Healthcare field,54860,slow,Bachelor's,Healthcare
+2719,"Therapists, All Other","Therapists, All Other in the Healthcare field",63650,slow,Bachelor's,Healthcare
+2720,Veterinarians,Veterinarians in the Healthcare field,119100,stable,Bachelor's,Healthcare
+2721,Registered Nurses,Registered Nurses in the Healthcare field,86070,fast,Bachelor's,Healthcare
+2723,Nurse Midwives,Nurse Midwives in the Healthcare field,129650,slow,Bachelor's,Healthcare
+2727,Cardiologists,Cardiologists in the Healthcare field,,slow,Bachelor's,Healthcare
+2728,Dermatologists,Dermatologists in the Healthcare field,,slow,Bachelor's,Healthcare
+2687,Editors,Editors in the Other field,75020,stable,Bachelor's,Other
+2753,Emergency Medical Technicians,Emergency Medical Technicians in the Healthcare field,38930,stable,Bachelor's,Healthcare
+2754,Paramedics,Paramedics in the Healthcare field,53180,stable,Bachelor's,Healthcare
+2756,Pharmacy Technicians,Pharmacy Technicians in the Healthcare field,40300,stable,Bachelor's,Healthcare
+2758,Surgical Technologists,Surgical Technologists in the Healthcare field,60610,stable,Bachelor's,Healthcare
+2760,Ophthalmic Medical Technicians,Ophthalmic Medical Technicians in the Healthcare field,41780,stable,Bachelor's,Healthcare
+2761,Licensed Practical and Licensed Vocational Nurses,Licensed Practical and Licensed Vocational Nurses in the Healthcare field,59730,fast,Bachelor's,Healthcare
+2763,"Opticians, Dispensing","Opticians, Dispensing in the Healthcare field",44170,stable,Bachelor's,Healthcare
+2765,Hearing Aid Specialists,Hearing Aid Specialists in the Healthcare field,58670,slow,Bachelor's,Healthcare
+2769,Genetic Counselors,Genetic Counselors in the Healthcare field,95770,slow,Bachelor's,Healthcare
+2774,Orderlies,Orderlies in the Other field,36830,slow,Bachelor's,Other
+2777,Occupational Therapy Aides,Occupational Therapy Aides in the Other field,36970,slow,Bachelor's,Other
+2781,Dental Assistants,Dental Assistants in the Other field,46540,stable,Bachelor's,Other
+2785,Pharmacy Aides,Pharmacy Aides in the Other field,36200,slow,Bachelor's,Other
+2786,Veterinary Assistants and Laboratory Animal Caretakers,Veterinary Assistants and Laboratory Animal Caretakers in the Other field,36440,stable,Bachelor's,Other
+2790,First-Line Supervisors of Police and Detectives,First-Line Supervisors of Police and Detectives in the Other field,101750,stable,Bachelor's,Other
+2741,Pediatric Surgeons,Pediatric Surgeons in the Healthcare field,,slow,Bachelor's,Healthcare
+2743,Acupuncturists,Acupuncturists in the Healthcare field,78220,slow,Bachelor's,Healthcare
+2745,"Healthcare Diagnosing or Treating Practitioners, All Other","Healthcare Diagnosing or Treating Practitioners, All Other in the Healthcare field",107990,slow,Bachelor's,Healthcare
+2748,Diagnostic Medical Sonographers,Diagnostic Medical Sonographers in the Healthcare field,84470,stable,Bachelor's,Healthcare
+2749,Nuclear Medicine Technologists,Nuclear Medicine Technologists in the Healthcare field,92500,slow,Bachelor's,Healthcare
+2750,Radiologic Technologists and Technicians,Radiologic Technologists and Technicians in the Healthcare field,73410,stable,Bachelor's,Healthcare
+2751,Magnetic Resonance Imaging Technologists,Magnetic Resonance Imaging Technologists in the Healthcare field,83740,slow,Bachelor's,Healthcare
+2752,Medical Dosimetrists,Medical Dosimetrists in the Healthcare field,132880,slow,Bachelor's,Healthcare
+2755,Dietetic Technicians,Dietetic Technicians in the Healthcare field,36520,slow,Bachelor's,Healthcare
+2757,Psychiatric Technicians,Psychiatric Technicians in the Healthcare field,39700,stable,Bachelor's,Healthcare
+2762,Medical Records Specialists,Medical Records Specialists in the Healthcare field,48780,stable,Bachelor's,Healthcare
+2764,Orthotists and Prosthetists,Orthotists and Prosthetists in the Healthcare field,78100,slow,Bachelor's,Healthcare
+2767,Health Information Technologists and Medical Registrars,Health Information Technologists and Medical Registrars in the Healthcare field,62990,slow,Bachelor's,Healthcare
+2768,Athletic Trainers,Athletic Trainers in the Healthcare field,57930,slow,Bachelor's,Healthcare
+2770,Surgical Assistants,Surgical Assistants in the Healthcare field,59160,slow,Bachelor's,Healthcare
+2772,Home Health and Personal Care Aides,Home Health and Personal Care Aides in the Other field,33530,fast,Bachelor's,Other
+2773,Nursing Assistants,Nursing Assistants in the Other field,38200,fast,Bachelor's,Other
+2775,Psychiatric Aides,Psychiatric Aides in the Other field,39160,slow,Bachelor's,Other
+2778,Physical Therapist Assistants,Physical Therapist Assistants in the Other field,64080,stable,Bachelor's,Other
+2779,Physical Therapist Aides,Physical Therapist Aides in the Other field,33520,slow,Bachelor's,Other
+2780,Massage Therapists,Massage Therapists in the Other field,55310,stable,Bachelor's,Other
+2782,Medical Assistants,Medical Assistants in the Other field,42000,fast,Bachelor's,Other
+2783,Medical Equipment Preparers,Medical Equipment Preparers in the Other field,45280,stable,Bachelor's,Other
+2787,Phlebotomists,Phlebotomists in the Other field,41810,stable,Bachelor's,Other
+2788,"Healthcare Support Workers, All Other","Healthcare Support Workers, All Other in the Other field",44490,stable,Bachelor's,Other
+2740,"Orthopedic Surgeons, Except Pediatric","Orthopedic Surgeons, Except Pediatric in the Healthcare field",,slow,Bachelor's,Healthcare
+2796,Forest Fire Inspectors and Prevention Specialists,Forest Fire Inspectors and Prevention Specialists in the Other field,54080,slow,Bachelor's,Other
+2797,Bailiffs,Bailiffs in the Other field,53040,slow,Bachelor's,Other
+2799,Detectives and Criminal Investigators,Detectives and Criminal Investigators in the Other field,91100,stable,Bachelor's,Other
+2834,"Building Cleaning Workers, All Other","Building Cleaning Workers, All Other in the Other field",39900,slow,Bachelor's,Other
+2795,Fire Inspectors and Investigators,Fire Inspectors and Investigators in the Other field,74160,slow,Bachelor's,Other
+2798,Correctional Officers and Jailers,Correctional Officers and Jailers in the Other field,53300,stable,Bachelor's,Other
+2800,Fish and Game Wardens,Fish and Game Wardens in the Other field,60380,slow,Bachelor's,Other
+2802,Police and Sheriff's Patrol Officers,Police and Sheriff's Patrol Officers in the Other field,72280,fast,Bachelor's,Other
+2803,Transit and Railroad Police,Transit and Railroad Police in the Other field,72250,slow,Bachelor's,Other
+2804,Animal Control Workers,Animal Control Workers in the Other field,43170,slow,Bachelor's,Other
+2805,Private Detectives and Investigators,Private Detectives and Investigators in the Other field,49540,slow,Bachelor's,Other
+2807,Security Guards,Security Guards in the Other field,37070,fast,Bachelor's,Other
+2808,Crossing Guards and Flaggers,Crossing Guards and Flaggers in the Other field,36370,stable,Bachelor's,Other
+2809,"Lifeguards, Ski Patrol, and Other Recreational Protective Service Workers","Lifeguards, Ski Patrol, and Other Recreational Protective Service Workers in the Other field",30380,stable,Bachelor's,Other
+2810,Transportation Security Screeners,Transportation Security Screeners in the Other field,50020,slow,Bachelor's,Other
+2811,School Bus Monitors,School Bus Monitors in the Other field,33130,stable,Bachelor's,Other
+2812,"Protective Service Workers, All Other","Protective Service Workers, All Other in the Other field",39360,stable,Bachelor's,Other
+2813,Chefs and Head Cooks,Chefs and Head Cooks in the Other field,58920,stable,Bachelor's,Other
+2815,"Cooks, Fast Food","Cooks, Fast Food in the Other field",29260,fast,Bachelor's,Other
+2816,"Cooks, Institution and Cafeteria","Cooks, Institution and Cafeteria in the Other field",35320,stable,Bachelor's,Other
+2817,"Cooks, Private Household","Cooks, Private Household in the Other field",42590,slow,Bachelor's,Other
+2818,"Cooks, Restaurant","Cooks, Restaurant in the Other field",35780,fast,Bachelor's,Other
+2819,"Cooks, Short Order","Cooks, Short Order in the Other field",34130,stable,Bachelor's,Other
+2821,Food Preparation Workers,Food Preparation Workers in the Other field,32420,fast,Bachelor's,Other
+2822,Bartenders,Bartenders in the Other field,31510,fast,Bachelor's,Other
+2823,Fast Food and Counter Workers,Fast Food and Counter Workers in the Other field,29540,fast,Bachelor's,Other
+2824,Waiters and Waitresses,Waiters and Waitresses in the Other field,31940,fast,Bachelor's,Other
+2826,Dining Room and Cafeteria Attendants and Bartender Helpers,Dining Room and Cafeteria Attendants and Bartender Helpers in the Other field,31180,stable,Bachelor's,Other
+2827,Dishwashers,Dishwashers in the Other field,31200,stable,Bachelor's,Other
+2828,"Hosts and Hostesses, Restaurant, Lounge, and Coffee Shop","Hosts and Hostesses, Restaurant, Lounge, and Coffee Shop in the Other field",29220,stable,Bachelor's,Other
+2829,"Food Preparation and Serving Related Workers, All Other","Food Preparation and Serving Related Workers, All Other in the Other field",33870,stable,Bachelor's,Other
+2831,"First-Line Supervisors of Landscaping, Lawn Service, and Groundskeeping Workers","First-Line Supervisors of Landscaping, Lawn Service, and Groundskeeping Workers in the Other field",55740,stable,Bachelor's,Other
+2832,"Janitors and Cleaners, Except Maids and Housekeeping Cleaners","Janitors and Cleaners, Except Maids and Housekeeping Cleaners in the Other field",35020,fast,Bachelor's,Other
+2833,Maids and Housekeeping Cleaners,Maids and Housekeeping Cleaners in the Other field,33450,fast,Bachelor's,Other
+2835,Pest Control Workers,Pest Control Workers in the Other field,43470,stable,Bachelor's,Other
+2836,Landscaping and Groundskeeping Workers,Landscaping and Groundskeeping Workers in the Other field,37360,fast,Bachelor's,Other
+2837,"Pesticide Handlers, Sprayers, and Applicators, Vegetation","Pesticide Handlers, Sprayers, and Applicators, Vegetation in the Other field",44070,slow,Bachelor's,Other
+2838,Tree Trimmers and Pruners,Tree Trimmers and Pruners in the Other field,49070,stable,Bachelor's,Other
+2839,"Grounds Maintenance Workers, All Other","Grounds Maintenance Workers, All Other in the Other field",43310,slow,Bachelor's,Other
+2792,First-Line Supervisors of Security Workers,First-Line Supervisors of Security Workers in the Other field,54580,stable,Bachelor's,Other
+2794,Firefighters,Firefighters in the Other field,57120,stable,Bachelor's,Other
+2845,Gambling Dealers,Gambling Dealers in the Other field,32240,stable,Bachelor's,Other
+2867,Childcare Workers,Childcare Workers in the Other field,30370,stable,Bachelor's,Other
+2876,Counter and Rental Clerks,Counter and Rental Clerks in the Other field,37400,stable,Bachelor's,Other
+2914,"Interviewers, Except Eligibility and Loan","Interviewers, Except Eligibility and Loan in the Other field",40300,stable,Bachelor's,Other
+2842,First-Line Supervisors of Personal Service Workers,First-Line Supervisors of Personal Service Workers in the Other field,46690,stable,Bachelor's,Other
+2844,Animal Caretakers,Animal Caretakers in the Other field,31200,stable,Bachelor's,Other
+2846,Gambling and Sports Book Writers and Runners,Gambling and Sports Book Writers and Runners in the Other field,29170,slow,Bachelor's,Other
+2847,"Gambling Service Workers, All Other","Gambling Service Workers, All Other in the Other field",32710,slow,Bachelor's,Other
+2848,Motion Picture Projectionists,Motion Picture Projectionists in the Other field,35160,slow,Bachelor's,Other
+2849,"Ushers, Lobby Attendants, and Ticket Takers","Ushers, Lobby Attendants, and Ticket Takers in the Other field",29780,stable,Bachelor's,Other
+2850,Amusement and Recreation Attendants,Amusement and Recreation Attendants in the Other field,29390,stable,Bachelor's,Other
+2851,Costume Attendants,Costume Attendants in the Other field,52370,slow,Bachelor's,Other
+2852,"Locker Room, Coatroom, and Dressing Room Attendants","Locker Room, Coatroom, and Dressing Room Attendants in the Other field",33450,slow,Bachelor's,Other
+2854,Embalmers,Embalmers in the Other field,54090,slow,Bachelor's,Other
+2855,Crematory Operators,Crematory Operators in the Other field,41670,slow,Bachelor's,Other
+2856,Funeral Attendants,Funeral Attendants in the Other field,33850,slow,Bachelor's,Other
+2857,"Morticians, Undertakers, and Funeral Arrangers","Morticians, Undertakers, and Funeral Arrangers in the Other field",51030,slow,Bachelor's,Other
+2858,Barbers,Barbers in the Other field,36150,slow,Bachelor's,Other
+2859,"Hairdressers, Hairstylists, and Cosmetologists","Hairdressers, Hairstylists, and Cosmetologists in the Other field",34970,stable,Bachelor's,Other
+2860,"Makeup Artists, Theatrical and Performance","Makeup Artists, Theatrical and Performance in the Other field",47390,slow,Bachelor's,Other
+2861,Manicurists and Pedicurists,Manicurists and Pedicurists in the Other field,34250,stable,Bachelor's,Other
+2862,Shampooers,Shampooers in the Other field,29530,slow,Bachelor's,Other
+2863,Skincare Specialists,Skincare Specialists in the Other field,43200,stable,Bachelor's,Other
+2864,Baggage Porters and Bellhops,Baggage Porters and Bellhops in the Other field,34840,slow,Bachelor's,Other
+2865,Concierges,Concierges in the Other field,37150,slow,Bachelor's,Other
+2869,Recreation Workers,Recreation Workers in the Other field,34410,stable,Bachelor's,Other
+2870,Residential Advisors,Residential Advisors in the Other field,37950,stable,Bachelor's,Other
+2871,"Personal Care and Service Workers, All Other","Personal Care and Service Workers, All Other in the Other field",36980,stable,Bachelor's,Other
+2874,Cashiers,Cashiers in the Other field,29720,fast,Bachelor's,Other
+2875,Gambling Change Persons and Booth Cashiers,Gambling Change Persons and Booth Cashiers in the Other field,33230,slow,Bachelor's,Other
+2877,Parts Salespersons,Parts Salespersons in the Other field,36860,stable,Bachelor's,Other
+2878,Retail Salespersons,Retail Salespersons in the Other field,33680,fast,Bachelor's,Other
+2879,Advertising Sales Agents,Advertising Sales Agents in the Other field,61270,stable,Bachelor's,Other
+2880,Insurance Sales Agents,Insurance Sales Agents in the Other field,59080,stable,Bachelor's,Other
+2906,Brokerage Clerks,Brokerage Clerks in the Other field,60150,slow,Bachelor's,Other
+2907,Correspondence Clerks,Correspondence Clerks in the Other field,42120,slow,Bachelor's,Other
+2908,"Court, Municipal, and License Clerks","Court, Municipal, and License Clerks in the Other field",46110,stable,Bachelor's,Other
+2909,"Credit Authorizers, Checkers, and Clerks","Credit Authorizers, Checkers, and Clerks in the Other field",48000,slow,Bachelor's,Other
+2910,Customer Service Representatives,Customer Service Representatives in the Other field,39680,fast,Bachelor's,Other
+2912,File Clerks,File Clerks in the Other field,38130,stable,Bachelor's,Other
+2913,"Hotel, Motel, and Resort Desk Clerks","Hotel, Motel, and Resort Desk Clerks in the Other field",30790,stable,Bachelor's,Other
+2915,"Library Assistants, Clerical","Library Assistants, Clerical in the Other field",34020,stable,Bachelor's,Other
+2916,Loan Interviewers and Clerks,Loan Interviewers and Clerks in the Other field,47380,stable,Bachelor's,Other
+2843,Animal Trainers,Animal Trainers in the Other field,38810,slow,Bachelor's,Other
+2922,"Information and Record Clerks, All Other","Information and Record Clerks, All Other in the Other field",46210,stable,Bachelor's,Other
+2882,Travel Agents,Travel Agents in the Other field,47410,stable,Bachelor's,Other
+2883,"Sales Representatives of Services, Except Advertising, Insurance, Financial Services, and Travel","Sales Representatives of Services, Except Advertising, Insurance, Financial Services, and Travel in the Other field",64600,fast,Bachelor's,Other
+2884,"Sales Representatives, Wholesale and Manufacturing, Technical and Scientific Products","Sales Representatives, Wholesale and Manufacturing, Technical and Scientific Products in the Other field",99710,stable,Bachelor's,Other
+2885,"Sales Representatives, Wholesale and Manufacturing, Except Technical and Scientific Products","Sales Representatives, Wholesale and Manufacturing, Except Technical and Scientific Products in the Other field",65630,fast,Bachelor's,Other
+2886,Demonstrators and Product Promoters,Demonstrators and Product Promoters in the Other field,36970,stable,Bachelor's,Other
+2887,Models,Models in the Other field,47430,slow,Bachelor's,Other
+2888,Real Estate Brokers,Real Estate Brokers in the Other field,63060,stable,Bachelor's,Other
+2889,Real Estate Sales Agents,Real Estate Sales Agents in the Other field,54300,stable,Bachelor's,Other
+2891,Telemarketers,Telemarketers in the Other field,34480,stable,Bachelor's,Other
+2893,"Sales and Related Workers, All Other","Sales and Related Workers, All Other in the Other field",44610,stable,Bachelor's,Other
+2895,"Switchboard Operators, Including Answering Service","Switchboard Operators, Including Answering Service in the Other field",36750,slow,Bachelor's,Other
+2896,Telephone Operators,Telephone Operators in the Other field,38080,slow,Bachelor's,Other
+2897,"Communications Equipment Operators, All Other","Communications Equipment Operators, All Other in the Other field",49310,slow,Bachelor's,Other
+2898,Bill and Account Collectors,Bill and Account Collectors in the Other field,44250,stable,Bachelor's,Other
+2899,Billing and Posting Clerks,Billing and Posting Clerks in the Other field,45590,stable,Bachelor's,Other
+2900,"Bookkeeping, Accounting, and Auditing Clerks","Bookkeeping, Accounting, and Auditing Clerks in the Other field",47440,fast,Bachelor's,Other
+2901,Gambling Cage Workers,Gambling Cage Workers in the Other field,36110,slow,Bachelor's,Other
+2902,Payroll and Timekeeping Clerks,Payroll and Timekeeping Clerks in the Other field,52240,stable,Bachelor's,Other
+2903,Procurement Clerks,Procurement Clerks in the Other field,46670,stable,Bachelor's,Other
+2904,Tellers,Tellers in the Other field,37640,stable,Bachelor's,Other
+2917,New Accounts Clerks,New Accounts Clerks in the Other field,44630,slow,Bachelor's,Other
+2918,Order Clerks,Order Clerks in the Other field,41600,stable,Bachelor's,Other
+2919,"Human Resources Assistants, Except Payroll and Timekeeping","Human Resources Assistants, Except Payroll and Timekeeping in the Other field",47710,stable,Bachelor's,Other
+2920,Receptionists and Information Clerks,Receptionists and Information Clerks in the Other field,35840,fast,Bachelor's,Other
+2921,Reservation and Transportation Ticket Agents and Travel Clerks,Reservation and Transportation Ticket Agents and Travel Clerks in the Other field,40610,stable,Bachelor's,Other
+2923,Cargo and Freight Agents,Cargo and Freight Agents in the Other field,48330,stable,Bachelor's,Other
+2924,Couriers and Messengers,Couriers and Messengers in the Other field,36710,stable,Bachelor's,Other
+2925,Public Safety Telecommunicators,Public Safety Telecommunicators in the Other field,48890,stable,Bachelor's,Other
+2926,"Dispatchers, Except Police, Fire, and Ambulance","Dispatchers, Except Police, Fire, and Ambulance in the Other field",46860,stable,Bachelor's,Other
+2927,"Meter Readers, Utilities","Meter Readers, Utilities in the Other field",47720,slow,Bachelor's,Other
+2928,Postal Service Clerks,Postal Service Clerks in the Other field,59570,stable,Bachelor's,Other
+2929,Postal Service Mail Carriers,Postal Service Mail Carriers in the Other field,56330,stable,Bachelor's,Other
+2930,"Postal Service Mail Sorters, Processors, and Processing Machine Operators","Postal Service Mail Sorters, Processors, and Processing Machine Operators in the Other field",53440,stable,Bachelor's,Other
+2931,"Production, Planning, and Expediting Clerks","Production, Planning, and Expediting Clerks in the Other field",53900,stable,Bachelor's,Other
+2932,"Shipping, Receiving, and Inventory Clerks","Shipping, Receiving, and Inventory Clerks in the Other field",39780,fast,Bachelor's,Other
+2934,Executive Secretaries and Executive Administrative Assistants,Executive Secretaries and Executive Administrative Assistants in the Other field,70310,stable,Bachelor's,Other
+2935,Legal Secretaries and Administrative Assistants,Legal Secretaries and Administrative Assistants in the Other field,50680,stable,Bachelor's,Other
+2936,Medical Secretaries and Administrative Assistants,Medical Secretaries and Administrative Assistants in the Other field,40640,fast,Bachelor's,Other
+2964,Stonemasons,Stonemasons in the Other field,51830,slow,Bachelor's,Other
+2968,Floor Sanders and Finishers,Floor Sanders and Finishers in the Other field,47760,slow,Bachelor's,Other
+2978,Electricians,Electricians in the Other field,61590,fast,Bachelor's,Other
+2981,"Insulation Workers, Mechanical","Insulation Workers, Mechanical in the Other field",53920,slow,Bachelor's,Other
+2940,Desktop Publishers,Desktop Publishers in the Other field,51290,slow,Bachelor's,Other
+2941,Insurance Claims and Policy Processing Clerks,Insurance Claims and Policy Processing Clerks in the Other field,46900,stable,Bachelor's,Other
+2942,"Mail Clerks and Mail Machine Operators, Except Postal Service","Mail Clerks and Mail Machine Operators, Except Postal Service in the Other field",36880,stable,Bachelor's,Other
+2943,"Office Clerks, General","Office Clerks, General in the Other field",40480,fast,Bachelor's,Other
+2944,"Office Machine Operators, Except Computer","Office Machine Operators, Except Computer in the Other field",37450,slow,Bachelor's,Other
+2945,Proofreaders and Copy Markers,Proofreaders and Copy Markers in the Other field,48790,slow,Bachelor's,Other
+2949,Agricultural Inspectors,Agricultural Inspectors in the Other field,48010,slow,Bachelor's,Other
+2950,Animal Breeders,Animal Breeders in the Other field,47540,slow,Bachelor's,Other
+2951,"Graders and Sorters, Agricultural Products","Graders and Sorters, Agricultural Products in the Other field",34360,slow,Bachelor's,Other
+2952,Agricultural Equipment Operators,Agricultural Equipment Operators in the Other field,39690,slow,Bachelor's,Other
+2953,"Farmworkers and Laborers, Crop, Nursery, and Greenhouse","Farmworkers and Laborers, Crop, Nursery, and Greenhouse in the Other field",34470,stable,Bachelor's,Other
+2954,"Farmworkers, Farm, Ranch, and Aquacultural Animals","Farmworkers, Farm, Ranch, and Aquacultural Animals in the Other field",35120,slow,Bachelor's,Other
+2955,"Agricultural Workers, All Other","Agricultural Workers, All Other in the Other field",40620,slow,Bachelor's,Other
+2956,Forest and Conservation Workers,Forest and Conservation Workers in the Other field,33940,slow,Bachelor's,Other
+2957,Fallers,Fallers in the Other field,53170,slow,Bachelor's,Other
+2958,Logging Equipment Operators,Logging Equipment Operators in the Other field,48240,slow,Bachelor's,Other
+2960,"Logging Workers, All Other","Logging Workers, All Other in the Other field",52480,slow,Bachelor's,Other
+2962,Boilermakers,Boilermakers in the Other field,71140,slow,Bachelor's,Other
+2963,Brickmasons and Blockmasons,Brickmasons and Blockmasons in the Other field,59640,stable,Bachelor's,Other
+2965,Carpenters,Carpenters in the Other field,56350,fast,Bachelor's,Other
+2966,Carpet Installers,Carpet Installers in the Other field,47520,slow,Bachelor's,Other
+2967,"Floor Layers, Except Carpet, Wood, and Hard Tiles","Floor Layers, Except Carpet, Wood, and Hard Tiles in the Other field",48840,slow,Bachelor's,Other
+2969,Tile and Stone Setters,Tile and Stone Setters in the Other field,48910,slow,Bachelor's,Other
+2970,Cement Masons and Concrete Finishers,Cement Masons and Concrete Finishers in the Other field,50720,stable,Bachelor's,Other
+2971,Terrazzo Workers and Finishers,Terrazzo Workers and Finishers in the Other field,48900,slow,Bachelor's,Other
+2972,Construction Laborers,Construction Laborers in the Other field,45300,fast,Bachelor's,Other
+2973,"Paving, Surfacing, and Tamping Equipment Operators","Paving, Surfacing, and Tamping Equipment Operators in the Other field",48980,slow,Bachelor's,Other
+2974,Pile Driver Operators,Pile Driver Operators in the Other field,63550,slow,Bachelor's,Other
+2976,Drywall and Ceiling Tile Installers,Drywall and Ceiling Tile Installers in the Other field,55700,stable,Bachelor's,Other
+2977,Tapers,Tapers in the Other field,63350,slow,Bachelor's,Other
+2979,Glaziers,Glaziers in the Other field,51100,stable,Bachelor's,Other
+2980,"Insulation Workers, Floor, Ceiling, and Wall","Insulation Workers, Floor, Ceiling, and Wall in the Other field",47540,slow,Bachelor's,Other
+2982,"Painters, Construction and Maintenance","Painters, Construction and Maintenance in the Other field",47700,stable,Bachelor's,Other
+2983,Paperhangers,Paperhangers in the Other field,48460,slow,Bachelor's,Other
+2984,Pipelayers,Pipelayers in the Other field,47330,slow,Bachelor's,Other
+2986,Plasterers and Stucco Masons,Plasterers and Stucco Masons in the Other field,52640,slow,Bachelor's,Other
+2987,Reinforcing Iron and Rebar Workers,Reinforcing Iron and Rebar Workers in the Other field,54850,slow,Bachelor's,Other
+2988,Roofers,Roofers in the Other field,50030,stable,Bachelor's,Other
+2938,Data Entry Keyers,Data Entry Keyers in the Other field,37790,stable,Bachelor's,Other
+2939,Word Processors and Typists,Word Processors and Typists in the Other field,46450,slow,Bachelor's,Other
+3029,"Electrical and Electronics Repairers, Powerhouse, Substation, and Relay","Electrical and Electronics Repairers, Powerhouse, Substation, and Relay in the Other field",96600,slow,Bachelor's,Other
+2990,Structural Iron and Steel Workers,Structural Iron and Steel Workers in the Other field,62760,stable,Bachelor's,Other
+2991,Solar Photovoltaic Installers,Solar Photovoltaic Installers in the Other field,48800,slow,Bachelor's,Other
+2993,Helpers--Carpenters,Helpers--Carpenters in the Other field,39380,slow,Bachelor's,Other
+2994,Helpers--Electricians,Helpers--Electricians in the Other field,38340,stable,Bachelor's,Other
+2995,"Helpers--Painters, Paperhangers, Plasterers, and Stucco Masons","Helpers--Painters, Paperhangers, Plasterers, and Stucco Masons in the Other field",37010,slow,Bachelor's,Other
+2996,"Helpers--Pipelayers, Plumbers, Pipefitters, and Steamfitters","Helpers--Pipelayers, Plumbers, Pipefitters, and Steamfitters in the Other field",37650,slow,Bachelor's,Other
+2997,Helpers--Roofers,Helpers--Roofers in the Other field,38620,slow,Bachelor's,Other
+2998,"Helpers, Construction Trades, All Other","Helpers, Construction Trades, All Other in the Other field",40220,slow,Bachelor's,Other
+2999,Construction and Building Inspectors,Construction and Building Inspectors in the Other field,67700,stable,Bachelor's,Other
+3000,Elevator and Escalator Installers and Repairers,Elevator and Escalator Installers and Repairers in the Other field,102420,slow,Bachelor's,Other
+3001,Fence Erectors,Fence Erectors in the Other field,44410,slow,Bachelor's,Other
+3003,Highway Maintenance Workers,Highway Maintenance Workers in the Other field,47360,stable,Bachelor's,Other
+3004,Rail-Track Laying and Maintenance Equipment Operators,Rail-Track Laying and Maintenance Equipment Operators in the Other field,67000,slow,Bachelor's,Other
+3005,Septic Tank Servicers and Sewer Pipe Cleaners,Septic Tank Servicers and Sewer Pipe Cleaners in the Other field,46910,slow,Bachelor's,Other
+3006,Miscellaneous Construction and Related Workers,Miscellaneous Construction and Related Workers in the Other field,47090,slow,Bachelor's,Other
+3007,"Derrick Operators, Oil and Gas","Derrick Operators, Oil and Gas in the Other field",58210,slow,Bachelor's,Other
+3008,"Rotary Drill Operators, Oil and Gas","Rotary Drill Operators, Oil and Gas in the Other field",61770,slow,Bachelor's,Other
+3009,"Service Unit Operators, Oil and Gas","Service Unit Operators, Oil and Gas in the Other field",55750,slow,Bachelor's,Other
+3011,"Earth Drillers, Except Oil and Gas","Earth Drillers, Except Oil and Gas in the Other field",56660,slow,Bachelor's,Other
+3012,"Explosives Workers, Ordnance Handling Experts, and Blasters","Explosives Workers, Ordnance Handling Experts, and Blasters in the Other field",61590,slow,Bachelor's,Other
+3013,Continuous Mining Machine Operators,Continuous Mining Machine Operators in the Other field,61420,slow,Bachelor's,Other
+3014,"Roof Bolters, Mining","Roof Bolters, Mining in the Other field",66660,slow,Bachelor's,Other
+3015,"Loading and Moving Machine Operators, Underground Mining","Loading and Moving Machine Operators, Underground Mining in the Other field",64070,slow,Bachelor's,Other
+3016,"Underground Mining Machine Operators, All Other","Underground Mining Machine Operators, All Other in the Other field",68910,slow,Bachelor's,Other
+3017,"Rock Splitters, Quarry","Rock Splitters, Quarry in the Other field",46530,slow,Bachelor's,Other
+3018,"Roustabouts, Oil and Gas","Roustabouts, Oil and Gas in the Other field",46340,slow,Bachelor's,Other
+3019,Helpers--Extraction Workers,Helpers--Extraction Workers in the Other field,45520,slow,Bachelor's,Other
+3020,"Extraction Workers, All Other","Extraction Workers, All Other in the Other field",49580,slow,Bachelor's,Other
+3023,"Radio, Cellular, and Tower Equipment Installers and Repairers","Radio, Cellular, and Tower Equipment Installers and Repairers in the Other field",61310,slow,Bachelor's,Other
+3024,"Telecommunications Equipment Installers and Repairers, Except Line Installers","Telecommunications Equipment Installers and Repairers, Except Line Installers in the Other field",61270,stable,Bachelor's,Other
+3025,Avionics Technicians,Avionics Technicians in the Other field,77420,slow,Bachelor's,Other
+3026,"Electric Motor, Power Tool, and Related Repairers","Electric Motor, Power Tool, and Related Repairers in the Other field",49230,slow,Bachelor's,Other
+3027,"Electrical and Electronics Installers and Repairers, Transportation Equipment","Electrical and Electronics Installers and Repairers, Transportation Equipment in the Other field",79160,slow,Bachelor's,Other
+3030,"Electronic Equipment Installers and Repairers, Motor Vehicles","Electronic Equipment Installers and Repairers, Motor Vehicles in the Other field",45570,slow,Bachelor's,Other
+3031,Audiovisual Equipment Installers and Repairers,Audiovisual Equipment Installers and Repairers in the Other field,48380,slow,Bachelor's,Other
+3032,Security and Fire Alarm Systems Installers,Security and Fire Alarm Systems Installers in the Other field,56430,stable,Bachelor's,Other
+3033,Aircraft Mechanics and Service Technicians,Aircraft Mechanics and Service Technicians in the Other field,75020,stable,Bachelor's,Other
+2989,Sheet Metal Workers,Sheet Metal Workers in the Other field,58780,stable,Bachelor's,Other
+3041,Motorboat Mechanics and Service Technicians,Motorboat Mechanics and Service Technicians in the Other field,49990,slow,Bachelor's,Other
+3044,Bicycle Repairers,Bicycle Repairers in the Other field,38320,slow,Bachelor's,Other
+3048,"Control and Valve Installers and Repairers, Except Mechanical Door","Control and Valve Installers and Repairers, Except Mechanical Door in the Other field",70100,slow,Bachelor's,Other
+3066,Locksmiths and Safe Repairers,Locksmiths and Safe Repairers in the Other field,48380,slow,Bachelor's,Other
+3075,"Electrical, Electronic, and Electromechanical Assemblers, Except Coil Winders, Tapers, and Finishers","Electrical, Electronic, and Electromechanical Assemblers, Except Coil Winders, Tapers, and Finishers in the Other field",40490,stable,High School,Other
+3039,"Mobile Heavy Equipment Mechanics, Except Engines","Mobile Heavy Equipment Mechanics, Except Engines in the Other field",61900,stable,Bachelor's,Other
+3040,Rail Car Repairers,Rail Car Repairers in the Other field,65030,slow,Bachelor's,Other
+3042,Motorcycle Mechanics,Motorcycle Mechanics in the Other field,46270,slow,Bachelor's,Other
+3043,Outdoor Power Equipment and Other Small Engine Mechanics,Outdoor Power Equipment and Other Small Engine Mechanics in the Other field,44140,slow,Bachelor's,Other
+3045,Recreational Vehicle Service Technicians,Recreational Vehicle Service Technicians in the Other field,47950,slow,Bachelor's,Other
+3046,Tire Repairers and Changers,Tire Repairers and Changers in the Other field,35790,stable,Bachelor's,Other
+3047,Mechanical Door Repairers,Mechanical Door Repairers in the Other field,48650,slow,Bachelor's,Other
+3049,"Heating, Air Conditioning, and Refrigeration Mechanics and Installers","Heating, Air Conditioning, and Refrigeration Mechanics and Installers in the Other field",57300,stable,Bachelor's,Other
+3050,Home Appliance Repairers,Home Appliance Repairers in the Other field,47170,slow,Bachelor's,Other
+3051,Industrial Machinery Mechanics,Industrial Machinery Mechanics in the Other field,61420,stable,Bachelor's,Other
+3052,"Maintenance Workers, Machinery","Maintenance Workers, Machinery in the Other field",57350,stable,Bachelor's,Other
+3053,Millwrights,Millwrights in the Other field,62980,slow,Bachelor's,Other
+3054,"Refractory Materials Repairers, Except Brickmasons","Refractory Materials Repairers, Except Brickmasons in the Other field",48410,slow,Bachelor's,Other
+3055,Electrical Power-Line Installers and Repairers,Electrical Power-Line Installers and Repairers in the Other field,85420,stable,Bachelor's,Other
+3057,Camera and Photographic Equipment Repairers,Camera and Photographic Equipment Repairers in the Other field,46850,slow,Bachelor's,Other
+3058,Medical Equipment Repairers,Medical Equipment Repairers in the Other field,60670,stable,Bachelor's,Other
+3059,Musical Instrument Repairers and Tuners,Musical Instrument Repairers and Tuners in the Other field,42800,slow,Bachelor's,Other
+3060,Watch and Clock Repairers,Watch and Clock Repairers in the Other field,58140,slow,Bachelor's,Other
+3061,"Precision Instrument and Equipment Repairers, All Other","Precision Instrument and Equipment Repairers, All Other in the Other field",62040,slow,Bachelor's,Other
+3062,"Maintenance and Repair Workers, General","Maintenance and Repair Workers, General in the Other field",46700,fast,Bachelor's,Other
+3063,Wind Turbine Service Technicians,Wind Turbine Service Technicians in the Other field,61770,slow,Bachelor's,Other
+3064,"Coin, Vending, and Amusement Machine Servicers and Repairers","Coin, Vending, and Amusement Machine Servicers and Repairers in the Other field",44980,slow,Bachelor's,Other
+3065,Commercial Divers,Commercial Divers in the Other field,61300,slow,Bachelor's,Other
+3068,Riggers,Riggers in the Other field,56220,slow,Bachelor's,Other
+3069,Signal and Track Switch Repairers,Signal and Track Switch Repairers in the Other field,82710,slow,Bachelor's,Other
+3070,"Helpers--Installation, Maintenance, and Repair Workers","Helpers--Installation, Maintenance, and Repair Workers in the Other field",36710,stable,Bachelor's,Other
+3071,"Installation, Maintenance, and Repair Workers, All Other","Installation, Maintenance, and Repair Workers, All Other in the Other field",46500,stable,Bachelor's,Other
+3073,"Aircraft Structure, Surfaces, Rigging, and Systems Assemblers","Aircraft Structure, Surfaces, Rigging, and Systems Assemblers in the Other field",61240,slow,High School,Other
+3074,"Coil Winders, Tapers, and Finishers","Coil Winders, Tapers, and Finishers in the Other field",44890,slow,High School,Other
+3076,Engine and Other Machine Assemblers,Engine and Other Machine Assemblers in the Other field,50270,slow,High School,Other
+3077,Structural Metal Fabricators and Fitters,Structural Metal Fabricators and Fitters in the Other field,48480,stable,High School,Other
+3078,Fiberglass Laminators and Fabricators,Fiberglass Laminators and Fabricators in the Other field,40200,slow,High School,Other
+3034,Automotive Body and Related Repairers,Automotive Body and Related Repairers in the Other field,48740,stable,Bachelor's,Other
+3035,Automotive Glass Installers and Repairers,Automotive Glass Installers and Repairers in the Other field,45320,slow,Bachelor's,Other
+3081,Bakers,Bakers in the Other field,34950,stable,High School,Other
+3083,"Meat, Poultry, and Fish Cutters and Trimmers","Meat, Poultry, and Fish Cutters and Trimmers in the Other field",36300,stable,High School,Other
+3084,Slaughterers and Meat Packers,Slaughterers and Meat Packers in the Other field,38160,stable,High School,Other
+3085,"Food and Tobacco Roasting, Baking, and Drying Machine Operators and Tenders","Food and Tobacco Roasting, Baking, and Drying Machine Operators and Tenders in the Other field",39850,slow,High School,Other
+3086,Food Batchmakers,Food Batchmakers in the Other field,38460,stable,High School,Other
+3087,Food Cooking Machine Operators and Tenders,Food Cooking Machine Operators and Tenders in the Other field,38550,slow,High School,Other
+3088,"Food Processing Workers, All Other","Food Processing Workers, All Other in the Other field",36890,stable,High School,Other
+3090,"Forging Machine Setters, Operators, and Tenders, Metal and Plastic","Forging Machine Setters, Operators, and Tenders, Metal and Plastic in the Other field",46990,slow,High School,Other
+3091,"Rolling Machine Setters, Operators, and Tenders, Metal and Plastic","Rolling Machine Setters, Operators, and Tenders, Metal and Plastic in the Other field",47040,slow,High School,Other
+3092,"Cutting, Punching, and Press Machine Setters, Operators, and Tenders, Metal and Plastic","Cutting, Punching, and Press Machine Setters, Operators, and Tenders, Metal and Plastic in the Other field",42400,stable,High School,Other
+3093,"Drilling and Boring Machine Tool Setters, Operators, and Tenders, Metal and Plastic","Drilling and Boring Machine Tool Setters, Operators, and Tenders, Metal and Plastic in the Other field",44620,slow,High School,Other
+3094,"Grinding, Lapping, Polishing, and Buffing Machine Tool Setters, Operators, and Tenders, Metal and Plastic","Grinding, Lapping, Polishing, and Buffing Machine Tool Setters, Operators, and Tenders, Metal and Plastic in the Other field",42610,stable,High School,Other
+3095,"Lathe and Turning Machine Tool Setters, Operators, and Tenders, Metal and Plastic","Lathe and Turning Machine Tool Setters, Operators, and Tenders, Metal and Plastic in the Other field",47110,slow,High School,Other
+3096,"Milling and Planing Machine Setters, Operators, and Tenders, Metal and Plastic","Milling and Planing Machine Setters, Operators, and Tenders, Metal and Plastic in the Other field",47200,slow,High School,Other
+3097,Machinists,Machinists in the Other field,50840,stable,High School,Other
+3098,Metal-Refining Furnace Operators and Tenders,Metal-Refining Furnace Operators and Tenders in the Other field,50250,slow,High School,Other
+3099,"Pourers and Casters, Metal","Pourers and Casters, Metal in the Other field",48690,slow,High School,Other
+3100,"Model Makers, Metal and Plastic","Model Makers, Metal and Plastic in the Other field",64190,slow,High School,Other
+3101,"Patternmakers, Metal and Plastic","Patternmakers, Metal and Plastic in the Other field",49670,slow,High School,Other
+3104,"Multiple Machine Tool Setters, Operators, and Tenders, Metal and Plastic","Multiple Machine Tool Setters, Operators, and Tenders, Metal and Plastic in the Other field",41600,stable,High School,Other
+3105,Tool and Die Makers,Tool and Die Makers in the Other field,61490,stable,High School,Other
+3106,"Welders, Cutters, Solderers, and Brazers","Welders, Cutters, Solderers, and Brazers in the Other field",48940,stable,High School,Other
+3107,"Welding, Soldering, and Brazing Machine Setters, Operators, and Tenders","Welding, Soldering, and Brazing Machine Setters, Operators, and Tenders in the Other field",45350,slow,High School,Other
+3108,"Heat Treating Equipment Setters, Operators, and Tenders, Metal and Plastic","Heat Treating Equipment Setters, Operators, and Tenders, Metal and Plastic in the Other field",44240,slow,High School,Other
+3109,"Layout Workers, Metal and Plastic","Layout Workers, Metal and Plastic in the Other field",62270,slow,High School,Other
+3110,"Plating Machine Setters, Operators, and Tenders, Metal and Plastic","Plating Machine Setters, Operators, and Tenders, Metal and Plastic in the Other field",39740,slow,High School,Other
+3111,"Tool Grinders, Filers, and Sharpeners","Tool Grinders, Filers, and Sharpeners in the Other field",46410,slow,High School,Other
+3112,"Metal Workers and Plastic Workers, All Other","Metal Workers and Plastic Workers, All Other in the Other field",41200,slow,High School,Other
+3114,Printing Press Operators,Printing Press Operators in the Other field,41860,stable,High School,Other
+3115,Print Binding and Finishing Workers,Print Binding and Finishing Workers in the Other field,38100,slow,High School,Other
+3116,Laundry and Dry-Cleaning Workers,Laundry and Dry-Cleaning Workers in the Other field,31050,stable,High School,Other
+3117,"Pressers, Textile, Garment, and Related Materials","Pressers, Textile, Garment, and Related Materials in the Other field",32240,slow,High School,Other
+3118,Sewing Machine Operators,Sewing Machine Operators in the Other field,34440,stable,High School,Other
+3119,Shoe and Leather Workers and Repairers,Shoe and Leather Workers and Repairers in the Other field,36020,slow,High School,Other
+3120,Shoe Machine Operators and Tenders,Shoe Machine Operators and Tenders in the Other field,36970,slow,High School,Other
+3121,"Sewers, Hand","Sewers, Hand in the Other field",32240,slow,High School,Other
+3080,Miscellaneous Assemblers and Fabricators,Miscellaneous Assemblers and Fabricators in the Other field,38920,fast,High School,Other
+3162,"Painting, Coating, and Decorating Workers","Painting, Coating, and Decorating Workers in the Other field",40230,slow,High School,Other
+3164,Semiconductor Processing Technicians,Semiconductor Processing Technicians in the Other field,45850,slow,High School,Other
+3123,Textile Bleaching and Dyeing Machine Operators and Tenders,Textile Bleaching and Dyeing Machine Operators and Tenders in the Other field,35340,slow,High School,Other
+3124,"Textile Cutting Machine Setters, Operators, and Tenders","Textile Cutting Machine Setters, Operators, and Tenders in the Other field",36620,slow,High School,Other
+3125,"Textile Knitting and Weaving Machine Setters, Operators, and Tenders","Textile Knitting and Weaving Machine Setters, Operators, and Tenders in the Other field",37130,slow,High School,Other
+3127,"Extruding and Forming Machine Setters, Operators, and Tenders, Synthetic and Glass Fibers","Extruding and Forming Machine Setters, Operators, and Tenders, Synthetic and Glass Fibers in the Other field",44030,slow,High School,Other
+3128,Fabric and Apparel Patternmakers,Fabric and Apparel Patternmakers in the Other field,62510,slow,High School,Other
+3129,Upholsterers,Upholsterers in the Other field,42730,slow,High School,Other
+3130,"Textile, Apparel, and Furnishings Workers, All Other","Textile, Apparel, and Furnishings Workers, All Other in the Other field",35130,slow,High School,Other
+3131,Cabinetmakers and Bench Carpenters,Cabinetmakers and Bench Carpenters in the Other field,43260,stable,High School,Other
+3132,Furniture Finishers,Furniture Finishers in the Other field,39790,slow,High School,Other
+3133,"Model Makers, Wood","Model Makers, Wood in the Other field",45040,slow,High School,Other
+3134,"Patternmakers, Wood","Patternmakers, Wood in the Other field",48630,slow,High School,Other
+3135,"Sawing Machine Setters, Operators, and Tenders, Wood","Sawing Machine Setters, Operators, and Tenders, Wood in the Other field",38000,slow,High School,Other
+3136,"Woodworking Machine Setters, Operators, and Tenders, Except Sawing","Woodworking Machine Setters, Operators, and Tenders, Except Sawing in the Other field",38260,stable,High School,Other
+3137,"Woodworkers, All Other","Woodworkers, All Other in the Other field",37760,slow,High School,Other
+3138,Nuclear Power Reactor Operators,Nuclear Power Reactor Operators in the Other field,120350,slow,High School,Other
+3139,Power Distributors and Dispatchers,Power Distributors and Dispatchers in the Other field,104750,slow,High School,Other
+3140,Power Plant Operators,Power Plant Operators in the Other field,97010,slow,High School,Other
+3143,Chemical Plant and System Operators,Chemical Plant and System Operators in the Other field,80030,slow,High School,Other
+3144,Gas Plant Operators,Gas Plant Operators in the Other field,82560,slow,High School,Other
+3145,"Petroleum Pump System Operators, Refinery Operators, and Gaugers","Petroleum Pump System Operators, Refinery Operators, and Gaugers in the Other field",94580,slow,High School,Other
+3146,"Plant and System Operators, All Other","Plant and System Operators, All Other in the Other field",56940,slow,High School,Other
+3147,Chemical Equipment Operators and Tenders,Chemical Equipment Operators and Tenders in the Other field,51720,stable,High School,Other
+3149,"Crushing, Grinding, and Polishing Machine Setters, Operators, and Tenders","Crushing, Grinding, and Polishing Machine Setters, Operators, and Tenders in the Other field",44510,slow,High School,Other
+3150,"Grinding and Polishing Workers, Hand","Grinding and Polishing Workers, Hand in the Other field",38940,slow,High School,Other
+3151,"Mixing and Blending Machine Setters, Operators, and Tenders","Mixing and Blending Machine Setters, Operators, and Tenders in the Other field",46100,stable,High School,Other
+3152,"Cutters and Trimmers, Hand","Cutters and Trimmers, Hand in the Other field",37040,slow,High School,Other
+3153,"Cutting and Slicing Machine Setters, Operators, and Tenders","Cutting and Slicing Machine Setters, Operators, and Tenders in the Other field",44310,stable,High School,Other
+3154,"Extruding, Forming, Pressing, and Compacting Machine Setters, Operators, and Tenders","Extruding, Forming, Pressing, and Compacting Machine Setters, Operators, and Tenders in the Other field",42670,stable,High School,Other
+3155,"Furnace, Kiln, Oven, Drier, and Kettle Operators and Tenders","Furnace, Kiln, Oven, Drier, and Kettle Operators and Tenders in the Other field",45640,slow,High School,Other
+3156,"Inspectors, Testers, Sorters, Samplers, and Weighers","Inspectors, Testers, Sorters, Samplers, and Weighers in the Other field",45850,fast,High School,Other
+3157,Jewelers and Precious Stone and Metal Workers,Jewelers and Precious Stone and Metal Workers in the Other field,47450,slow,High School,Other
+3158,Dental Laboratory Technicians,Dental Laboratory Technicians in the Other field,47690,slow,High School,Other
+3159,Medical Appliance Technicians,Medical Appliance Technicians in the Other field,44960,slow,High School,Other
+3161,Packaging and Filling Machine Operators and Tenders,Packaging and Filling Machine Operators and Tenders in the Other field,38330,stable,High School,Other
+3122,"Tailors, Dressmakers, and Custom Sewers","Tailors, Dressmakers, and Custom Sewers in the Other field",36650,slow,High School,Other
+3182,Airfield Operations Specialists,Airfield Operations Specialists in the Other field,51140,slow,Bachelor's,Other
+3185,Driver/Sales Workers,Driver/Sales Workers in the Other field,35420,stable,Bachelor's,Other
+3187,Light Truck Drivers,Light Truck Drivers in the Other field,42470,fast,Bachelor's,Other
+3197,Subway and Streetcar Operators,Subway and Streetcar Operators in the Other field,84270,slow,Bachelor's,Other
+3198,"Rail Transportation Workers, All Other","Rail Transportation Workers, All Other in the Other field",44660,slow,Bachelor's,Other
+3205,Automotive and Watercraft Service Attendants,Automotive and Watercraft Service Attendants in the Other field,33820,stable,Bachelor's,Other
+3210,"Transportation Workers, All Other","Transportation Workers, All Other in the Other field",40300,slow,Bachelor's,Other
+3167,Computer Numerically Controlled Tool Programmers,Computer Numerically Controlled Tool Programmers in the Other field,63440,slow,High School,Other
+3168,Adhesive Bonding Machine Operators and Tenders,Adhesive Bonding Machine Operators and Tenders in the Other field,43540,slow,High School,Other
+3169,"Cleaning, Washing, and Metal Pickling Equipment Operators and Tenders","Cleaning, Washing, and Metal Pickling Equipment Operators and Tenders in the Other field",39340,slow,High School,Other
+3170,Cooling and Freezing Equipment Operators and Tenders,Cooling and Freezing Equipment Operators and Tenders in the Other field,42420,slow,High School,Other
+3171,Etchers and Engravers,Etchers and Engravers in the Other field,40040,slow,High School,Other
+3172,"Molders, Shapers, and Casters, Except Metal and Plastic","Molders, Shapers, and Casters, Except Metal and Plastic in the Other field",43310,slow,High School,Other
+3173,"Paper Goods Machine Setters, Operators, and Tenders","Paper Goods Machine Setters, Operators, and Tenders in the Other field",47250,stable,High School,Other
+3174,Tire Builders,Tire Builders in the Other field,54080,slow,High School,Other
+3175,Helpers--Production Workers,Helpers--Production Workers in the Other field,36700,stable,High School,Other
+3176,"Production Workers, All Other","Production Workers, All Other in the Other field",37430,stable,High School,Other
+3180,Commercial Pilots,Commercial Pilots in the Other field,113080,stable,Bachelor's,Other
+3181,Air Traffic Controllers,Air Traffic Controllers in the Other field,137380,slow,Bachelor's,Other
+3183,Flight Attendants,Flight Attendants in the Other field,68370,stable,Bachelor's,Other
+3184,"Ambulance Drivers and Attendants, Except Emergency Medical Technicians","Ambulance Drivers and Attendants, Except Emergency Medical Technicians in the Other field",32580,slow,Bachelor's,Other
+3186,Heavy and Tractor-Trailer Truck Drivers,Heavy and Tractor-Trailer Truck Drivers in the Other field,54320,fast,Bachelor's,Other
+3188,"Bus Drivers, School","Bus Drivers, School in the Other field",45660,stable,Bachelor's,Other
+3189,"Bus Drivers, Transit and Intercity","Bus Drivers, Transit and Intercity in the Other field",60170,stable,Bachelor's,Other
+3190,Shuttle Drivers and Chauffeurs,Shuttle Drivers and Chauffeurs in the Other field,35240,stable,Bachelor's,Other
+3191,Taxi Drivers,Taxi Drivers in the Other field,34680,slow,Bachelor's,Other
+3192,"Motor Vehicle Operators, All Other","Motor Vehicle Operators, All Other in the Other field",35690,stable,Bachelor's,Other
+3193,Locomotive Engineers,Locomotive Engineers in the Other field,74770,slow,Bachelor's,Other
+3195,"Railroad Brake, Signal, and Switch Operators and Locomotive Firers","Railroad Brake, Signal, and Switch Operators and Locomotive Firers in the Other field",63540,slow,Bachelor's,Other
+3196,Railroad Conductors and Yardmasters,Railroad Conductors and Yardmasters in the Other field,71130,slow,Bachelor's,Other
+3199,Sailors and Marine Oilers,Sailors and Marine Oilers in the Other field,48400,slow,Bachelor's,Other
+3200,"Captains, Mates, and Pilots of Water Vessels","Captains, Mates, and Pilots of Water Vessels in the Other field",88730,slow,Bachelor's,Other
+3201,Motorboat Operators,Motorboat Operators in the Other field,46420,slow,Bachelor's,Other
+3202,Ship Engineers,Ship Engineers in the Other field,94270,slow,Bachelor's,Other
+3203,Bridge and Lock Tenders,Bridge and Lock Tenders in the Other field,49120,slow,Bachelor's,Other
+3204,Parking Attendants,Parking Attendants in the Other field,32840,stable,Bachelor's,Other
+3206,Aircraft Service Attendants,Aircraft Service Attendants in the Other field,39110,slow,Bachelor's,Other
+3207,Traffic Technicians,Traffic Technicians in the Other field,52240,slow,Bachelor's,Other
+3208,Transportation Inspectors,Transportation Inspectors in the Other field,87290,slow,Bachelor's,Other
+3209,Passenger Attendants,Passenger Attendants in the Other field,35620,slow,Bachelor's,Other
+3211,Conveyor Operators and Tenders,Conveyor Operators and Tenders in the Other field,39260,slow,Bachelor's,Other
+3166,Computer Numerically Controlled Tool Operators,Computer Numerically Controlled Tool Operators in the Other field,48550,stable,High School,Other
+2438,Compliance Officers,Compliance Officers in the Finance field,75670,stable,Bachelor's,Finance
+2440,Human Resources Specialists,Human Resources Specialists in the Finance field,67650,fast,Bachelor's,Finance
+2446,"Meeting, Convention, and Event Planners","Meeting, Convention, and Event Planners in the Finance field",56920,stable,Bachelor's,Finance
+2472,Database Administrators,Database Administrators in the Technology field,101510,stable,Bachelor's,Technology
+2488,Landscape Architects,Landscape Architects in the Other field,79320,slow,Bachelor's,Other
+2530,Conservation Scientists,Conservation Scientists in the Other field,68750,slow,Bachelor's,Other
+2533,"Medical Scientists, Except Epidemiologists","Medical Scientists, Except Epidemiologists in the Other field",100890,stable,Bachelor's,Other
+2540,"Environmental Scientists and Specialists, Including Health","Environmental Scientists and Specialists, Including Health in the Other field",78980,stable,Bachelor's,Other
+2561,"Environmental Science and Protection Technicians, Including Health","Environmental Science and Protection Technicians, Including Health in the Other field",50660,slow,Bachelor's,Other
+2744,Dental Hygienists,Dental Hygienists in the Healthcare field,87530,stable,Bachelor's,Healthcare
+3212,Crane and Tower Operators,Crane and Tower Operators in the Other field,64690,slow,Bachelor's,Other
+3214,Hoist and Winch Operators,Hoist and Winch Operators in the Other field,55950,slow,Bachelor's,Other
+2434,"Agents and Business Managers of Artists, Performers, and Athletes","Agents and Business Managers of Artists, Performers, and Athletes in the Finance field",84900,slow,Bachelor's,Finance
+2456,Financial and Investment Analysts,Financial and Investment Analysts in the Finance field,99010,stable,Bachelor's,Finance
+2479,Web and Digital Interface Designers,Web and Digital Interface Designers in the Technology field,98540,stable,Bachelor's,Technology
+2486,"Mathematical Science Occupations, All Other","Mathematical Science Occupations, All Other in the Technology field",70620,slow,Bachelor's,Technology
+2491,Aerospace Engineers,Aerospace Engineers in the Other field,130720,stable,Bachelor's,Other
+2498,"Electronics Engineers, Except Computer","Electronics Engineers, Except Computer in the Other field",119200,stable,Bachelor's,Other
+2555,Political Scientists,Political Scientists in the Other field,132350,slow,Bachelor's,Other
+2560,Chemical Technicians,Chemical Technicians in the Other field,56750,stable,Bachelor's,Other
+2578,Mental Health and Substance Abuse Social Workers,Mental Health and Substance Abuse Social Workers in the Other field,55960,stable,Bachelor's,Other
+3213,Dredge Operators,Dredge Operators in the Other field,50440,slow,Bachelor's,Other
+3215,Industrial Truck and Tractor Operators,Industrial Truck and Tractor Operators in the Other field,44470,fast,Bachelor's,Other
+3216,Cleaners of Vehicles and Equipment,Cleaners of Vehicles and Equipment in the Other field,34150,stable,Bachelor's,Other
+3217,"Laborers and Freight, Stock, and Material Movers, Hand","Laborers and Freight, Stock, and Material Movers, Hand in the Other field",37660,fast,Bachelor's,Other
+3218,Machine Feeders and Offbearers,Machine Feeders and Offbearers in the Other field,39250,slow,Bachelor's,Other
+3219,"Packers and Packagers, Hand","Packers and Packagers, Hand in the Other field",34830,fast,Bachelor's,Other
+3220,Stockers and Order Fillers,Stockers and Order Fillers in the Other field,36390,fast,Bachelor's,Other
+3221,Gas Compressor and Gas Pumping Station Operators,Gas Compressor and Gas Pumping Station Operators in the Other field,61870,slow,Bachelor's,Other
+3222,"Pump Operators, Except Wellhead Pumpers","Pump Operators, Except Wellhead Pumpers in the Other field",54690,slow,Bachelor's,Other
+3223,Wellhead Pumpers,Wellhead Pumpers in the Other field,71830,slow,Bachelor's,Other
+3224,Refuse and Recyclable Material Collectors,Refuse and Recyclable Material Collectors in the Other field,45760,stable,Bachelor's,Other
+3225,"Tank Car, Truck, and Ship Loaders","Tank Car, Truck, and Ship Loaders in the Other field",58620,slow,Bachelor's,Other
+3226,"Material Moving Workers, All Other","Material Moving Workers, All Other in the Other field",40310,slow,Bachelor's,Other
+2399,Advertising and Promotions Managers,Advertising and Promotions Managers in the Management field,131870,slow,Master's,Management
+2423,"Entertainment and Recreation Managers, Except Gambling","Entertainment and Recreation Managers, Except Gambling in the Other field",73460,slow,Bachelor's,Other
+2690,Interpreters and Translators,Interpreters and Translators in the Other field,57090,stable,Bachelor's,Other
+2771,"Healthcare Practitioners and Technical Workers, All Other","Healthcare Practitioners and Technical Workers, All Other in the Healthcare field",63630,slow,Bachelor's,Healthcare
+2776,Occupational Therapy Assistants,Occupational Therapy Assistants in the Other field,67010,slow,Bachelor's,Other
+2784,Medical Transcriptionists,Medical Transcriptionists in the Other field,37060,stable,Bachelor's,Other
+2806,Gambling Surveillance Officers and Gambling Investigators,Gambling Surveillance Officers and Gambling Investigators in the Other field,39210,slow,Bachelor's,Other
+2830,First-Line Supervisors of Housekeeping and Janitorial Workers,First-Line Supervisors of Housekeeping and Janitorial Workers in the Other field,46650,stable,Bachelor's,Other
+2866,Tour and Travel Guides,Tour and Travel Guides in the Other field,36060,slow,Bachelor's,Other
+2868,Exercise Trainers and Group Fitness Instructors,Exercise Trainers and Group Fitness Instructors in the Other field,46480,stable,Bachelor's,Other
+2615,"Social Sciences Teachers, Postsecondary, All Other","Social Sciences Teachers, Postsecondary, All Other in the Education field",77750,slow,Bachelor's,Education
+2624,"Communications Teachers, Postsecondary","Communications Teachers, Postsecondary in the Education field",79910,slow,Bachelor's,Education
+2629,"Family and Consumer Sciences Teachers, Postsecondary","Family and Consumer Sciences Teachers, Postsecondary in the Education field",78410,slow,Bachelor's,Education
+2636,"Middle School Teachers, Except Special and Career/Technical Education","Middle School Teachers, Except Special and Career/Technical Education in the Education field",64290,fast,Bachelor's,Education
+2662,"Fine Artists, Including Painters, Sculptors, and Illustrators","Fine Artists, Including Painters, Sculptors, and Illustrators in the Other field",59300,slow,Bachelor's,Other
+2668,Graphic Designers,Graphic Designers in the Other field,58910,stable,Bachelor's,Other
+2670,Merchandise Displayers and Window Trimmers,Merchandise Displayers and Window Trimmers in the Other field,36230,stable,Bachelor's,Other
+2677,"Umpires, Referees, and Other Sports Officials","Umpires, Referees, and Other Sports Officials in the Other field",35820,slow,Bachelor's,Other
+2698,"Camera Operators, Television, Video, and Film","Camera Operators, Television, Video, and Film in the Other field",61800,slow,Bachelor's,Other
+2707,Dietitians and Nutritionists,Dietitians and Nutritionists in the Healthcare field,69680,stable,Bachelor's,Healthcare
+2715,Recreational Therapists,Recreational Therapists in the Healthcare field,57120,slow,Bachelor's,Healthcare
+2722,Nurse Anesthetists,Nurse Anesthetists in the Healthcare field,212650,slow,Bachelor's,Healthcare
+2729,Emergency Medicine Physicians,Emergency Medicine Physicians in the Healthcare field,,slow,Bachelor's,Healthcare
+2746,Clinical Laboratory Technologists and Technicians,Clinical Laboratory Technologists and Technicians in the Healthcare field,60780,stable,Bachelor's,Healthcare
+2759,Veterinary Technologists and Technicians,Veterinary Technologists and Technicians in the Healthcare field,43740,stable,Bachelor's,Healthcare
+2801,Parking Enforcement Workers,Parking Enforcement Workers in the Other field,46840,slow,Bachelor's,Other
+2814,First-Line Supervisors of Food Preparation and Serving Workers,First-Line Supervisors of Food Preparation and Serving Workers in the Other field,38520,fast,Bachelor's,Other
+2820,"Cooks, All Other","Cooks, All Other in the Other field",35920,slow,Bachelor's,Other
+2825,"Food Servers, Nonrestaurant","Food Servers, Nonrestaurant in the Other field",33110,stable,Bachelor's,Other
+2840,First-Line Supervisors of Gambling Services Workers,First-Line Supervisors of Gambling Services Workers in the Other field,61210,slow,Bachelor's,Other
+2853,"Entertainment Attendants and Related Workers, All Other","Entertainment Attendants and Related Workers, All Other in the Other field",33280,slow,Bachelor's,Other
+2872,First-Line Supervisors of Retail Sales Workers,First-Line Supervisors of Retail Sales Workers in the Other field,46730,fast,Bachelor's,Other
+2881,"Securities, Commodities, and Financial Services Sales Agents","Securities, Commodities, and Financial Services Sales Agents in the Other field",76900,stable,Bachelor's,Other
+2892,"Door-to-Door Sales Workers, News and Street Vendors, and Related Workers","Door-to-Door Sales Workers, News and Street Vendors, and Related Workers in the Other field",34910,slow,Bachelor's,Other
+2597,"Computer Science Teachers, Postsecondary","Computer Science Teachers, Postsecondary in the Education field",96430,slow,Bachelor's,Education
+2604,"Atmospheric, Earth, Marine, and Space Sciences Teachers, Postsecondary","Atmospheric, Earth, Marine, and Space Sciences Teachers, Postsecondary in the Education field",100690,slow,Bachelor's,Education
+2905,"Financial Clerks, All Other","Financial Clerks, All Other in the Other field",49940,slow,Bachelor's,Other
+2428,"Property, Real Estate, and Community Association Managers","Property, Real Estate, and Community Association Managers in the Other field",62850,stable,Bachelor's,Other
+2444,Project Management Specialists,Project Management Specialists in the Finance field,98580,fast,Bachelor's,Finance
+2448,"Compensation, Benefits, and Job Analysis Specialists","Compensation, Benefits, and Job Analysis Specialists in the Finance field",74530,stable,Bachelor's,Finance
+2474,Network and Computer Systems Administrators,Network and Computer Systems Administrators in the Technology field,95360,stable,Bachelor's,Technology
+2496,Computer Hardware Engineers,Computer Hardware Engineers in the Other field,138080,stable,Bachelor's,Other
+2500,"Health and Safety Engineers, Except Mining Safety Engineers and Inspectors","Health and Safety Engineers, Except Mining Safety Engineers and Inspectors in the Other field",103690,slow,Bachelor's,Other
+2505,"Mining and Geological Engineers, Including Mining Safety Engineers","Mining and Geological Engineers, Including Mining Safety Engineers in the Other field",100640,slow,Bachelor's,Other
+2515,Electrical and Electronic Engineering Technologists and Technicians,Electrical and Electronic Engineering Technologists and Technicians in the Other field,72800,stable,Bachelor's,Other
+2557,Agricultural Technicians,Agricultural Technicians in the Other field,43180,slow,Bachelor's,Other
+2566,Forest and Conservation Technicians,Forest and Conservation Technicians in the Other field,51880,slow,Bachelor's,Other
+2580,Health Education Specialists,Health Education Specialists in the Other field,62860,stable,Bachelor's,Other
+2581,Probation Officers and Correctional Treatment Specialists,Probation Officers and Correctional Treatment Specialists in the Other field,61800,stable,Bachelor's,Other
+2584,"Community and Social Service Specialists, All Other","Community and Social Service Specialists, All Other in the Other field",49690,stable,Bachelor's,Other
+2593,Paralegals and Legal Assistants,Paralegals and Legal Assistants in the Other field,60970,stable,Bachelor's,Other
+2652,Museum Technicians and Conservators,Museum Technicians and Conservators in the Education field,48670,slow,Bachelor's,Education
+2658,"Teaching Assistants, Except Postsecondary","Teaching Assistants, Except Postsecondary in the Education field",35550,fast,Bachelor's,Education
+2686,Public Relations Specialists,Public Relations Specialists in the Other field,66750,stable,Bachelor's,Other
+2695,Sound Engineering Technicians,Sound Engineering Technicians in the Other field,59430,slow,Bachelor's,Other
+2738,"Physicians, All Other","Physicians, All Other in the Healthcare field",236000,stable,Bachelor's,Healthcare
+2742,"Surgeons, All Other","Surgeons, All Other in the Healthcare field",,slow,Bachelor's,Healthcare
+2747,Cardiovascular Technologists and Technicians,Cardiovascular Technologists and Technicians in the Healthcare field,66170,stable,Bachelor's,Healthcare
+2766,"Health Technologists and Technicians, All Other","Health Technologists and Technicians, All Other in the Healthcare field",47470,stable,Bachelor's,Healthcare
+2789,First-Line Supervisors of Correctional Officers,First-Line Supervisors of Correctional Officers in the Other field,70530,stable,Bachelor's,Other
+2791,First-Line Supervisors of Firefighting and Prevention Workers,First-Line Supervisors of Firefighting and Prevention Workers in the Other field,86220,stable,Bachelor's,Other
+2397,General and Operations Managers,General and Operations Managers in the Management field,101280,fast,Master's,Management
+2406,Computer and Information Systems Managers,Computer and Information Systems Managers in the Other field,169510,fast,Bachelor's,Other
+2410,"Transportation, Storage, and Distribution Managers","Transportation, Storage, and Distribution Managers in the Other field",99200,stable,Bachelor's,Other
+2414,"Farmers, Ranchers, and Other Agricultural Managers","Farmers, Ranchers, and Other Agricultural Managers in the Finance field",83770,slow,Bachelor's,Finance
+2793,"First-Line Supervisors of Protective Service Workers, All Other","First-Line Supervisors of Protective Service Workers, All Other in the Other field",65050,slow,Bachelor's,Other
+2946,Statistical Assistants,Statistical Assistants in the Other field,50510,slow,Bachelor's,Other
+2948,"First-Line Supervisors of Farming, Fishing, and Forestry Workers","First-Line Supervisors of Farming, Fishing, and Forestry Workers in the Other field",57320,slow,Bachelor's,Other
+3021,"First-Line Supervisors of Mechanics, Installers, and Repairers","First-Line Supervisors of Mechanics, Installers, and Repairers in the Other field",75820,fast,Bachelor's,Other
+3036,Automotive Service Technicians and Mechanics,Automotive Service Technicians and Mechanics in the Other field,47770,fast,Bachelor's,Other
+3037,Bus and Truck Mechanics and Diesel Engine Specialists,Bus and Truck Mechanics and Diesel Engine Specialists in the Other field,58970,stable,Bachelor's,Other
+3113,Prepress Technicians and Workers,Prepress Technicians and Workers in the Other field,45070,slow,High School,Other
+3141,Stationary Engineers and Boiler Operators,Stationary Engineers and Boiler Operators in the Other field,67640,slow,High School,Other
+3160,Ophthalmic Laboratory Technicians,Ophthalmic Laboratory Technicians in the Other field,37720,slow,High School,Other
+3177,Aircraft Cargo Handling Supervisors,Aircraft Cargo Handling Supervisors in the Other field,58920,slow,Bachelor's,Other
+3178,"First-Line Supervisors of Transportation and Material Moving Workers, Except Aircraft Cargo Handling Supervisors","First-Line Supervisors of Transportation and Material Moving Workers, Except Aircraft Cargo Handling Supervisors in the Other field",60510,fast,Bachelor's,Other
+2841,"First-Line Supervisors of Entertainment and Recreation Workers, Except Gambling Services","First-Line Supervisors of Entertainment and Recreation Workers, Except Gambling Services in the Other field",46060,stable,Bachelor's,Other
+2890,Sales Engineers,Sales Engineers in the Other field,116950,stable,Bachelor's,Other
+2894,First-Line Supervisors of Office and Administrative Support Workers,First-Line Supervisors of Office and Administrative Support Workers in the Other field,63450,fast,Bachelor's,Other
+2937,"Secretaries and Administrative Assistants, Except Legal, Medical, and Executive","Secretaries and Administrative Assistants, Except Legal, Medical, and Executive in the Other field",44280,fast,Bachelor's,Other
+2911,"Eligibility Interviewers, Government Programs","Eligibility Interviewers, Government Programs in the Other field",50270,stable,Bachelor's,Other
+2933,"Weighers, Measurers, Checkers, and Samplers, Recordkeeping","Weighers, Measurers, Checkers, and Samplers, Recordkeeping in the Other field",43270,stable,Bachelor's,Other
+2961,First-Line Supervisors of Construction Trades and Extraction Workers,First-Line Supervisors of Construction Trades and Extraction Workers in the Other field,76760,fast,Bachelor's,Other
+2985,"Plumbers, Pipefitters, and Steamfitters","Plumbers, Pipefitters, and Steamfitters in the Other field",61550,stable,Bachelor's,Other
+2992,"Helpers--Brickmasons, Blockmasons, Stonemasons, and Tile and Marble Setters","Helpers--Brickmasons, Blockmasons, Stonemasons, and Tile and Marble Setters in the Other field",42470,slow,Bachelor's,Other
+3002,Hazardous Materials Removal Workers,Hazardous Materials Removal Workers in the Other field,47280,slow,Bachelor's,Other
+3010,"Excavating and Loading Machine and Dragline Operators, Surface Mining","Excavating and Loading Machine and Dragline Operators, Surface Mining in the Other field",50050,slow,Bachelor's,Other
+3022,"Computer, Automated Teller, and Office Machine Repairers","Computer, Automated Teller, and Office Machine Repairers in the Other field",45760,stable,Bachelor's,Other
+3028,"Electrical and Electronics Repairers, Commercial and Industrial Equipment","Electrical and Electronics Repairers, Commercial and Industrial Equipment in the Other field",66680,stable,Bachelor's,Other
+3038,Farm Equipment Mechanics and Service Technicians,Farm Equipment Mechanics and Service Technicians in the Other field,49210,slow,Bachelor's,Other
+3056,Telecommunications Line Installers and Repairers,Telecommunications Line Installers and Repairers in the Other field,64640,stable,Bachelor's,Other
+3067,Manufactured Building and Mobile Home Installers,Manufactured Building and Mobile Home Installers in the Other field,38980,slow,Bachelor's,Other
+3072,First-Line Supervisors of Production and Operating Workers,First-Line Supervisors of Production and Operating Workers in the Other field,65930,fast,High School,Other
+3082,Butchers and Meat Cutters,Butchers and Meat Cutters in the Other field,37650,stable,High School,Other
+3089,"Extruding and Drawing Machine Setters, Operators, and Tenders, Metal and Plastic","Extruding and Drawing Machine Setters, Operators, and Tenders, Metal and Plastic in the Other field",44390,stable,High School,Other
+3102,Foundry Mold and Coremakers,Foundry Mold and Coremakers in the Other field,44300,slow,High School,Other
+3103,"Molding, Coremaking, and Casting Machine Setters, Operators, and Tenders, Metal and Plastic","Molding, Coremaking, and Casting Machine Setters, Operators, and Tenders, Metal and Plastic in the Other field",38870,stable,High School,Other
+3126,"Textile Winding, Twisting, and Drawing Out Machine Setters, Operators, and Tenders","Textile Winding, Twisting, and Drawing Out Machine Setters, Operators, and Tenders in the Other field",35530,slow,High School,Other
+3142,Water and Wastewater Treatment Plant and System Operators,Water and Wastewater Treatment Plant and System Operators in the Other field,54890,stable,High School,Other
+3148,"Separating, Filtering, Clarifying, Precipitating, and Still Machine Setters, Operators, and Tenders","Separating, Filtering, Clarifying, Precipitating, and Still Machine Setters, Operators, and Tenders in the Other field",48120,stable,High School,Other
+3163,"Coating, Painting, and Spraying Machine Setters, Operators, and Tenders","Coating, Painting, and Spraying Machine Setters, Operators, and Tenders in the Other field",45560,stable,High School,Other
+3179,"Airline Pilots, Copilots, and Flight Engineers","Airline Pilots, Copilots, and Flight Engineers in the Other field",219140,stable,Bachelor's,Other
+3194,"Rail Yard Engineers, Dinkey Operators, and Hostlers","Rail Yard Engineers, Dinkey Operators, and Hostlers in the Other field",57070,slow,Bachelor's,Other
+2396,Chief Executives,Chief Executives in the Management field,206680,stable,Master's,Management
+2645,"Adult Basic Education, Adult Secondary Education, and English as a Second Language Instructors","Adult Basic Education, Adult Secondary Education, and English as a Second Language Instructors in the Education field",60560,slow,Bachelor's,Education
+2947,"Office and Administrative Support Workers, All Other","Office and Administrative Support Workers, All Other in the Other field",43230,stable,Bachelor's,Other
+2959,Log Graders and Scalers,Log Graders and Scalers in the Other field,45600,slow,Bachelor's,Other
+2975,Operating Engineers and Other Construction Equipment Operators,Operating Engineers and Other Construction Equipment Operators in the Other field,56160,stable,Bachelor's,Other
+3079,Timing Device Assemblers and Adjusters,Timing Device Assemblers and Adjusters in the Other field,48840,slow,High School,Other
+3165,Photographic Process Workers and Processing Machine Operators,Photographic Process Workers and Processing Machine Operators in the Other field,35620,slow,High School,Other
+2450,Market Research Analysts and Marketing Specialists,Market Research Analysts and Marketing Specialists in the Finance field,74680,fast,Bachelor's,Finance
+2463,"Tax Examiners and Collectors, and Revenue Agents","Tax Examiners and Collectors, and Revenue Agents in the Finance field",58530,stable,Bachelor's,Finance
+2485,Data Scientists,Data Scientists in the Technology field,108020,stable,Bachelor's,Technology
+2495,Civil Engineers,Civil Engineers in the Other field,95890,stable,Bachelor's,Other
+2513,Aerospace Engineering and Operations Technologists and Technicians,Aerospace Engineering and Operations Technologists and Technicians in the Other field,77830,slow,Bachelor's,Other
+2556,"Social Scientists and Related Workers, All Other","Social Scientists and Related Workers, All Other in the Other field",95890,slow,Bachelor's,Other
+2574,"Substance Abuse, Behavioral Disorder, and Mental Health Counselors","Substance Abuse, Behavioral Disorder, and Mental Health Counselors in the Other field",53710,stable,Bachelor's,Other
+2586,"Directors, Religious Activities and Education","Directors, Religious Activities and Education in the Other field",50140,slow,Bachelor's,Other
+2598,"Mathematical Science Teachers, Postsecondary","Mathematical Science Teachers, Postsecondary in the Education field",81020,slow,Bachelor's,Education
+2630,"Recreation and Fitness Studies Teachers, Postsecondary","Recreation and Fitness Studies Teachers, Postsecondary in the Education field",75770,slow,Bachelor's,Education
+2659,"Educational Instruction and Library Workers, All Other","Educational Instruction and Library Workers, All Other in the Education field",49800,stable,Bachelor's,Education
+2691,Court Reporters and Simultaneous Captioners,Court Reporters and Simultaneous Captioners in the Other field,63940,slow,Bachelor's,Other
+2700,"Media and Communication Equipment Workers, All Other","Media and Communication Equipment Workers, All Other in the Other field",71340,slow,Bachelor's,Other
+2724,Nurse Practitioners,Nurse Practitioners in the Healthcare field,126260,stable,Bachelor's,Healthcare
+2873,First-Line Supervisors of Non-Retail Sales Workers,First-Line Supervisors of Non-Retail Sales Workers in the Other field,84570,stable,Bachelor's,Other

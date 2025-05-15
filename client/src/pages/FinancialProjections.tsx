@@ -958,6 +958,32 @@ const FinancialProjections = ({
             setExpenses(Math.round(startingIncome * 0.7));
           }
         }
+
+        // Determine selected college from favorites or pathway data
+        let selectedCollege = null;
+        if (favoriteColleges && favoriteColleges.length > 0) {
+          selectedCollege = favoriteColleges[0]; // Use the first favorite college
+        } else if (pathwayData && pathwayData.selectedSchoolId) {
+          selectedCollege = pathwayData.selectedSchoolId; // Or fetch the full object if available
+        }
+
+        // Determine selected career from favorites or pathway data
+        let selectedCareer = null;
+        if (favoriteCareers && favoriteCareers.length > 0) {
+          selectedCareer = favoriteCareers[0]; // Use the first favorite career
+        } else if (pathwayData && pathwayData.selectedCareer) {
+          selectedCareer = pathwayData.selectedCareer; // Or fetch the full object if available
+        }
+
+        // Add selected college and career data to the payload if available
+        const payload: any = {
+          startAge: age,
+          yearsToProject: years,
+          // ...existing code for other fields ...
+          ...(selectedCollege ? { collegeData: selectedCollege } : {}),
+          ...(selectedCareer ? { careerData: selectedCareer } : {}),
+        };
+        console.log('DEBUG: Projection payload being sent to backend:', payload);
       } catch (error) {
         console.error("Error auto-generating financial projection:", error);
       }
@@ -1254,6 +1280,17 @@ const FinancialProjections = ({
   // This is now a function to be called both during rendering and via onMilestoneChange
   // We directly use the state values and the milestones parameter
   const generateProjectionData = (milestonesList = milestones) => {
+    // Retrieve pathwayData from localStorage if not already available
+    let pathwayData = null;
+    const pathwayDataStr = localStorage.getItem("pathwayData");
+    if (pathwayDataStr) {
+      try {
+        pathwayData = JSON.parse(pathwayDataStr);
+      } catch (e) {
+        pathwayData = null;
+      }
+    }
+
     // Format milestones to match expected format if needed
     const formattedMilestones =
       milestonesList?.map((m) => ({
@@ -1925,6 +1962,31 @@ const FinancialProjections = ({
       other: 0, // Will be populated from Python data when available
     };
 
+    // Determine selected college from favorites or pathway data
+    let selectedCollege = null;
+    if (favoriteColleges && favoriteColleges.length > 0) {
+      selectedCollege = favoriteColleges[0]; // Use the first favorite college
+    } else if (pathwayData && pathwayData.selectedSchoolId) {
+      selectedCollege = pathwayData.selectedSchoolId; // Or fetch the full object if available
+    }
+
+    // Determine selected career from favorites or pathway data
+    let selectedCareer = null;
+    if (favoriteCareers && favoriteCareers.length > 0) {
+      selectedCareer = favoriteCareers[0]; // Use the first favorite career
+    } else if (pathwayData && pathwayData.selectedCareer) {
+      selectedCareer = pathwayData.selectedCareer; // Or fetch the full object if available
+    }
+
+    // Add selected college and career data to the payload if available
+    const payload: any = {
+      startAge: age,
+      yearsToProject: years,
+      // ...existing code for other fields ...
+      ...(selectedCollege ? { collegeData: selectedCollege } : {}),
+      ...(selectedCareer ? { careerData: selectedCareer } : {}),
+    };
+
     return {
       netWorth: netWorthData,
       income: incomeData,
@@ -1971,9 +2033,29 @@ const FinancialProjections = ({
 
   // Create a state for projection data
   // Add a state for the name of the current projection
-  const [projectionName, setProjectionName] = useState<string>(
-    `Projection - ${new Date().toLocaleDateString()}`
-  );
+  const [projectionName, setProjectionName] = useState<string>(() => {
+    // Get current date
+    const currentDate = new Date().toLocaleDateString();
+    
+    // Get school name if available
+    const selectedCollege = collegeCalculations?.find(calc => calc.includedInProjection) as CollegeCalculationWithCollege;
+    const schoolName = selectedCollege?.college?.name || '';
+    
+    // Get career title if available
+    const selectedCareer = careerCalculations?.find(calc => calc.includedInProjection) as CareerCalculationWithCareer;
+    const careerTitle = selectedCareer?.career?.title || '';
+    
+    // Get milestone count
+    const milestonesCount = milestones?.length || 0;
+    
+    // Build the projection name
+    let name = `Projection - ${currentDate}`;
+    if (schoolName) name += ` | ${schoolName}`;
+    if (careerTitle) name += ` | ${careerTitle}`;
+    if (milestonesCount > 0) name += ` | ${milestonesCount} milestone${milestonesCount > 1 ? 's' : ''}`;
+    
+    return name;
+  });
 
   // Fetch saved projection data if an ID is provided
   const {
@@ -2818,6 +2900,65 @@ const FinancialProjections = ({
           contributionRate: retirementContributionRate,
           growthRate: retirementGrowthRate,
         });
+        
+        // Prepare college and education data for age adjustment
+        let collegeData = null;
+        let educationType = "none";
+        
+        // If we have a college calculation with college data, use it
+        if (effectiveCollegeCalc && (effectiveCollegeCalc as CollegeCalculationWithCollege).college) {
+          collegeData = {
+            ...(effectiveCollegeCalc as CollegeCalculationWithCollege).college,
+            // Include any additional fields needed for the Python calculator
+            studentLoanAmount: effectiveCollegeCalc.studentLoanAmount,
+            netPrice: effectiveCollegeCalc.netPrice,
+            inState: effectiveCollegeCalc.inState
+          };
+          
+          // Try to determine education type based on college type
+          const collegeType = (effectiveCollegeCalc as CollegeCalculationWithCollege).college?.type;
+          if (collegeType) {
+            const collegeTypeLower = collegeType.toLowerCase();
+            console.log("DEBUG: College type detected:", {
+              originalType: collegeType,
+              lowercaseType: collegeTypeLower
+            });
+            
+            if (collegeTypeLower.includes('2-year') || 
+                collegeTypeLower.includes('2year') || 
+                collegeTypeLower.includes('2 year') || 
+                collegeTypeLower.includes('two-year') || 
+                collegeTypeLower.includes('two year') || 
+                collegeTypeLower.includes('associate') || 
+                collegeTypeLower.includes('community college')) {
+              educationType = "2year_college";
+              console.log("DEBUG: Detected as 2-year college");
+            } else if (collegeTypeLower.includes('4-year') || 
+                       collegeTypeLower.includes('4year') || 
+                       collegeTypeLower.includes('4 year') || 
+                       collegeTypeLower.includes('four-year') || 
+                       collegeTypeLower.includes('four year') || 
+                       collegeTypeLower.includes('bachelor')) {
+              educationType = "4year_college";
+              console.log("DEBUG: Detected as 4-year college");
+            } else if (collegeTypeLower.includes('graduate') || 
+                       collegeTypeLower.includes('professional') || 
+                       collegeTypeLower.includes('masters') || 
+                       collegeTypeLower.includes('phd') || 
+                       collegeTypeLower.includes('doctorate')) {
+              educationType = "graduate_school";
+              console.log("DEBUG: Detected as graduate school");
+            } else {
+              console.log("DEBUG: College type not recognized, defaulting to 'none'");
+            }
+          }
+        }
+        
+        // Prepare career data
+        let careerData = null;
+        if (effectiveCareerCalc && (effectiveCareerCalc as CareerCalculationWithCareer).career) {
+          careerData = (effectiveCareerCalc as CareerCalculationWithCareer).career;
+        }
 
         const pythonInput = generatePythonCalculatorInput(
           age,
@@ -2833,7 +2974,9 @@ const FinancialProjections = ({
           personalLoanTermYears, // New parameter: term length for personal loans
           personalLoanInterestRate, // New parameter: interest rate for personal loans
           retirementContributionRate, // New parameter: percentage of income to contribute to retirement
-          retirementGrowthRate // New parameter: annual growth rate for retirement accounts
+          retirementGrowthRate, // New parameter: annual growth rate for retirement accounts
+          collegeData, // Add college data for age adjustment
+          educationType // Add education type for age adjustment
         );
 
         // Add the careers data to the calculator input for post-graduation occupation selection
@@ -2850,6 +2993,11 @@ const FinancialProjections = ({
             `Added ${careers.length} careers to Python calculator input for milestone target occupations (optimized fields)`
           );
         }
+        
+        // If we have specific career data, include it
+        if (careerData) {
+          pythonInput.careerData = careerData;
+        }
 
         console.log("Sending data to Python calculator:", pythonInput);
 
@@ -2864,6 +3012,20 @@ const FinancialProjections = ({
           "Auto-generate mode:",
           autoGenerate
         );
+        
+        // Show toast notification if age was adjusted for education
+        if (result.age_adjustment && result.age_adjustment.years_added > 0) {
+          // Get college name if available
+          const collegeName = collegeData?.name || '';
+          const collegeInfo = collegeName ? ` (${collegeName})` : '';
+          
+          toast({
+            title: "Age Adjustment Applied",
+            description: `Starting age adjusted from ${result.age_adjustment.original_age} to ${result.age_adjustment.adjusted_age} based on ${formatEducationType(result.age_adjustment.education_type)}${collegeInfo}`,
+            duration: 5000,
+          });
+          console.log("Age adjustment applied:", result.age_adjustment);
+        }
 
         // Add milestones to the projection data (with properly transformed years)
         const resultWithMilestones = {
@@ -3123,8 +3285,24 @@ const FinancialProjections = ({
           />
         ) : effectiveCollegeCalc || effectiveCareerCalc ? (
           <CurrentProjectionSummary
-            collegeCalculation={effectiveCollegeCalc as CollegeCalculationWithCollege}
-            careerCalculation={effectiveCareerCalc as CareerCalculationWithCareer}
+            collegeCalculation={effectiveCollegeCalc ? {
+              id: effectiveCollegeCalc.id,
+              userId: effectiveCollegeCalc.userId,
+              collegeId: effectiveCollegeCalc.collegeId,
+              netPrice: effectiveCollegeCalc.netPrice,
+              studentLoanAmount: effectiveCollegeCalc.studentLoanAmount ?? 0,
+              college: (effectiveCollegeCalc as CollegeCalculationWithCollege).college,
+              inState: effectiveCollegeCalc.inState === null ? undefined : effectiveCollegeCalc.inState
+            } : null}
+            careerCalculation={effectiveCareerCalc ? {
+              id: effectiveCareerCalc.id,
+              userId: effectiveCareerCalc.userId,
+              careerId: effectiveCareerCalc.careerId,
+              projectedSalary: effectiveCareerCalc.projectedSalary ?? 0,
+              entryLevelSalary: effectiveCareerCalc.entryLevelSalary,
+              education: effectiveCareerCalc.education,
+              career: (effectiveCareerCalc as CareerCalculationWithCareer).career
+            } : null}
             locationData={locationCostData}
             renderEditButtons={({ section }) => {
               if (section === 'education') {
@@ -3595,6 +3773,40 @@ const FinancialProjections = ({
                             <p>
                               Percentage of income saved each year. Higher rates
                               lead to faster wealth accumulation.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-1 gap-4 text-center">
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                      <p className="text-sm text-gray-500 uppercase">
+                        Milestones Included
+                      </p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex flex-wrap justify-center gap-2 mt-2">
+                              {milestones && milestones.length > 0 ? (
+                                milestones.map((milestone, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                  >
+                                    {milestone.title}
+                                  </span>
+                                ))
+                              ) : (
+                                <p className="text-gray-500 text-sm">No milestones added</p>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>
+                              Life milestones included in this financial projection.
+                              Each milestone can impact your financial trajectory.
                             </p>
                           </TooltipContent>
                         </Tooltip>

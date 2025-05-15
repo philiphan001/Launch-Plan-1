@@ -3565,7 +3565,8 @@ class FinancialCalculator:
             'vocational': 2,
             'masters': 2,
             'doctorate': 4,
-            'professional': 3
+            'professional': 3,
+            'graduate_school': 6  # Adding graduate_school with 6 years duration
         }
         return education_years_map.get(education_type, 4)
 
@@ -3577,7 +3578,8 @@ class FinancialCalculator:
             'vocational': 1.2,     # 20% increase
             'masters': 1.5,        # 50% increase
             'doctorate': 1.8,      # 80% increase
-            'professional': 2.0    # 100% increase
+            'professional': 2.0,   # 100% increase
+            'graduate_school': 1.8 # 80% increase, same as doctorate
         }
         return multiplier_map.get(education_type, 1.2)
 
