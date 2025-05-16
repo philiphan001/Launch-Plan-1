@@ -283,7 +283,7 @@ export default function LoginPage(props: LoginPageProps) {
               variant="outline"
               onClick={handleGoogleLogin}
               disabled={isGoogleLoading}
-              className="w-full border-gray-600 text-white hover:bg-slate-700 hover:text-white flex items-center justify-center gap-2"
+              className="w-full border-gray-300 bg-white text-gray-800 hover:bg-gray-100 flex items-center justify-center gap-2 shadow-sm"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -295,7 +295,9 @@ export default function LoginPage(props: LoginPageProps) {
                   d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
                 />
               </svg>
-              {isGoogleLoading ? "Signing in..." : "Continue with Google"}
+              <span className="font-medium text-gray-800">
+                {isGoogleLoading ? "Signing in..." : "Continue with Google"}
+              </span>
             </Button>
           </form>
         </CardContent>

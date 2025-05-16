@@ -17,17 +17,19 @@ router.post("/register", verifyFirebaseToken, async (req, res) => {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const { email, displayName, username } = req.body;
+    const { email, displayName } = req.body;
     const firebaseUid = req.firebaseUser.uid;
 
     console.log(`📌 Registering new user with Firebase UID: ${firebaseUid}`);
 
     // Basic validation
-    if (!email || !username) {
+    if (!email) {
       return res
         .status(400)
-        .json({ message: "Email and username are required" });
+        .json({ message: "Email is required" });
     }
+
+    const username = email.toLowerCase(); // Always use email as username
 
     // Check if user already exists with this Firebase UID
     const existingUser = await db
@@ -43,15 +45,15 @@ router.post("/register", verifyFirebaseToken, async (req, res) => {
       return res.status(200).json(userWithoutPassword);
     }
 
-    // Check if email is already in use
-    const emailExists = await db
+    // Check if username (email) is already in use
+    const usernameExists = await db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(eq(users.username, username))
       .limit(1);
 
-    if (emailExists.length > 0) {
-      return res.status(409).json({ message: "Email already in use" });
+    if (usernameExists.length > 0) {
+      return res.status(409).json({ message: "An account already exists with this email." });
     }
 
     // Create new user
@@ -60,6 +62,7 @@ router.post("/register", verifyFirebaseToken, async (req, res) => {
       email,
       displayName: displayName || username,
       firebaseUid,
+      passwordHash: "FIREBASE_AUTH_USER", // Placeholder for Firebase users
       createdAt: new Date(),
       updatedAt: new Date(),
     };

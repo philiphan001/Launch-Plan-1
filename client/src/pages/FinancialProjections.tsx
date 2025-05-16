@@ -3246,6 +3246,43 @@ const FinancialProjections = ({
     commentary = "Amazing! Your financial future looks bright!";
   }
 
+  // Check if user is missing required info for projections
+  const missingProfile = !financialProfile || !financialProfile.householdIncome;
+  const missingPathway = (!favoriteColleges || favoriteColleges.length === 0)
+    && (!favoriteCareers || favoriteCareers.length === 0)
+    && (!favoriteLocations || favoriteLocations.length === 0);
+
+  if (missingProfile || missingPathway) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-br from-green-50 to-blue-50 rounded-lg shadow-md p-8 mx-auto max-w-2xl mt-12">
+        <h2 className="text-3xl font-bold text-green-700 mb-4 text-center">Welcome to Your Financial Journey!</h2>
+        <p className="text-lg text-gray-700 mb-6 text-center">
+          To unlock your personalized financial projections, start by exploring <span className="font-semibold text-green-600">Pathways!</span>.
+        </p>
+        <div className="w-full bg-white rounded-lg shadow p-6 mb-6">
+          <h3 className="text-xl font-semibold text-blue-700 mb-2">Explore Your Pathways:</h3>
+          <ul className="list-disc pl-6 text-gray-700 space-y-2">
+            <li>
+              <span className="font-semibold text-blue-600">I know what I want to do:</span> Whether its continuing your education, starting work, joining the armed forces or taking a gap year we got you covered!
+            </li>
+            <li>
+              <span className="font-semibold text-blue-600">Help me explore options:</span> Let's engage to find out your interests, values, goals and allow AI to help map out your pathway!
+            </li>
+            <li>
+              <span className="font-semibold text-blue-600">Mess around with numbers:</span> You just want to take a spin to see our financial visualization tools!  That works too!
+            </li>
+          </ul>
+        </div>
+        <Button
+          className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow"
+          onClick={() => setLocation('/pathways')}
+        >
+          Start Your Pathway
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="max-w-7xl mx-auto">

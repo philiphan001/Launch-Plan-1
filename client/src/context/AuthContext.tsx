@@ -174,7 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       // Register with Firebase first
       const firebaseUser = await registerWithEmail(
-        credentials.username,
+        credentials.email || "",
         credentials.password,
         credentials.firstName || ""
       );

@@ -153,7 +153,7 @@ const CelebrityProfiles = () => {
               </div>
               <Disclosure>
                 {({ open }: { open: boolean }) => (
-                  <>
+                  <div>
                     <Disclosure.Button className="flex w-full justify-between items-center mb-2 text-left">
                       <span className="font-semibold text-gray-700">Economic Realism Score: 
                         <span className={`ml-2 font-medium ${
@@ -187,7 +187,7 @@ const CelebrityProfiles = () => {
                         </ul>
                       </Disclosure.Panel>
                     </Transition>
-                  </>
+                  </div>
                 )}
               </Disclosure>
               <div className="text-gray-600 mb-4 text-sm">

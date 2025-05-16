@@ -400,7 +400,7 @@ const Profile = ({ user }: ProfileProps) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="zipCode">Zip Code</Label>
+                    <Label htmlFor="zipCode">Home Zip Code</Label>
                     <Input
                       id="zipCode"
                       value={zipCode}
@@ -442,59 +442,77 @@ const Profile = ({ user }: ProfileProps) => {
                 Financial Information
               </h3>
 
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="income">Annual Household Income</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="income"
-                      type="number"
-                      value={householdIncome}
-                      onChange={(e) => setHouseholdIncome(e.target.value)}
-                    />
-                  </div>
+              {/* Show empty state if no financial profile exists */}
+              {isLoadingFinancialProfile ? (
+                <div className="text-center py-12 text-gray-500">Loading...</div>
+              ) : !financialProfile ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <svg width="64" height="64" fill="none" viewBox="0 0 64 64" className="mb-4">
+                    <circle cx="32" cy="32" r="32" fill="#E0E7FF" />
+                    <path d="M20 44c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" />
+                    <circle cx="32" cy="28" r="6" stroke="#6366F1" strokeWidth="2" />
+                  </svg>
+                  <h4 className="text-xl font-semibold mb-2 text-gray-800">No Financial Profile Yet</h4>
+                  <p className="text-gray-600 max-w-md mb-4 text-center">
+                    You haven't set up your financial profile. Creating one helps you get personalized projections and advice!
+                  </p>
+                  <p className="text-gray-500 text-sm">Click "Save Financial Information" below to create your profile.</p>
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="income">Annual Household Income</Label>
+                    <div className="flex items-center mt-1">
+                      <span className="mr-2">$</span>
+                      <Input
+                        id="income"
+                        type="number"
+                        value={householdIncome}
+                        onChange={(e) => setHouseholdIncome(e.target.value)}
+                      />
+                    </div>
+                  </div>
 
-                <div>
-                  <Label htmlFor="savings">Current Savings</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="savings"
-                      type="number"
-                      value={savingsAmount}
-                      onChange={(e) => setSavingsAmount(e.target.value)}
-                    />
+                  <div>
+                    <Label htmlFor="savings">Current Savings</Label>
+                    <div className="flex items-center mt-1">
+                      <span className="mr-2">$</span>
+                      <Input
+                        id="savings"
+                        type="number"
+                        value={savingsAmount}
+                        onChange={(e) => setSavingsAmount(e.target.value)}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <Label htmlFor="studentLoans">Student Loan Debt</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="studentLoans"
-                      type="number"
-                      value={studentLoanAmount}
-                      onChange={(e) => setStudentLoanAmount(e.target.value)}
-                    />
+                  <div>
+                    <Label htmlFor="studentLoans">Student Loan Debt</Label>
+                    <div className="flex items-center mt-1">
+                      <span className="mr-2">$</span>
+                      <Input
+                        id="studentLoans"
+                        type="number"
+                        value={studentLoanAmount}
+                        onChange={(e) => setStudentLoanAmount(e.target.value)}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <Label htmlFor="otherDebt">Other Debt</Label>
-                  <div className="flex items-center mt-1">
-                    <span className="mr-2">$</span>
-                    <Input
-                      id="otherDebt"
-                      type="number"
-                      value={otherDebtAmount}
-                      onChange={(e) => setOtherDebtAmount(e.target.value)}
-                    />
+                  <div>
+                    <Label htmlFor="otherDebt">Other Debt</Label>
+                    <div className="flex items-center mt-1">
+                      <span className="mr-2">$</span>
+                      <Input
+                        id="otherDebt"
+                        type="number"
+                        value={otherDebtAmount}
+                        onChange={(e) => setOtherDebtAmount(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <Button className="mt-6" onClick={handleSaveFinancial}>
                 Save Financial Information

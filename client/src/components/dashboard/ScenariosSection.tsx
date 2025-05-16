@@ -414,7 +414,7 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
             <p className="mt-2 text-gray-500">Loading your scenarios...</p>
           </div>
         </div>
-      ) : error ? (
+      ) : error && scenarios.length > 0 ? (
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Scenarios</h3>
           <p className="text-red-600 mb-4">We encountered a problem loading your saved financial scenarios. Please try again.</p>
@@ -427,26 +427,14 @@ const ScenariosSection = ({ userId, username = "User" }: ScenariosSectionProps) 
           </Button>
         </div>
       ) : scenarios.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <PlusCircle className="h-8 w-8 text-blue-600" />
+        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center shadow-md relative">
+          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <PlusCircle className="h-10 w-10 text-blue-600" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-800 mb-2">No Saved Scenarios Yet</h3>
+          <h3 className="text-2xl font-bold text-gray-800 mb-2">No Saved Scenarios Yet!</h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            Create your first financial projection to see how your education, career, and life choices affect your financial future.
+            You haven't created any financial scenarios yet. Start your first scenario to see how your education, career, and life choices can shape your financial future!
           </p>
-          <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 justify-center">
-            <Button asChild className="bg-green-600 hover:bg-green-700">
-              <Link href="/projections">
-                <PlusCircle className="mr-2 h-4 w-4" /> Create Your First Scenario
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/careers">
-                <Info className="mr-2 h-4 w-4" /> Explore Career Options
-              </Link>
-            </Button>
-          </div>
         </div>
       ) : (
         <div className="relative">
